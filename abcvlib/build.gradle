@@ -1,0 +1,55 @@
+apply plugin: 'com.android.library'
+
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            url 'https://maven.google.com/'
+            name 'Google'
+        }
+        google()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.2.1'
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    repositories {
+        google() // and here
+        jcenter()
+    }
+}
+
+android {
+    compileSdkVersion 28
+    buildToolsVersion '28.0.3'
+
+    defaultConfig {
+        minSdkVersion 17
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    api fileTree(include: ['*.jar'], dir: 'libs')
+    // Should likely avoid coverall imports like this and implement a gradle link for the OpenCV library as well
+    api fileTree(include: ['*.aar'], dir: 'libs')
+    testImplementation 'junit:junit:4.12'
+    implementation 'com.android.support:appcompat-v7:23.4.0'
+    implementation 'com.github.ytai.ioio:IOIOLibAndroid:5.07'
+    implementation 'com.github.ytai.ioio:IOIOLibAndroidBluetooth:5.07'
+    implementation 'com.github.ytai.ioio:IOIOLibAndroidAccessory:5.07'
+    implementation 'com.github.ytai.ioio:IOIOLibAndroidDevice:5.07'
+}
