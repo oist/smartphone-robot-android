@@ -485,6 +485,8 @@ public class AbcvlibSensors implements SensorEventListener {
      H    L   L   H   Stop-Brake
      L    L   H/L H   Stop-NoBrake
      H/L  H/L H/L L   Standby
+
+     * @return wheelCounts
      */
     int encoder(boolean input1WheelStateIo, boolean input2WheelStateIo,
                               boolean encoderAWheelState, boolean encoderBWheelState,
@@ -492,6 +494,8 @@ public class AbcvlibSensors implements SensorEventListener {
                               boolean encoderBWheelStatePrevious){
         int wheelCounts = 0;
         // Java exclusive OR logic. I.e. only calculate if one and only one WheelState is true (H).
+        // This ensures that you are only modifying the wheel counts when the wheel is moving either
+        // forward or backward (as opposed to being stopped/braked)
         if(input1WheelStateIo ^ input2WheelStateIo){
             // Previous Encoder A HIGH, B HIGH
             if(encoderAWheelStatePrevious && encoderBWheelStatePrevious){

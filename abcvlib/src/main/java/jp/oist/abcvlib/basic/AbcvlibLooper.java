@@ -4,6 +4,7 @@ import android.util.Log;
 
 import ioio.lib.api.DigitalInput;
 import ioio.lib.api.DigitalOutput;
+import ioio.lib.api.IOIO;
 import ioio.lib.api.PwmOutput;
 import ioio.lib.api.exception.ConnectionLostException;
 import ioio.lib.util.BaseIOIOLooper;
@@ -20,72 +21,159 @@ import ioio.lib.util.IOIOConnectionManager;
  */
 public class AbcvlibLooper extends BaseIOIOLooper {
 
-    /*
-     --------------Quadrature AbcvlibSensors----------------
-     Creating IOIO Board objects that read the quadrature encoders of the Hubee Wheels.
-     Using the encoderXXWheel.read() returns a boolean of either high or low telling whether the
-     quadrature abcvlibSensors is on a black or white mark at the rime of read.
+    //      --------------Quadrature AbcvlibSensors----------------
+    /**
+     Creates IOIO Board object that read the quadrature encoders of the Hubee Wheels.
+     Using the encoderARightWheel.read() returns a boolean of either high or low telling whether the
+     quadrature abcvlibSensors is on a black or white mark at the rime of read.<br><br>
 
-     The encoderXXWheel.waitForValue(true) can also be used to wait for the value read by the quadrature
-     abcvlibSensors to change to a given value (true in this case).
+     The encoderARightWheel.waitForValue(true) can also be used to wait for the value read by the quadrature
+     abcvlibSensors to change to a given value (true in this case).<br><br>
 
-     For more on quadrature encoders see http://www.creative-robotics.com/bmdsresources OR
-     https://en.wikipedia.org/wiki/Rotary_encoder#Incremental_rotary_encoder
+     encoderARightWheelStatePrevious is just the previous reading of encoderARightWheel<br><br>
+
+     For more on quadrature encoders see
+     <a href="http://www.creative-robotics.com/bmdsresources">here</a> OR
+     <a href="https://en.wikipedia.org/wiki/Rotary_encoder#Incremental_rotary_encoder">here</a><br><br>
 
      For more on IOIO Board DigitalInput objects see:
-     https://github.com/ytai/ioio/wiki/Digital-IO
+     <a href="https://github.com/ytai/ioio/wiki/Digital-IO">here</a><br><br>
     */
     private DigitalInput encoderARightWheel;
+    /**
+     * @see #encoderARightWheel
+     */
     private DigitalInput encoderBRightWheel;
+    /**
+     * @see #encoderARightWheel
+     */
     private DigitalInput encoderALeftWheel;
+    /**
+     * @see #encoderARightWheel
+     */
     private DigitalInput encoderBLeftWheel;
+    /**
+     * @see #encoderARightWheel
+     */
     private boolean encoderARightWheelStatePrevious;
+    /**
+     * @see #encoderARightWheel
+     */
     private boolean encoderBRightWheelStatePrevious;
+    /**
+     * @see #encoderARightWheel
+     */
     private boolean encoderALeftWheelStatePrevious;
+    /**
+     * @see #encoderARightWheel
+     */
     private boolean encoderBLeftWheelStatePrevious;
 
-    /*
-     --------------Wheel Direction Controllers----------------
-     The values set by xxxWheelController.write() control the direction of the Hubee wheels.
-     See http://www.creative-robotics.com/bmdsresources for the source of the control value table copied below:
+    //     --------------Wheel Direction Controllers----------------
+    /**
+     The values set by input1RightWheelController.write() control the direction of the Hubee wheels.
+     See <a hred="http://www.creative-robotics.com/bmdsresources">here</a> for the source of the
+     control value table copied below:<br><br>
 
      Table below refers to a single wheel
      (e.g. setting input1RightWheelController to H and input2RightWheelController to L
-     with PWM H and Standby H would result in the right wheel turning backwards)
+     with PWM H and Standby H would result in the right wheel turning backwards)<br><br>
 
-     Setting input1RightWheelController to H is done via input1RightWheelController.write(true)
+     Setting input1RightWheelController to H is done via input1RightWheelController.write(true)<br><br>
 
-     IN1  IN2 PWM Standby Result
-     H    H   H/L H   Stop-Brake
-     L    H   H   H   Turn Forwards
-     L    H   L   H   Stop-Brake
-     H    L   H   H   Turn Backwards
-     H    L   L   H   Stop-Brake
-     L    L   H/L H   Stop-NoBrake
-     H/L  H/L H/L L   Standby
+     <table style="width:100%">
+        <tr>
+            <th>IN1</th>
+            <th>IN2</th>
+            <th>PWM</th>
+            <th>Standby</th>
+            <th>Result</th>
+        </tr>
+        <tr>
+            <th>H</th>
+            <th>H</th>
+            <th>H/L</th>
+            <th>H</th>
+            <th>Stop-Brake</th>
+        </tr>
+        <tr>
+            <th>L</th>
+            <th>H</th>
+            <th>H</th>
+            <th>H</th>
+            <th>Turn Forwards</th>
+        </tr>
+        <tr>
+            <th>L</th>
+            <th>H</th>
+            <th>L</th>
+            <th>H</th>
+            <th>Stop-Brake</th>
+        </tr>
+        <tr>
+            <th>H</th>
+            <th>L</th>
+            <th>H</th>
+            <th>H</th>
+            <th>Turn Backwards</th>
+        </tr>
+        <tr>
+            <th>H</th>
+            <th>L</th>
+            <th>L</th>
+            <th>H</th>
+            <th>Stop-Brake</th>
+        </tr>
+        <tr>
+            <th>L</th>
+            <th>L</th>
+            <th>H/L</th>
+            <th>H</th>
+            <th>Stop-NoBrake</th>
+        </tr>
+        <tr>
+            <th>H/L</th>
+            <th>H/L</th>
+            <th>H/L</th>
+            <th>L</th>
+            <th>Standby</th>
+        </tr>
+     </table>
     */
     private DigitalOutput input1RightWheelController;
+    /**
+     * @see #input1RightWheelController
+     */
     private DigitalOutput input2RightWheelController;
+    /**
+     * @see #input1RightWheelController
+     */
     private DigitalOutput input1LeftWheelController;
+    /**
+     * @see #input1RightWheelController
+     */
     private DigitalOutput input2LeftWheelController;
 
-    /*
-     --------------Pulse Width Modulation (PWM)----------------
+    //     --------------Pulse Width Modulation (PWM)----------------
+    /**
      PwmOutput objects like pwmControllerRightWheel have methods like
+    <ul>
+     <li>openPwmOutput(pinNum, freq) to start the PWM on pinNum at freq</li>
 
-     * openPwmOutput(pinNum, freq) to start the PWM on pinNum at freq
+     <li>pwm.setPulseWidth(pw) to change the freq directly by modifying the pulse width</li>
+     </ul>
 
-     * pwm.setPulseWidth(pw) to change the freq directly by modifying the pulse width
-
-     Not sure why initial PWM_FREQ is 1000, but assume this can be modified is necessary
-
-     Note pulseWidthXXX are given in microseconds
-
-     More info here:
-     https://github.com/ytai/ioio/wiki/PWM-Output
+     More info <a href="https://github.com/ytai/ioio/wiki/PWM-Output">here</a>
     */
     private PwmOutput pwmControllerRightWheel;
+    /**
+     * @see #pwmControllerRightWheel
+     */
     private PwmOutput pwmControllerLeftWheel;
+    /**
+     *  Not sure why initial PWM_FREQ is 1000, but assume this can be modified as necessary.
+     *  This may depend on the motor or microcontroller requirements/specs.
+     */
     private final int PWM_FREQ = 1000;
 
     private AbcvlibSensors abcvlibSensors;
@@ -105,7 +193,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      * @throws ConnectionLostException
      *             When IOIO connection is lost.
      *
-     * @see ioio.lib.util.IOIOLooper#setup()
+     * @see ioio.lib.util.IOIOLooper#setup(IOIO)
      */
     @Override
     public void setup() throws ConnectionLostException {
@@ -149,12 +237,17 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         try{
             pwmControllerRightWheel = ioio_.openPwmOutput(PWM_RIGHT_WHEEL_PIN,PWM_FREQ);
             pwmControllerLeftWheel = ioio_.openPwmOutput(PWM_LEFT_WHEEL_PIN,PWM_FREQ);
+
             /* Note openDigitalInput() can also accept DigitalInput.Spec.Mode.OPEN_DRAIN if motor
             circuit requires */
-            encoderARightWheel = ioio_.openDigitalInput(ENCODER_A_RIGHT_WHEEL_PIN, DigitalInput.Spec.Mode.PULL_UP);
-            encoderBRightWheel = ioio_.openDigitalInput(ENCODER_B_RIGHT_WHEEL_PIN, DigitalInput.Spec.Mode.PULL_UP);
-            encoderALeftWheel = ioio_.openDigitalInput(ENCODER_A_LEFT_WHEEL_PIN, DigitalInput.Spec.Mode.PULL_UP);
-            encoderBLeftWheel = ioio_.openDigitalInput(ENCODER_B_LEFT_WHEEL_PIN, DigitalInput.Spec.Mode.PULL_UP);
+            encoderARightWheel = ioio_.openDigitalInput(ENCODER_A_RIGHT_WHEEL_PIN,
+                    DigitalInput.Spec.Mode.PULL_UP);
+            encoderBRightWheel = ioio_.openDigitalInput(ENCODER_B_RIGHT_WHEEL_PIN,
+                    DigitalInput.Spec.Mode.PULL_UP);
+            encoderALeftWheel = ioio_.openDigitalInput(ENCODER_A_LEFT_WHEEL_PIN,
+                    DigitalInput.Spec.Mode.PULL_UP);
+            encoderBLeftWheel = ioio_.openDigitalInput(ENCODER_B_LEFT_WHEEL_PIN,
+                    DigitalInput.Spec.Mode.PULL_UP);
 
         }catch (ConnectionLostException e){
             throw e;
@@ -174,22 +267,27 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     @Override
     public void loop() throws ConnectionLostException {
 
+        // The IN1 and IN2 IO determining Hubee Wheel direction.
+        // See input1RightWheelController doc for control table
         boolean input1RightWheelState;
         boolean input2RightWheelState;
         boolean input1LeftWheelState;
         boolean input2LeftWheelState;
 
-        final int minPulseWidth = 0;
-        final int maxPulseWidth = PWM_FREQ;
+        final int MIN_PULSE_WIDTH = 0;
+        final int MAX_PULSE_WIDTH = PWM_FREQ;
+
+        // pulseWidths are given in microseconds
         int pulseWidthRightWheel;
         int pulseWidthLeftWheel;
 
         /*
-        The logical tests for whether the pulseWidthRightWheel is positive or negative determines how to set the
-        input variables to control the Hubee Wheel direction. See control table at top of code. If
-        you wanted to inverse polarity, just reverse the > signs to < in each if statement.
+        The logical tests for whether the pulseWidthRightWheel is positive or negative determines
+        how to set the input variables to control the Hubee Wheel direction. See
+        input1RightWheelController doc for control table. If you wanted to inverse polarity, just
+        reverse the > signs to < in each if statement.
         */
-        if(abcvlibMotion.pulseWidthRightWheel >= minPulseWidth){
+        if(abcvlibMotion.pulseWidthRightWheel >= MIN_PULSE_WIDTH){
             input1RightWheelState=false;
             input2RightWheelState=true;
         }else{
@@ -197,7 +295,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             input2RightWheelState=false;
         }
 
-        if(abcvlibMotion.pulseWidthLeftWheel >= minPulseWidth){
+        if(abcvlibMotion.pulseWidthLeftWheel >= MIN_PULSE_WIDTH){
             input1LeftWheelState=true;
             input2LeftWheelState=false;
         }else{
@@ -206,19 +304,19 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         }
 
         /*
-        The following two logical statements simply hard limit the pulseWidth to be less than 1000
-        which represents the highest value it can be.
+        The following two logical statements simply hard limit the pulseWidth to be less than
+        MAX_PULSE_WIDTH which represents the highest value it can be.
          */
-        if(abcvlibMotion.pulseWidthRightWheel < maxPulseWidth){
+        if(abcvlibMotion.pulseWidthRightWheel < MAX_PULSE_WIDTH){
             pulseWidthRightWheel = Math.abs(abcvlibMotion.pulseWidthRightWheel);
         }else{
-            pulseWidthRightWheel = maxPulseWidth;
+            pulseWidthRightWheel = MAX_PULSE_WIDTH;
         }
 
-        if(abcvlibMotion.pulseWidthLeftWheel < maxPulseWidth){
+        if(abcvlibMotion.pulseWidthLeftWheel < MAX_PULSE_WIDTH){
             pulseWidthLeftWheel = Math.abs(abcvlibMotion.pulseWidthLeftWheel);
         }else{
-            pulseWidthLeftWheel = maxPulseWidth;
+            pulseWidthLeftWheel = MAX_PULSE_WIDTH;
         }
 
         try {
@@ -248,6 +346,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             IOIOConnectionManager.Thread.sleep(1);
         // Intentional empty catch block?
         } catch (InterruptedException e) {
+            Log.i("abcvlib", "AbcvlibLooper.loop threw an InteruptedException");
         } catch (ConnectionLostException e){
             throw e;
         }
@@ -270,9 +369,21 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      */
     @Override
     public void incompatible() {
-        Log.e("abcvlib", "Incompatible firmware version!");
+        Log.e("abcvlib", "Incompatible IOIO firmware version!");
     }
 
+    /**
+     * Sets wheel counts for each wheel based on current turning direction of wheel as determined
+     * , while encoder values de
+     * @param input1RightWheelState IN1 of right Hubee Wheel
+     * @param input2RightWheelState IN2 of right Hubee Wheel
+     * @param input1LeftWheelState IN1 of left Hubee Wheel
+     * @param input2LeftWheelState IN1 of left Hubee Wheel
+     * @param encoderARightWheelState
+     * @param encoderALeftWheelState
+     * @param encoderBRightWheelState
+     * @param encoderBLeftWheelState
+     */
     private void setEncoderStates(Boolean input1RightWheelState, Boolean input2RightWheelState,
                                  Boolean input1LeftWheelState, Boolean input2LeftWheelState,
                                  Boolean encoderARightWheelState, Boolean encoderALeftWheelState,
