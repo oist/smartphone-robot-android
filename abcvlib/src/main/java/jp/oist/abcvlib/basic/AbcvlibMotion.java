@@ -33,10 +33,8 @@ public class AbcvlibMotion {
     1/1000 seconds) a value of 1 ms for the pulseWidthRightWheel would result in an always high voltage (i.e.
     no pulses at all, just a flat DC high voltage).
     */
-    int pulseWidthRightWheel = 0;
-    int pulseWidthLeftWheel = 0;
-
-    public int testInt;
+    private int pulseWidthRightWheel = 0;
+    private int pulseWidthLeftWheel = 0;
 
     private float[] cpgXY = {900, 900}; // Central Pattern Generator destabalizer initial parameters.
     private float ddt = 0.005F; //TODO update to sensor sampling rate? Waiting on Judy's reply
@@ -51,8 +49,14 @@ public class AbcvlibMotion {
     // Constructor to pass other module objects in. Keep public.
     public AbcvlibMotion(AbcvlibSensors abcvlibSensors){
         this.abcvlibSensors = abcvlibSensors;
-        Log.i("abcvlib", "Constructor AbcvlibMotion");
-        testInt = 1;
+    }
+
+    public int getPwRight(){
+        return pulseWidthRightWheel;
+    }
+
+    public int getPwLeft(){
+        return pulseWidthLeftWheel;
     }
 
     public void switchLinearCpg(float k_p, float k_d1, float k_d2, int omega, int beta) {

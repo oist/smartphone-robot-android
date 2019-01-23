@@ -488,15 +488,27 @@ public class AbcvlibSensors implements SensorEventListener {
 
      * @return wheelCounts
      */
-    int encoder(boolean input1WheelStateIo, boolean input2WheelStateIo,
-                              boolean encoderAWheelState, boolean encoderBWheelState,
-                              boolean encoderAWheelStatePrevious,
-                              boolean encoderBWheelStatePrevious){
+    int encoder(Boolean input1WheelStateIo, Boolean input2WheelStateIo, Integer pulseWidthRightWheelNew,
+                Integer pulseWidthLeftWheelNew, Boolean encoderAWheelState, Boolean encoderBWheelState,
+                Boolean encoderAWheelStatePrevious, Boolean encoderBWheelStatePrevious){
+
         int wheelCounts = 0;
-        // Java exclusive OR logic. I.e. only calculate if one and only one WheelState is true (H).
-        // This ensures that you are only modifying the wheel counts when the wheel is moving either
-        // forward or backward (as opposed to being stopped/braked)
-        if(input1WheelStateIo ^ input2WheelStateIo){
+        /*
+        Java exclusive OR logic ^. I.e. only calculate if one and only one WheelState is true (H).
+        Additionally both PWM and Standby must be H, but Standby is always H by default in its
+        unconnected state. This ensures that you are only modifying the wheel counts when the wheel
+        is moving either forward or backward (as opposed to being stopped/braked). Additionally
+        the PWM pin will alter between H and L during normal operation, so checking if the
+        pulseWidthRightWheelNew values are above 0 will ensure only moving wheels are counted.
+        The else statements can then differentiate between a stopped wheel and
+        a misread from the quadrature encoders. This allows you to calculate the drift/error of the
+        quadrature sensors to some degree, though you wouldn't be able to tell whether the drift is
+        positive or negative or evens out over time. I guess you could use this to calculate an
+        appropriate sampling frequency for the IOIOBoard. If you are getting too many of these errors
+        maybe decreasing the sampling rate will remove the number of times the encoders are read
+        precisely at the wrong moment (both H or both L). Will this happen?
+         */
+        if((input1WheelStateIo ^ input2WheelStateIo) && pulseWidthRightWheelNew > 0 && pulseWidthLeftWheelNew > 0){
             // Previous Encoder A HIGH, B HIGH
             if(encoderAWheelStatePrevious && encoderBWheelStatePrevious){
                 // Current Encoder A LOW, B HIGH

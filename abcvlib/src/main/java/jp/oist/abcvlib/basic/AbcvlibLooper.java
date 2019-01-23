@@ -278,16 +278,18 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         final int MAX_PULSE_WIDTH = PWM_FREQ;
 
         // pulseWidths are given in microseconds
-        int pulseWidthRightWheel;
-        int pulseWidthLeftWheel;
+        int pulseWidthRightWheelOld = abcvlibMotion.getPwRight();
+        int pulseWidthLeftWheelOld = abcvlibMotion.getPwLeft();
+        int pulseWidthRightWheelNew;
+        int pulseWidthLeftWheelNew;
 
         /*
-        The logical tests for whether the pulseWidthRightWheel is positive or negative determines
+        The logical tests for whether the pulseWidthRightWheelNew is positive or negative determines
         how to set the input variables to control the Hubee Wheel direction. See
         input1RightWheelController doc for control table. If you wanted to inverse polarity, just
         reverse the > signs to < in each if statement.
         */
-        if(abcvlibMotion.pulseWidthRightWheel >= MIN_PULSE_WIDTH){
+        if(pulseWidthRightWheelOld >= MIN_PULSE_WIDTH){
             input1RightWheelState=false;
             input2RightWheelState=true;
         }else{
@@ -295,7 +297,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             input2RightWheelState=false;
         }
 
-        if(abcvlibMotion.pulseWidthLeftWheel >= MIN_PULSE_WIDTH){
+        if(pulseWidthLeftWheelOld >= MIN_PULSE_WIDTH){
             input1LeftWheelState=true;
             input2LeftWheelState=false;
         }else{
@@ -307,26 +309,26 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         The following two logical statements simply hard limit the pulseWidth to be less than
         MAX_PULSE_WIDTH which represents the highest value it can be.
          */
-        if(abcvlibMotion.pulseWidthRightWheel < MAX_PULSE_WIDTH){
-            pulseWidthRightWheel = Math.abs(abcvlibMotion.pulseWidthRightWheel);
+        if(pulseWidthRightWheelOld < MAX_PULSE_WIDTH){
+            pulseWidthRightWheelNew = Math.abs(pulseWidthRightWheelOld);
         }else{
-            pulseWidthRightWheel = MAX_PULSE_WIDTH;
+            pulseWidthRightWheelNew = MAX_PULSE_WIDTH;
         }
 
-        if(abcvlibMotion.pulseWidthLeftWheel < MAX_PULSE_WIDTH){
-            pulseWidthLeftWheel = Math.abs(abcvlibMotion.pulseWidthLeftWheel);
+        if(pulseWidthLeftWheelOld < MAX_PULSE_WIDTH){
+            pulseWidthLeftWheelNew = Math.abs(pulseWidthLeftWheelOld);
         }else{
-            pulseWidthLeftWheel = MAX_PULSE_WIDTH;
+            pulseWidthLeftWheelNew = MAX_PULSE_WIDTH;
         }
 
         try {
             // Write all calculated values to the IOIO Board pins
             input1RightWheelController.write(input1RightWheelState);
             input2RightWheelController.write(input2RightWheelState);
-            pwmControllerRightWheel.setPulseWidth(pulseWidthRightWheel);
+            pwmControllerRightWheel.setPulseWidth(pulseWidthRightWheelNew);
             input1LeftWheelController.write(input1LeftWheelState);
             input2LeftWheelController.write(input2LeftWheelState);
-            pwmControllerLeftWheel.setPulseWidth(pulseWidthLeftWheel);
+            pwmControllerLeftWheel.setPulseWidth(pulseWidthLeftWheelNew);
 
             // Read all encoder values from IOIO Board
             boolean encoderARightWheelState = encoderARightWheel.read();
@@ -336,7 +338,8 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
             setEncoderStates(input1RightWheelState, input2RightWheelState, input1LeftWheelState,
                     input2LeftWheelState, encoderARightWheelState, encoderALeftWheelState,
-                    encoderBRightWheelState, encoderBLeftWheelState);
+                    encoderBRightWheelState, encoderBLeftWheelState, pulseWidthRightWheelNew,
+                    pulseWidthLeftWheelNew);
 
             encoderARightWheelStatePrevious = encoderARightWheelState;
             encoderBRightWheelStatePrevious = encoderBRightWheelState;
@@ -387,7 +390,8 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     private void setEncoderStates(Boolean input1RightWheelState, Boolean input2RightWheelState,
                                  Boolean input1LeftWheelState, Boolean input2LeftWheelState,
                                  Boolean encoderARightWheelState, Boolean encoderALeftWheelState,
-                                 Boolean encoderBRightWheelState, Boolean encoderBLeftWheelState){
+                                 Boolean encoderBRightWheelState, Boolean encoderBLeftWheelState,
+                                  Integer pulseWidthRightWheelNew, Integer pulseWidthLeftWheelNew){
 
         int encoderCountRightWheel = abcvlibSensors.getWheelCountR();
         int encoderCountLeftWheel = abcvlibSensors.getWheelCountL();
@@ -395,12 +399,14 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         // Right is negative and left is positive since the wheels are physically mirrored so
         // while moving forward one wheel is moving ccw while the other is rotating cw.
         int newCountR = encoderCountRightWheel - abcvlibSensors.encoder(input1RightWheelState,
-                input2RightWheelState, encoderARightWheelState, encoderBRightWheelState,
-                encoderARightWheelStatePrevious, encoderBRightWheelStatePrevious);
+                input2RightWheelState, pulseWidthRightWheelNew, pulseWidthLeftWheelNew,
+                encoderARightWheelState, encoderBRightWheelState, encoderARightWheelStatePrevious,
+                encoderBRightWheelStatePrevious);
 
         int newCountL = encoderCountLeftWheel + abcvlibSensors.encoder(input1LeftWheelState,
-                input2LeftWheelState, encoderALeftWheelState, encoderBLeftWheelState,
-                encoderALeftWheelStatePrevious, encoderBLeftWheelStatePrevious);
+                input2LeftWheelState, pulseWidthRightWheelNew, pulseWidthLeftWheelNew,
+                encoderALeftWheelState, encoderBLeftWheelState, encoderALeftWheelStatePrevious,
+                encoderBLeftWheelStatePrevious);
 
         abcvlibSensors.setWheelR(newCountR);
         abcvlibSensors.setWheelL(newCountL);
