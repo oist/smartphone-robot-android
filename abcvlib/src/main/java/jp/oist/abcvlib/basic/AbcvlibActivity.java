@@ -4,6 +4,7 @@ import android.os.Bundle;
 
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
+import jp.oist.abcvlib.basic.AbcvlibLooper;
 
 /**
  * AbcvlibActivity is where all of the other classes are initialized into an object. The objects
@@ -21,6 +22,12 @@ public class AbcvlibActivity extends IOIOActivity {
     public AbcvlibSensors abcvlibSensors;
     public AbcvlibMotion abcvlibMotion;
 
+    /**
+     * Enable/disable sensor and IO logging. Only set to true when debugging as it uses a lot of
+     * memory/disk space on the phone and may result in memory failure if run for a long time. 
+     */
+    private boolean logSwitch = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Pass Android App information up to parent classes
@@ -37,7 +44,7 @@ public class AbcvlibActivity extends IOIOActivity {
       */
     @Override
     protected IOIOLooper createIOIOLooper() {
-        return new AbcvlibLooper(abcvlibSensors, abcvlibMotion);
+        return new AbcvlibLooper(abcvlibSensors, abcvlibMotion, logSwitch);
     }
 
 }

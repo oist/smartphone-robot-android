@@ -21,6 +21,10 @@ import ioio.lib.util.IOIOConnectionManager;
  */
 public class AbcvlibLooper extends BaseIOIOLooper {
 
+    /**
+     * Boolean to switch on and off logger functions. On by default but can be set to false via
+     */
+    private boolean logSwitch;
     //      --------------Quadrature AbcvlibSensors----------------
     /**
      Creates IOIO Board object that read the quadrature encoders of the Hubee Wheels.
@@ -179,7 +183,6 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     private AbcvlibSensors abcvlibSensors;
     private AbcvlibMotion abcvlibMotion;
 
-    private final int MIN_PULSE_WIDTH = 0;
     private final int MAX_PULSE_WIDTH = PWM_FREQ;
 
     private boolean encoderARightWheelState;
@@ -191,16 +194,52 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     // See input1RightWheelController doc for control table
     private boolean input1RightWheelState;
     private boolean input2RightWheelState;
-    private int pulseWidthRightWheelNew;
     private boolean input1LeftWheelState;
     private boolean input2LeftWheelState;
+
+    // PWM pulse width tracking variables
+    private int pulseWidthRightWheelNew;
+    private int pulseWidthRightWheelCurrent;
     private int pulseWidthLeftWheelNew;
+    private int pulseWidthLeftWheelCurrent;
 
+    // Encoder counters
+    /**
+     * Note encoderCountRightWheel accumulates counts at the AbcvlibLooper thread loop rate of 1ms
+     * and then fills in the encoder counter value within
+     * AbcvlibSensors.encoderCountRightWheel[indexHistoryCurrent]. The value of indexHistoryCurrent
+     * changes only every 5ms or so, so the single
+     * AbcvlibSensors.encoderCountRightWheel[indexHistoryCurrent] value represents a summation of
+     * approximately 5 loops of counting through the AbcvlibLooper thread loop. The timing of the
+     * threads may vary a bit, but this doesn't undermine the general idea of summing up counts
+     * then dumping them into the array within AbcvlibSensors. This timing depends on the sleep time
+     * provided at the end of the loop method within this class and the value of SENSOR_DELAY_FASTEST
+     * in the AbcvlibSensors.register method.
+     *
+     * @see AbcvlibSensors#encoderCountRightWheel
+     * @see #loop()
+     * @see AbcvlibSensors#register()
+     */
+    int encoderCountRightWheel;
+    /**
+     * @see #encoderCountRightWheel
+     */
+    int encoderCountLeftWheel;
 
-    // Constructor to pass other module objects in.
+    // Constructor to pass other module objects in. Default logSwitch value to true
     public AbcvlibLooper(AbcvlibSensors abcvlibSensors, AbcvlibMotion abcvlibMotion){
+
+        this(abcvlibSensors, abcvlibMotion, true);
+
+    }
+
+    // Constructor to pass other module objects in. No default logSwitch.
+    public AbcvlibLooper(AbcvlibSensors abcvlibSensors, AbcvlibMotion abcvlibMotion,
+                         Boolean logSwitch){
+
         this.abcvlibMotion = abcvlibMotion;
         this.abcvlibSensors = abcvlibSensors;
+        this.logSwitch = logSwitch;
     }
 
     /**
@@ -284,29 +323,19 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     @Override
     public void loop() throws ConnectionLostException, InterruptedException{
 
-        // pulseWidths are given in microseconds
-        int pulseWidthRightWheelOld = abcvlibMotion.getPwRight();
-        int pulseWidthLeftWheelOld = abcvlibMotion.getPwLeft();
+        getPwm();
 
-        boolean[] stateReturn;
+        getIn1In2();
 
-        // Update IN1 and IN2 for each wheel based on sign of pulseWidth (+/-)
-        stateReturn = setIn1In2(pulseWidthRightWheelOld);
-        input1RightWheelState = stateReturn[0];
-        input2RightWheelState = stateReturn[1];
+        getEncoderStates();
 
-        stateReturn = setIn1In2(pulseWidthLeftWheelOld);
-        input1LeftWheelState = stateReturn[0];
-        input2LeftWheelState = stateReturn[1];
-
-        pulseWidthRightWheelNew = truncatePulseWidth(pulseWidthRightWheelOld);
-        pulseWidthLeftWheelNew = truncatePulseWidth(pulseWidthLeftWheelOld);
+        getEncoderCounts();
 
         writeIoUpdates();
 
-        readIoUpdates();
-
-        encoderUpdates();
+        if (logSwitch) {
+            sendToLog();
+        }
 
         try {
             // TODO Not sure if this is necessary. Seems like better thread wait/notify would be better?
@@ -337,65 +366,46 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         Log.e("abcvlib", "Incompatible IOIO firmware version!");
     }
 
+    private void getPwm() {
+
+        // pulseWidths are given in microseconds
+        pulseWidthRightWheelCurrent = abcvlibMotion.getPwRight();
+        pulseWidthLeftWheelCurrent = abcvlibMotion.getPwLeft();
+
+        pulseWidthRightWheelNew = pulseWidthLimiter(pulseWidthRightWheelCurrent);
+        pulseWidthLeftWheelNew = pulseWidthLimiter(pulseWidthLeftWheelCurrent);
+
+    }
+
     /**
      *
      * Tests the sign of pulseWidth then determines how to set the input variables (IN1 and IN2)
      * to control the Hubee Wheel direction. See input1RightWheelController doc for control table.
      * If you wanted to inverse polarity, just reverse the > signs to < in each if statement.
      *
-     * @param pulseWidth PWM pulse width of one wheel signal
      * @return input[0] --> IN1 and input[1] --> IN2
      */
-    private boolean[] setIn1In2(Integer pulseWidth){
+    private void getIn1In2(){
 
-        boolean[] input = new boolean[2];
-
-        if(pulseWidth >= MIN_PULSE_WIDTH){
-            input[0] = false;
-            input[1] = true;
+        if(pulseWidthRightWheelCurrent >= 0){
+            input1RightWheelState = false;
+            input2RightWheelState = true;
         }else{
-            input[0] = true;
-            input[1] = false;
+            input1RightWheelState = true;
+            input2RightWheelState = false;
         }
 
-        return input;
-
-    }
-
-    private int truncatePulseWidth(Integer pulseWidthOld){
-        /*
-        The following two logical statements simply hard limit the pulseWidth to be less than
-        MAX_PULSE_WIDTH which represents the highest value it can be.
-         */
-        int pulseWidthNew;
-
-        if(pulseWidthOld < MAX_PULSE_WIDTH){
-            pulseWidthNew = Math.abs(pulseWidthOld);
+        if(pulseWidthLeftWheelCurrent >= 0){
+            input1LeftWheelState = false;
+            input2LeftWheelState = true;
         }else{
-            pulseWidthNew = MAX_PULSE_WIDTH;
+            input1LeftWheelState = true;
+            input2LeftWheelState = false;
         }
 
-        return pulseWidthNew;
     }
 
-    private void writeIoUpdates() throws ConnectionLostException{
-
-        try {
-            // Write all calculated values to the IOIO Board pins
-            input1RightWheelController.write(input1RightWheelState);
-            input2RightWheelController.write(input2RightWheelState);
-            pwmControllerRightWheel.setPulseWidth(pulseWidthRightWheelNew);
-            input1LeftWheelController.write(input1LeftWheelState);
-            input2LeftWheelController.write(input2LeftWheelState);
-            pwmControllerLeftWheel.setPulseWidth(pulseWidthLeftWheelNew);
-
-        } catch (ConnectionLostException e){
-            Log.i("abcvlib", "AbcvlibLooper.loop threw an ConnectionLostException");
-            throw e;
-        }
-    }
-
-    private void readIoUpdates() throws ConnectionLostException{
+    private void getEncoderStates() throws ConnectionLostException{
 
         try {
             // Read all encoder values from IOIO Board
@@ -413,27 +423,41 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         }
     }
 
-    private void encoderUpdates() {
-
-        int encoderCountRightWheelOld = abcvlibSensors.getWheelCountR();
-        int encoderCountLeftWheelOld = abcvlibSensors.getWheelCountL();
+    private void getEncoderCounts(){
 
         // Right is negative and left is positive since the wheels are physically mirrored so
         // while moving forward one wheel is moving ccw while the other is rotating cw.
-        int encoderCountRightWheelNew = encoderCountRightWheelOld -
+        encoderCountRightWheel = encoderCountRightWheel -
                 encoderAddSubtractCount(input1RightWheelState, input2RightWheelState,
                         pulseWidthRightWheelNew, pulseWidthLeftWheelNew, encoderARightWheelState,
                         encoderBRightWheelState, encoderARightWheelStatePrevious,
                         encoderBRightWheelStatePrevious);
 
-        int encoderCountLeftWheelNew = encoderCountLeftWheelOld +
+        encoderCountLeftWheel = encoderCountLeftWheel +
                 encoderAddSubtractCount(input1LeftWheelState, input2LeftWheelState,
                         pulseWidthRightWheelNew, pulseWidthLeftWheelNew, encoderALeftWheelState,
                         encoderBLeftWheelState, encoderALeftWheelStatePrevious,
                         encoderBLeftWheelStatePrevious);
+    }
 
-        abcvlibSensors.setWheelR(encoderCountRightWheelNew);
-        abcvlibSensors.setWheelL(encoderCountLeftWheelNew);
+    private void writeIoUpdates() throws ConnectionLostException{
+
+        try {
+            // Write all calculated values to the IOIO Board pins
+            input1RightWheelController.write(input1RightWheelState);
+            input2RightWheelController.write(input2RightWheelState);
+            pwmControllerRightWheel.setPulseWidth(pulseWidthRightWheelNew);
+            input1LeftWheelController.write(input1LeftWheelState);
+            input2LeftWheelController.write(input2LeftWheelState);
+            pwmControllerLeftWheel.setPulseWidth(pulseWidthLeftWheelNew);
+
+        } catch (ConnectionLostException e){
+            Log.i("abcvlib", "AbcvlibLooper.loop threw an ConnectionLostException");
+            throw e;
+        }
+
+        abcvlibSensors.setWheelR(encoderCountRightWheel);
+        abcvlibSensors.setWheelL(encoderCountLeftWheel);
 
         encoderARightWheelStatePrevious = encoderARightWheelState;
         encoderBRightWheelStatePrevious = encoderBRightWheelState;
@@ -441,6 +465,21 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         encoderBLeftWheelStatePrevious = encoderBLeftWheelState;
     }
 
+    private int pulseWidthLimiter(Integer pulseWidthOld){
+        /*
+        The following two logical statements simply hard limit the pulseWidth to be less than
+        MAX_PULSE_WIDTH which represents the highest value it can be.
+         */
+        int pulseWidthNew;
+
+        if(pulseWidthOld < MAX_PULSE_WIDTH){
+            pulseWidthNew = Math.abs(pulseWidthOld);
+        }else{
+            pulseWidthNew = MAX_PULSE_WIDTH;
+        }
+
+        return pulseWidthNew;
+    }
 
     /**
      Input all IO values from Hubee Wheel and output either +1, or -1 to add or subtract one wheel
@@ -555,40 +594,29 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         return wheelCounts;
     }
 
-    private void sendToLogPwm(Integer pulseWidthRightWheelOld, Integer pulseWidthRightWheelOld) {
+    private void sendToLog() {
 
 
-        pulseWidthRightWheelOld;
-        pulseWidthRightWheelOld;
-        pulseWidthRightWheelNew
-        pulseWidthLeftWheelNew;
 
-        // Compile raw acceleration data to push to adb log
-        String rawAccelerationMsg = Float.toString(accelerationX) + " " +
-                Float.toString(accelerationY) + " " +
-                Float.toString(accelerationZ);
+        // Compile Encoder state data to push to adb log
+        String encoderStateMsg = Integer.toString((encoderARightWheelState) ? 1 : 0) + " " +
+                Integer.toString((encoderBRightWheelState) ? 1 : 0) + " " +
+                Integer.toString((encoderALeftWheelState) ? 1 : 0) + " " +
+                Integer.toString((encoderBLeftWheelState) ? 1 : 0);
 
-        Log.i("rawAccelerationMsg", rawAccelerationMsg);
+        // Compile Encoder count data to push to adb log
+        String encoderCountMsg = Float.toString(encoderCountRightWheel) + " " +
+                Float.toString(encoderCountLeftWheel);
 
-    }
+        // Compile PWM data to push to adb log
+        String pwmMsg = Float.toString(pulseWidthRightWheelCurrent) + " " +
+                Float.toString(pulseWidthLeftWheelCurrent) + " " +
+                Float.toString(pulseWidthRightWheelNew) + " " +
+                Float.toString(pulseWidthLeftWheelNew);
 
-    private void sendToLogEncoder(Integer encoderCountRightWheelNew, Integer encoderCountLeftWheelNew) {
-
-        encoderARightWheelState;
-        encoderBRightWheelState;
-        encoderALeftWheelState;
-        encoderBLeftWheelState;
-        pulseWidthRightWheelNew;
-        pulseWidthLeftWheelNew;
-        encoderCountRightWheelNew;
-        encoderCountLeftWheelNew;
-
-        // Compile raw acceleration data to push to adb log
-        String rawAccelerationMsg = Float.toString(accelerationX) + " " +
-                Float.toString(accelerationY) + " " +
-                Float.toString(accelerationZ);
-
-        Log.i("rawAccelerationMsg", rawAccelerationMsg);
+        Log.i("encoderStateMsg", encoderStateMsg);
+        Log.i("encoderCountMsg", encoderCountMsg);
+        Log.i("pwmMsg", pwmMsg);
 
     }
 
