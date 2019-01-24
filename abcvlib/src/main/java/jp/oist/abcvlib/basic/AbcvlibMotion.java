@@ -26,39 +26,68 @@ import android.util.Log;
  */
 public class AbcvlibMotion {
 
-    /*
-    AbcvlibMotion.pulseWidthRightWheel represents some int value from 0 to 1000 which indirectly controls the
-    speed of the wheel. 0 representing a 0 microsecond pulse width (i.e. always zero) and
-    1000 representing 1000 microseconds, or 1 ms. As the PWM freq is set to 1000 Hz (1 pulse per
-    1/1000 seconds) a value of 1 ms for the pulseWidthRightWheel would result in an always high voltage (i.e.
+    /**
+    Represents some int value from 0 to 1000 which indirectly controls the speed of the wheel.
+     0 representing a 0 microsecond pulse width (i.e. always zero) and 1000 representing
+     1000 microseconds, or 1 ms. As the PWM freq is set to 1000 Hz (1 pulse per 1/1000 seconds)
+     a value of 1 ms for the pulseWidthRightWheel would result in an always high voltage (i.e.
     no pulses at all, just a flat DC high voltage).
     */
     private int pulseWidthRightWheel = 0;
+    /**
+     * @see #pulseWidthRightWheel
+     */
     private int pulseWidthLeftWheel = 0;
 
-    private float[] cpgXY = {900, 900}; // Central Pattern Generator destabalizer initial parameters.
-    private float ddt = 0.005F; //TODO update to sensor sampling rate? Waiting on Judy's reply
-    private double c_p = -7 + 67 * (0.1 + 0.004600000102072954); // Some bias constant to the proportional controller. Strange value kept for historical reference.
-    private float c_d1 = 1.737F; // Some bias constant to one of the derivative controllers. Past value kept for historical reference.
-    private float c_d2 = 0.4928F; // Some bias constant to one of the derivative controllers. Past value kept for historical reference.
-    private float maxTiltAngle = 20F; // Maximum allowed tilt angle of phone in degrees. Angles above this will result in no motion.
-    private float minTiltAngle = -20F; // Minimum allowed tilt angle of phone in degrees. Angles above this will result in no motion.
+    /**
+     * Central Pattern Generator destabalizer initial parameters.
+     */
+    private float[] cpgXY = {900, 900};
+    private float ddt = 0.005F; //TODO update to sensor sampling rate? Judy says no, but need to read more about the Runge Kutta methods she claims to have used.
+    /**
+     * Some bias constant to the proportional controller. Strange value kept for historical reference.
+     */
+    private double c_p = -7 + 67 * (0.1 + 0.004600000102072954);
+    /**
+     * Some bias constant to one of the derivative controllers. Past value kept for historical reference.
+     */
+    private float c_d1 = 1.737F;
+    /**
+     * Some bias constant to one of the derivative controllers. Past value kept for historical reference.
+     */
+    private float c_d2 = 0.4928F;
+    /**
+     * Maximum allowed tilt angle of phone in degrees. Angles above this will result in no motion.
+     */
+    private float maxTiltAngle = 20F;
+    /**
+     * Minimum allowed tilt angle of phone in degrees. Angles above this will result in no motion.
+     */
+    private float minTiltAngle = -20F;
 
     private AbcvlibSensors abcvlibSensors;
 
-    // Constructor to pass other module objects in. Keep public.
-    public AbcvlibMotion(AbcvlibSensors abcvlibSensors){
+    /**
+     * PWM frequency. Do not modify locally. Modify at AbcvlibActivity level if necessary.
+     */
+    private int PWM_FREQ;
+
+    /**
+     * Constructor to pass other module objects in. Keep public.
+      */
+    public AbcvlibMotion(AbcvlibSensors abcvlibSensors, Integer PWM_FREQ){
         this.abcvlibSensors = abcvlibSensors;
+        this.PWM_FREQ = PWM_FREQ;
     }
 
-    public int getPwRight(){
-        return pulseWidthRightWheel;
-    }
-
-    public int getPwLeft(){
-        return pulseWidthLeftWheel;
-    }
-
+    /**
+     * TODO Figure out the purpose of this.
+     * @param k_p
+     * @param k_d1
+     * @param k_d2
+     * @param omega
+     * @param beta
+     */
     public void switchLinearCpg(float k_p, float k_d1, float k_d2, int omega, int beta) {
         k_d1 = k_d1 * 0.01F; // Just put these here for better readability
         k_d2 = k_d2 * 0.01F; // Just put these here for better readability
@@ -82,6 +111,15 @@ public class AbcvlibMotion {
 
     }
 
+    /**
+     * TODO Figure out the purpose of this.
+     * @param k_p
+     * @param k_d1
+     * @param k_d2
+     * @param omega
+     * @param beta
+     * @param offset
+     */
     public void linearMoving(float k_p, float k_d1, float k_d2, int omega, int beta, int offset) {
         k_d1 = k_d1 * 0.01F; // Just put these here for better readability
         k_d2 = k_d2 * 0.01F; // Just put these here for better readability
@@ -104,7 +142,15 @@ public class AbcvlibMotion {
         }
 
     }
-	
+
+    /**
+     * TODO Figure out the purpose of this.
+     * @param k_p
+     * @param k_d1
+     * @param k_d2
+     * @param omega
+     * @param beta
+     */
 	public void standingBalancing(float k_p, float k_d1, float k_d2, int omega, int beta){
         k_d1 = k_d1 * 0.01F; // Just put these here for better readability
         k_d2 = k_d2 * 0.01F; // Just put these here for better readability
@@ -128,6 +174,15 @@ public class AbcvlibMotion {
         }
     }
 
+    /**
+     * TODO Figure out the purpose of this.
+     * @param k_p
+     * @param k_d1
+     * @param k_d2
+     * @param omega
+     * @param beta
+     * @param offset
+     */
     //offset in [-500,500]
     public void balanceMoving(float k_p, float k_d1, float k_d2, int omega, int beta, int offset){
         k_d1 = k_d1 * 0.01F; // Just put these here for better readability
@@ -153,6 +208,13 @@ public class AbcvlibMotion {
 
     }
 
+    /**
+     * TODO Figure out the purpose of this.
+     * @param param
+     * @param distance
+     * @param contourdiff
+     * @return
+     */
     public int[] contourApproaching(double[] param, double distance, double contourdiff){
         int output1, output2;
         int[] outputret = new int[2];
@@ -184,12 +246,36 @@ public class AbcvlibMotion {
         return outputret;
     }
 
+    /**
+     * Sets the pulse width for each wheel. This directly correlates with the speed of the wheel.
+     * This is the only method in here that doesn't require a separate thread, since it does not
+     * need to be updated so long as you just want to drive the wheels at a constant speed
+     * indefinitely. Therefore it makes a good example test case since its the easiest to implement.
+     * @param right pulse width of right wheel from 0 to PWM_FREQ
+     * @param left pulse width of left wheel from 0 to AbcvlibLooper.PWM_FREQ
+     * @see AbcvlibLooper#PWM_FREQ
+     */
     public void setWheelSpeed(int right, int left){
+        if (0 <= right && right <= PWM_FREQ)
         pulseWidthRightWheel = right;
         pulseWidthLeftWheel = left;
     }
 
-    /*
+    /**
+     * @return Pulse Width of right wheel
+     */
+    int getPwRight(){
+        return pulseWidthRightWheel;
+    }
+
+    /**
+     * @return Pulse Width of left wheel
+     */
+    int getPwLeft(){
+        return pulseWidthLeftWheel;
+    }
+
+    /**
     Central Pattern Generator based destabalizer is applied when phone tilt angle is not within
     minTiltAngle and maxTiltAngle. Apparently this method implements the Runge Kutta methods.
     dt should correlate with the dt shown in the below mentioned wiki article.
@@ -215,12 +301,26 @@ public class AbcvlibMotion {
         return x;
     }
 
+    /**
+     * Just a slave function of cpgUpdate
+     * @param y
+     * @param thetadot
+     * @param omega
+     * @param beta
+     * @return
+     */
     private float getXDot(float y, float thetadot, float omega, float beta){
         float xdot;
         xdot = (omega * y + beta * thetadot);
         return xdot;
     }
 
+    /**
+     * Just a slave function of cpgUpdate
+     * @param x
+     * @param omega
+     * @return
+     */
     private float getYDot(float x, float omega){
         float ydot;
         ydot = -omega*x;

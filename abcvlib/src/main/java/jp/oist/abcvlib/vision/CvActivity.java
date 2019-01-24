@@ -25,14 +25,34 @@ public class CvActivity extends IOIOActivity {
     private CameraBridgeViewBase mOpenCvCameraView;
     TextView tv;
 
+    /**
+     * Enable/disable sensor and IO logging. Only set to true when debugging as it uses a lot of
+     * memory/disk space on the phone and may result in memory failure if run for a long time.
+     */
+    protected boolean loggerOn = false;
+
+    /**
+     * Enable/disable this
+     */
+    protected boolean wheelPolaritySwap = false;
+
+    /**
+     *  Not sure why initial PWM_FREQ is 1000, but assume this can be modified as necessary.
+     *  This may depend on the motor or microcontroller requirements/specs. <br><br>
+     *
+     *  If motor is just a DC motor, I guess this does not matter much, but for servos, this would
+     *  be the control function, so would have to match the baud rate of the microcontroller. Note
+     *  this library is not set up to control servos at this time. <br><br>
+     *
+     *  The microcontroller likely has a maximum frequency which it can turn ON/OFF the IO, so
+     *  setting PWM_FREQ too high may cause issues for certain microcontrollers.
+     */
+    private final int PWM_FREQ = 1000;
+
     // Create objects of each module class
     AbcvlibSensors abcvlibSensors = new AbcvlibSensors(this);
-    AbcvlibMotion abcvlibMotion = new AbcvlibMotion(abcvlibSensors);
+    AbcvlibMotion abcvlibMotion = new AbcvlibMotion(abcvlibSensors, PWM_FREQ);
     Camera mCamera = new Camera(abcvlibSensors);
-
-    public IOIOLooper createIOIOLooper() {
-        return new AbcvlibLooper(abcvlibSensors, abcvlibMotion);
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

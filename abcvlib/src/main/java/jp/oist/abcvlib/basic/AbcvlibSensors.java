@@ -49,9 +49,19 @@ public class AbcvlibSensors implements SensorEventListener {
     //----------------------------------------------------------------------------------------------
 
     //----------------------------------------- Counters -------------------------------------------
-    private int indexHistoryCurrent = 0; // Keeps track of current history index.
-    private int historyLength = 15; // Length of past timestamps and encoder values you keep in memory. 15 is not significant, just what was deemed appropriate previously.
-    private int sensorChangeCount = 0; // Total number of times the sensors have changed data
+    /**
+     * Keeps track of current history index.
+     */
+    private int indexHistoryCurrent = 0;
+    /**
+     * Length of past timestamps and encoder values you keep in memory. 15 is not significant,
+     * just what was deemed appropriate previously.
+     */
+    private int historyLength = 15;
+    /**
+     * Total number of times the sensors have changed data
+     */
+    private int sensorChangeCount = 0;
     //----------------------------------------------------------------------------------------------
 
     //----------------------------------- Wheel speed metrics --------------------------------------
@@ -79,6 +89,7 @@ public class AbcvlibSensors implements SensorEventListener {
     private SensorManager sensorManager;
     private Sensor accelerometer;
     private Sensor gyroscope;
+
     //----------------------------------------------------------------------------------------------
 
     // Variables to calculate linear acceleration from combined gravity + linear acceleration data.
@@ -119,7 +130,7 @@ public class AbcvlibSensors implements SensorEventListener {
      * Constructor that sets up Android Sensor Service and creates Sensor objects for both
      * accelerometer and gyroscope. Then registers both sensors such that their onSensorChanged
      * events will call the onSensorChanged method within this class.
-     * @param context
+     * @param context Context object passed up from Android Main Activity
      */
     public AbcvlibSensors(Context context){
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
@@ -130,11 +141,11 @@ public class AbcvlibSensors implements SensorEventListener {
 
     /**
      * Assume this is only used for sensors that have the ability to change accuracy (e.g. GPS)
-     * @param arg0
-     * @param arg1
+     * @param sensor Sensor object that has changed its accuracy
+     * @param accuracy Accuracy. See SensorEvent on Android Dev documentation for details
      */
     @Override
-    public void onAccuracyChanged(android.hardware.Sensor arg0, int arg1){
+    public void onAccuracyChanged(android.hardware.Sensor sensor, int accuracy){
         // Not sure if we need to worry about this. I think this is more for more variable sensors like GPS but could be wrong.
     }
 
@@ -142,7 +153,7 @@ public class AbcvlibSensors implements SensorEventListener {
      * This is called every time a registered sensor provides data. Sensor must be registered before
      * it will fire the event which calls this method. If statements handle differentiating between
      * accelerometer and gyrscope events.
-     * @param event
+     * @param event SensorEvent object that has updated its output
      */
     @Override
     public void onSensorChanged(SensorEvent event){

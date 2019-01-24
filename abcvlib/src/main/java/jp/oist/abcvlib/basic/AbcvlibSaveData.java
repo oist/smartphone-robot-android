@@ -7,7 +7,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 
-
+/**
+ * Not used anywhere else in the library at this time. Leaving for possible future use.
+ */
 public class AbcvlibSaveData {
 
     String saved="saved!";

@@ -181,32 +181,65 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      */
     private PwmOutput pwmControllerLeftWheel;
     /**
-     *  Not sure why initial PWM_FREQ is 1000, but assume this can be modified as necessary.
-     *  This may depend on the motor or microcontroller requirements/specs.
+     * PWM frequency. Do not modify locally. Modify at AbcvlibActivity level if necessary.
      */
-    private final int PWM_FREQ = 1000;
+    private int PWM_FREQ;
 
     private AbcvlibSensors abcvlibSensors;
     private AbcvlibMotion abcvlibMotion;
 
-    private final int MAX_PULSE_WIDTH = PWM_FREQ;
-
+    /**
+     * Boolean representing the current state (H/L) of the ChA and ChB on the HubeeWheels
+     */
     private boolean encoderARightWheelState;
+    /**
+     * @see #encoderARightWheelState
+     */
     private boolean encoderBRightWheelState;
+    /**
+     * @see #encoderARightWheelState
+     */
     private boolean encoderALeftWheelState;
+    /**
+     * @see #encoderARightWheelState
+     */
     private boolean encoderBLeftWheelState;
 
-    // The IN1 and IN2 IO determining Hubee Wheel direction.
-    // See input1RightWheelController doc for control table
+    /**
+     * The IN1 and IN2 IO determining Hubee Wheel direction. See input1RightWheelController doc for
+     * control table
+     *
+     * @see #input1RightWheelController
+     */
     private boolean input1RightWheelState;
+    /**
+     * @see #input1RightWheelState
+     */
     private boolean input2RightWheelState;
+    /**
+     * @see #input1RightWheelState
+     */
     private boolean input1LeftWheelState;
+    /**
+     * @see #input1RightWheelState
+     */
     private boolean input2LeftWheelState;
 
-    // PWM pulse width tracking variables
+    /**
+     * PWM pulse width tracking variable. Values range from 0 to PWM_FREQ
+     */
     private int pulseWidthRightWheelNew;
+    /**
+     * @see #pulseWidthRightWheelNew
+     */
     private int pulseWidthRightWheelCurrent;
+    /**
+     * @see #pulseWidthRightWheelNew
+     */
     private int pulseWidthLeftWheelNew;
+    /**
+     * @see #pulseWidthRightWheelNew
+     */
     private int pulseWidthLeftWheelCurrent;
 
     // Encoder counters
@@ -226,25 +259,28 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      * @see #loop()
      * @see AbcvlibSensors#register()
      */
-    int encoderCountRightWheel;
+    private int encoderCountRightWheel;
     /**
      * @see #encoderCountRightWheel
      */
-    int encoderCountLeftWheel;
+    private int encoderCountLeftWheel;
 
     // Constructor to pass other module objects in. Default loggerOn value to true
-    public AbcvlibLooper(AbcvlibSensors abcvlibSensors, AbcvlibMotion abcvlibMotion){
+    public AbcvlibLooper(AbcvlibSensors abcvlibSensors, AbcvlibMotion abcvlibMotion,
+                         Integer PWM_FREQ){
 
-        this(abcvlibSensors, abcvlibMotion, true, false);
+        this(abcvlibSensors, abcvlibMotion, PWM_FREQ, true, false);
 
     }
 
-    // Constructor to pass other module objects in. No default loggerOn.
+    // Constructor to pass other module objects in. No default loggerOn. Needs to remain public
+    // despite what Android Studio says
     public AbcvlibLooper(AbcvlibSensors abcvlibSensors, AbcvlibMotion abcvlibMotion,
-                         Boolean loggerOn, Boolean wheelPolaritySwap){
+                         Integer PWM_FREQ, Boolean loggerOn, Boolean wheelPolaritySwap){
 
         this.abcvlibMotion = abcvlibMotion;
         this.abcvlibSensors = abcvlibSensors;
+        this.PWM_FREQ = PWM_FREQ;
         this.loggerOn = loggerOn;
         this.wheelPolaritySwap = wheelPolaritySwap;
     }
@@ -313,6 +349,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
                     DigitalInput.Spec.Mode.PULL_UP);
 
         }catch (ConnectionLostException e){
+            Log.e("abcvlib", "ConnectionLostException at AbcvlibLooper.setup()");
             throw e;
         }
     }
@@ -385,12 +422,9 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     }
 
     /**
-     *
      * Tests the sign of pulseWidth then determines how to set the input variables (IN1 and IN2)
      * to control the Hubee Wheel direction. See input1RightWheelController doc for control table.
      * If you wanted to inverse polarity, just reverse the > signs to < in each if statement.
-     *
-     * @return input[0] --> IN1 and input[1] --> IN2
      */
     private void getIn1In2(){
 
@@ -492,6 +526,9 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     }
 
     private int pulseWidthLimiter(Integer pulseWidthOld){
+
+        final int MAX_PULSE_WIDTH = PWM_FREQ;
+
         /*
         The following two logical statements simply hard limit the pulseWidth to be less than
         MAX_PULSE_WIDTH which represents the highest value it can be.
@@ -568,7 +605,8 @@ public class AbcvlibLooper extends BaseIOIOLooper {
                     wheelCounts--;
                 }
                 else{
-                    Log.w("Abcvlib", "Quadrature encoders read H/H or L/L when they should have read H/L or L/H");
+                    Log.w("abcvlib", "Quadrature encoders read H/H or L/L when they " +
+                            "should have read H/L or L/H");
                 }
             }
             // Previous Encoder A LOW, B HIGH
@@ -582,10 +620,12 @@ public class AbcvlibLooper extends BaseIOIOLooper {
                     wheelCounts--;
                 }
                 else{
-                    Log.w("Abcvlib", "Quadrature encoders read H/L or L/H when they should have read H/H or L/L");
+                    Log.w("abcvlib", "Quadrature encoders read H/L or L/H when they " +
+                            "should have read H/H or L/L");
                 }
             }
-            // Previous Encoder A LOW, B LOW
+            // Previous Encoder A LOW, B LOW. Leave "always true" warning from Android Studio for
+            // readability.
             else if(!encoderAWheelStatePrevious && !encoderBWheelStatePrevious){
                 // Current Encoder A HIGH, B LOW
                 if(encoderAWheelState && !encoderBWheelState){
@@ -596,12 +636,12 @@ public class AbcvlibLooper extends BaseIOIOLooper {
                     wheelCounts--;
                 }
                 else{
-                    Log.w("Abcvlib", "Quadrature encoders read H/H or L/L when they should have read H/L or L/H");
+                    Log.w("abcvlib", "Quadrature encoders read H/H or L/L when they " +
+                            "should have read H/L or L/H");
                 }
             }
-            // Previous Encoder A HIGH, B LOW.
-            // You could make this into an else statement rather than else if to remove the compiler
-            // warning, but I think it makes the readability better like this.
+            // Previous Encoder A HIGH, B LOW. Leave "always true" warning from Android Studio for
+            // readability.
             else if(encoderAWheelStatePrevious &&! encoderBWheelStatePrevious){
                 // Current Encoder A HIGH, B HIGH
                 if(encoderAWheelState && encoderBWheelState){
@@ -612,7 +652,8 @@ public class AbcvlibLooper extends BaseIOIOLooper {
                     wheelCounts--;
                 }
                 else{
-                    Log.w("Abcvlib", "Quadrature encoders read H/L or L/H when they should have read H/H or L/L");
+                    Log.w("abcvlib", "Quadrature encoders read H/L or L/H when they " +
+                            "should have read H/H or L/L");
                 }
             }
         }
