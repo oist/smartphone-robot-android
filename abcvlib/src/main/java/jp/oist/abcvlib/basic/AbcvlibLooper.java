@@ -24,7 +24,13 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     /**
      * Boolean to switch on and off logger functions. On by default but can be set to false via
      */
-    private boolean logSwitch;
+    private boolean loggerOn;
+
+    /**
+     * Enable/disable this to swap the polarity of the wheels such that the default forward
+     * direction will be swapped (i.e. wheels will move cw vs ccw as forward).
+     */
+    private boolean wheelPolaritySwap;
     //      --------------Quadrature AbcvlibSensors----------------
     /**
      Creates IOIO Board object that read the quadrature encoders of the Hubee Wheels.
@@ -226,20 +232,21 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      */
     int encoderCountLeftWheel;
 
-    // Constructor to pass other module objects in. Default logSwitch value to true
+    // Constructor to pass other module objects in. Default loggerOn value to true
     public AbcvlibLooper(AbcvlibSensors abcvlibSensors, AbcvlibMotion abcvlibMotion){
 
-        this(abcvlibSensors, abcvlibMotion, true);
+        this(abcvlibSensors, abcvlibMotion, true, false);
 
     }
 
-    // Constructor to pass other module objects in. No default logSwitch.
+    // Constructor to pass other module objects in. No default loggerOn.
     public AbcvlibLooper(AbcvlibSensors abcvlibSensors, AbcvlibMotion abcvlibMotion,
-                         Boolean logSwitch){
+                         Boolean loggerOn, Boolean wheelPolaritySwap){
 
         this.abcvlibMotion = abcvlibMotion;
         this.abcvlibSensors = abcvlibSensors;
-        this.logSwitch = logSwitch;
+        this.loggerOn = loggerOn;
+        this.wheelPolaritySwap = wheelPolaritySwap;
     }
 
     /**
@@ -333,7 +340,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
         writeIoUpdates();
 
-        if (logSwitch) {
+        if (loggerOn) {
             sendToLog();
         }
 
@@ -387,20 +394,39 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      */
     private void getIn1In2(){
 
-        if(pulseWidthRightWheelCurrent >= 0){
-            input1RightWheelState = false;
-            input2RightWheelState = true;
-        }else{
-            input1RightWheelState = true;
-            input2RightWheelState = false;
-        }
+        if (wheelPolaritySwap) {
+            if(pulseWidthRightWheelCurrent >= 0){
+                input1RightWheelState = false;
+                input2RightWheelState = true;
+            }else{
+                input1RightWheelState = true;
+                input2RightWheelState = false;
+            }
 
-        if(pulseWidthLeftWheelCurrent >= 0){
-            input1LeftWheelState = false;
-            input2LeftWheelState = true;
-        }else{
-            input1LeftWheelState = true;
-            input2LeftWheelState = false;
+            if(pulseWidthLeftWheelCurrent >= 0){
+                input1LeftWheelState = false;
+                input2LeftWheelState = true;
+            }else{
+                input1LeftWheelState = true;
+                input2LeftWheelState = false;
+            }
+        }
+        else {
+            if(pulseWidthRightWheelCurrent <= 0){
+                input1RightWheelState = false;
+                input2RightWheelState = true;
+            }else{
+                input1RightWheelState = true;
+                input2RightWheelState = false;
+            }
+
+            if(pulseWidthLeftWheelCurrent <= 0){
+                input1LeftWheelState = false;
+                input2LeftWheelState = true;
+            }else{
+                input1LeftWheelState = true;
+                input2LeftWheelState = false;
+            }
         }
 
     }
