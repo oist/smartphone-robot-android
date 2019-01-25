@@ -605,7 +605,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
                     wheelCounts--;
                 }
                 else{
-                    Log.w("abcvlib", "Quadrature encoders read H/H or L/L when they " +
+                    Log.w("abcvlibEncoder", "Quadrature encoders read H/H or L/L when they " +
                             "should have read H/L or L/H");
                 }
             }
@@ -620,7 +620,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
                     wheelCounts--;
                 }
                 else{
-                    Log.w("abcvlib", "Quadrature encoders read H/L or L/H when they " +
+                    Log.w("abcvlibEncoder", "Quadrature encoders read H/L or L/H when they " +
                             "should have read H/H or L/L");
                 }
             }
@@ -636,7 +636,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
                     wheelCounts--;
                 }
                 else{
-                    Log.w("abcvlib", "Quadrature encoders read H/H or L/L when they " +
+                    Log.w("abcvlibEncoder", "Quadrature encoders read H/H or L/L when they " +
                             "should have read H/L or L/H");
                 }
             }
@@ -652,7 +652,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
                     wheelCounts--;
                 }
                 else{
-                    Log.w("abcvlib", "Quadrature encoders read H/L or L/H when they " +
+                    Log.w("abcvlibEncoder", "Quadrature encoders read H/L or L/H when they " +
                             "should have read H/H or L/L");
                 }
             }

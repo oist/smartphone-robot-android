@@ -4,7 +4,7 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "jp.oist.abcvlibapp"
-        minSdkVersion 17
+        minSdkVersion 16
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -17,17 +17,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    flavorDimensions "version"
-    productFlavors {
-        basic {
-            dimension "version"
-            applicationIdSuffix ".basic"
-            versionNameSuffix "-basic"
-        }
-        controlThread {
-            dimension "version"
-            applicationIdSuffix ".controlThread"
-            versionNameSuffix "-controlThread"
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }
@@ -39,7 +32,7 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    api project(':abcvlib')
+    implementation project(':abcvlib')
     implementation 'com.github.ytai.ioio:IOIOLibAndroid:5.07'
     implementation 'com.github.ytai.ioio:IOIOLibAndroidBluetooth:5.07'
     implementation 'com.github.ytai.ioio:IOIOLibAndroidAccessory:5.07'

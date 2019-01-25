@@ -33,28 +33,22 @@ public class MainActivity extends AbcvlibActivity {
         // ID within the R class
         setContentView(R.layout.activity_main);
 
-        if (BuildConfig.FLAVOR.equals("basic")){
-            basicMovement();
-        }
-        else if (BuildConfig.FLAVOR.equals("controlThread")){
-            (new Thread(new advancedMovement())).start();
-        }
+        movement movementThread = new movement();
+        new Thread(movementThread).start();
+
     }
 
     /**
      * Edit the contents of this method to customize the desired robot movement. For more advanced
      * use cases, you will need a separate movement thread. See advancedMovment class below.
      */
-    private void basicMovement(){
-        // Sets PWM pulse width to 500 microseconds for both wheels.
-        super.abcvlibMotion.setWheelSpeed(500,500);
-    }
-
-    public class advancedMovement implements Runnable{
+    public class movement implements Runnable{
 
         public void run(){
-            MainActivity.super.abcvlibMotion.switchLinearCpg(248,1007,-8,-6,-52);
+            // TODO find way of quitting gracefully. Any Android event to target some boolean?
+            while(true){
+                MainActivity.super.abcvlibMotion.switchLinearCpg(248,1007,-8,-6,-52);
+            }
         }
-
     }
 }

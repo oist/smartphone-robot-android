@@ -25,12 +25,12 @@ public class AbcvlibActivity extends IOIOActivity {
      * Enable/disable sensor and IO logging. Only set to true when debugging as it uses a lot of
      * memory/disk space on the phone and may result in memory failure if run for a long time.
      */
-    protected boolean loggerOn = false;
+    public boolean loggerOn = false;
 
     /**
      * Enable/disable this
      */
-    protected boolean wheelPolaritySwap = false;
+    public boolean wheelPolaritySwap = false;
 
     /**
      *  Not sure why initial PWM_FREQ is 1000, but assume this can be modified as necessary.

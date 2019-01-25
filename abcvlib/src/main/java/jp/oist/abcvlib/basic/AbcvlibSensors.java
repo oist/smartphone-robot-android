@@ -325,7 +325,9 @@ public class AbcvlibSensors implements SensorEventListener {
     /**
      * @return Phone tilt angle in degrees
      */
-    public float getThetaDeg(){ return thetaDeg; }
+    public float getThetaDeg(){
+        return thetaDeg;
+    }
 
     /**
      * @return Phone tilt speed (angular velocity) in radians per second
