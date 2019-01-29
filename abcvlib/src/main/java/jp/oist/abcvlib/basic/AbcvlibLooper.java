@@ -16,6 +16,12 @@ import ioio.lib.util.IOIOConnectionManager;
  * contents of the setup() and loop() methods are passed upward to the respective parent classes
  * related to the core IOIOBoard operation by extending BaseIOIOLooper.
  *
+ * AbcvlibLooper represents the "control" thread mentioned in the git wiki. It sets up the IOIO
+ * Board pin connections, reads the encoder values, and writes out the total encoder counts for
+ * wheel speed calculations elsewhere.
+ *
+ * This thread updates every 1 ms.
+ *
  * @author Jiexin Wang https://github.com/ha5ha6
  * @author Christopher Buckley https://github.com/topherbuckley
  */

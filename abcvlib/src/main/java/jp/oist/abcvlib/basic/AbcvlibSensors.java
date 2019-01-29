@@ -9,12 +9,20 @@ import android.util.Log;
 
 /**
  * AbcvlibSensors reads and processes the data from the Android phone gryoscope and
- * accelerometer. The two main goals of this class are:
+ * accelerometer. The three main goals of this class are:
  *
  * 1.) To estimate the tilt angle of the phone (thetaRad) by combining the input from the
  * gyroscope and accelerometer
  * 2.) To calculate the speed of each wheel (speedRightWheel and speedLeftWheel) by using
  * existing and past quadrature encoder states
+ * 3.) Provides the get() methods for all relevant sensory variables
+ *
+ * This thread typically updates every 5 ms, but this depends on the
+ * SensorManager.SENSOR_DELAY_FASTEST value. This represents the fastest possible sampling rate for
+ * the sensor. Note this value can change depending on the Android phone used and corresponding
+ * internal sensor hardware.
+ *
+ * A counter is keep track of the number of sensor change events via sensorChangeCount.
  *
  * @author Jiexin Wang https://github.com/ha5ha6
  * @author Christopher Buckley https://github.com/topherbuckley

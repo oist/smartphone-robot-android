@@ -39,15 +39,27 @@ public class MainActivity extends AbcvlibActivity {
     }
 
     /**
-     * Edit the contents of this method to customize the desired robot movement. For more advanced
-     * use cases, you will need a separate movement thread. See advancedMovment class below.
+     * Edit the contents of this method to customize the desired robot movement. Make sure only
+     * one method from abcvlibMotion is used at a time. They will conflict otherwise.
      */
     public class movement implements Runnable{
 
         public void run(){
             // TODO find way of quitting gracefully. Any Android event to target some boolean?
             while(true){
-                MainActivity.super.abcvlibMotion.switchLinearCpg(248,1007,-8,-6,-52);
+
+                /*
+                Option 1: This simply directly sets a static value of 500 as the pulse width on
+                each wheel
+                 */
+                MainActivity.super.abcvlibMotion.setWheelSpeed(500,500);
+
+                /*
+                Option 2: This attempts to set the tilt angle to zero when between 20 and -20
+                degrees from center. Otherwise it uses the CPG controller to bounce until such an
+                angle is reached.
+                */
+                // MainActivity.super.abcvlibMotion.switchLinearCpg(248,1007,-8,-6,-52);
             }
         }
     }
