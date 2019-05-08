@@ -276,9 +276,22 @@ public class AbcvlibMotion {
      * @see AbcvlibLooper#PWM_FREQ
      */
     public void setWheelSpeed(int right, int left){
-//        if (0 <= right && right <= PWM_FREQ)
+
+        if (right > 1000){
+            right = 1000;
+        }
+        else if (right < -1000){
+            right = -1000;
+        }
+        if (left > 1000){
+            left = 1000;
+        }
+        else if (left < -1000){
+            left = -1000;
+        }
         pulseWidthRightWheel = right;
-        pulseWidthLeftWheel = left;
+        // Wheels must be opposite polarity to turn in same direction
+        pulseWidthLeftWheel = -left;
     }
 
     /**

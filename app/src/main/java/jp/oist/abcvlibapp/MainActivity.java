@@ -55,12 +55,20 @@ public class MainActivity extends AbcvlibActivity {
 //                MainActivity.super.abcvlibMotion.setWheelSpeed(-500,500);
 
                 /*
-                Option 2: This attempts to set the tilt angle to zero when between 20 and -20
-                degrees from center. Otherwise it uses the CPG controller to bounce until such an
-                angle is reached.
+                Option 2: This attempts to set the tilt angle to zero via a simple PID controller
                 */
-//                 MainActivity.super.abcvlibMotion.switchLinearCpg(248,1007,-8,-6,-52);
-                MainActivity.super.abcvlibMotion.simplePID(1000f, 0f);
+//
+                float thetaDeg = abcvlibSensors.getThetaDeg();
+                float thetaDegDot = abcvlibSensors.getThetaDegDot();
+                int output;
+                int neutralBalanceAngle = -10;
+                float k_p = 1000;
+                float k_d1 = 0;
+
+                output = -Math.round(k_p * (thetaDeg + neutralBalanceAngle) + (k_d1 * (thetaDegDot)));
+
+                abcvlibMotion.setWheelSpeed(output, output);
+
             }
         }
     }

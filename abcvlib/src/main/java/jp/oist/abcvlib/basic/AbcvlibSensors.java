@@ -340,12 +340,12 @@ public class AbcvlibSensors implements SensorEventListener {
     /**
      * @return Phone tilt speed (angular velocity) in radians per second
      */
-    float getThetaRadDot(){ return thetaRadDotGyro; }
+    public float getThetaRadDot(){ return thetaRadDotGyro; }
 
     /**
      * @return Phone tilt speed (angular velocity) in degrees per second
      */
-    float getThetaDegDot(){ return thetaDegDot;}
+    public float getThetaDegDot(){ return thetaDegDot;}
 
     /**
      * @return Current encoder count for the right wheel
