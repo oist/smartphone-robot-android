@@ -20,7 +20,7 @@ public class MainActivity extends AbcvlibActivity {
      * Enable/disable this to swap the polarity of the wheels such that the default forward
      * direction will be swapped (i.e. wheels will move cw vs ccw as forward).
      */
-    private boolean wheelPolaritySwap = true;
+    private boolean wheelPolaritySwap = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,20 +46,21 @@ public class MainActivity extends AbcvlibActivity {
 
         public void run(){
             // TODO find way of quitting gracefully. Any Android event to target some boolean?
-            while(true){
+            while(true) {
 
                 /*
                 Option 1: This simply directly sets a static value of 500 as the pulse width on
                 each wheel
                  */
-                MainActivity.super.abcvlibMotion.setWheelSpeed(500,500);
+//                MainActivity.super.abcvlibMotion.setWheelSpeed(-500,500);
 
                 /*
                 Option 2: This attempts to set the tilt angle to zero when between 20 and -20
                 degrees from center. Otherwise it uses the CPG controller to bounce until such an
                 angle is reached.
                 */
-                // MainActivity.super.abcvlibMotion.switchLinearCpg(248,1007,-8,-6,-52);
+//                 MainActivity.super.abcvlibMotion.switchLinearCpg(248,1007,-8,-6,-52);
+                MainActivity.super.abcvlibMotion.simplePID(1000f, 0f);
             }
         }
     }

@@ -102,12 +102,32 @@ public class AbcvlibMotion {
                     (k_d1 * (thetaDegDot + c_d1)) +
                     (k_d2 * (speedRightWheel + c_d2)) +
                     (k_d2 * (speedLeftWheel + c_d2)));
-            pulseWidthLeftWheel = pulseWidthRightWheel;
+            pulseWidthLeftWheel = -pulseWidthRightWheel;
         } else {
             pulseWidthRightWheel = (int) -cpgXY[1];
             pulseWidthLeftWheel = pulseWidthRightWheel;
             cpgXY = cpgUpdate(cpgXY, ddt, thetaDegDot, (float) omega, (float) beta);
         }
+
+    }
+
+    public void simplePID(float k_p, float k_d1) {
+        float thetaDeg = abcvlibSensors.getThetaDeg();
+        float thetaDegDot = abcvlibSensors.getThetaDegDot();
+        int output;
+        int c_p_bo = -10;
+
+    // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
+        output = (int) -Math.round(k_p * (thetaDeg + c_p_bo) + (k_d1 * (thetaDegDot)));
+
+        if (output > 1000){
+            output = 1000;
+        }
+        else if (output < -1000){
+            output = -1000;
+        }
+        pulseWidthRightWheel = output;
+        pulseWidthLeftWheel = -pulseWidthRightWheel;
 
     }
 
@@ -256,7 +276,7 @@ public class AbcvlibMotion {
      * @see AbcvlibLooper#PWM_FREQ
      */
     public void setWheelSpeed(int right, int left){
-        if (0 <= right && right <= PWM_FREQ)
+//        if (0 <= right && right <= PWM_FREQ)
         pulseWidthRightWheel = right;
         pulseWidthLeftWheel = left;
     }
