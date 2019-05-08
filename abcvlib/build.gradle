@@ -50,10 +50,7 @@ dependencies {
     // Should likely avoid coverall imports like this and implement a gradle link for the OpenCV library as well
     api fileTree(include: ['*.aar'], dir: 'libs')
     testImplementation 'junit:junit:4.12'
-<<<<<<< HEAD:abcvlib/build.gradle
     implementation 'com.android.support:appcompat-v7:23.4.0'
-=======
->>>>>>> 179ec358d491d9748c315c58d67e62a23d671ba2:abcvlibApp/abcvlib/build.gradle
     implementation 'com.github.ytai.ioio:IOIOLibAndroid:5.07'
     implementation 'com.github.ytai.ioio:IOIOLibAndroidBluetooth:5.07'
     implementation 'com.github.ytai.ioio:IOIOLibAndroidAccessory:5.07'
