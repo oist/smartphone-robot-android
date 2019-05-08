@@ -319,16 +319,17 @@ public class AbcvlibLooper extends BaseIOIOLooper {
          necessary in order to properly use the PWM based methods (though not sure if these are even
          used). The 5V tolerant pins are not necessary as the IOIO Board PWM is a 3.3V peak signal.
          */
-        final int INPUT1_RIGHT_WHEEL_PIN = 5;
-        final int INPUT2_RIGHT_WHEEL_PIN = 6;
-        final int INPUT1_LEFT_WHEEL_PIN = 10;
-        final int INPUT2_LEFT_WHEEL_PIN = 11;
-        final int PWM_RIGHT_WHEEL_PIN = 7;
-        final int PWM_LEFT_WHEEL_PIN = 12;
-        final int ENCODER_A_RIGHT_WHEEL_PIN=34;
-        final int ENCODER_B_RIGHT_WHEEL_PIN=35;
-        final int ENCODER_A_LEFT_WHEEL_PIN=36;
-        final int ENCODER_B_LEFT_WHEEL_PIN=37;
+        final int INPUT1_RIGHT_WHEEL_PIN = 2;
+        final int INPUT2_RIGHT_WHEEL_PIN = 3;
+        final int PWM_RIGHT_WHEEL_PIN = 4;
+        final int ENCODER_A_RIGHT_WHEEL_PIN = 6;
+        final int ENCODER_B_RIGHT_WHEEL_PIN=7;
+
+        final int INPUT1_LEFT_WHEEL_PIN = 11;
+        final int INPUT2_LEFT_WHEEL_PIN = 12;
+        final int PWM_LEFT_WHEEL_PIN = 13;
+        final int ENCODER_A_LEFT_WHEEL_PIN=15;
+        final int ENCODER_B_LEFT_WHEEL_PIN=16;
 
         /* Initializing all wheel controller values to low would result in both wheels being in
          the "Stop-NoBrake" mode according to the Hubee control table. Not sure if this state
@@ -358,6 +359,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             Log.e("abcvlib", "ConnectionLostException at AbcvlibLooper.setup()");
             throw e;
         }
+
     }
 
     /**
@@ -373,18 +375,23 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     @Override
     public void loop() throws ConnectionLostException, InterruptedException{
 
-        getPwm();
+        try {
+            getPwm();
 
-        getIn1In2();
+            getIn1In2();
 
-        getEncoderStates();
+            getEncoderStates();
 
-        getEncoderCounts();
+            getEncoderCounts();
 
-        writeIoUpdates();
+            writeIoUpdates();
 
-        if (loggerOn) {
-            sendToLog();
+            if (loggerOn) {
+                sendToLog();
+            }
+        }
+        catch (ConnectionLostException e){
+            Log.e("abcvlib", "connection lost in AbcvlibLooper.loop");
         }
 
         try {
