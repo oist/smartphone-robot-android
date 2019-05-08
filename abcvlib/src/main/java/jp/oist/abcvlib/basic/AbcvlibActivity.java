@@ -1,6 +1,7 @@
 package jp.oist.abcvlib.basic;
 
 import android.os.Bundle;
+import android.view.WindowManager;
 
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
@@ -52,6 +53,8 @@ public class AbcvlibActivity extends IOIOActivity {
         // Initialize AbcvlibSensors and AbcvlibMotion objects.
         abcvlibSensors = new AbcvlibSensors(this);
         abcvlibMotion = new AbcvlibMotion(abcvlibSensors, PWM_FREQ);
+
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     /**
