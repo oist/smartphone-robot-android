@@ -126,8 +126,8 @@ public class AbcvlibMotion {
         else if (output < -1000){
             output = -1000;
         }
-        pulseWidthRightWheel = output;
-        pulseWidthLeftWheel = -pulseWidthRightWheel;
+
+        setWheelSpeed(output, -output);
 
     }
 

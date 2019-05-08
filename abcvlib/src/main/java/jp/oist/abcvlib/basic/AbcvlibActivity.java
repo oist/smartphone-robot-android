@@ -57,6 +57,13 @@ public class AbcvlibActivity extends IOIOActivity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
+    @Override
+    protected void onPause() {
+        abcvlibMotion.setWheelSpeed(0,0);
+
+        super.onPause();
+    }
+
     /**
      Overriding here passes the initialized AbcvlibLooper object to the IOIOLooper class which
      then connects the object to the actual IOIOBoard. There is no need to start a separate thread
