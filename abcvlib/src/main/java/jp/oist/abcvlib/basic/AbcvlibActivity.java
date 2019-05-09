@@ -56,7 +56,8 @@ public class AbcvlibActivity extends IOIOActivity {
         abcvlibSensors = new AbcvlibSensors(this);
         abcvlibMotion = new AbcvlibMotion(abcvlibSensors, PWM_FREQ);
 
-//        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        // Keeps screen from timing out
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     @Override
