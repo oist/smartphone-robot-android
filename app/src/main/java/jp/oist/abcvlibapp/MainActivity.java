@@ -44,8 +44,21 @@ public class MainActivity extends AbcvlibActivity {
      */
     public class movement implements Runnable{
 
+        // PID Setup
+        float thetaDeg;
+        float thetaDegDot;
+
+        int output;
+        float setPoint = -2.5f; // AKA Neutral Balance Angle
+        float e_t = 0;
+        float int_e_t;
+
+        float k_p = 300;
+        float k_i = 0;
+        float k_d = 10;
+
         public void run(){
-            // TODO find way of quitting gracefully. Any Android event to target some boolean?
+
             while(true) {
 
                 /*
@@ -57,19 +70,26 @@ public class MainActivity extends AbcvlibActivity {
                 /*
                 Option 2: This attempts to set the tilt angle to zero via a simple PID controller
                 */
-//
-                float thetaDeg = abcvlibSensors.getThetaDeg();
-                float thetaDegDot = abcvlibSensors.getThetaDegDot();
-                int output;
-                int neutralBalanceAngle = -10;
-                float k_p = 1000;
-                float k_d1 = 0;
-
-                output = -Math.round(k_p * (thetaDeg + neutralBalanceAngle) + (k_d1 * (thetaDegDot)));
-
-                abcvlibMotion.setWheelSpeed(output, output);
+                PIDLoop();
 
             }
+        }
+
+        private void PIDLoop(){
+
+            thetaDeg = abcvlibSensors.getThetaDeg();
+            thetaDegDot = abcvlibSensors.getThetaDegDot();
+            int_e_t = int_e_t + e_t;
+            e_t = setPoint - thetaDeg;
+
+
+            float p_out = k_p * e_t;
+            float i_out = k_i * int_e_t;
+            float d_out = k_d * thetaDegDot;
+
+            output = Math.round(p_out + i_out + d_out);
+
+            abcvlibMotion.setWheelSpeed(output, output);
         }
     }
 }

@@ -289,6 +289,7 @@ public class AbcvlibMotion {
         else if (left < -1000){
             left = -1000;
         }
+
         pulseWidthRightWheel = right;
         // Wheels must be opposite polarity to turn in same direction
         pulseWidthLeftWheel = -left;
