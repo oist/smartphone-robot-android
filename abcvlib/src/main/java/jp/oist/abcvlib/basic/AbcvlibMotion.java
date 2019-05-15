@@ -315,7 +315,7 @@ public class AbcvlibMotion {
     dt should correlate with the dt shown in the below mentioned wiki article.
     https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods
      */
-    private float[] cpgUpdate(float[] cpgXY, float dt, float thetadot, float omega, float beta){
+    public float[] cpgUpdate(float[] cpgXY, float dt, float thetadot, float omega, float beta){
         float a1, a2, a3, a4; // dummy variables
         float aa1, aa2, aa3, aa4; // dummy variables
         float[] x = new float[2];
