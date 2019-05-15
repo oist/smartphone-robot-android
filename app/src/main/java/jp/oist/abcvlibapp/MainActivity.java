@@ -48,14 +48,21 @@ public class MainActivity extends AbcvlibActivity {
         float thetaDeg;
         float thetaDegDot;
 
-        int output;
-        float setPoint = -2.5f; // AKA Neutral Balance Angle
-        float e_t = 0;
-        float int_e_t;
+        int output; //  u(t) of wikipedia
+        float setPoint = -2.5f; // SP of wikipedia
+        float e_t = 0; // e(t) of wikipedia
+        float int_e_t; // integral of e(t) from wikipedia. Discrete, so just a sum here.
 
         float k_p = 300;
+//        float k_i = 0.0003f;
         float k_i = 0;
-        float k_d = 10;
+//        float k_d = -f;
+        float k_d = 0;
+
+        float maxTiltAngle = 5f;
+        float minTiltAngle = -8f;
+
+        private int stuckCount = 0;
 
         public void run(){
 
@@ -79,17 +86,38 @@ public class MainActivity extends AbcvlibActivity {
 
             thetaDeg = abcvlibSensors.getThetaDeg();
             thetaDegDot = abcvlibSensors.getThetaDegDot();
+
+            // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
+            if(thetaDeg < maxTiltAngle && thetaDeg > minTiltAngle){
+
+                linearController();
+                stuckCount = 0;
+            }
+            else if(stuckCount < 500000){
+                linearController();
+                stuckCount = stuckCount + 1;
+            }
+            else{
+                if (output == 1000){
+                    output = -1000;
+                }
+                else{
+                    output = 1000;
+                }
+                }
+
+            abcvlibMotion.setWheelSpeed(output, output);
+        }
+
+        private void linearController(){
             int_e_t = int_e_t + e_t;
             e_t = setPoint - thetaDeg;
-
 
             float p_out = k_p * e_t;
             float i_out = k_i * int_e_t;
             float d_out = k_d * thetaDegDot;
 
             output = Math.round(p_out + i_out + d_out);
-
-            abcvlibMotion.setWheelSpeed(output, output);
         }
     }
 }
