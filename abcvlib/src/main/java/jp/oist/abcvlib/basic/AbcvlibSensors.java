@@ -243,96 +243,18 @@ public class AbcvlibSensors implements SensorEventListener {
                 SensorManager.remapCoordinateSystem(rotationMatrix, SensorManager.AXIS_X, SensorManager.AXIS_Z, rotationMatrixRemap);
                 SensorManager.getOrientation(rotationMatrixRemap, orientation);
                 thetaRotationVector[indexHistoryCurrent] = orientation[1]; //Pitch
-//                dt = (timeStamps[indexHistoryCurrent] - timeStamps[indexHistoryCurrentPrevious]);
+
+                /*
+                timestamps given in nanoseconds from some seemingly random start time (this varies
+                with Android version apparently, so only depend on time differences, not any
+                absolute time. Dividing by 1000000000 to get time in seconds.
+                */
                 dt = (timeStamps[indexHistoryCurrent] - timeStamps[indexHistoryCurrentPrevious]) / 1000000000f;
-
-
                 thetaRotationVector = lowpassFilter(thetaRotationVector, dt, 10000f);
-
-        /*
-            timestamps given in nanoseconds from some seemingly random start time (this varies
-            with Android version apparently, so only depend on time differences, not any
-            absolute time. Dividing by 1000000000 to get time in seconds.
-        */
-//                time_delta = (float) (timeStamps[indexHistoryCurrent] - timeStamps[indexHistoryCurrentPrevious]) / 1000000000f;
-
                 angularVelocityRotationVector[indexHistoryCurrent] = (thetaRotationVector[indexHistoryCurrent] - thetaRotationVector[indexHistoryCurrentPrevious]) / dt;
-                //angularVelocityRotationVector = lowpassFilter(angularVelocityRotationVector, dt, 10000f);
             }
         }
 
-//        if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-//
-//            if (gyroTime != 0) {
-//
-//                /*
-//                timestamps given in nanoseconds from some seemingly random start time (this varies
-//                with Android version apparently, so only depend on time differences, not any
-//                absolute time. Dividing by 1000000000 to get time in seconds.
-//                */
-//                gyroTimeDelta = (event.timestamp - gyroTime) / 1000000000;
-//                /*
-//                event.values[0] for the gyroscope is the angular acceleration around the x axis
-//                (Left to Right axis if looking at portrait phone)
-//                 */
-//                thetaRadDotGyro = -event.values[0];
-//                // Calculate tilt angle based on previous tilt angle plus angular veclocity * timestep
-//                thetaRad += thetaRadDotGyro * gyroTimeDelta;
-//
-//            }
-//
-//            gyroTime = event.timestamp;
-//            Log.i("SensorTimestamps", "Gyroscope = " + String.valueOf(gyroTime) );
-//
-//        }
-//
-//        /*
-//        SensorEvent.values[] for TYPE_ACCELEROMETER
-//        All values are in SI units (m/s^2)
-//        values[0]: Acceleration minus Gx on the x-axis (Left to Right axis if looking at portrait phone)
-//        values[1]: Acceleration minus Gy on the y-axis (Bottom to Top axis if looking at portrait phone)
-//        values[2]: Acceleration minus Gz on the z-axis (Back to Front axis if looking at portrait phone)
-//         */
-//        else if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-//
-//            // alpha is calculated as t / (t + dT)
-//            // with t, the low-pass filter's time-constant
-//            // and dT, the event delivery rate
-//
-//            final float alpha = 0.8f;
-//
-//            accelerationX = event.values[0];
-//            accelerationY = event.values[1];
-//            accelerationZ = event.values[2];
-//
-//            gravity[0] = alpha * gravity[0] + (1 - alpha) * accelerationX;
-//            gravity[1] = alpha * gravity[1] + (1 - alpha) * accelerationX;
-//            gravity[2] = alpha * gravity[2] + (1 - alpha) * accelerationZ;
-//
-//            linearAcceleration[0] = event.values[0] - gravity[0];
-//            linearAcceleration[1] = event.values[1] - gravity[1];
-//            linearAcceleration[2] = event.values[2] - gravity[2];
-//
-//            // Calculate tilt angle based on accelerometer readings.
-//            thetaAccelerometer = (float)(Math.atan2(accelerationZ, accelerationY));
-//
-//            /*
-//            This logic was to remove the effects of linear acceleration or bumping of the phone which
-//            caused the accelerometer data to be unreliable. Paavo recommended comparing the variances of
-//            the gyro and accelerometer instead at some point. Reducing the weighting on the accelerometer
-//            as the variance increases.
-//            */
-//            // TODO replace this logic with a comparison of variance on the acc and gyro.
-//            if ((thetaRad - thetaRadPrevious) * (thetaRad - thetaRadPrevious) < 0.0025) {
-//
-//                // TODO Are these the best weights for the Complementary filter?
-//                thetaRad = 0.99f * thetaRad + 0.01f * thetaAccelerometer;
-//
-//            }
-//
-//            accelerometerTime = event.timestamp;
-//            Log.i("SensorTimestamps", "Accelerometer = " + String.valueOf(accelerometerTime) );
-//        }
 
         thetaRad = wrapAngle(thetaRad);
         // Convert radians to degrees
@@ -365,26 +287,12 @@ public class AbcvlibSensors implements SensorEventListener {
      Registering sensorEventListeners for accelerometer and gyroscope only.
      */
     public void register(){
-//        // Check if accelerometer exists before trying to turn on the listener
-//        if (accelerometer != null){
-//            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-//        } else {
-//            Log.e("SensorTesting", "No Default Accelerometer Available.");
-//        }
-//        // Check if gyroscope exists before trying to turn on the listener
-//        if (gyroscope != null){
-//            sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_FASTEST);
-//        } else {
-//            Log.e("SensorTesting", "No Default Gyroscope Available.");
-//        }
         // Check if rotation_sensor exists before trying to turn on the listener
         if (rotation_sensor != null){
             sensorManager.registerListener(this, rotation_sensor, SensorManager.SENSOR_DELAY_FASTEST);
         } else {
             Log.e("SensorTesting", "No Default rotation_sensor Available.");
         }
-
-
     }
 
     /**
@@ -392,14 +300,6 @@ public class AbcvlibSensors implements SensorEventListener {
      * This prevents null pointer exceptions.
      */
     public void unregister(){
-//        // Check if accelerometer exists before trying to turn off the listener
-//        if (accelerometer != null){
-//            sensorManager.unregisterListener(this, accelerometer);
-//        }
-//        // Check if gyroscope exists before trying to turn off the listener
-//        if (gyroscope != null){
-//            sensorManager.unregisterListener(this, gyroscope);
-//        }
         // Check if rotation_sensor exists before trying to turn off the listener
         if (rotation_sensor != null){
             sensorManager.unregisterListener(this, rotation_sensor);
