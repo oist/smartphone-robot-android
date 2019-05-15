@@ -92,11 +92,21 @@ public class AbcvlibSensors implements SensorEventListener {
     /**
      * Right Wheel Speed in quadrature encoder counts per second.
      */
-    private float speedRightWheel;
+    private double speedRightWheel;
     /**
      * Left Wheel Speed in quadrature encoder counts per second.
      */
-    private float speedLeftWheel;
+    private double speedLeftWheel;
+    /**
+     * distance in mm that the right wheel has traveled from start point
+     * This assumes no slippage/lifting/etc. Use with a grain of salt.
+     */
+    private double distanceR;
+    /**
+     * distance in mm that the left wheel has traveled from start point
+     * This assumes no slippage/lifting/etc. Use with a grain of salt.
+     */
+    private double distanceL;
     //----------------------------------------------------------------------------------------------
 
     // Android Sensor objects
@@ -180,9 +190,6 @@ public class AbcvlibSensors implements SensorEventListener {
     private float time_delta = 0;
     float timeDeltaOldestNewest = 0; // Difference in timestamps between most current and oldest in history.
     int indexHistoryOldest = 0; // Keeps track of oldest history index.
-
-
-
 
     //----------------------------------------------------------------------------------------------
 
@@ -269,9 +276,9 @@ public class AbcvlibSensors implements SensorEventListener {
          sensors.
           */
         if (timeDeltaOldestNewest != 0) {
-            // Calculate the speed of each wheel in encoder counts per second. TODO convert this to something more meaningful like rotations per second.
-            speedRightWheel = (float) ((encoderCountRightWheel[indexHistoryCurrent] - encoderCountRightWheel[indexHistoryOldest]) / timeDeltaOldestNewest);
-            speedLeftWheel = (float) ((encoderCountLeftWheel[indexHistoryCurrent] - encoderCountLeftWheel[indexHistoryOldest]) / timeDeltaOldestNewest);
+            // Calculate the speed of each wheel in mm/s.
+            speedRightWheel = (calcDistance(encoderCountRightWheel[indexHistoryCurrent]) - calcDistance(encoderCountRightWheel[indexHistoryOldest])) / timeDeltaOldestNewest;
+            speedLeftWheel = (calcDistance(encoderCountLeftWheel[indexHistoryCurrent]) - calcDistance(encoderCountLeftWheel[indexHistoryOldest])) / timeDeltaOldestNewest;
         }
         else{
             Log.i("sensorDebugging", "timeDeltaOldestNewest == 0");
@@ -280,7 +287,9 @@ public class AbcvlibSensors implements SensorEventListener {
         // Update all previous variables with current ones
         thetaRadPrevious = thetaRad;
         sensorChangeCount++;
-        sendToLog(accelerationX, accelerationY, accelerationZ);
+        distanceL = getDistanceL();
+        distanceR = getDistanceR();
+        sendToLog();
     }
 
     /**
@@ -335,24 +344,64 @@ public class AbcvlibSensors implements SensorEventListener {
     /**
      * @return Current encoder count for the right wheel
      */
-    int getWheelCountR(){ return encoderCountRightWheel[indexHistoryCurrent]; }
+    public int getWheelCountR(){ return encoderCountRightWheel[indexHistoryCurrent]; }
 
     /**
      * @return Current encoder count for the left wheel
      */
-    int getWheelCountL(){ return encoderCountLeftWheel[indexHistoryCurrent]; }
+    public int getWheelCountL(){ return encoderCountLeftWheel[indexHistoryCurrent]; }
 
     /**
-     * @return Current speed of right wheel in encoder counts per second. May want to convert to
-     * rotations per second if the encoder resolution (counts per revolution) is known.
+     * Get distances traveled by left wheel from start point.
+     * This does not account for slippage/lifting/etc. so
+     * use with a grain of salt
+     * @return distanceL in mm
      */
-    float getWheelDotR() { return speedRightWheel; }
+    public double getDistanceL(){
+
+        double mmPerCount = (2 * Math.PI * 30) / 128;
+
+        distanceL = encoderCountLeftWheel[indexHistoryCurrent] * mmPerCount;
+
+        return distanceL;
+    }
+
+    /**
+     * Get distances traveled by right wheel from start point.
+     * This does not account for slippage/lifting/etc. so
+     * use with a grain of salt
+     * @return distanceR in mm
+     */
+    public double getDistanceR(){
+
+        double mmPerCount = (2 * Math.PI * 30) / 128;
+
+        distanceR = encoderCountRightWheel[indexHistoryCurrent] * mmPerCount;
+
+        return distanceR;
+    }
 
     /**
      * @return Current speed of left wheel in encoder counts per second. May want to convert to
      * rotations per second if the encoder resolution (counts per revolution) is known.
      */
-    float getWheelDotL() { return speedLeftWheel; }
+    public double getWheelSpeedL() { return speedLeftWheel; }
+
+    /**
+     * @return Current speed of right wheel in encoder counts per second. May want to convert to
+     * rotations per second if the encoder resolution (counts per revolution) is known.
+     */
+    public double getWheelSpeedR() { return speedRightWheel; }
+
+    private double calcDistance(int count){
+
+        double distance;
+        double mmPerCount = (2 * Math.PI * 30) / 128;
+
+        distance = count * mmPerCount;
+
+        return distance;
+    }
 
     /**
      * @return Total combined count for how many times the accelerometer and gyroscope have provided
@@ -420,36 +469,8 @@ public class AbcvlibSensors implements SensorEventListener {
     /**
      * Send accelerometer and gyroscope data, along with calculated tilt angles, speeds, etc. such
      * that they can be read by the sensor data graphing utility.
-     * @param accelerationX Raw acceleration data from accelerometer along x-axis
-     * @param accelerationY Raw acceleration data from accelerometer along y-axis
-     * @param accelerationZ Raw acceleration data from accelerometer along z-axis
      */
-    private void sendToLog(float accelerationX, float accelerationY, float accelerationZ) {
-
-        // Compile raw acceleration data to push to adb log
-        String rawAccelerationMsg = Float.toString(accelerationX) + " " +
-                Float.toString(accelerationY) + " " +
-                Float.toString(accelerationZ);
-
-        // Compile gravity values to push to separate adb tag
-        String gravitiesMsg = Float.toString(gravity[0]) + " " +
-                Float.toString(gravity[1]) + " " +
-                Float.toString(gravity[2]);
-
-        // Compile linear acceleration values to push to separate adb tag
-        String linearAccelerationMsg = Float.toString(linearAcceleration[0]) + " " +
-                Float.toString(linearAcceleration[1]) + " " +
-                Float.toString(linearAcceleration[2]);
-
-        // Compile thetaRad values to push to separate adb tag
-        String anglesMsg = Float.toString(thetaAccelerometer) + " " +
-                Float.toString(thetaRad);
-
-        // Compile linear acceleration values to push to separate adb tag
-        String angleDotMsg = Float.toString(thetaRadDotGyro);
-
-        // Compile thetaDegMsg values to push to separate adb tag
-        String thetaDegMsg = Float.toString(thetaDeg);
+    private void sendToLog() {
 
         // Compile thetaDegVectorMsg values to push to separate adb tag
         String thetaVectorMsg = Float.toString(thetaDegVector);
@@ -457,14 +478,20 @@ public class AbcvlibSensors implements SensorEventListener {
         // Compile thetaDegVectorMsg values to push to separate adb tag
         String thetaVectorVelMsg = Float.toString(angularVelocityRotationVectorDeg);
 
-        Log.i("rawAccelerationMsg", rawAccelerationMsg);
-        Log.i("gravitiesMsg", gravitiesMsg);
-        Log.i("linearAccelerationMsg", linearAccelerationMsg);
-        Log.i("anglesMsg", anglesMsg);
-        Log.i("angleDotMsg", angleDotMsg);
-        Log.i("thetaDegMsg", thetaDegMsg);
+        // Compile encoderCount values to push to separate adb tag
+        String countsSensorMsg = Integer.toString(encoderCountLeftWheel[indexHistoryCurrent]) + " " + Integer.toString(encoderCountRightWheel[indexHistoryCurrent]);
+
+        // Compile distance values to push to separate adb tag
+        String distanceMsg = Double.toString(distanceL) + " " + Double.toString(distanceR);
+
+        // Compile thetaDegVectorMsg values to push to separate adb tag
+        String speedMsg = Double.toString(speedLeftWheel) + " " + Double.toString(speedRightWheel);
+
         Log.i("thetaVectorMsg", thetaVectorMsg);
         Log.i("thetaVectorVelMsg", thetaVectorVelMsg);
+        Log.i("countsSensorMsg", countsSensorMsg);
+        Log.i("distanceMsg", distanceMsg);
+        Log.i("speedMsg", speedMsg);
     }
 
     /**

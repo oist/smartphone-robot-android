@@ -261,7 +261,6 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      * provided at the end of the loop method within this class and the value of SENSOR_DELAY_FASTEST
      * in the AbcvlibSensors.register method.
      *
-     * @see AbcvlibSensors#encoderCountRightWheel
      * @see #loop()
      * @see AbcvlibSensors#register()
      */
@@ -675,8 +674,6 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     }
 
     private void sendToLog() {
-
-
 
         // Compile Encoder state data to push to adb log
         String encoderStateMsg = Integer.toString((encoderARightWheelState) ? 1 : 0) + " " +

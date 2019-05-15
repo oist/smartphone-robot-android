@@ -1,8 +1,6 @@
 package jp.oist.abcvlib.basic;
 
 
-import android.util.Log;
-
 /**
  * AbcvlibMotion is a collection of methods that implement various predefined motions via
  * controlling the values of pulseWidthRightWheel and pulseWidthLeftWhee. These variables
@@ -92,8 +90,8 @@ public class AbcvlibMotion {
         k_d1 = k_d1 * 0.01F; // Just put these here for better readability
         k_d2 = k_d2 * 0.01F; // Just put these here for better readability
         float thetaDeg = abcvlibSensors.getThetaDeg();
-        float speedRightWheel = abcvlibSensors.getWheelDotR();
-        float speedLeftWheel = abcvlibSensors.getWheelDotL();
+        double speedRightWheel = abcvlibSensors.getWheelSpeedR();
+        double speedLeftWheel = abcvlibSensors.getWheelSpeedL();
         float thetaDegDot = abcvlibSensors.getThetaDegDot();
 
         // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
@@ -144,8 +142,8 @@ public class AbcvlibMotion {
         k_d1 = k_d1 * 0.01F; // Just put these here for better readability
         k_d2 = k_d2 * 0.01F; // Just put these here for better readability
         float thetaDeg = abcvlibSensors.getThetaDeg();
-        float speedRightWheel = abcvlibSensors.getWheelDotR();
-        float speedLeftWheel = abcvlibSensors.getWheelDotL();
+        double speedRightWheel = abcvlibSensors.getWheelSpeedR();
+        double speedLeftWheel = abcvlibSensors.getWheelSpeedL();
         float thetaDegDot = abcvlibSensors.getThetaDegDot();
 
         // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
@@ -175,8 +173,8 @@ public class AbcvlibMotion {
         k_d1 = k_d1 * 0.01F; // Just put these here for better readability
         k_d2 = k_d2 * 0.01F; // Just put these here for better readability
         float thetaDeg = abcvlibSensors.getThetaDeg();
-        float speedRightWheel = abcvlibSensors.getWheelDotR();
-        float speedLeftWheel = abcvlibSensors.getWheelDotL();
+        double speedRightWheel = abcvlibSensors.getWheelSpeedR();
+        double speedLeftWheel = abcvlibSensors.getWheelSpeedL();
         float thetaDegDot = abcvlibSensors.getThetaDegDot();
 
         // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
@@ -208,8 +206,8 @@ public class AbcvlibMotion {
         k_d1 = k_d1 * 0.01F; // Just put these here for better readability
         k_d2 = k_d2 * 0.01F; // Just put these here for better readability
         float thetaDeg = abcvlibSensors.getThetaDeg();
-        float speedRightWheel = abcvlibSensors.getWheelDotR();
-        float speedLeftWheel = abcvlibSensors.getWheelDotL();
+        double speedRightWheel = abcvlibSensors.getWheelSpeedR();
+        double speedLeftWheel = abcvlibSensors.getWheelSpeedL();
         float thetaDegDot = abcvlibSensors.getThetaDegDot();
 
         // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
@@ -239,8 +237,8 @@ public class AbcvlibMotion {
         int output1, output2;
         int[] outputret = new int[2];
         float thetaDeg = abcvlibSensors.getThetaDeg();
-        float speedRightWheel = abcvlibSensors.getWheelDotR();
-        float speedLeftWheel = abcvlibSensors.getWheelDotL();
+        double speedRightWheel = abcvlibSensors.getWheelSpeedR();
+        double speedLeftWheel = abcvlibSensors.getWheelSpeedL();
         float thetaDegDot = abcvlibSensors.getThetaDegDot();
 
         // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller

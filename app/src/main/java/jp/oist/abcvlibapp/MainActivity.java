@@ -45,18 +45,24 @@ public class MainActivity extends AbcvlibActivity {
     public class movement implements Runnable{
 
         // PID Setup
-        float thetaDeg;
-        float thetaDegDot;
+        float thetaDeg; // tilt of phone with vertical being 0.
+        float thetaDegDot; // derivative of tilt (angular velocity)
+        float wheelCountL; // encoder count on left wheel
+        float wheelCountR; // encoder count on right wheel
+        double distanceL; // distances traveled by left wheel from start point (mm)
+        double distanceR; // distances traveled by right wheel from start point (mm)
+        double speedL; // Current speed on left wheel in mm/s
+        double speedR; // Current speed on right wheel in mm/s
 
         int output; //  u(t) of wikipedia
         float setPoint = -2.5f; // SP of wikipedia
         float e_t = 0; // e(t) of wikipedia
         float int_e_t; // integral of e(t) from wikipedia. Discrete, so just a sum here.
 
-        float k_p = 300;
+        float k_p = 200;
 //        float k_i = 0.0003f;
         float k_i = 0;
-//        float k_d = -f;
+//        float k_d = -2f;
         float k_d = 0;
 
         float maxTiltAngle = 5f;
@@ -86,6 +92,12 @@ public class MainActivity extends AbcvlibActivity {
 
             thetaDeg = abcvlibSensors.getThetaDeg();
             thetaDegDot = abcvlibSensors.getThetaDegDot();
+            wheelCountL = abcvlibSensors.getWheelCountL();
+            wheelCountR = abcvlibSensors.getWheelCountR();
+//            distanceL = abcvlibSensors.getDistanceL();
+//            distanceR = abcvlibSensors.getDistanceR();
+//            speedL = abcvlibSensors.getWheelSpeedL();
+//            speedR = abcvlibSensors.getWheelSpeedR();
 
             // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
             if(thetaDeg < maxTiltAngle && thetaDeg > minTiltAngle){
