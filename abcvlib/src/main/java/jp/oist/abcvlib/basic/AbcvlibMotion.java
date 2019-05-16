@@ -64,6 +64,7 @@ public class AbcvlibMotion {
     private float minTiltAngle = -20F;
 
     private AbcvlibSensors abcvlibSensors;
+    private AbcvlibQuadEncoders abcvlibQuadEncoders;
 
     /**
      * PWM frequency. Do not modify locally. Modify at AbcvlibActivity level if necessary.
@@ -73,8 +74,9 @@ public class AbcvlibMotion {
     /**
      * Constructor to pass other module objects in. Keep public.
       */
-    public AbcvlibMotion(AbcvlibSensors abcvlibSensors, Integer PWM_FREQ){
+    public AbcvlibMotion(AbcvlibSensors abcvlibSensors, AbcvlibQuadEncoders abcvlibQuadEncoders, Integer PWM_FREQ){
         this.abcvlibSensors = abcvlibSensors;
+        this.abcvlibQuadEncoders = abcvlibQuadEncoders;
         this.PWM_FREQ = PWM_FREQ;
     }
 
@@ -90,8 +92,8 @@ public class AbcvlibMotion {
         k_d1 = k_d1 * 0.01F; // Just put these here for better readability
         k_d2 = k_d2 * 0.01F; // Just put these here for better readability
         float thetaDeg = abcvlibSensors.getThetaDeg();
-        double speedRightWheel = abcvlibSensors.getWheelSpeedR();
-        double speedLeftWheel = abcvlibSensors.getWheelSpeedL();
+        double speedRightWheel = abcvlibQuadEncoders.getWheelSpeedR();
+        double speedLeftWheel = abcvlibQuadEncoders.getWheelSpeedL();
         float thetaDegDot = abcvlibSensors.getThetaDegDot();
 
         // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
@@ -142,8 +144,8 @@ public class AbcvlibMotion {
         k_d1 = k_d1 * 0.01F; // Just put these here for better readability
         k_d2 = k_d2 * 0.01F; // Just put these here for better readability
         float thetaDeg = abcvlibSensors.getThetaDeg();
-        double speedRightWheel = abcvlibSensors.getWheelSpeedR();
-        double speedLeftWheel = abcvlibSensors.getWheelSpeedL();
+        double speedRightWheel = abcvlibQuadEncoders.getWheelSpeedR();
+        double speedLeftWheel = abcvlibQuadEncoders.getWheelSpeedL();
         float thetaDegDot = abcvlibSensors.getThetaDegDot();
 
         // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
@@ -173,8 +175,8 @@ public class AbcvlibMotion {
         k_d1 = k_d1 * 0.01F; // Just put these here for better readability
         k_d2 = k_d2 * 0.01F; // Just put these here for better readability
         float thetaDeg = abcvlibSensors.getThetaDeg();
-        double speedRightWheel = abcvlibSensors.getWheelSpeedR();
-        double speedLeftWheel = abcvlibSensors.getWheelSpeedL();
+        double speedRightWheel = abcvlibQuadEncoders.getWheelSpeedR();
+        double speedLeftWheel = abcvlibQuadEncoders.getWheelSpeedL();
         float thetaDegDot = abcvlibSensors.getThetaDegDot();
 
         // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
@@ -206,8 +208,8 @@ public class AbcvlibMotion {
         k_d1 = k_d1 * 0.01F; // Just put these here for better readability
         k_d2 = k_d2 * 0.01F; // Just put these here for better readability
         float thetaDeg = abcvlibSensors.getThetaDeg();
-        double speedRightWheel = abcvlibSensors.getWheelSpeedR();
-        double speedLeftWheel = abcvlibSensors.getWheelSpeedL();
+        double speedRightWheel = abcvlibQuadEncoders.getWheelSpeedR();
+        double speedLeftWheel = abcvlibQuadEncoders.getWheelSpeedL();
         float thetaDegDot = abcvlibSensors.getThetaDegDot();
 
         // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
@@ -237,8 +239,8 @@ public class AbcvlibMotion {
         int output1, output2;
         int[] outputret = new int[2];
         float thetaDeg = abcvlibSensors.getThetaDeg();
-        double speedRightWheel = abcvlibSensors.getWheelSpeedR();
-        double speedLeftWheel = abcvlibSensors.getWheelSpeedL();
+        double speedRightWheel = abcvlibQuadEncoders.getWheelSpeedR();
+        double speedLeftWheel = abcvlibQuadEncoders.getWheelSpeedL();
         float thetaDegDot = abcvlibSensors.getThetaDegDot();
 
         // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller

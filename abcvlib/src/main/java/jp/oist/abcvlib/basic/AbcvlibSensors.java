@@ -78,35 +78,6 @@ public class AbcvlibSensors implements SensorEventListener {
     private int sensorChangeCount = 0;
     //----------------------------------------------------------------------------------------------
 
-    //----------------------------------- Wheel speed metrics --------------------------------------
-    /**
-     * Compounding negative wheel count set in AbcvlibLooper. Right is negative while left is
-     * positive since wheels are mirrored on physical body and thus one runs cw and the other ccw.
-     */
-    private int encoderCountRightWheel[] = new int[historyLength];
-    /**
-     * Compounding positive wheel count set in AbcvlibLooper. Right is negative while left is
-     * positive since wheels are mirrored on physical body and thus one runs cw and the other ccw.
-     */
-    private int encoderCountLeftWheel[] = new int[historyLength];
-    /**
-     * Right Wheel Speed in quadrature encoder counts per second.
-     */
-    private double speedRightWheel;
-    /**
-     * Left Wheel Speed in quadrature encoder counts per second.
-     */
-    private double speedLeftWheel;
-    /**
-     * distance in mm that the right wheel has traveled from start point
-     * This assumes no slippage/lifting/etc. Use with a grain of salt.
-     */
-    private double distanceR;
-    /**
-     * distance in mm that the left wheel has traveled from start point
-     * This assumes no slippage/lifting/etc. Use with a grain of salt.
-     */
-    private double distanceL;
     //----------------------------------------------------------------------------------------------
 
     // Android Sensor objects
@@ -205,42 +176,6 @@ public class AbcvlibSensors implements SensorEventListener {
         gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         rotation_sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         register();
-    }
-
-    public class QuadratureThread implements Runnable{
-
-        public void run(){
-
-//            while(true) {
-//
-////                /*
-////                The if statement waits for the full history length to fill. Otherwise you would be dividing
-////                by zero since timeDeltaOldestNewest is zero until the array fills with timeStamps from the
-////                sensors.
-////                */
-////                // TODO I think speed should be calculated not from a 15 length average, but from a either a raw or low pass filtered version of the distance.
-////                if (timeDeltaOldestNewest != 0) {
-////                    distanceL = getDistanceL();
-////                    distanceR = getDistanceR();
-////                    // Calculate the speed of each wheel in mm/s.
-////                    speedRightWheel = (calcDistance(encoderCountRightWheel[indexHistoryCurrent]) - calcDistance(encoderCountRightWheel[indexHistoryOldest])) / timeDeltaOldestNewest;
-////                    speedLeftWheel = (calcDistance(encoderCountLeftWheel[indexHistoryCurrent]) - calcDistance(encoderCountLeftWheel[indexHistoryOldest])) / timeDeltaOldestNewest;
-////                }
-////                else{
-////                    Log.i("sensorDebugging", "timeDeltaOldestNewest == 0");
-////                }
-//                try{
-//                    Thread.sleep(1);
-//                } catch (IllegalArgumentException e){
-//                    Log.i("sensorDebugging", "negative sleep value provided");
-//                } catch (InterruptedException e){
-//                    Log.i("sensorDebugging", "QuadratureThread interrupted");
-//                }
-//
-//
-//            }
-        }
-
     }
 
     /**
@@ -360,68 +295,6 @@ public class AbcvlibSensors implements SensorEventListener {
     }
 
     /**
-     * @return Current encoder count for the right wheel
-     */
-    public int getWheelCountR(){ return encoderCountRightWheel[indexHistoryCurrent]; }
-
-    /**
-     * @return Current encoder count for the left wheel
-     */
-    public int getWheelCountL(){ return encoderCountLeftWheel[indexHistoryCurrent]; }
-
-    /**
-     * Get distances traveled by left wheel from start point.
-     * This does not account for slippage/lifting/etc. so
-     * use with a grain of salt
-     * @return distanceL in mm
-     */
-    public double getDistanceL(){
-
-        double mmPerCount = (2 * Math.PI * 30) / 128;
-
-        distanceL = encoderCountLeftWheel[indexHistoryCurrent] * mmPerCount;
-
-        return distanceL;
-    }
-
-    /**
-     * Get distances traveled by right wheel from start point.
-     * This does not account for slippage/lifting/etc. so
-     * use with a grain of salt
-     * @return distanceR in mm
-     */
-    public double getDistanceR(){
-
-        double mmPerCount = (2 * Math.PI * 30) / 128;
-
-        distanceR = encoderCountRightWheel[indexHistoryCurrent] * mmPerCount;
-
-        return distanceR;
-    }
-
-    /**
-     * @return Current speed of left wheel in encoder counts per second. May want to convert to
-     * rotations per second if the encoder resolution (counts per revolution) is known.
-     */
-    public double getWheelSpeedL() { return speedLeftWheel; }
-
-    /**
-     * @return Current speed of right wheel in encoder counts per second. May want to convert to
-     * rotations per second if the encoder resolution (counts per revolution) is known.
-     */
-    public double getWheelSpeedR() { return speedRightWheel; }
-
-    private double calcDistance(int count){
-
-        double distance;
-        double mmPerCount = (2 * Math.PI * 30) / 128;
-
-        distance = count * mmPerCount;
-
-        return distance;
-    }
-
-    /**
      * @return Total combined count for how many times the accelerometer and gyroscope have provided
      * data.
      */
@@ -444,23 +317,6 @@ public class AbcvlibSensors implements SensorEventListener {
      */
     void setThetaRadDot(float thetaRadDot) { this.thetaRadDotGyro = thetaRadDot; }
 
-    /**
-     * Sets the encoder count for the right wheel. This shouldn't normally be used by the user. This
-     * method exists for the AbcvlibLooper class to get/set encoder counts as the AbcvlibLooper
-     * class is responsible for constantly reading the encoder values from the IOIOBoard.
-     * @param count encoder count (number of times the quadrature encoder has passed between
-     *              H and L)
-     */
-    void setWheelR(int count) { encoderCountRightWheel[indexHistoryCurrent] = count; }
-
-    /**
-     * Sets the encoder count for the left wheel. This shouldn't normally be used by the user. This
-     * method exists for the AbcvlibLooper class to get/set encoder counts as the AbcvlibLooper
-     * class is responsible for constantly reading the encoder values from the IOIOBoard.
-     * @param count encoder count (number of times the quadrature encoder has passed between
-     *              H and L)
-     */
-    void setWheelL(int count) { encoderCountLeftWheel[indexHistoryCurrent] = count; }
 
     /**
      * Sets the history length for which to base the derivative functions off of (angular velocity,
@@ -468,21 +324,6 @@ public class AbcvlibSensors implements SensorEventListener {
      * @param len length of array for keeping history
      */
     public void setHistoryLength(int len) {historyLength = len; }
-    /**
-     * Sets the wheel speed for the right wheel. This shouldn't normally be used by the user. Not
-     * sure why this would ever be necessary as it would be overwritten at the very next sensor
-     * event. See {@link #onSensorChanged(SensorEvent) onSensorChanged} method.
-     * @param speed encoder speed in encoder counts per second.
-     */
-    void setWheeldotR(float speed) { speedRightWheel = speed; }
-
-    /**
-     * Sets the wheel speed for the left wheel. This shouldn't normally be used by the user. Not
-     * sure why this would ever be necessary as it would be overwritten at the very next sensor
-     * event. See {@link #onSensorChanged(SensorEvent) onSensorChanged} method.
-     * @param speed encoder speed in encoder counts per second.
-     */
-    void setWheeldotL(float speed) { speedLeftWheel = speed; }
 
     /**
      * Send accelerometer and gyroscope data, along with calculated tilt angles, speeds, etc. such
@@ -496,20 +337,9 @@ public class AbcvlibSensors implements SensorEventListener {
         // Compile thetaDegVectorMsg values to push to separate adb tag
         String thetaVectorVelMsg = Float.toString(angularVelocityRotationVectorDeg);
 
-        // Compile encoderCount values to push to separate adb tag
-        String countsSensorMsg = Integer.toString(encoderCountLeftWheel[indexHistoryCurrent]) + " " + Integer.toString(encoderCountRightWheel[indexHistoryCurrent]);
-
-        // Compile distance values to push to separate adb tag
-        String distanceMsg = Double.toString(distanceL) + " " + Double.toString(distanceR);
-
-        // Compile thetaDegVectorMsg values to push to separate adb tag
-        String speedMsg = Double.toString(speedLeftWheel) + " " + Double.toString(speedRightWheel);
-
         Log.i("thetaVectorMsg", thetaVectorMsg);
         Log.i("thetaVectorVelMsg", thetaVectorVelMsg);
-        Log.i("countsSensorMsg", countsSensorMsg);
-        Log.i("distanceMsg", distanceMsg);
-        Log.i("speedMsg", speedMsg);
+
     }
 
     /**

@@ -32,6 +32,13 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      */
     private boolean loggerOn;
 
+    private int indexCurrent = 1;
+    private int indexPrevious = 0;
+    private int loopCount = 1;
+    private int buffer = 15;
+    private long[] timeStamp = new long[buffer];
+    private long dt = 0;
+
     /**
      * Enable/disable this to swap the polarity of the wheels such that the default forward
      * direction will be swapped (i.e. wheels will move cw vs ccw as forward).
@@ -193,6 +200,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
     private AbcvlibSensors abcvlibSensors;
     private AbcvlibMotion abcvlibMotion;
+    private AbcvlibQuadEncoders abcvlibQuadEncoders;
 
     /**
      * Boolean representing the current state (H/L) of the ChA and ChB on the HubeeWheels
@@ -271,20 +279,21 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     private int encoderCountLeftWheel;
 
     // Constructor to pass other module objects in. Default loggerOn value to true
-    public AbcvlibLooper(AbcvlibSensors abcvlibSensors, AbcvlibMotion abcvlibMotion,
+    public AbcvlibLooper(AbcvlibSensors abcvlibSensors, AbcvlibMotion abcvlibMotion, AbcvlibQuadEncoders abcvlibQuadEncoders,
                          Integer PWM_FREQ){
 
-        this(abcvlibSensors, abcvlibMotion, PWM_FREQ, true, false);
+        this(abcvlibSensors, abcvlibMotion, abcvlibQuadEncoders, PWM_FREQ, true, false);
 
     }
 
     // Constructor to pass other module objects in. No default loggerOn. Needs to remain public
     // despite what Android Studio says
-    public AbcvlibLooper(AbcvlibSensors abcvlibSensors, AbcvlibMotion abcvlibMotion,
+    public AbcvlibLooper(AbcvlibSensors abcvlibSensors, AbcvlibMotion abcvlibMotion, AbcvlibQuadEncoders abcvlibQuadEncoders,
                          Integer PWM_FREQ, Boolean loggerOn, Boolean wheelPolaritySwap){
 
         this.abcvlibMotion = abcvlibMotion;
         this.abcvlibSensors = abcvlibSensors;
+        this.abcvlibQuadEncoders = abcvlibQuadEncoders;
         this.PWM_FREQ = PWM_FREQ;
         this.loggerOn = loggerOn;
         this.wheelPolaritySwap = wheelPolaritySwap;
@@ -375,6 +384,9 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     public void loop() throws ConnectionLostException, InterruptedException{
 
         try {
+
+            timeStampUpdate();
+
             getPwm();
 
             getIn1In2();
@@ -388,6 +400,9 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             if (loggerOn) {
                 sendToLog();
             }
+
+            indexUpdate();
+
         }
         catch (ConnectionLostException e){
             Log.e("abcvlib", "connection lost in AbcvlibLooper.loop");
@@ -420,6 +435,17 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     @Override
     public void incompatible() {
         Log.e("abcvlib", "Incompatible IOIO firmware version!");
+    }
+
+    private void timeStampUpdate(){
+        timeStamp[indexCurrent] = System.nanoTime();
+        dt = timeStamp[indexCurrent] - timeStamp[indexPrevious];
+    }
+
+    private void indexUpdate(){
+        indexCurrent = loopCount % buffer;
+        indexPrevious = (loopCount - 1) % buffer;
+        loopCount++;
     }
 
     private void getPwm() {
@@ -528,8 +554,9 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             throw e;
         }
 
-        abcvlibSensors.setWheelR(encoderCountRightWheel);
-        abcvlibSensors.setWheelL(encoderCountLeftWheel);
+        abcvlibQuadEncoders.setWheelR(encoderCountRightWheel);
+        abcvlibQuadEncoders.setWheelL(encoderCountLeftWheel);
+        abcvlibQuadEncoders.setDt(dt);
 
         encoderARightWheelStatePrevious = encoderARightWheelState;
         encoderBRightWheelStatePrevious = encoderBRightWheelState;
@@ -691,9 +718,21 @@ public class AbcvlibLooper extends BaseIOIOLooper {
                 Float.toString(pulseWidthRightWheelNew) + " " +
                 Float.toString(pulseWidthLeftWheelNew);
 
+        // Compile encoderCount values to push to separate adb tag
+        String countsSensorMsg = Integer.toString(abcvlibQuadEncoders.getWheelCountL()) + " " + Integer.toString(abcvlibQuadEncoders.getWheelCountR());
+
+        // Compile distance values to push to separate adb tag
+        String distanceMsg = Double.toString(abcvlibQuadEncoders.getDistanceL()) + " " + Double.toString(abcvlibQuadEncoders.getDistanceR());
+
+        // Compile thetaDegVectorMsg values to push to separate adb tag
+        String speedMsg = Double.toString(abcvlibQuadEncoders.getWheelSpeedL()) + " " + Double.toString(abcvlibQuadEncoders.getWheelSpeedL());
+
         Log.i("encoderStateMsg", encoderStateMsg);
         Log.i("encoderCountMsg", encoderCountMsg);
         Log.i("pwmMsg", pwmMsg);
+        Log.i("countsSensorMsg", countsSensorMsg);
+        Log.i("distanceMsg", distanceMsg);
+        Log.i("speedMsg", speedMsg);
 
     }
 

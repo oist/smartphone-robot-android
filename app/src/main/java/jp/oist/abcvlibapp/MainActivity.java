@@ -55,11 +55,11 @@ public class MainActivity extends AbcvlibActivity {
         double speedR; // Current speed on right wheel in mm/s
 
         int output; //  u(t) of wikipedia
-        float setPoint = -2.5f; // SP of wikipedia
+        float setPoint = 0f; // SP of wikipedia
         float e_t = 0; // e(t) of wikipedia
         float int_e_t; // integral of e(t) from wikipedia. Discrete, so just a sum here.
 
-        float k_p = 100;
+        float k_p = 200;
 //        float k_i = 0.0003f;
         float k_i = 0;
 //        float k_d = -2f;
@@ -92,8 +92,8 @@ public class MainActivity extends AbcvlibActivity {
 
             thetaDeg = abcvlibSensors.getThetaDeg();
             thetaDegDot = abcvlibSensors.getThetaDegDot();
-            wheelCountL = abcvlibSensors.getWheelCountL();
-            wheelCountR = abcvlibSensors.getWheelCountR();
+//            wheelCountL = abcvlibSensors.getWheelCountL();
+//            wheelCountR = abcvlibSensors.getWheelCountR();
 //            distanceL = abcvlibSensors.getDistanceL();
 //            distanceR = abcvlibSensors.getDistanceR();
 //            speedL = abcvlibSensors.getWheelSpeedL();

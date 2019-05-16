@@ -7,6 +7,7 @@ import android.widget.TextView;
 
 import jp.oist.abcvlib.basic.AbcvlibLooper;
 import jp.oist.abcvlib.basic.AbcvlibMotion;
+import jp.oist.abcvlib.basic.AbcvlibQuadEncoders;
 import jp.oist.abcvlib.basic.AbcvlibSensors;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -51,7 +52,8 @@ public class CvActivity extends IOIOActivity {
 
     // Create objects of each module class
     AbcvlibSensors abcvlibSensors = new AbcvlibSensors(this);
-    AbcvlibMotion abcvlibMotion = new AbcvlibMotion(abcvlibSensors, PWM_FREQ);
+    AbcvlibQuadEncoders abcvlibQuadEncoders = new AbcvlibQuadEncoders();
+    AbcvlibMotion abcvlibMotion = new AbcvlibMotion(abcvlibSensors, abcvlibQuadEncoders, PWM_FREQ);
     Camera mCamera = new Camera(abcvlibSensors);
 
     @Override
