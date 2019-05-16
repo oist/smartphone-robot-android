@@ -33,22 +33,27 @@ public class MainActivity extends AbcvlibActivity {
         // ID within the R class
         setContentView(R.layout.activity_main);
 
-        movement movementThread = new movement();
-        new Thread(movementThread).start();
+//        // PID Controller
+//        PID pidThread = new PID();
+//        new Thread(pidThread).start();
+
+//        // Linear Back and Forth every 10 mm
+//        BackAndForth backAndForthThread = new BackAndForth();
+//        new Thread(backAndForthThread).start();
+
+        // Rotate Back and Forth every 180 deg
+        TurnBackAndForth turnBackAndForthThread = new TurnBackAndForth();
+        new Thread(turnBackAndForthThread).start();
 
     }
 
-    /**
-     * Edit the contents of this method to customize the desired robot movement. Make sure only
-     * one method from abcvlibMotion is used at a time. They will conflict otherwise.
-     */
-    public class movement implements Runnable{
+    public class PID implements Runnable{
 
         // PID Setup
         double thetaDeg; // tilt of phone with vertical being 0.
         double thetaDegDot; // derivative of tilt (angular velocity)
-        float wheelCountL; // encoder count on left wheel
-        float wheelCountR; // encoder count on right wheel
+        double wheelCountL; // encoder count on left wheel
+        double wheelCountR; // encoder count on right wheel
         double distanceL; // distances traveled by left wheel from start point (mm)
         double distanceR; // distances traveled by right wheel from start point (mm)
         double speedL; // Current speed on left wheel in mm/s
@@ -62,8 +67,8 @@ public class MainActivity extends AbcvlibActivity {
         float k_p = 300;
 //        float k_i = 0.003f;
         float k_i = 0;
-        float k_d = -10f;
-//        float k_d = 0;
+//        float k_d = -10f;
+        float k_d = 0;
 
         float maxTiltAngle = 5f;
         float minTiltAngle = -8f;
@@ -83,42 +88,38 @@ public class MainActivity extends AbcvlibActivity {
                 /*
                 Option 2: This attempts to set the tilt angle to zero via a simple PID controller
                 */
-                PIDLoop();
 
-            }
-        }
+                thetaDeg = abcvlibSensors.getThetaDeg();
+                thetaDegDot = abcvlibSensors.getThetaDegDot();
+                wheelCountL = abcvlibQuadEncoders.getWheelCountL();
+                wheelCountR = abcvlibQuadEncoders.getWheelCountR();
+                distanceL = abcvlibQuadEncoders.getDistanceL();
+                distanceR = abcvlibQuadEncoders.getDistanceR();
+                speedL = abcvlibQuadEncoders.getWheelSpeedL();
+                speedR = abcvlibQuadEncoders.getWheelSpeedR();
 
-        private void PIDLoop(){
+                // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
+                if(thetaDeg < maxTiltAngle && thetaDeg > minTiltAngle){
 
-            thetaDeg = abcvlibSensors.getThetaDeg();
-            thetaDegDot = abcvlibSensors.getThetaDegDot();
-//            wheelCountL = abcvlibSensors.getWheelCountL();
-//            wheelCountR = abcvlibSensors.getWheelCountR();
-//            distanceL = abcvlibSensors.getDistanceL();
-//            distanceR = abcvlibSensors.getDistanceR();
-//            speedL = abcvlibSensors.getWheelSpeedL();
-//            speedR = abcvlibSensors.getWheelSpeedR();
-
-            // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
-            if(thetaDeg < maxTiltAngle && thetaDeg > minTiltAngle){
-
-                linearController();
-                stuckCount = 0;
-            }
-            else if(stuckCount < 500000){
-                linearController();
-                stuckCount = stuckCount + 1;
-            }
-            else{
-                if (output == 1000){
-                    output = -1000;
+                    linearController();
+                    stuckCount = 0;
+                }
+                else if(stuckCount < 500000){
+                    linearController();
+                    stuckCount = stuckCount + 1;
                 }
                 else{
-                    output = 1000;
-                }
+                    if (output == 1000){
+                        output = -1000;
+                    }
+                    else{
+                        output = 1000;
+                    }
                 }
 
-            abcvlibMotion.setWheelSpeed(output, output);
+                abcvlibMotion.setWheelSpeed(output, output);
+
+            }
         }
 
         private void linearController(){
@@ -130,6 +131,64 @@ public class MainActivity extends AbcvlibActivity {
             double d_out = k_d * thetaDegDot;
 
             output = (int) Math.round(p_out + i_out + d_out);
+        }
+    }
+
+    public class BackAndForth implements Runnable{
+
+        // PID Setup
+        double distanceL; // distances traveled by left wheel from start point (mm)
+        double distanceR; // distances traveled by right wheel from start point (mm)
+
+        int speed = 300; // PWM from 0 to 1000.
+
+        public void run(){
+
+            // Set Initial Speed
+            abcvlibMotion.setWheelSpeed(speed, speed);
+
+            while(true) {
+
+                distanceL = abcvlibQuadEncoders.getDistanceL();
+                distanceR = abcvlibQuadEncoders.getDistanceR();
+
+                if (distanceR >= 10){
+                    abcvlibMotion.setWheelSpeed(speed, speed);
+                }
+                else if (distanceR <= 10){
+                    abcvlibMotion.setWheelSpeed(-speed, -speed);
+                }
+
+            }
+        }
+    }
+
+    public class TurnBackAndForth implements Runnable{
+
+        // PID Setup
+        double distanceL; // distances traveled by left wheel from start point (mm)
+        double distanceR; // distances traveled by right wheel from start point (mm)
+
+        int speed = 600; // PWM from 0 to 1000.
+
+        public void run(){
+
+            // Set Initial Speed
+            abcvlibMotion.setWheelSpeed(speed, -speed);
+
+            while(true) {
+
+                distanceL = abcvlibQuadEncoders.getDistanceL();
+                distanceR = abcvlibQuadEncoders.getDistanceR();
+
+                if (distanceR >= distanceL){
+                    abcvlibMotion.setWheelSpeed(speed, -speed);
+                }
+                else if (distanceR <= distanceL){
+                    abcvlibMotion.setWheelSpeed(-speed, speed);
+                }
+
+            }
         }
     }
 }

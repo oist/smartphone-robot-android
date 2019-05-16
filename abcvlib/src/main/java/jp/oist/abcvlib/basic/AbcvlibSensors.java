@@ -45,6 +45,7 @@ public class AbcvlibSensors implements SensorEventListener {
      * just what was deemed appropriate previously.
      */
     private int historyLength = 1000;
+    private double lp_freq = 1;
     /**
      * Total number of times the sensors have changed data
      */
@@ -99,7 +100,6 @@ public class AbcvlibSensors implements SensorEventListener {
      */
     private long timeStamps[] = new long[historyLength];
     int indexHistoryOldest = 0; // Keeps track of oldest history index.
-    private double lp_freq = 10000;
 
     private boolean loggerOn;
 
