@@ -15,7 +15,7 @@ public class MainActivity extends AbcvlibActivity {
      * memory/disk space on the phone and may result in memory failure if run for a long time
      * such as any learning tasks.
      */
-    private boolean loggerOn = false;
+    private boolean loggerOn = true;
     /**
      * Enable/disable this to swap the polarity of the wheels such that the default forward
      * direction will be swapped (i.e. wheels will move cw vs ccw as forward).
@@ -45,8 +45,8 @@ public class MainActivity extends AbcvlibActivity {
     public class movement implements Runnable{
 
         // PID Setup
-        float thetaDeg; // tilt of phone with vertical being 0.
-        float thetaDegDot; // derivative of tilt (angular velocity)
+        double thetaDeg; // tilt of phone with vertical being 0.
+        double thetaDegDot; // derivative of tilt (angular velocity)
         float wheelCountL; // encoder count on left wheel
         float wheelCountR; // encoder count on right wheel
         double distanceL; // distances traveled by left wheel from start point (mm)
@@ -56,8 +56,8 @@ public class MainActivity extends AbcvlibActivity {
 
         int output; //  u(t) of wikipedia
         float setPoint = 0f; // SP of wikipedia
-        float e_t = 0; // e(t) of wikipedia
-        float int_e_t; // integral of e(t) from wikipedia. Discrete, so just a sum here.
+        double e_t = 0; // e(t) of wikipedia
+        double int_e_t; // integral of e(t) from wikipedia. Discrete, so just a sum here.
 
         float k_p = 300;
 //        float k_i = 0.003f;
@@ -125,11 +125,11 @@ public class MainActivity extends AbcvlibActivity {
             int_e_t = int_e_t + e_t;
             e_t = setPoint - thetaDeg;
 
-            float p_out = k_p * e_t;
-            float i_out = k_i * int_e_t;
-            float d_out = k_d * thetaDegDot;
+            double p_out = k_p * e_t;
+            double i_out = k_i * int_e_t;
+            double d_out = k_d * thetaDegDot;
 
-            output = Math.round(p_out + i_out + d_out);
+            output = (int) Math.round(p_out + i_out + d_out);
         }
     }
 }

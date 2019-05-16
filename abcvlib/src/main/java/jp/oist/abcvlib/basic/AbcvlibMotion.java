@@ -40,7 +40,7 @@ public class AbcvlibMotion {
     /**
      * Central Pattern Generator destabalizer initial parameters.
      */
-    private float[] cpgXY = {900, 900};
+    private double[] cpgXY = {900, 900};
     private float ddt = 0.005F; //TODO update to sensor sampling rate? Judy says no, but need to read more about the Runge Kutta methods she claims to have used.
     /**
      * Some bias constant to the proportional controller. Strange value kept for historical reference.
@@ -79,192 +79,192 @@ public class AbcvlibMotion {
         this.abcvlibQuadEncoders = abcvlibQuadEncoders;
         this.PWM_FREQ = PWM_FREQ;
     }
-
-    /**
-     * TODO Figure out the purpose of this.
-     * @param k_p
-     * @param k_d1
-     * @param k_d2
-     * @param omega
-     * @param beta
-     */
-    public void switchLinearCpg(float k_p, float k_d1, float k_d2, int omega, int beta) {
-        k_d1 = k_d1 * 0.01F; // Just put these here for better readability
-        k_d2 = k_d2 * 0.01F; // Just put these here for better readability
-        float thetaDeg = abcvlibSensors.getThetaDeg();
-        double speedRightWheel = abcvlibQuadEncoders.getWheelSpeedR();
-        double speedLeftWheel = abcvlibQuadEncoders.getWheelSpeedL();
-        float thetaDegDot = abcvlibSensors.getThetaDegDot();
-
-        // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
-        if (thetaDeg < maxTiltAngle && thetaDeg > minTiltAngle) {
-            pulseWidthRightWheel = (int) -Math.round(k_p * (thetaDeg + c_p) +
-                    (k_d1 * (thetaDegDot + c_d1)) +
-                    (k_d2 * (speedRightWheel + c_d2)) +
-                    (k_d2 * (speedLeftWheel + c_d2)));
-            pulseWidthLeftWheel = -pulseWidthRightWheel;
-        } else {
-            pulseWidthRightWheel = (int) -cpgXY[1];
-            pulseWidthLeftWheel = pulseWidthRightWheel;
-            cpgXY = cpgUpdate(cpgXY, ddt, thetaDegDot, (float) omega, (float) beta);
-        }
-
-    }
-
-    public void simplePID(float k_p, float k_d1) {
-        float thetaDeg = abcvlibSensors.getThetaDeg();
-        float thetaDegDot = abcvlibSensors.getThetaDegDot();
-        int output;
-        int c_p_bo = -10;
-
-    // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
-        output = (int) -Math.round(k_p * (thetaDeg + c_p_bo) + (k_d1 * (thetaDegDot)));
-
-        if (output > 1000){
-            output = 1000;
-        }
-        else if (output < -1000){
-            output = -1000;
-        }
-
-        setWheelSpeed(output, -output);
-
-    }
-
-    /**
-     * TODO Figure out the purpose of this.
-     * @param k_p
-     * @param k_d1
-     * @param k_d2
-     * @param omega
-     * @param beta
-     * @param offset
-     */
-    public void linearMoving(float k_p, float k_d1, float k_d2, int omega, int beta, int offset) {
-        k_d1 = k_d1 * 0.01F; // Just put these here for better readability
-        k_d2 = k_d2 * 0.01F; // Just put these here for better readability
-        float thetaDeg = abcvlibSensors.getThetaDeg();
-        double speedRightWheel = abcvlibQuadEncoders.getWheelSpeedR();
-        double speedLeftWheel = abcvlibQuadEncoders.getWheelSpeedL();
-        float thetaDegDot = abcvlibSensors.getThetaDegDot();
-
-        // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
-        if (thetaDeg < maxTiltAngle && thetaDeg > minTiltAngle) {
-            pulseWidthRightWheel = (int) -Math.round(k_p * (thetaDeg + c_p) +
-                    (k_d1 * (thetaDegDot + c_d1)) +
-                    (k_d2 * (speedRightWheel + c_d2)) +
-                    (k_d2 * (speedLeftWheel + c_d2)) + offset);
-            pulseWidthLeftWheel = pulseWidthRightWheel;
-        } else {
-            pulseWidthRightWheel = (int) -cpgXY[1];
-            pulseWidthLeftWheel = pulseWidthRightWheel;
-            cpgXY = cpgUpdate(cpgXY, ddt, thetaDegDot, (float) omega, (float) beta);
-        }
-
-    }
-
-    /**
-     * TODO Figure out the purpose of this.
-     * @param k_p
-     * @param k_d1
-     * @param k_d2
-     * @param omega
-     * @param beta
-     */
-	public void standingBalancing(float k_p, float k_d1, float k_d2, int omega, int beta){
-        k_d1 = k_d1 * 0.01F; // Just put these here for better readability
-        k_d2 = k_d2 * 0.01F; // Just put these here for better readability
-        float thetaDeg = abcvlibSensors.getThetaDeg();
-        double speedRightWheel = abcvlibQuadEncoders.getWheelSpeedR();
-        double speedLeftWheel = abcvlibQuadEncoders.getWheelSpeedL();
-        float thetaDegDot = abcvlibSensors.getThetaDegDot();
-
-        // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
-        if(thetaDeg < maxTiltAngle && thetaDeg > minTiltAngle){
-            pulseWidthRightWheel = (int) -(k_p * (thetaDeg + c_p) +
-                    k_d1 * (thetaDegDot + c_d1) +
-                    k_d2 * (speedRightWheel + c_d2) +
-                    k_d2 * (speedLeftWheel + c_d2));
-            pulseWidthLeftWheel = pulseWidthRightWheel;
-        }
-        else{
-            pulseWidthRightWheel = (int) -cpgXY[1];
-            pulseWidthLeftWheel = pulseWidthRightWheel;
-            cpgXY = cpgUpdate(cpgXY, ddt, thetaDegDot, omega, beta);
-        }
-    }
-
-    /**
-     * TODO Figure out the purpose of this.
-     * @param k_p
-     * @param k_d1
-     * @param k_d2
-     * @param omega
-     * @param beta
-     * @param offset
-     */
-    //offset in [-500,500]
-    public void balanceMoving(float k_p, float k_d1, float k_d2, int omega, int beta, int offset){
-        k_d1 = k_d1 * 0.01F; // Just put these here for better readability
-        k_d2 = k_d2 * 0.01F; // Just put these here for better readability
-        float thetaDeg = abcvlibSensors.getThetaDeg();
-        double speedRightWheel = abcvlibQuadEncoders.getWheelSpeedR();
-        double speedLeftWheel = abcvlibQuadEncoders.getWheelSpeedL();
-        float thetaDegDot = abcvlibSensors.getThetaDegDot();
-
-        // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
-        if(thetaDeg < maxTiltAngle && thetaDeg > minTiltAngle){
-            pulseWidthRightWheel = (int) -(k_p * (thetaDeg + c_p) +
-                    k_d1 * (thetaDegDot + c_d1) +
-                    k_d2 * (speedRightWheel + c_d2) +
-                    k_d2 * (speedLeftWheel + c_d2) + offset);
-            pulseWidthLeftWheel = pulseWidthRightWheel;
-        }
-        else{
-            pulseWidthRightWheel = (int) -cpgXY[1];
-            pulseWidthLeftWheel = pulseWidthRightWheel;
-            cpgXY= cpgUpdate(cpgXY, ddt, thetaDegDot, omega, beta);
-        }
-
-    }
-
-    /**
-     * TODO Figure out the purpose of this.
-     * @param param
-     * @param distance
-     * @param contourdiff
-     * @return
-     */
-    public int[] contourApproaching(double[] param, double distance, double contourdiff){
-        int output1, output2;
-        int[] outputret = new int[2];
-        float thetaDeg = abcvlibSensors.getThetaDeg();
-        double speedRightWheel = abcvlibQuadEncoders.getWheelSpeedR();
-        double speedLeftWheel = abcvlibQuadEncoders.getWheelSpeedL();
-        float thetaDegDot = abcvlibSensors.getThetaDegDot();
-
-        // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
-        if(thetaDeg < maxTiltAngle && thetaDeg > minTiltAngle){
-            output1 = (int) -(param[0] * (thetaDeg + c_p) +
-                    param[1] * (thetaDegDot + c_d1) * 0.01f +
-                    param[2] * (speedRightWheel + c_d2) +
-                    param[8] + param[10] * distance + param[12] * contourdiff);
-            output2 = (int) -(param[5] * (thetaDeg + c_p) +
-                    param[6] * (thetaDegDot + c_d1) * 0.01f +
-                    param[7] * (speedLeftWheel + c_d2) +
-                    param[9] + param[11] * distance + param[13] * contourdiff);
-        }
-        else{
-            output1 = (int) -cpgXY[1];
-            output2 = (int) -cpgXY[1];
-            cpgXY = cpgUpdate(cpgXY, ddt, thetaDegDot, (int) param[3], (int) param[4]);
-        }
-        outputret[0] = output1;
-        outputret[1] = output2;
-        pulseWidthRightWheel = output1;
-        pulseWidthLeftWheel = output2;
-        return outputret;
-    }
+//
+//    /**
+//     * TODO Figure out the purpose of this.
+//     * @param k_p
+//     * @param k_d1
+//     * @param k_d2
+//     * @param omega
+//     * @param beta
+//     */
+//    public void switchLinearCpg(float k_p, float k_d1, float k_d2, int omega, int beta) {
+//        k_d1 = k_d1 * 0.01F; // Just put these here for better readability
+//        k_d2 = k_d2 * 0.01F; // Just put these here for better readability
+//        double thetaDeg = abcvlibSensors.getThetaDeg();
+//        double speedRightWheel = abcvlibQuadEncoders.getWheelSpeedR();
+//        double speedLeftWheel = abcvlibQuadEncoders.getWheelSpeedL();
+//        double thetaDegDot = abcvlibSensors.getThetaDegDot();
+//
+//        // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
+//        if (thetaDeg < maxTiltAngle && thetaDeg > minTiltAngle) {
+//            pulseWidthRightWheel = (int) -Math.round(k_p * (thetaDeg + c_p) +
+//                    (k_d1 * (thetaDegDot + c_d1)) +
+//                    (k_d2 * (speedRightWheel + c_d2)) +
+//                    (k_d2 * (speedLeftWheel + c_d2)));
+//            pulseWidthLeftWheel = -pulseWidthRightWheel;
+//        } else {
+//            pulseWidthRightWheel = (int) -cpgXY[1];
+//            pulseWidthLeftWheel = pulseWidthRightWheel;
+//            cpgXY = cpgUpdate(cpgXY, ddt, thetaDegDot, omega, beta);
+//        }
+//
+//    }
+//
+//    public void simplePID(float k_p, float k_d1) {
+//        double thetaDeg = abcvlibSensors.getThetaDeg();
+//        double thetaDegDot = abcvlibSensors.getThetaDegDot();
+//        int output;
+//        int c_p_bo = -10;
+//
+//    // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
+//        output = (int) -Math.round(k_p * (thetaDeg + c_p_bo) + (k_d1 * (thetaDegDot)));
+//
+//        if (output > 1000){
+//            output = 1000;
+//        }
+//        else if (output < -1000){
+//            output = -1000;
+//        }
+//
+//        setWheelSpeed(output, -output);
+//
+//    }
+//
+//    /**
+//     * TODO Figure out the purpose of this.
+//     * @param k_p
+//     * @param k_d1
+//     * @param k_d2
+//     * @param omega
+//     * @param beta
+//     * @param offset
+//     */
+//    public void linearMoving(float k_p, float k_d1, float k_d2, int omega, int beta, int offset) {
+//        k_d1 = k_d1 * 0.01F; // Just put these here for better readability
+//        k_d2 = k_d2 * 0.01F; // Just put these here for better readability
+//        double thetaDeg = abcvlibSensors.getThetaDeg();
+//        double speedRightWheel = abcvlibQuadEncoders.getWheelSpeedR();
+//        double speedLeftWheel = abcvlibQuadEncoders.getWheelSpeedL();
+//        double thetaDegDot = abcvlibSensors.getThetaDegDot();
+//
+//        // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
+//        if (thetaDeg < maxTiltAngle && thetaDeg > minTiltAngle) {
+//            pulseWidthRightWheel = (int) -Math.round(k_p * (thetaDeg + c_p) +
+//                    (k_d1 * (thetaDegDot + c_d1)) +
+//                    (k_d2 * (speedRightWheel + c_d2)) +
+//                    (k_d2 * (speedLeftWheel + c_d2)) + offset);
+//            pulseWidthLeftWheel = pulseWidthRightWheel;
+//        } else {
+//            pulseWidthRightWheel = (int) -cpgXY[1];
+//            pulseWidthLeftWheel = pulseWidthRightWheel;
+//            cpgXY = cpgUpdate(cpgXY, ddt, thetaDegDot, (float) omega, (float) beta);
+//        }
+//
+//    }
+//
+//    /**
+//     * TODO Figure out the purpose of this.
+//     * @param k_p
+//     * @param k_d1
+//     * @param k_d2
+//     * @param omega
+//     * @param beta
+//     */
+//	public void standingBalancing(float k_p, float k_d1, float k_d2, int omega, int beta){
+//        k_d1 = k_d1 * 0.01F; // Just put these here for better readability
+//        k_d2 = k_d2 * 0.01F; // Just put these here for better readability
+//        double thetaDeg = abcvlibSensors.getThetaDeg();
+//        double speedRightWheel = abcvlibQuadEncoders.getWheelSpeedR();
+//        double speedLeftWheel = abcvlibQuadEncoders.getWheelSpeedL();
+//        double thetaDegDot = abcvlibSensors.getThetaDegDot();
+//
+//        // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
+//        if(thetaDeg < maxTiltAngle && thetaDeg > minTiltAngle){
+//            pulseWidthRightWheel = (int) -(k_p * (thetaDeg + c_p) +
+//                    k_d1 * (thetaDegDot + c_d1) +
+//                    k_d2 * (speedRightWheel + c_d2) +
+//                    k_d2 * (speedLeftWheel + c_d2));
+//            pulseWidthLeftWheel = pulseWidthRightWheel;
+//        }
+//        else{
+//            pulseWidthRightWheel = (int) -cpgXY[1];
+//            pulseWidthLeftWheel = pulseWidthRightWheel;
+//            cpgXY = cpgUpdate(cpgXY, ddt, thetaDegDot, omega, beta);
+//        }
+//    }
+//
+//    /**
+//     * TODO Figure out the purpose of this.
+//     * @param k_p
+//     * @param k_d1
+//     * @param k_d2
+//     * @param omega
+//     * @param beta
+//     * @param offset
+//     */
+//    //offset in [-500,500]
+//    public void balanceMoving(float k_p, float k_d1, float k_d2, int omega, int beta, int offset){
+//        k_d1 = k_d1 * 0.01F; // Just put these here for better readability
+//        k_d2 = k_d2 * 0.01F; // Just put these here for better readability
+//        double thetaDeg = abcvlibSensors.getThetaDeg();
+//        double speedRightWheel = abcvlibQuadEncoders.getWheelSpeedR();
+//        double speedLeftWheel = abcvlibQuadEncoders.getWheelSpeedL();
+//        double thetaDegDot = abcvlibSensors.getThetaDegDot();
+//
+//        // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
+//        if(thetaDeg < maxTiltAngle && thetaDeg > minTiltAngle){
+//            pulseWidthRightWheel = (int) -(k_p * (thetaDeg + c_p) +
+//                    k_d1 * (thetaDegDot + c_d1) +
+//                    k_d2 * (speedRightWheel + c_d2) +
+//                    k_d2 * (speedLeftWheel + c_d2) + offset);
+//            pulseWidthLeftWheel = pulseWidthRightWheel;
+//        }
+//        else{
+//            pulseWidthRightWheel = (int) -cpgXY[1];
+//            pulseWidthLeftWheel = pulseWidthRightWheel;
+//            cpgXY= cpgUpdate(cpgXY, ddt, thetaDegDot, omega, beta);
+//        }
+//
+//    }
+//
+//    /**
+//     * TODO Figure out the purpose of this.
+//     * @param param
+//     * @param distance
+//     * @param contourdiff
+//     * @return
+//     */
+//    public int[] contourApproaching(double[] param, double distance, double contourdiff){
+//        int output1, output2;
+//        int[] outputret = new int[2];
+//        double thetaDeg = abcvlibSensors.getThetaDeg();
+//        double speedRightWheel = abcvlibQuadEncoders.getWheelSpeedR();
+//        double speedLeftWheel = abcvlibQuadEncoders.getWheelSpeedL();
+//        double thetaDegDot = abcvlibSensors.getThetaDegDot();
+//
+//        // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
+//        if(thetaDeg < maxTiltAngle && thetaDeg > minTiltAngle){
+//            output1 = (int) -(param[0] * (thetaDeg + c_p) +
+//                    param[1] * (thetaDegDot + c_d1) * 0.01f +
+//                    param[2] * (speedRightWheel + c_d2) +
+//                    param[8] + param[10] * distance + param[12] * contourdiff);
+//            output2 = (int) -(param[5] * (thetaDeg + c_p) +
+//                    param[6] * (thetaDegDot + c_d1) * 0.01f +
+//                    param[7] * (speedLeftWheel + c_d2) +
+//                    param[9] + param[11] * distance + param[13] * contourdiff);
+//        }
+//        else{
+//            output1 = (int) -cpgXY[1];
+//            output2 = (int) -cpgXY[1];
+//            cpgXY = cpgUpdate(cpgXY, ddt, thetaDegDot, (int) param[3], (int) param[4]);
+//        }
+//        outputret[0] = output1;
+//        outputret[1] = output2;
+//        pulseWidthRightWheel = output1;
+//        pulseWidthLeftWheel = output2;
+//        return outputret;
+//    }
 
     /**
      * Sets the pulse width for each wheel. This directly correlates with the speed of the wheel.
@@ -273,7 +273,6 @@ public class AbcvlibMotion {
      * indefinitely. Therefore it makes a good example test case since its the easiest to implement.
      * @param right pulse width of right wheel from 0 to PWM_FREQ
      * @param left pulse width of left wheel from 0 to AbcvlibLooper.PWM_FREQ
-     * @see AbcvlibLooper#PWM_FREQ
      */
     public void setWheelSpeed(int right, int left){
 
@@ -308,58 +307,58 @@ public class AbcvlibMotion {
     int getPwLeft(){
         return pulseWidthLeftWheel;
     }
-
-    /**
-    Central Pattern Generator based destabalizer is applied when phone tilt angle is not within
-    minTiltAngle and maxTiltAngle. Apparently this method implements the Runge Kutta methods.
-    dt should correlate with the dt shown in the below mentioned wiki article.
-    https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods
-     */
-    public float[] cpgUpdate(float[] cpgXY, float dt, float thetadot, float omega, float beta){
-        float a1, a2, a3, a4; // dummy variables
-        float aa1, aa2, aa3, aa4; // dummy variables
-        float[] x = new float[2];
-
-        a1 = getXDot(cpgXY[1], thetadot, omega, beta);
-        a2 = getXDot(cpgXY[1] + a1 * dt / 2, thetadot, omega, beta);
-        a3 = getXDot(cpgXY[1] + a2 * dt / 2, thetadot, omega, beta);
-        a4 = getXDot(cpgXY[1]+ a3 * dt , thetadot, omega, beta);
-        x[0] = cpgXY[0] + (a1 + 2 * a2 + 2 * a3 + a4) * dt / 6;
-
-        aa1 = getYDot(cpgXY[0], omega);
-        aa2 = getYDot(cpgXY[0] + aa1 * dt / 2, omega);
-        aa3 = getYDot(cpgXY[0] + aa2 * dt / 2, omega);
-        aa4 = getYDot(cpgXY[0] + aa3 * dt, omega);
-        x[1] = cpgXY[1] + (aa1 + 2 * aa2 + 2 * aa3 + aa4) * dt / 6;
-
-        return x;
-    }
-
-    /**
-     * Just a slave function of cpgUpdate
-     * @param y
-     * @param thetadot
-     * @param omega
-     * @param beta
-     * @return
-     */
-    private float getXDot(float y, float thetadot, float omega, float beta){
-        float xdot;
-        xdot = (omega * y + beta * thetadot);
-        return xdot;
-    }
-
-    /**
-     * Just a slave function of cpgUpdate
-     * @param x
-     * @param omega
-     * @return
-     */
-    private float getYDot(float x, float omega){
-        float ydot;
-        ydot = -omega*x;
-        return ydot;
-    }
+//
+//    /**
+//    Central Pattern Generator based destabalizer is applied when phone tilt angle is not within
+//    minTiltAngle and maxTiltAngle. Apparently this method implements the Runge Kutta methods.
+//    dt should correlate with the dt shown in the below mentioned wiki article.
+//    https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods
+//     */
+//    public double[] cpgUpdate(double[] cpgXY, float dt, double thetadot, float omega, float beta){
+//        double a1, a2, a3, a4; // dummy variables
+//        double aa1, aa2, aa3, aa4; // dummy variables
+//        double[] x = new double[2];
+//
+//        a1 = getXDot(cpgXY[1], thetadot, omega, beta);
+//        a2 = getXDot(cpgXY[1] + a1 * dt / 2, thetadot, omega, beta);
+//        a3 = getXDot(cpgXY[1] + a2 * dt / 2, thetadot, omega, beta);
+//        a4 = getXDot(cpgXY[1]+ a3 * dt , thetadot, omega, beta);
+//        x[0] = cpgXY[0] + (a1 + 2 * a2 + 2 * a3 + a4) * dt / 6;
+//
+//        aa1 = getYDot(cpgXY[0], omega);
+//        aa2 = getYDot(cpgXY[0] + aa1 * dt / 2, omega);
+//        aa3 = getYDot(cpgXY[0] + aa2 * dt / 2, omega);
+//        aa4 = getYDot(cpgXY[0] + aa3 * dt, omega);
+//        x[1] = cpgXY[1] + (aa1 + 2 * aa2 + 2 * aa3 + aa4) * dt / 6;
+//
+//        return x;
+//    }
+//
+//    /**
+//     * Just a slave function of cpgUpdate
+//     * @param y
+//     * @param thetadot
+//     * @param omega
+//     * @param beta
+//     * @return
+//     */
+//    private double getXDot(double y, double thetadot, double omega, double beta){
+//        double xdot;
+//        xdot = (omega * y + beta * thetadot);
+//        return xdot;
+//    }
+//
+//    /**
+//     * Just a slave function of cpgUpdate
+//     * @param x
+//     * @param omega
+//     * @return
+//     */
+//    private double getYDot(double x, double omega){
+//        double ydot;
+//        ydot = -omega*x;
+//        return ydot;
+//    }
 
 //    public static void linearfeedback(int k_p, int k_d1, int k_d2){
 //        k_d1 = k_d1 * 0.01F; // Just put these here for better readability

@@ -11,7 +11,7 @@ import android.util.Log;
  * AbcvlibSensors reads and processes the data from the Android phone gryoscope and
  * accelerometer. The three main goals of this class are:
  *
- * 1.) To estimate the tilt angle of the phone (thetaRad) by combining the input from the
+ * 1.) To estimate the tilt angle of the phone by combining the input from the
  * gyroscope and accelerometer
  * 2.) To calculate the speed of each wheel (speedRightWheel and speedLeftWheel) by using
  * existing and past quadrature encoder states
@@ -29,33 +29,6 @@ import android.util.Log;
  */
 public class AbcvlibSensors implements SensorEventListener {
 
-    //------------------------------------ Tilt angle metrics --------------------------------------
-    /**
-     * Phone tilt angle in radians calculated via complementary filter combining both accelerometer and gyro inputs.
-     */
-    private float thetaRad = 0;
-    /**
-     * thetaRad converted to degrees.
-     */
-    private float thetaDeg;
-    /**
-     * thetaRadDotGyro converted to degrees per second.
-     */
-    private float thetaDegDot;
-    /**
-     * thetaRad from previous calculation (n-1).
-     */
-    private float thetaRadPrevious = 0;
-    /**
-     * Raw tilt velocity calculated by gyroscope alone.
-     */
-    private float thetaRadDotGyro;
-    /**
-     * Raw tilt angle of phone in radians calculated via accelerometer data alone.
-     */
-    private float thetaAccelerometer;
-    //----------------------------------------------------------------------------------------------
-
     //----------------------------------------- Counters -------------------------------------------
     /**
      * Keeps track of current history index.
@@ -71,7 +44,7 @@ public class AbcvlibSensors implements SensorEventListener {
      * Length of past timestamps and encoder values you keep in memory. 15 is not significant,
      * just what was deemed appropriate previously.
      */
-    private int historyLength = 10000;
+    private int historyLength = 1000;
     /**
      * Total number of times the sensors have changed data
      */
@@ -87,28 +60,6 @@ public class AbcvlibSensors implements SensorEventListener {
     private Sensor rotation_sensor;
 
     //----------------------------------------------------------------------------------------------
-
-    // Variables to calculate linear acceleration from combined gravity + linear acceleration data.
-    /**
-     * Calculated gravity portion of accelerometer data in x,y,z axes
-     */
-    private float[] gravity = new float[3];
-    /**
-     * Calculated acceleration without gravity of accelerometer data in x,y,z axes
-     */
-    private float[] linearAcceleration = new float[3];
-    /**
-     * Raw accelerometer signal along x-axis
-     */
-    private float accelerationX = 0;
-    /**
-     * Raw accelerometer signal along y-axis
-     */
-    private float accelerationY = 0;
-    /**
-     * Raw accelerometer signal along z-axis
-     */
-    private float accelerationZ = 0;
     /**
      * orientation vector See link below for android doc
      * https://developer.android.com/reference/android/hardware/SensorManager.html#getOrientation(float%5B%5D,%2520float%5B%5D)
@@ -121,7 +72,7 @@ public class AbcvlibSensors implements SensorEventListener {
     /**
      * thetaRotationVector converted to degrees.
      */
-    private float thetaDegVector = 0;
+    private double thetaDegVector = 0;
     /**
      * rotation matrix
      */
@@ -144,23 +95,11 @@ public class AbcvlibSensors implements SensorEventListener {
 
     //----------------------------------------- Timestamps -----------------------------------------
     /**
-     * Most recent timestamp provided by gyro
-     */
-    private long gyroTime = 0;
-    /**
      * Keeps track of both gyro and accelerometer sensor timestamps
      */
     private long timeStamps[] = new long[historyLength];
-    /**
-     * Timestamp of sensors immediately previous step.
-     */
-    private long timestampPrevious = 0;
-    /**
-     * Time in seconds between most recent timestamp and the immediately previous step.
-     */
-    private float time_delta = 0;
-    float timeDeltaOldestNewest = 0; // Difference in timestamps between most current and oldest in history.
     int indexHistoryOldest = 0; // Keeps track of oldest history index.
+    private double lp_freq = 10000;
 
     private boolean loggerOn;
 
@@ -202,7 +141,7 @@ public class AbcvlibSensors implements SensorEventListener {
 
         Sensor sensor = event.sensor;
 
-        float dt;
+        double dt;
         indexHistoryCurrent = sensorChangeCount % historyLength;
         indexHistoryCurrentPrevious = (sensorChangeCount - 1) % historyLength;
         /*
@@ -214,7 +153,7 @@ public class AbcvlibSensors implements SensorEventListener {
         indexHistoryOldest = (sensorChangeCount + 1) % historyLength;
         timeStamps[indexHistoryCurrent] = event.timestamp;
         //Calculate the time difference between the most current timestamp and the oldest one in the history arrays.
-        timeDeltaOldestNewest = (float) (timeStamps[indexHistoryCurrent] - timeStamps[indexHistoryOldest]) / 1000000000;
+        dt = (timeStamps[indexHistoryCurrent] - timeStamps[indexHistoryOldest]) / 1000000000;
 
         if (indexHistoryCurrentPrevious >= 0){
             if (sensor.getType() == Sensor.TYPE_ROTATION_VECTOR){
@@ -228,22 +167,16 @@ public class AbcvlibSensors implements SensorEventListener {
                 with Android version apparently, so only depend on time differences, not any
                 absolute time. Dividing by 1000000000 to get time in seconds.
                 */
-                dt = (timeStamps[indexHistoryCurrent] - timeStamps[indexHistoryCurrentPrevious]) / 1000000000f;
-                thetaRotationVector = lowpassFilter(thetaRotationVector, dt, 10000f);
+                thetaRotationVector = lowpassFilter(thetaRotationVector, dt, lp_freq);
                 angularVelocityRotationVector[indexHistoryCurrent] = (thetaRotationVector[indexHistoryCurrent] - thetaRotationVector[indexHistoryCurrentPrevious]) / dt;
+                angularVelocityRotationVector = lowpassFilter(angularVelocityRotationVector, dt, lp_freq);
             }
         }
 
-
-        thetaRad = wrapAngle(thetaRad);
-        // Convert radians to degrees
-        thetaDeg = (float) ((thetaRad * (180 / Math.PI)));
         thetaDegVector = (float) ((thetaRotationVector[indexHistoryCurrent] * (180 / Math.PI)));
         angularVelocityRotationVectorDeg = (float) ((angularVelocityRotationVector[indexHistoryCurrent] * (180 / Math.PI)));
-        thetaDegDot = (float) (thetaRadDotGyro * (180 / Math.PI));
 
         // Update all previous variables with current ones
-        thetaRadPrevious = thetaRad;
         sensorChangeCount++;
         if (loggerOn){
             sendToLog();
@@ -276,26 +209,24 @@ public class AbcvlibSensors implements SensorEventListener {
     /**
      * @return Phone tilt angle in radians
      */
-    public float getThetaRad(){ return thetaRad; }
+    public double getThetaRad(){ return thetaRotationVector[indexHistoryCurrent]; }
 
     /**
      * @return Phone tilt angle in degrees
      */
-    public float getThetaDeg(){
-//        return thetaDeg;
+    public double getThetaDeg(){
         return thetaDegVector;
     }
 
     /**
      * @return Phone tilt speed (angular velocity) in radians per second
      */
-    public float getThetaRadDot(){ return thetaRadDotGyro; }
+    public double getThetaRadDot(){ return angularVelocityRotationVector[indexHistoryCurrent]; }
 
     /**
      * @return Phone tilt speed (angular velocity) in degrees per second
      */
-    public float getThetaDegDot(){
-//        return thetaDegDot;
+    public double getThetaDegDot(){
         return angularVelocityRotationVectorDeg;
     }
 
@@ -304,24 +235,6 @@ public class AbcvlibSensors implements SensorEventListener {
      * data.
      */
     int getSensorChangeCount() {return sensorChangeCount;}
-
-    // TODO for all set methods, handle likely errors or miscalculations. (May need to add recalculations of some variables outside of the direct one set)
-    /**
-     * Sets the tilt angle of the phone in radians. Not sure why this would ever be necessary as it
-     * would be overwritten at the very next sensor event.
-     * @param thetaRad phone tilt angle in radians. Zero being the phone placed vertically,
-     *                 perpendicular to the ground, in portrait mode.
-     */
-    void setThetaRad(float thetaRad) { this.thetaRad = thetaRad; }
-
-    /**
-     * Sets the tilt angle of the phone in degrees. Not sure why this would ever be necessary as it
-     * would be overwritten at the very next sensor event.
-     * @param thetaRadDot phone tilt angle in degrees. Zero being the phone placed vertically,
-     *                 perpendicular to the ground, in portrait mode.
-     */
-    void setThetaRadDot(float thetaRadDot) { this.thetaRadDotGyro = thetaRadDot; }
-
 
     /**
      * Sets the history length for which to base the derivative functions off of (angular velocity,
@@ -337,7 +250,7 @@ public class AbcvlibSensors implements SensorEventListener {
     private void sendToLog() {
 
         // Compile thetaDegVectorMsg values to push to separate adb tag
-        String thetaVectorMsg = Float.toString(thetaDegVector);
+        String thetaVectorMsg = Double.toString(thetaDegVector);
 
         // Compile thetaDegVectorMsg values to push to separate adb tag
         String thetaVectorVelMsg = Float.toString(angularVelocityRotationVectorDeg);
@@ -360,7 +273,7 @@ public class AbcvlibSensors implements SensorEventListener {
         return angle;
     }
 
-    private double[] lowpassFilter(double[] x, float dt, float f_c){
+    private double[] lowpassFilter(double[] x, double dt, double f_c){
         double[] y = new double[x.length];
         double alpha = (2 * Math.PI * dt * f_c) / ((2 * Math.PI * dt * f_c) + 1);
         y[0] = alpha * x[0];

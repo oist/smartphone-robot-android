@@ -61,7 +61,7 @@ public class Camera implements CameraBridgeViewBase.CvCameraViewListener2, View.
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         mRgba = inputFrame.rgba();
-        float thetaDeg = abcvlibSensors.getThetaDeg();
+        double thetaDeg = abcvlibSensors.getThetaDeg();
 
 
         Core.flip(mRgba, mRgba, 1);
