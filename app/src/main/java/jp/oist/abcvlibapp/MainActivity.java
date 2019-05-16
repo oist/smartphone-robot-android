@@ -60,8 +60,8 @@ public class MainActivity extends AbcvlibActivity {
         float int_e_t; // integral of e(t) from wikipedia. Discrete, so just a sum here.
 
         float k_p = 300;
-        float k_i = 0.003f;
-//        float k_i = 0;
+//        float k_i = 0.003f;
+        float k_i = 0;
         float k_d = -10f;
 //        float k_d = 0;
 
