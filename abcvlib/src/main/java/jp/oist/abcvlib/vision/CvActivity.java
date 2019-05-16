@@ -51,8 +51,8 @@ public class CvActivity extends IOIOActivity {
     private final int PWM_FREQ = 1000;
 
     // Create objects of each module class
-    AbcvlibSensors abcvlibSensors = new AbcvlibSensors(this);
-    AbcvlibQuadEncoders abcvlibQuadEncoders = new AbcvlibQuadEncoders();
+    AbcvlibSensors abcvlibSensors = new AbcvlibSensors(this, loggerOn);
+    AbcvlibQuadEncoders abcvlibQuadEncoders = new AbcvlibQuadEncoders(loggerOn);
     AbcvlibMotion abcvlibMotion = new AbcvlibMotion(abcvlibSensors, abcvlibQuadEncoders, PWM_FREQ);
     Camera mCamera = new Camera(abcvlibSensors);
 

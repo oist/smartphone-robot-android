@@ -162,6 +162,8 @@ public class AbcvlibSensors implements SensorEventListener {
     float timeDeltaOldestNewest = 0; // Difference in timestamps between most current and oldest in history.
     int indexHistoryOldest = 0; // Keeps track of oldest history index.
 
+    private boolean loggerOn;
+
     //----------------------------------------------------------------------------------------------
 
     /**
@@ -170,7 +172,8 @@ public class AbcvlibSensors implements SensorEventListener {
      * events will call the onSensorChanged method within this class.
      * @param context Context object passed up from Android Main Activity
      */
-    public AbcvlibSensors(Context context){
+    public AbcvlibSensors(Context context, boolean loggerOn){
+        this.loggerOn = loggerOn;
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
@@ -242,7 +245,9 @@ public class AbcvlibSensors implements SensorEventListener {
         // Update all previous variables with current ones
         thetaRadPrevious = thetaRad;
         sensorChangeCount++;
-        sendToLog();
+        if (loggerOn){
+            sendToLog();
+        }
     }
 
     /**

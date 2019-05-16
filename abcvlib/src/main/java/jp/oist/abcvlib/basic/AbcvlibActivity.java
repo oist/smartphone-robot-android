@@ -54,8 +54,8 @@ public class AbcvlibActivity extends IOIOActivity {
         // Pass Android App information up to parent classes
         super.onCreate(savedInstanceState);
         // Initialize AbcvlibSensors and AbcvlibMotion objects.
-        abcvlibSensors = new AbcvlibSensors(this);
-        abcvlibQuadEncoders = new AbcvlibQuadEncoders();
+        abcvlibSensors = new AbcvlibSensors(this, loggerOn);
+        abcvlibQuadEncoders = new AbcvlibQuadEncoders(loggerOn);
         abcvlibMotion = new AbcvlibMotion(abcvlibSensors, abcvlibQuadEncoders, PWM_FREQ);
 
 //        abcvlibSensorsTest = new AbcvlibSensors(this);

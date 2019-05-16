@@ -35,9 +35,15 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     private int indexCurrent = 1;
     private int indexPrevious = 0;
     private int loopCount = 1;
-    private int buffer = 15;
+    private int buffer = 50;
     private double[] timeStamp = new double[buffer];
     private double dt = 0;
+    private double lp_freq = 100.0; // Low Pass Cutoff Freq
+    private int quadErrorCount = 0;
+    private boolean newData = true;
+    private boolean newDataLeft = true;
+    private boolean newDataRight = true;
+
 
     /**
      * Enable/disable this to swap the polarity of the wheels such that the default forward
@@ -272,11 +278,14 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      * @see #loop()
      * @see AbcvlibSensors#register()
      */
-    private int encoderCountRightWheel;
+    private double[] encoderCountRightWheel = new double[buffer];
     /**
      * @see #encoderCountRightWheel
      */
-    private int encoderCountLeftWheel;
+    private double[] encoderCountLeftWheel = new double[buffer];
+
+    private double[] encoderCountLeftWheelLP = new double[buffer];
+    private double[] encoderCountRightWheelLP = new double[buffer];
 
     // Constructor to pass other module objects in. Default loggerOn value to true
     public AbcvlibLooper(AbcvlibSensors abcvlibSensors, AbcvlibMotion abcvlibMotion, AbcvlibQuadEncoders abcvlibQuadEncoders,
@@ -399,11 +408,22 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
             updateQuadEncoders();
 
-            if (loggerOn) {
-                sendToLog();
-            }
 
-            indexUpdate();
+            if (newDataLeft || newDataRight) {
+
+                lowpassFilterBoth();
+
+
+                if (loggerOn) {
+                    sendToLog();
+                }
+
+                indexUpdate();
+
+            }
+            else {
+                Log.i("abcvlibLooper", "No new data");
+            }
 
         }
         catch (ConnectionLostException e){
@@ -466,12 +486,6 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     private void timeStampUpdate(){
         timeStamp[indexCurrent] = System.nanoTime();
         dt = (timeStamp[indexCurrent] - timeStamp[indexPrevious]) / 1000000000;
-    }
-
-    private void indexUpdate(){
-        indexCurrent = loopCount % buffer;
-        indexPrevious = (loopCount - 1) % buffer;
-        loopCount++;
     }
 
     private void getPwm() {
@@ -551,17 +565,40 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
         // Right is negative and left is positive since the wheels are physically mirrored so
         // while moving forward one wheel is moving ccw while the other is rotating cw.
-        encoderCountRightWheel = encoderCountRightWheel -
+        encoderCountRightWheel[indexCurrent] = encoderCountRightWheel[indexPrevious] -
                 encoderAddSubtractCount(input1RightWheelState, input2RightWheelState,
                         pulseWidthRightWheelNew, pulseWidthLeftWheelNew, encoderARightWheelState,
                         encoderBRightWheelState, encoderARightWheelStatePrevious,
                         encoderBRightWheelStatePrevious);
 
-        encoderCountLeftWheel = encoderCountLeftWheel +
+        if (newData){
+            newDataRight = true;
+        }
+        else {
+            newDataRight = false;
+        }
+
+        encoderCountLeftWheel[indexCurrent] = encoderCountLeftWheel[indexPrevious] +
                 encoderAddSubtractCount(input1LeftWheelState, input2LeftWheelState,
                         pulseWidthRightWheelNew, pulseWidthLeftWheelNew, encoderALeftWheelState,
                         encoderBLeftWheelState, encoderALeftWheelStatePrevious,
                         encoderBLeftWheelStatePrevious);
+
+        if (newData){
+            newDataLeft = true;
+        }
+        else{
+            newDataLeft = false;
+        }
+    }
+
+    private void lowpassFilterBoth(){
+//        encoderCountLeftWheelLP = lowpassFilter(encoderCountLeftWheel, dt, lp_freq);
+//        encoderCountRightWheelLP = lowpassFilter(encoderCountRightWheel, dt, lp_freq);
+//        encoderCountLeftWheelLP[indexCurrent] = runningAvg(encoderCountLeftWheel);
+//        encoderCountRightWheelLP[indexCurrent] = runningAvg(encoderCountRightWheel);
+        encoderCountLeftWheelLP[indexCurrent] = encoderCountLeftWheel[indexCurrent];
+        encoderCountRightWheelLP[indexCurrent] = encoderCountRightWheel[indexCurrent];
     }
 
     private void writeIoUpdates() throws ConnectionLostException{
@@ -607,7 +644,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
     private void updateQuadEncoders(){
 
-        abcvlibQuadEncoders.setQuadVars(encoderCountLeftWheel, encoderCountRightWheel, indexCurrent, indexPrevious, dt);
+        abcvlibQuadEncoders.setQuadVars(encoderCountLeftWheelLP[indexCurrent], encoderCountRightWheelLP[indexCurrent], indexCurrent, indexPrevious, timeStamp[indexCurrent]);
 
     }
 
@@ -672,8 +709,10 @@ public class AbcvlibLooper extends BaseIOIOLooper {
                     wheelCounts--;
                 }
                 else{
-                    Log.w("abcvlibEncoder", "Quadrature encoders read H/H or L/L when they " +
+                    Log.w("abcvlibEncoder", "quadErrorCount = " + quadErrorCount + " Quadrature encoders read H/H or L/L when they " +
                             "should have read H/L or L/H");
+                    quadErrorCount++;
+                    newData = false;
                 }
             }
             // Previous Encoder A LOW, B HIGH
@@ -687,8 +726,10 @@ public class AbcvlibLooper extends BaseIOIOLooper {
                     wheelCounts--;
                 }
                 else{
-                    Log.w("abcvlibEncoder", "Quadrature encoders read H/L or L/H when they " +
+                    Log.w("abcvlibEncoder", "quadErrorCount = " + quadErrorCount + " Quadrature encoders read H/L or L/H when they " +
                             "should have read H/H or L/L");
+                    quadErrorCount++;
+                    newData = false;
                 }
             }
             // Previous Encoder A LOW, B LOW. Leave "always true" warning from Android Studio for
@@ -703,8 +744,10 @@ public class AbcvlibLooper extends BaseIOIOLooper {
                     wheelCounts--;
                 }
                 else{
-                    Log.w("abcvlibEncoder", "Quadrature encoders read H/H or L/L when they " +
+                    Log.w("abcvlibEncoder", "quadErrorCount = " + quadErrorCount + " Quadrature encoders read H/H or L/L when they " +
                             "should have read H/L or L/H");
+                    quadErrorCount++;
+                    newData = false;
                 }
             }
             // Previous Encoder A HIGH, B LOW. Leave "always true" warning from Android Studio for
@@ -719,22 +762,37 @@ public class AbcvlibLooper extends BaseIOIOLooper {
                     wheelCounts--;
                 }
                 else{
-                    Log.w("abcvlibEncoder", "Quadrature encoders read H/L or L/H when they " +
+                    Log.w("abcvlibEncoder", "quadErrorCount = " + quadErrorCount + " Quadrature encoders read H/L or L/H when they " +
                             "should have read H/H or L/L");
+                    quadErrorCount++;
+                    newData = false;
                 }
             }
+        }
+
+        if (wheelCounts != 0){
+            newData = true;
         }
 
         return wheelCounts;
     }
 
-    private double[] lowpassFilter(double[] x, double dt, float f_c){
+    private double[] lowpassFilter(double[] x, double dt, double f_c){
         double[] y = new double[x.length];
         double alpha = (2 * Math.PI * dt * f_c) / ((2 * Math.PI * dt * f_c) + 1);
         y[0] = alpha * x[0];
         for (int i = 1; i < y.length; i++){
             y[i] = (alpha * x[i]) + ((1 - alpha) * y[i - 1]);
         }
+        return y;
+    }
+
+    private double runningAvg(double[] x){
+        double y = 0;
+        for (int i = 0; i < x.length; i++){
+            y = y + x[i];
+        }
+        y = y / x.length;
         return y;
     }
 
@@ -772,6 +830,12 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 //        Log.i("distanceMsg", distanceMsg);
 //        Log.i("speedMsg", speedMsg);
 
+    }
+
+    private void indexUpdate(){
+        indexCurrent = loopCount % buffer;
+        indexPrevious = (loopCount - 1) % buffer;
+        loopCount++;
     }
 
 }

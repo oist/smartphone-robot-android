@@ -15,7 +15,7 @@ public class MainActivity extends AbcvlibActivity {
      * memory/disk space on the phone and may result in memory failure if run for a long time
      * such as any learning tasks.
      */
-    private boolean loggerOn = true;
+    private boolean loggerOn = false;
     /**
      * Enable/disable this to swap the polarity of the wheels such that the default forward
      * direction will be swapped (i.e. wheels will move cw vs ccw as forward).
@@ -59,11 +59,11 @@ public class MainActivity extends AbcvlibActivity {
         float e_t = 0; // e(t) of wikipedia
         float int_e_t; // integral of e(t) from wikipedia. Discrete, so just a sum here.
 
-        float k_p = 200;
-//        float k_i = 0.0003f;
-        float k_i = 0;
-//        float k_d = -2f;
-        float k_d = 0;
+        float k_p = 300;
+        float k_i = 0.003f;
+//        float k_i = 0;
+        float k_d = -10f;
+//        float k_d = 0;
 
         float maxTiltAngle = 5f;
         float minTiltAngle = -8f;
