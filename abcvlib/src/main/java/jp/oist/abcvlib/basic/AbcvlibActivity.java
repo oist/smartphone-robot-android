@@ -23,6 +23,7 @@ public class AbcvlibActivity extends IOIOActivity {
 
     public AbcvlibSensors abcvlibSensors;
     public AbcvlibMotion abcvlibMotion;
+    public AbcvlibSensors abcvlibSensorsTest;
 
     /**
      * Enable/disable sensor and IO logging. Only set to true when debugging as it uses a lot of
@@ -56,8 +57,20 @@ public class AbcvlibActivity extends IOIOActivity {
         abcvlibSensors = new AbcvlibSensors(this);
         abcvlibMotion = new AbcvlibMotion(abcvlibSensors, PWM_FREQ);
 
+        TestThread testThread = new TestThread();
+        new Thread(testThread).start();
+//        abcvlibSensorsTest = new AbcvlibSensors(this);
+//        AbcvlibSensors.QuadratureThread quadratureThread = new AbcvlibSensors(this).new QuadratureThread();
+//        new Thread(quadratureThread).start();
+
         // Keeps screen from timing out
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    public class TestThread implements Runnable{
+        public void run(){
+
+        }
     }
 
     @Override

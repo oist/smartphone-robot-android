@@ -207,6 +207,42 @@ public class AbcvlibSensors implements SensorEventListener {
         register();
     }
 
+    public class QuadratureThread implements Runnable{
+
+        public void run(){
+
+//            while(true) {
+//
+////                /*
+////                The if statement waits for the full history length to fill. Otherwise you would be dividing
+////                by zero since timeDeltaOldestNewest is zero until the array fills with timeStamps from the
+////                sensors.
+////                */
+////                // TODO I think speed should be calculated not from a 15 length average, but from a either a raw or low pass filtered version of the distance.
+////                if (timeDeltaOldestNewest != 0) {
+////                    distanceL = getDistanceL();
+////                    distanceR = getDistanceR();
+////                    // Calculate the speed of each wheel in mm/s.
+////                    speedRightWheel = (calcDistance(encoderCountRightWheel[indexHistoryCurrent]) - calcDistance(encoderCountRightWheel[indexHistoryOldest])) / timeDeltaOldestNewest;
+////                    speedLeftWheel = (calcDistance(encoderCountLeftWheel[indexHistoryCurrent]) - calcDistance(encoderCountLeftWheel[indexHistoryOldest])) / timeDeltaOldestNewest;
+////                }
+////                else{
+////                    Log.i("sensorDebugging", "timeDeltaOldestNewest == 0");
+////                }
+//                try{
+//                    Thread.sleep(1);
+//                } catch (IllegalArgumentException e){
+//                    Log.i("sensorDebugging", "negative sleep value provided");
+//                } catch (InterruptedException e){
+//                    Log.i("sensorDebugging", "QuadratureThread interrupted");
+//                }
+//
+//
+//            }
+        }
+
+    }
+
     /**
      * Assume this is only used for sensors that have the ability to change accuracy (e.g. GPS)
      * @param sensor Sensor object that has changed its accuracy
@@ -228,8 +264,6 @@ public class AbcvlibSensors implements SensorEventListener {
 
         Sensor sensor = event.sensor;
 
-        long accelerometerTime; // Most recent timestamp provided by accelerometer
-        long gyroTimeDelta; // Elapsed time between current and last gyro readings
         float dt;
         indexHistoryCurrent = sensorChangeCount % historyLength;
         indexHistoryCurrentPrevious = (sensorChangeCount - 1) % historyLength;
@@ -270,25 +304,9 @@ public class AbcvlibSensors implements SensorEventListener {
         angularVelocityRotationVectorDeg = (float) ((angularVelocityRotationVector[indexHistoryCurrent] * (180 / Math.PI)));
         thetaDegDot = (float) (thetaRadDotGyro * (180 / Math.PI));
 
-        /*
-         The if statement waits for the full history length to fill. Otherwise you would be dividing
-         by zero since timeDeltaOldestNewest is zero until the array fills with timeStamps from the
-         sensors.
-          */
-        if (timeDeltaOldestNewest != 0) {
-            // Calculate the speed of each wheel in mm/s.
-            speedRightWheel = (calcDistance(encoderCountRightWheel[indexHistoryCurrent]) - calcDistance(encoderCountRightWheel[indexHistoryOldest])) / timeDeltaOldestNewest;
-            speedLeftWheel = (calcDistance(encoderCountLeftWheel[indexHistoryCurrent]) - calcDistance(encoderCountLeftWheel[indexHistoryOldest])) / timeDeltaOldestNewest;
-        }
-        else{
-            Log.i("sensorDebugging", "timeDeltaOldestNewest == 0");
-        }
-
         // Update all previous variables with current ones
         thetaRadPrevious = thetaRad;
         sensorChangeCount++;
-        distanceL = getDistanceL();
-        distanceR = getDistanceR();
         sendToLog();
     }
 
