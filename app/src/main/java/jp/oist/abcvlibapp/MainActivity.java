@@ -33,17 +33,17 @@ public class MainActivity extends AbcvlibActivity {
         // ID within the R class
         setContentView(R.layout.activity_main);
 
-//        // PID Controller
-//        PID pidThread = new PID();
-//        new Thread(pidThread).start();
+        // PID Controller
+        PID pidThread = new PID();
+        new Thread(pidThread).start();
 
 //        // Linear Back and Forth every 10 mm
 //        BackAndForth backAndForthThread = new BackAndForth();
 //        new Thread(backAndForthThread).start();
 
-        // Rotate Back and Forth every 180 deg
-        TurnBackAndForth turnBackAndForthThread = new TurnBackAndForth();
-        new Thread(turnBackAndForthThread).start();
+//        // Rotate Back and Forth every 180 deg
+//        TurnBackAndForth turnBackAndForthThread = new TurnBackAndForth();
+//        new Thread(turnBackAndForthThread).start();
 
     }
 
@@ -60,18 +60,18 @@ public class MainActivity extends AbcvlibActivity {
         double speedR; // Current speed on right wheel in mm/s
 
         int output; //  u(t) of wikipedia
-        float setPoint = 0f; // SP of wikipedia
+        float setPoint = -8f; // SP of wikipedia
         double e_t = 0; // e(t) of wikipedia
         double int_e_t; // integral of e(t) from wikipedia. Discrete, so just a sum here.
 
-        float k_p = 300;
-//        float k_i = 0.003f;
+        float k_p = 400;
+//        float k_i = 0.0003f;
         float k_i = 0;
-//        float k_d = -10f;
+//        float k_d = 1000f;
         float k_d = 0;
 
-        float maxTiltAngle = 5f;
-        float minTiltAngle = -8f;
+        float maxTiltAngle = setPoint + 50;
+        float minTiltAngle = setPoint - 50;
 
         private int stuckCount = 0;
 

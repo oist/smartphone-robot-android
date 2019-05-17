@@ -123,8 +123,8 @@ public class AbcvlibQuadEncoders {
         encoderCountLeftWheel[indexCurrent] = countLeft;
         encoderCountRightWheel[indexCurrent] = countRight;
         timeStamps[indexCurrent] = time;
-        dt = (timeStamps[indexCurrent] - timeStamps[indexSpeed]) / 1000000000;
-        dt_lp = (timeStamps[indexCurrent] - timeStamps[indexOldest]) / 1000000000;
+        dt = (timeStamps[indexCurrent] - timeStamps[indexSpeed]) / 1000000000f;
+        dt_lp = (timeStamps[indexCurrent] - timeStamps[indexOldest]) / 1000000000f;
         setDistanceL();
         setDistanceR();
         setWheelSpeedL();

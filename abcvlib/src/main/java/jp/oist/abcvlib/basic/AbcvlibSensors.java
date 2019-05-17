@@ -32,31 +32,45 @@ public class AbcvlibSensors implements SensorEventListener {
     //----------------------------------------- Counters -------------------------------------------
     /**
      * Keeps track of current history index.
-     * indexHistoryCurrent calculates the correct index within the time history arrays in order to
+     * indexCurrent calculates the correct index within the time history arrays in order to
      * continuously loop through and rewrite the encoderCountHistoryLength indexes.
-     * E.g. if sensorChangeCount is 15 and encoderCountHistoryLength is 15, then indexHistoryCurrent
+     * E.g. if sensorChangeCount is 15 and encoderCountHistoryLength is 15, then indexCurrent
      * will resolve to 0 and the values for each history array will be updated from index 0 until
      * sensorChangeCount exceeds 30 at which point it will loop to 0 again, so on and so forth.
      */
-    private int indexHistoryCurrent = 0;
-    private int indexHistoryCurrentPrevious = 0;
+    private int indexCurrentRotation = 1;
+    private int indexPreviousRotation = 0;
+    /**
+     * Keeps track of current history index.
+     * indexCurrent calculates the correct index within the time history arrays in order to
+     * continuously loop through and rewrite the encoderCountHistoryLength indexes.
+     * E.g. if sensorChangeCount is 15 and encoderCountHistoryLength is 15, then indexCurrent
+     * will resolve to 0 and the values for each history array will be updated from index 0 until
+     * sensorChangeCount exceeds 30 at which point it will loop to 0 again, so on and so forth.
+     */
+    private int indexCurrentGyro = 1;
+    private int indexPreviousGyro = 0;
     /**
      * Length of past timestamps and encoder values you keep in memory. 15 is not significant,
      * just what was deemed appropriate previously.
      */
-    private int historyLength = 1000;
-    private double lp_freq = 1;
+    private int historyLength = 100;
+    /**
+     * Low Pass Filter cutoff freq
+     */
+    private double lp_freq_theta = 1000;
+    private double lp_freq_thetaDot = 1000;
     /**
      * Total number of times the sensors have changed data
      */
-    private int sensorChangeCount = 0;
+    private int sensorChangeCountGyro = 1;
+    private int sensorChangeCountRotation = 1;
     //----------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------
 
     // Android Sensor objects
     private SensorManager sensorManager;
-    private Sensor accelerometer;
     private Sensor gyroscope;
     private Sensor rotation_sensor;
 
@@ -67,13 +81,13 @@ public class AbcvlibSensors implements SensorEventListener {
      */
     private float[] orientation = new float[3];
     /**
-     * theta calculated from rotation vector
+     * thetaRad calculated from rotation vector
      */
-    private double[] thetaRotationVector = new double[historyLength];
+    private double[] thetaRad = new double[historyLength];
     /**
-     * thetaRotationVector converted to degrees.
+     * thetaRad converted to degrees.
      */
-    private double thetaDegVector = 0;
+    private double thetaDeg = 0;
     /**
      * rotation matrix
      */
@@ -85,11 +99,11 @@ public class AbcvlibSensors implements SensorEventListener {
     /**
      * angularVelocity calculated from RotationMatrix.
      */
-    private double[] angularVelocityRotationVector = new double[historyLength];
+    private double[] angularVelocityRad = new double[historyLength];
     /**
-     * angularVelocityRotationVector converted to degrees.
+     * angularVelocityRad converted to degrees.
      */
-    private float angularVelocityRotationVectorDeg = 0;
+    private double angularVelocityDeg = 0;
 
 
     //----------------------------------------------------------------------------------------------
@@ -99,7 +113,14 @@ public class AbcvlibSensors implements SensorEventListener {
      * Keeps track of both gyro and accelerometer sensor timestamps
      */
     private long timeStamps[] = new long[historyLength];
+    /**
+    indexHistoryOldest calculates the index for the oldest encoder count still within
+    the history. Using the most recent historical point could lead to speed calculations of zero
+    in the event the quadrature encoders slip/skip and read the same wheel count two times in a
+    row even if the wheel is moving with a non-zero speed.
+     */
     int indexHistoryOldest = 0; // Keeps track of oldest history index.
+    double dt = 0;
 
     private boolean loggerOn;
 
@@ -114,7 +135,6 @@ public class AbcvlibSensors implements SensorEventListener {
     public AbcvlibSensors(Context context, boolean loggerOn){
         this.loggerOn = loggerOn;
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
-        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         rotation_sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         register();
@@ -141,45 +161,37 @@ public class AbcvlibSensors implements SensorEventListener {
 
         Sensor sensor = event.sensor;
 
-        double dt;
-        indexHistoryCurrent = sensorChangeCount % historyLength;
-        indexHistoryCurrentPrevious = (sensorChangeCount - 1) % historyLength;
-        /*
-        indexHistoryOldest calculates the index for the oldest encoder count still within
-        the history. Using the most recent historical point could lead to speed calculations of zero
-        in the event the quadrature encoders slip/skip and read the same wheel count two times in a
-        row even if the wheel is moving with a non-zero speed.
-         */
-        indexHistoryOldest = (sensorChangeCount + 1) % historyLength;
-        timeStamps[indexHistoryCurrent] = event.timestamp;
-        //Calculate the time difference between the most current timestamp and the oldest one in the history arrays.
-        dt = (timeStamps[indexHistoryCurrent] - timeStamps[indexHistoryOldest]) / 1000000000;
+        if(sensor.getType()==Sensor.TYPE_GYROSCOPE){
 
-        if (indexHistoryCurrentPrevious >= 0){
-            if (sensor.getType() == Sensor.TYPE_ROTATION_VECTOR){
-                SensorManager.getRotationMatrixFromVector(rotationMatrix , event.values);
-                SensorManager.remapCoordinateSystem(rotationMatrix, SensorManager.AXIS_X, SensorManager.AXIS_Z, rotationMatrixRemap);
-                SensorManager.getOrientation(rotationMatrixRemap, orientation);
-                thetaRotationVector[indexHistoryCurrent] = orientation[1]; //Pitch
-
-                /*
-                timestamps given in nanoseconds from some seemingly random start time (this varies
-                with Android version apparently, so only depend on time differences, not any
-                absolute time. Dividing by 1000000000 to get time in seconds.
-                */
-                thetaRotationVector = lowpassFilter(thetaRotationVector, dt, lp_freq);
-                angularVelocityRotationVector[indexHistoryCurrent] = (thetaRotationVector[indexHistoryCurrent] - thetaRotationVector[indexHistoryCurrentPrevious]) / dt;
-                angularVelocityRotationVector = lowpassFilter(angularVelocityRotationVector, dt, lp_freq);
-            }
         }
+        else if(sensor.getType()==Sensor.TYPE_ROTATION_VECTOR){
 
-        thetaDegVector = (float) ((thetaRotationVector[indexHistoryCurrent] * (180 / Math.PI)));
-        angularVelocityRotationVectorDeg = (float) ((angularVelocityRotationVector[indexHistoryCurrent] * (180 / Math.PI)));
+            indexCurrentRotation = sensorChangeCountRotation % historyLength;
+            indexPreviousRotation = (sensorChangeCountRotation - 1) % historyLength;
+            indexHistoryOldest = (sensorChangeCountRotation + 1) % historyLength;
+            timeStamps[indexCurrentRotation] = event.timestamp;
+            dt = (timeStamps[indexCurrentRotation] - timeStamps[indexPreviousRotation]) / 1000000000f;
 
-        // Update all previous variables with current ones
-        sensorChangeCount++;
-        if (loggerOn){
-            sendToLog();
+            SensorManager.getRotationMatrixFromVector(rotationMatrix , event.values);
+            SensorManager.remapCoordinateSystem(rotationMatrix, SensorManager.AXIS_X, SensorManager.AXIS_Z, rotationMatrixRemap);
+            SensorManager.getOrientation(rotationMatrixRemap, orientation);
+            thetaRad[indexCurrentRotation] = orientation[1]; //Pitch
+//            thetaRad = lowpassFilter(thetaRad, dt, lp_freq_theta);
+
+            angularVelocityRad[indexCurrentRotation] = (thetaRad[indexCurrentRotation] - thetaRad[indexPreviousRotation]) / 0.005;
+//            angularVelocityRad = lowpassFilter(angularVelocityRad, 0.005, lp_freq_thetaDot);
+//            if (sensorChangeCountRotation > historyLength){
+//                angularVelocityRad[indexCurrentRotation] = runningAvg(angularVelocityRad, 3);
+//            }
+
+            thetaDeg = (thetaRad[indexCurrentRotation] * (180 / Math.PI));
+            angularVelocityDeg = (angularVelocityRad[indexCurrentRotation] * (180 / Math.PI));
+
+            // Update all previous variables with current ones
+            sensorChangeCountRotation++;
+            if (loggerOn){
+                sendToLog();
+            }
         }
     }
 
@@ -193,6 +205,12 @@ public class AbcvlibSensors implements SensorEventListener {
         } else {
             Log.e("SensorTesting", "No Default rotation_sensor Available.");
         }
+        // Check if gyro exists before trying to turn on the listener
+        if (gyroscope != null){
+            sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_FASTEST);
+        } else {
+            Log.e("SensorTesting", "No Default gyroscope Available.");
+        }
     }
 
     /**
@@ -204,37 +222,41 @@ public class AbcvlibSensors implements SensorEventListener {
         if (rotation_sensor != null){
             sensorManager.unregisterListener(this, rotation_sensor);
         }
+        // Check if gyro exists before trying to turn off the listener
+        if (gyroscope != null){
+            sensorManager.unregisterListener(this, gyroscope);
+        }
     }
 
     /**
      * @return Phone tilt angle in radians
      */
-    public double getThetaRad(){ return thetaRotationVector[indexHistoryCurrent]; }
+    public double getThetaRad(){ return thetaRad[indexCurrentRotation]; }
 
     /**
      * @return Phone tilt angle in degrees
      */
     public double getThetaDeg(){
-        return thetaDegVector;
+        return thetaDeg;
     }
 
     /**
      * @return Phone tilt speed (angular velocity) in radians per second
      */
-    public double getThetaRadDot(){ return angularVelocityRotationVector[indexHistoryCurrent]; }
+    public double getThetaRadDot(){ return angularVelocityRad[indexCurrentRotation]; }
 
     /**
      * @return Phone tilt speed (angular velocity) in degrees per second
      */
     public double getThetaDegDot(){
-        return angularVelocityRotationVectorDeg;
+        return angularVelocityDeg;
     }
 
     /**
      * @return Total combined count for how many times the accelerometer and gyroscope have provided
      * data.
      */
-    int getSensorChangeCount() {return sensorChangeCount;}
+    int getSensorChangeCount() {return sensorChangeCountRotation;}
 
     /**
      * Sets the history length for which to base the derivative functions off of (angular velocity,
@@ -250,13 +272,17 @@ public class AbcvlibSensors implements SensorEventListener {
     private void sendToLog() {
 
         // Compile thetaDegVectorMsg values to push to separate adb tag
-        String thetaVectorMsg = Double.toString(thetaDegVector);
+        String thetaVectorMsg = Double.toString(thetaDeg);
 
         // Compile thetaDegVectorMsg values to push to separate adb tag
-        String thetaVectorVelMsg = Float.toString(angularVelocityRotationVectorDeg);
+        String thetaVectorVelMsg = Double.toString(angularVelocityDeg);
+
+        // Compile dt values to push to separate adb tag
+        String dtRotationMsg = Double.toString(dt);
 
         Log.i("thetaVectorMsg", thetaVectorMsg);
         Log.i("thetaVectorVelMsg", thetaVectorVelMsg);
+        Log.i("dtRotation", dtRotationMsg);
 
     }
 
@@ -276,11 +302,22 @@ public class AbcvlibSensors implements SensorEventListener {
     private double[] lowpassFilter(double[] x, double dt, double f_c){
         double[] y = new double[x.length];
         double alpha = (2 * Math.PI * dt * f_c) / ((2 * Math.PI * dt * f_c) + 1);
-        y[0] = alpha * x[0];
+        y[0] = alpha * x[0] + ((1 - alpha) * y[x.length - 1]);
         for (int i = 1; i < y.length; i++){
             y[i] = (alpha * x[i]) + ((1 - alpha) * y[i - 1]);
         }
         return y;
+    }
+
+    private double runningAvg(double[] x, int samples){
+        double y = 0;
+        int idx;
+
+        for (int i = 0; i < samples; i++){
+            idx = (sensorChangeCountRotation - i) % historyLength;
+            y = y + x[idx];
+        }
+        return y / samples;
     }
 
 }
