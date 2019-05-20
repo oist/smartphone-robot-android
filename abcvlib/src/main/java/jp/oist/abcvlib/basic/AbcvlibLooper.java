@@ -798,21 +798,21 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
     private void sendToLog() {
 
-        // Compile Encoder state data to push to adb log
-        String encoderStateMsg = Integer.toString((encoderARightWheelState) ? 1 : 0) + " " +
-                Integer.toString((encoderBRightWheelState) ? 1 : 0) + " " +
-                Integer.toString((encoderALeftWheelState) ? 1 : 0) + " " +
-                Integer.toString((encoderBLeftWheelState) ? 1 : 0);
+//        // Compile Encoder state data to push to adb log
+//        String encoderStateMsg = Integer.toString((encoderARightWheelState) ? 1 : 0) + " " +
+//                Integer.toString((encoderBRightWheelState) ? 1 : 0) + " " +
+//                Integer.toString((encoderALeftWheelState) ? 1 : 0) + " " +
+//                Integer.toString((encoderBLeftWheelState) ? 1 : 0);
 
 //        // Compile Encoder count data to push to adb log
 //        String encoderCountMsg = Float.toString(encoderCountRightWheel) + " " +
 //                Float.toString(encoderCountLeftWheel);
 
-        // Compile PWM data to push to adb log
-        String pwmMsg = Float.toString(pulseWidthRightWheelCurrent) + " " +
-                Float.toString(pulseWidthLeftWheelCurrent) + " " +
-                Float.toString(pulseWidthRightWheelNew) + " " +
-                Float.toString(pulseWidthLeftWheelNew);
+//        // Compile PWM data to push to adb log
+//        String pwmMsg = Float.toString(pulseWidthRightWheelCurrent) + " " +
+//                Float.toString(pulseWidthLeftWheelCurrent) + " " +
+//                Float.toString(pulseWidthRightWheelNew) + " " +
+//                Float.toString(pulseWidthLeftWheelNew);
 
         // Compile encoderCount values to push to separate adb tag
 //        String countsSensorMsg = Integer.toString(abcvlibQuadEncoders.getWheelCountL()) + " " + Integer.toString(abcvlibQuadEncoders.getWheelCountR());
@@ -823,12 +823,12 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         // Compile thetaDegVectorMsg values to push to separate adb tag
 //        String speedMsg = Double.toString(abcvlibQuadEncoders.getWheelSpeedL()) + " " + Double.toString(abcvlibQuadEncoders.getWheelSpeedR());
 
-        Log.i("encoderStateMsg", encoderStateMsg);
-//        Log.i("encoderCountMsg", encoderCountMsg);
-        Log.i("pwmMsg", pwmMsg);
-//        Log.i("countsSensorMsg", countsSensorMsg);
-//        Log.i("distanceMsg", distanceMsg);
-//        Log.i("speedMsg", speedMsg);
+//        Log.i("encoderStateMsg", encoderStateMsg);
+////        Log.i("encoderCountMsg", encoderCountMsg);
+//        Log.i("pwmMsg", pwmMsg);
+////        Log.i("countsSensorMsg", countsSensorMsg);
+////        Log.i("distanceMsg", distanceMsg);
+////        Log.i("speedMsg", speedMsg);
 
     }
 

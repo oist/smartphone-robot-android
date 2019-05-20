@@ -45,6 +45,10 @@ public class MainActivity extends AbcvlibActivity {
 //        TurnBackAndForth turnBackAndForthThread = new TurnBackAndForth();
 //        new Thread(turnBackAndForthThread).start();
 
+//        // SetPoint Calibration
+//        SetPointCalibration setPointCalibration = new SetPointCalibration();
+//        new Thread(setPointCalibration).start();
+
     }
 
     public class PID implements Runnable{
@@ -60,7 +64,7 @@ public class MainActivity extends AbcvlibActivity {
         double speedR; // Current speed on right wheel in mm/s
 
         int output; //  u(t) of wikipedia
-        float setPoint = -8f; // SP of wikipedia
+        float setPoint = 0f; // SP of wikipedia
         double e_t = 0; // e(t) of wikipedia
         double int_e_t; // integral of e(t) from wikipedia. Discrete, so just a sum here.
 
@@ -189,6 +193,12 @@ public class MainActivity extends AbcvlibActivity {
                 }
 
             }
+        }
+    }
+
+    public class SetPointCalibration implements Runnable{
+        public void run(){
+
         }
     }
 }

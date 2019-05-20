@@ -4,11 +4,8 @@ import android.util.Log;
 
 public class AbcvlibQuadEncoders {
 
-    int buffer = 10000;
+    int buffer = 50;
     double dt = 0;
-    double dt_lp = 0;
-    double lp_freq = 0.000001;
-    int speed_sample_length = 50;
 
     //----------------------------------- Wheel speed metrics --------------------------------------
     /**
@@ -25,10 +22,14 @@ public class AbcvlibQuadEncoders {
      * Right Wheel Speed in quadrature encoder counts per second.
      */
     private double[] speedRightWheel = new double[buffer];
+    private double[] speedRightWheelLP = new double[buffer];
+
     /**
      * Left Wheel Speed in quadrature encoder counts per second.
      */
     private double[] speedLeftWheel = new double[buffer];
+    private double[] speedLeftWheelLP = new double[buffer];
+
     /**
      * distance in mm that the right wheel has traveled from start point
      * This assumes no slippage/lifting/etc. Use with a grain of salt.
@@ -40,15 +41,15 @@ public class AbcvlibQuadEncoders {
      */
     private double[] distanceL = new double[buffer];
 
-    private double[] distanceLAvg = new double[buffer];
-    private double[] distanceRAvg = new double[buffer];
+    private double[] distanceLLP = new double[buffer];
+    private double[] distanceRLP = new double[buffer];
 
     private double[] timeStamps = new double[buffer];
 
-    private int indexCurrent = speed_sample_length;
-    private int indexSpeed = 0;
-    private int indexOldest = 0;
-    private int quadCount = speed_sample_length;
+    private int indexCurrent = 5;
+    private int indexPrevious = 0;
+    private int indexFilterDelay = 0;
+    private int quadCount = 5;
     private boolean loggerOn;
 
     // Constructor to pass other module objects in. Default loggerOn value to true
@@ -116,15 +117,14 @@ public class AbcvlibQuadEncoders {
      */
     void setQuadVars(double countLeft, double countRight, int indexCurrentLopper, int indexPreviousLooper, double time) {
 
-        indexCurrent = (quadCount - 1) % buffer;
-        indexSpeed = (quadCount - speed_sample_length) % buffer;
-        indexOldest = (quadCount) % buffer;
+        indexCurrent = (quadCount) % buffer;
+        indexPrevious = (quadCount - 1) % buffer;
+        indexFilterDelay = (quadCount - 5) % buffer;
 
         encoderCountLeftWheel[indexCurrent] = countLeft;
         encoderCountRightWheel[indexCurrent] = countRight;
         timeStamps[indexCurrent] = time;
-        dt = (timeStamps[indexCurrent] - timeStamps[indexSpeed]) / 1000000000f;
-        dt_lp = (timeStamps[indexCurrent] - timeStamps[indexOldest]) / 1000000000f;
+        dt = (timeStamps[indexCurrent] - timeStamps[indexPrevious]) / 1000000000f;
         setDistanceL();
         setDistanceR();
         setWheelSpeedL();
@@ -149,9 +149,8 @@ public class AbcvlibQuadEncoders {
 
         distanceL[indexCurrent] = encoderCountLeftWheel[indexCurrent] * mmPerCount;
 
-//        distanceLAvg[indexCurrent] = runningAvg(distanceL, buffer);
-        distanceLAvg = lowpassFilter(distanceL, dt_lp, lp_freq);
-
+//        distanceLLP[indexCurrent] = runningAvg(distanceL, buffer);
+        distanceLLP[indexCurrent] = lowpassFilter(distanceL);
 
     }
 
@@ -167,8 +166,8 @@ public class AbcvlibQuadEncoders {
 
         distanceR[indexCurrent] = encoderCountRightWheel[indexCurrent] * mmPerCount;
 
-//        distanceRAvg[indexCurrent] = runningAvg(distanceR, buffer);
-        distanceRAvg = lowpassFilter(distanceR, dt_lp, lp_freq);
+//        distanceRLP[indexCurrent] = runningAvg(distanceR, buffer);
+        distanceRLP[indexCurrent] = lowpassFilter(distanceR);
 
 
     }
@@ -181,8 +180,8 @@ public class AbcvlibQuadEncoders {
 
         if (dt != 0) {
             // Calculate the speed of each wheel in mm/s.
-            speedLeftWheel[indexCurrent] = (distanceLAvg[indexCurrent] - distanceLAvg[indexSpeed]) / dt;
-//            speedLeftWheel = lowpassFilter(speedLeftWheel, dt, 1000f);
+            speedLeftWheel[indexCurrent] = (distanceLLP[indexCurrent] - distanceLLP[indexPrevious]) / dt;
+            speedLeftWheelLP[indexCurrent] = lowpassFilterSpeed(speedLeftWheel);
         }
         else{
             Log.i("sensorDebugging", "dt == 0");
@@ -198,8 +197,8 @@ public class AbcvlibQuadEncoders {
 
         if (dt != 0) {
             // Calculate the speed of each wheel in mm/s.
-            speedRightWheel[indexCurrent] = (distanceRAvg[indexCurrent] - distanceRAvg[indexSpeed]) / dt;
-//            speedRightWheel = lowpassFilter(speedRightWheel, dt, 100f);
+            speedRightWheel[indexCurrent] = (distanceRLP[indexCurrent] - distanceRLP[indexPrevious]) / dt;
+            speedRightWheelLP[indexCurrent] = lowpassFilterSpeed(speedRightWheel);
         }
         else{
             Log.i("sensorDebugging", "dt == 0");
@@ -223,20 +222,20 @@ public class AbcvlibQuadEncoders {
         // Compile Encoder count data to push to adb log
         String encoderCountMsg =  Double.toString(encoderCountLeftWheel[indexCurrent]) + " " +
                 Double.toString(encoderCountRightWheel[indexCurrent]);
-
+//
         // Compile distance values to push to separate adb tag
-        String distanceLMsg = Double.toString(distanceL[indexCurrent]) + " " +  Double.toString(distanceLAvg[indexCurrent]) + " " + Double.toString(distanceR[indexCurrent]) + " " +  Double.toString(distanceRAvg[indexCurrent]);
+        String distanceLMsg = Double.toString(distanceL[indexFilterDelay]) + " " +  Double.toString(distanceLLP[indexCurrent]) + " " + Double.toString(distanceR[indexFilterDelay]) + " " +  Double.toString(distanceRLP[indexCurrent]);
 
         // Compile thetaDegVectorMsg values to push to separate adb tag
-        String speedMsg = Double.toString(speedLeftWheel[indexCurrent]) + " " + Double.toString(speedRightWheel[indexCurrent]);
-
-        // Compile avg and dt values to push to separate adb tag
-        String dtMsg = Double.toString(dt);
+        String speedMsg = Double.toString(speedLeftWheelLP[indexCurrent]) + " " + Double.toString(speedRightWheelLP[indexCurrent]);
+//
+//        // Compile avg and dt values to push to separate adb tag
+//        String dtMsg = Double.toString(dt);
 
         Log.i("encoderCountMsg", encoderCountMsg);
         Log.i("distanceLMsg", distanceLMsg);
         Log.i("speedMsg", speedMsg);
-        Log.i("dtMsg", dtMsg);
+//        Log.i("dtMsg", dtMsg);
 
     }
 
@@ -257,12 +256,42 @@ public class AbcvlibQuadEncoders {
         return y;
     }
 
-    private double[] lowpassFilter(double[] x, double dt, double f_c){
-        double[] y = new double[x.length];
-        double alpha = (2 * Math.PI * dt * f_c) / ((2 * Math.PI * dt * f_c) + 1);
-        y[0] = alpha * x[0];
-        for (int i = 1; i < y.length; i++){
-            y[i] = (alpha * x[i]) + ((1 - alpha) * y[i - 1]);
+    private double lowpassFilter(double[] x){
+        double y = 0;
+        int i1;
+        int i2;
+        int i3;
+        int i4;
+        int i5;
+
+        for (int i = 0; i < x.length; i++){
+            i1 = (quadCount + i) % buffer;
+            i2 = (quadCount + i - 1) % buffer;
+            i3 = (quadCount + i - 2) % buffer;
+            i4 = (quadCount + i - 3) % buffer;
+            i5 = (quadCount + i - 4) % buffer;
+            y = (0.2 * x[i1] + 0.2 * x[i2] + 0.2 * x[i3] + 0.2 * x[i4] + 0.2 * x[i5]);
+            i++;
+        }
+        return y;
+    }
+
+    private double lowpassFilterSpeed(double[] x){
+        double y = 0;
+        int i1;
+        int i2;
+        int i3;
+        int i4;
+        int i5;
+
+        for (int i = 0; i < x.length; i++){
+            i1 = (quadCount + i) % buffer;
+            i2 = (quadCount + i - 1) % buffer;
+            i3 = (quadCount + i - 2) % buffer;
+            i4 = (quadCount + i - 3) % buffer;
+            i5 = (quadCount + i - 4) % buffer;
+            y = (0.2 * x[i1] + 0.2 * x[i2] + 0.2 * x[i3] + 0.2 * x[i4] + 0.2 * x[i5]);
+            i++;
         }
         return y;
     }

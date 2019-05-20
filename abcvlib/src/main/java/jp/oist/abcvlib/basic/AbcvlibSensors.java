@@ -54,7 +54,7 @@ public class AbcvlibSensors implements SensorEventListener {
      * Length of past timestamps and encoder values you keep in memory. 15 is not significant,
      * just what was deemed appropriate previously.
      */
-    private int historyLength = 100;
+    private int historyLength = 3;
     /**
      * Low Pass Filter cutoff freq
      */
@@ -83,7 +83,7 @@ public class AbcvlibSensors implements SensorEventListener {
     /**
      * thetaRad calculated from rotation vector
      */
-    private double[] thetaRad = new double[historyLength];
+    private double thetaRad = 0;
     /**
      * thetaRad converted to degrees.
      */
@@ -99,11 +99,15 @@ public class AbcvlibSensors implements SensorEventListener {
     /**
      * angularVelocity calculated from RotationMatrix.
      */
-    private double[] angularVelocityRad = new double[historyLength];
+    private double angularVelocityRad = 0;
     /**
      * angularVelocityRad converted to degrees.
      */
     private double angularVelocityDeg = 0;
+    private double thetaDotGyro = 0;
+    private double[] timeStampsGyro = new double[historyLength];
+    private double thetaDotGyroDeg = 0;
+    private double dtGyro = 0;
 
 
     //----------------------------------------------------------------------------------------------
@@ -163,6 +167,19 @@ public class AbcvlibSensors implements SensorEventListener {
 
         if(sensor.getType()==Sensor.TYPE_GYROSCOPE){
 
+            indexCurrentGyro = sensorChangeCountGyro % historyLength;
+            indexPreviousGyro = (sensorChangeCountGyro - 1) % historyLength;
+            // Rotation around x-axis
+            // See https://developer.android.com/reference/android/hardware/SensorEvent.html
+            thetaDotGyro = event.values[0];
+            thetaDotGyroDeg = (thetaDotGyro * (180 / Math.PI));
+            timeStampsGyro[indexCurrentGyro] = event.timestamp;
+            dtGyro = (timeStampsGyro[indexCurrentGyro] - timeStampsGyro[indexPreviousGyro]) / 1000000000f;
+            sensorChangeCountGyro++;
+            if (loggerOn){
+                sendToLog();
+            }
+
         }
         else if(sensor.getType()==Sensor.TYPE_ROTATION_VECTOR){
 
@@ -175,17 +192,17 @@ public class AbcvlibSensors implements SensorEventListener {
             SensorManager.getRotationMatrixFromVector(rotationMatrix , event.values);
             SensorManager.remapCoordinateSystem(rotationMatrix, SensorManager.AXIS_X, SensorManager.AXIS_Z, rotationMatrixRemap);
             SensorManager.getOrientation(rotationMatrixRemap, orientation);
-            thetaRad[indexCurrentRotation] = orientation[1]; //Pitch
+            thetaRad = orientation[1]; //Pitch
 //            thetaRad = lowpassFilter(thetaRad, dt, lp_freq_theta);
 
-            angularVelocityRad[indexCurrentRotation] = (thetaRad[indexCurrentRotation] - thetaRad[indexPreviousRotation]) / 0.005;
+//            angularVelocityRad[indexCurrentRotation] = (thetaRad[indexCurrentRotation] - thetaRad[indexPreviousRotation]) / 0.005;
 //            angularVelocityRad = lowpassFilter(angularVelocityRad, 0.005, lp_freq_thetaDot);
 //            if (sensorChangeCountRotation > historyLength){
 //                angularVelocityRad[indexCurrentRotation] = runningAvg(angularVelocityRad, 3);
 //            }
 
-            thetaDeg = (thetaRad[indexCurrentRotation] * (180 / Math.PI));
-            angularVelocityDeg = (angularVelocityRad[indexCurrentRotation] * (180 / Math.PI));
+            thetaDeg = (thetaRad * (180 / Math.PI));
+//            angularVelocityDeg = (angularVelocityRad[indexCurrentRotation] * (180 / Math.PI));
 
             // Update all previous variables with current ones
             sensorChangeCountRotation++;
@@ -231,7 +248,7 @@ public class AbcvlibSensors implements SensorEventListener {
     /**
      * @return Phone tilt angle in radians
      */
-    public double getThetaRad(){ return thetaRad[indexCurrentRotation]; }
+    public double getThetaRad(){ return thetaRad; }
 
     /**
      * @return Phone tilt angle in degrees
@@ -243,13 +260,13 @@ public class AbcvlibSensors implements SensorEventListener {
     /**
      * @return Phone tilt speed (angular velocity) in radians per second
      */
-    public double getThetaRadDot(){ return angularVelocityRad[indexCurrentRotation]; }
+    public double getThetaRadDot(){ return thetaDotGyro; }
 
     /**
      * @return Phone tilt speed (angular velocity) in degrees per second
      */
     public double getThetaDegDot(){
-        return angularVelocityDeg;
+        return thetaDotGyroDeg;
     }
 
     /**
@@ -271,18 +288,26 @@ public class AbcvlibSensors implements SensorEventListener {
      */
     private void sendToLog() {
 
-        // Compile thetaDegVectorMsg values to push to separate adb tag
-        String thetaVectorMsg = Double.toString(thetaDeg);
+//        // Compile thetaDegVectorMsg values to push to separate adb tag
+//        String thetaVectorMsg = Double.toString(thetaDeg);
 
-        // Compile thetaDegVectorMsg values to push to separate adb tag
-        String thetaVectorVelMsg = Double.toString(angularVelocityDeg);
+//        // Compile thetaDegVectorMsg values to push to separate adb tag
+//        String thetaVectorVelMsg = Double.toString(angularVelocityDeg);
+//
+//        // Compile dt values to push to separate adb tag
+//        String dtRotationMsg = Double.toString(dt);
+//
+//        // Compile dt values to push to separate adb tag
+//        String thetaDotGyroMsg = Double.toString(thetaDotGyro);
+//
+//        // Compile dt values to push to separate adb tag
+//        String dtGyroMsg = Double.toString(dtGyro);
 
-        // Compile dt values to push to separate adb tag
-        String dtRotationMsg = Double.toString(dt);
-
-        Log.i("thetaVectorMsg", thetaVectorMsg);
-        Log.i("thetaVectorVelMsg", thetaVectorVelMsg);
-        Log.i("dtRotation", dtRotationMsg);
+//        Log.i("thetaVectorMsg", thetaVectorMsg);
+//        Log.i("thetaVectorVelMsg", thetaVectorVelMsg);
+//        Log.i("dtRotation", dtRotationMsg);
+//        Log.i("thetaDotGyroMsg", thetaDotGyroMsg);
+//        Log.i("dtGyroMsg", dtGyroMsg);
 
     }
 
