@@ -193,7 +193,7 @@ public class AbcvlibSensors implements SensorEventListener {
             SensorManager.remapCoordinateSystem(rotationMatrix, SensorManager.AXIS_X, SensorManager.AXIS_Z, rotationMatrixRemap);
             SensorManager.getOrientation(rotationMatrixRemap, orientation);
             thetaRad = orientation[1]; //Pitch
-//            thetaRad = lowpassFilter(thetaRad, dt, lp_freq_theta);
+//            thetaRad = lowpassFilter(thetaRad, dt_sample, lp_freq_theta);
 
 //            angularVelocityRad[indexCurrentRotation] = (thetaRad[indexCurrentRotation] - thetaRad[indexPreviousRotation]) / 0.005;
 //            angularVelocityRad = lowpassFilter(angularVelocityRad, 0.005, lp_freq_thetaDot);
@@ -294,13 +294,13 @@ public class AbcvlibSensors implements SensorEventListener {
 //        // Compile thetaDegVectorMsg values to push to separate adb tag
 //        String thetaVectorVelMsg = Double.toString(angularVelocityDeg);
 //
-//        // Compile dt values to push to separate adb tag
-//        String dtRotationMsg = Double.toString(dt);
+//        // Compile dt_sample values to push to separate adb tag
+//        String dtRotationMsg = Double.toString(dt_sample);
 //
-//        // Compile dt values to push to separate adb tag
+//        // Compile dt_sample values to push to separate adb tag
 //        String thetaDotGyroMsg = Double.toString(thetaDotGyro);
 //
-//        // Compile dt values to push to separate adb tag
+//        // Compile dt_sample values to push to separate adb tag
 //        String dtGyroMsg = Double.toString(dtGyro);
 
 //        Log.i("thetaVectorMsg", thetaVectorMsg);

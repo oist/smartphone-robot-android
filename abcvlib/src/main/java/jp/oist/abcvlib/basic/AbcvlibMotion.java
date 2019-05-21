@@ -311,25 +311,25 @@ public class AbcvlibMotion {
 //    /**
 //    Central Pattern Generator based destabalizer is applied when phone tilt angle is not within
 //    minTiltAngle and maxTiltAngle. Apparently this method implements the Runge Kutta methods.
-//    dt should correlate with the dt shown in the below mentioned wiki article.
+//    dt_sample should correlate with the dt_sample shown in the below mentioned wiki article.
 //    https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods
 //     */
-//    public double[] cpgUpdate(double[] cpgXY, float dt, double thetadot, float omega, float beta){
+//    public double[] cpgUpdate(double[] cpgXY, float dt_sample, double thetadot, float omega, float beta){
 //        double a1, a2, a3, a4; // dummy variables
 //        double aa1, aa2, aa3, aa4; // dummy variables
 //        double[] x = new double[2];
 //
 //        a1 = getXDot(cpgXY[1], thetadot, omega, beta);
-//        a2 = getXDot(cpgXY[1] + a1 * dt / 2, thetadot, omega, beta);
-//        a3 = getXDot(cpgXY[1] + a2 * dt / 2, thetadot, omega, beta);
-//        a4 = getXDot(cpgXY[1]+ a3 * dt , thetadot, omega, beta);
-//        x[0] = cpgXY[0] + (a1 + 2 * a2 + 2 * a3 + a4) * dt / 6;
+//        a2 = getXDot(cpgXY[1] + a1 * dt_sample / 2, thetadot, omega, beta);
+//        a3 = getXDot(cpgXY[1] + a2 * dt_sample / 2, thetadot, omega, beta);
+//        a4 = getXDot(cpgXY[1]+ a3 * dt_sample , thetadot, omega, beta);
+//        x[0] = cpgXY[0] + (a1 + 2 * a2 + 2 * a3 + a4) * dt_sample / 6;
 //
 //        aa1 = getYDot(cpgXY[0], omega);
-//        aa2 = getYDot(cpgXY[0] + aa1 * dt / 2, omega);
-//        aa3 = getYDot(cpgXY[0] + aa2 * dt / 2, omega);
-//        aa4 = getYDot(cpgXY[0] + aa3 * dt, omega);
-//        x[1] = cpgXY[1] + (aa1 + 2 * aa2 + 2 * aa3 + aa4) * dt / 6;
+//        aa2 = getYDot(cpgXY[0] + aa1 * dt_sample / 2, omega);
+//        aa3 = getYDot(cpgXY[0] + aa2 * dt_sample / 2, omega);
+//        aa4 = getYDot(cpgXY[0] + aa3 * dt_sample, omega);
+//        x[1] = cpgXY[1] + (aa1 + 2 * aa2 + 2 * aa3 + aa4) * dt_sample / 6;
 //
 //        return x;
 //    }

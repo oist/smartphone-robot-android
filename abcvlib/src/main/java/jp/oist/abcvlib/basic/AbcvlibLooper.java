@@ -593,8 +593,8 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     }
 
     private void lowpassFilterBoth(){
-//        encoderCountLeftWheelLP = lowpassFilter(encoderCountLeftWheel, dt, lp_freq);
-//        encoderCountRightWheelLP = lowpassFilter(encoderCountRightWheel, dt, lp_freq);
+//        encoderCountLeftWheelLP = lowpassFilter(encoderCountLeftWheel, dt_sample, lp_freq);
+//        encoderCountRightWheelLP = lowpassFilter(encoderCountRightWheel, dt_sample, lp_freq);
 //        encoderCountLeftWheelLP[indexCurrent] = runningAvg(encoderCountLeftWheel);
 //        encoderCountRightWheelLP[indexCurrent] = runningAvg(encoderCountRightWheel);
         encoderCountLeftWheelLP[indexCurrent] = encoderCountLeftWheel[indexCurrent];
