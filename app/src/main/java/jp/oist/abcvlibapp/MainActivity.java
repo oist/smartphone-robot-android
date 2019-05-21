@@ -33,9 +33,9 @@ public class MainActivity extends AbcvlibActivity {
         // ID within the R class
         setContentView(R.layout.activity_main);
 
-        // PID Controller
-        PID pidThread = new PID();
-        new Thread(pidThread).start();
+//        // PID Controller
+//        PID pidThread = new PID();
+//        new Thread(pidThread).start();
 
 //        // Linear Back and Forth every 10 mm
 //        BackAndForth backAndForthThread = new BackAndForth();
@@ -45,9 +45,9 @@ public class MainActivity extends AbcvlibActivity {
 //        TurnBackAndForth turnBackAndForthThread = new TurnBackAndForth();
 //        new Thread(turnBackAndForthThread).start();
 
-//        // SetPoint Calibration
-//        SetPointCalibration setPointCalibration = new SetPointCalibration();
-//        new Thread(setPointCalibration).start();
+        // SetPoint Calibration
+        SetPointCalibration setPointCalibration = new SetPointCalibration();
+        new Thread(setPointCalibration).start();
 
     }
 

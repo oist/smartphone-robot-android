@@ -288,8 +288,8 @@ public class AbcvlibSensors implements SensorEventListener {
      */
     private void sendToLog() {
 
-//        // Compile thetaDegVectorMsg values to push to separate adb tag
-//        String thetaVectorMsg = Double.toString(thetaDeg);
+        // Compile thetaDegVectorMsg values to push to separate adb tag
+        String thetaVectorMsg = Double.toString(thetaDeg);
 
 //        // Compile thetaDegVectorMsg values to push to separate adb tag
 //        String thetaVectorVelMsg = Double.toString(angularVelocityDeg);
@@ -303,7 +303,7 @@ public class AbcvlibSensors implements SensorEventListener {
 //        // Compile dt_sample values to push to separate adb tag
 //        String dtGyroMsg = Double.toString(dtGyro);
 
-//        Log.i("thetaVectorMsg", thetaVectorMsg);
+        Log.i("thetaVectorMsg", thetaVectorMsg);
 //        Log.i("thetaVectorVelMsg", thetaVectorVelMsg);
 //        Log.i("dtRotation", dtRotationMsg);
 //        Log.i("thetaDotGyroMsg", thetaDotGyroMsg);
@@ -322,27 +322,6 @@ public class AbcvlibSensors implements SensorEventListener {
         while(angle>Math.PI)
             angle-=2*Math.PI;
         return angle;
-    }
-
-    private double[] lowpassFilter(double[] x, double dt, double f_c){
-        double[] y = new double[x.length];
-        double alpha = (2 * Math.PI * dt * f_c) / ((2 * Math.PI * dt * f_c) + 1);
-        y[0] = alpha * x[0] + ((1 - alpha) * y[x.length - 1]);
-        for (int i = 1; i < y.length; i++){
-            y[i] = (alpha * x[i]) + ((1 - alpha) * y[i - 1]);
-        }
-        return y;
-    }
-
-    private double runningAvg(double[] x, int samples){
-        double y = 0;
-        int idx;
-
-        for (int i = 0; i < samples; i++){
-            idx = (sensorChangeCountRotation - i) % historyLength;
-            y = y + x[idx];
-        }
-        return y / samples;
     }
 
 }

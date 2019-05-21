@@ -411,9 +411,6 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
             if (newDataLeft || newDataRight) {
 
-                lowpassFilterBoth();
-
-
                 if (loggerOn) {
                     sendToLog();
                 }
@@ -592,15 +589,6 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         }
     }
 
-    private void lowpassFilterBoth(){
-//        encoderCountLeftWheelLP = lowpassFilter(encoderCountLeftWheel, dt_sample, lp_freq);
-//        encoderCountRightWheelLP = lowpassFilter(encoderCountRightWheel, dt_sample, lp_freq);
-//        encoderCountLeftWheelLP[indexCurrent] = runningAvg(encoderCountLeftWheel);
-//        encoderCountRightWheelLP[indexCurrent] = runningAvg(encoderCountRightWheel);
-        encoderCountLeftWheelLP[indexCurrent] = encoderCountLeftWheel[indexCurrent];
-        encoderCountRightWheelLP[indexCurrent] = encoderCountRightWheel[indexCurrent];
-    }
-
     private void writeIoUpdates() throws ConnectionLostException{
 
         try {
@@ -777,25 +765,6 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         return wheelCounts;
     }
 
-    private double[] lowpassFilter(double[] x, double dt, double f_c){
-        double[] y = new double[x.length];
-        double alpha = (2 * Math.PI * dt * f_c) / ((2 * Math.PI * dt * f_c) + 1);
-        y[0] = alpha * x[0];
-        for (int i = 1; i < y.length; i++){
-            y[i] = (alpha * x[i]) + ((1 - alpha) * y[i - 1]);
-        }
-        return y;
-    }
-
-    private double runningAvg(double[] x){
-        double y = 0;
-        for (int i = 0; i < x.length; i++){
-            y = y + x[i];
-        }
-        y = y / x.length;
-        return y;
-    }
-
     private void sendToLog() {
 
 //        // Compile Encoder state data to push to adb log
@@ -803,32 +772,32 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 //                Integer.toString((encoderBRightWheelState) ? 1 : 0) + " " +
 //                Integer.toString((encoderALeftWheelState) ? 1 : 0) + " " +
 //                Integer.toString((encoderBLeftWheelState) ? 1 : 0);
-
+//
 //        // Compile Encoder count data to push to adb log
 //        String encoderCountMsg = Float.toString(encoderCountRightWheel) + " " +
 //                Float.toString(encoderCountLeftWheel);
-
+//
 //        // Compile PWM data to push to adb log
 //        String pwmMsg = Float.toString(pulseWidthRightWheelCurrent) + " " +
 //                Float.toString(pulseWidthLeftWheelCurrent) + " " +
 //                Float.toString(pulseWidthRightWheelNew) + " " +
 //                Float.toString(pulseWidthLeftWheelNew);
-
-        // Compile encoderCount values to push to separate adb tag
+//
+//        // Compile encoderCount values to push to separate adb tag
 //        String countsSensorMsg = Integer.toString(abcvlibQuadEncoders.getWheelCountL()) + " " + Integer.toString(abcvlibQuadEncoders.getWheelCountR());
-
-        // Compile distance values to push to separate adb tag
+//
+//        // Compile distance values to push to separate adb tag
 //        String distanceMsg = Double.toString(abcvlibQuadEncoders.getDistanceL()) + " " + Double.toString(abcvlibQuadEncoders.getDistanceR());
-
-        // Compile thetaDegVectorMsg values to push to separate adb tag
+//
+//        // Compile thetaDegVectorMsg values to push to separate adb tag
 //        String speedMsg = Double.toString(abcvlibQuadEncoders.getWheelSpeedL()) + " " + Double.toString(abcvlibQuadEncoders.getWheelSpeedR());
-
+//
 //        Log.i("encoderStateMsg", encoderStateMsg);
-////        Log.i("encoderCountMsg", encoderCountMsg);
+//        Log.i("encoderCountMsg", encoderCountMsg);
 //        Log.i("pwmMsg", pwmMsg);
-////        Log.i("countsSensorMsg", countsSensorMsg);
-////        Log.i("distanceMsg", distanceMsg);
-////        Log.i("speedMsg", speedMsg);
+//        Log.i("countsSensorMsg", countsSensorMsg);
+//        Log.i("distanceMsg", distanceMsg);
+//        Log.i("speedMsg", speedMsg);
 
     }
 
