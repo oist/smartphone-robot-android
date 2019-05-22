@@ -2,6 +2,7 @@ package jp.oist.abcvlibapp;
 
 import android.content.res.AssetManager;
 import android.os.Bundle;
+import android.os.Environment;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,18 +42,11 @@ public class MainActivity extends AbcvlibActivity {
         // ID within the R class
         setContentView(R.layout.activity_main);
 
-        csvFileString = this.getApplicationInfo().dataDir + File.separatorChar + "raw" + File.separatorChar + "params.csv";
-        AssetManager assetManager = getAssets();
+        csvFileString = Environment.getExternalStorageDirectory().toString() + "/params.csv";
 
-        try {
-            InputStream is = assetManager.open("raw/params.csv");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // PID Controller
-        PID pidThread = new PID();
-        new Thread(pidThread).start();
+//        // PID Controller
+//        PID pidThread = new PID();
+//        new Thread(pidThread).start();
 
 //        // Linear Back and Forth every 10 mm
 //        BackAndForth backAndForthThread = new BackAndForth();
@@ -65,6 +59,10 @@ public class MainActivity extends AbcvlibActivity {
 //        // SetPoint Calibration
 //        SetPointCalibration setPointCalibration = new SetPointCalibration();
 //        new Thread(setPointCalibration).start();
+
+        // PythonControl
+        PythonControl pythonControl = new PythonControl();
+        new Thread(pythonControl).start();
 
     }
 
@@ -79,7 +77,7 @@ public class MainActivity extends AbcvlibActivity {
         double distanceR; // distances traveled by right wheel from start point (mm)
         double speedL; // Current speed on left wheel in mm/s
         double speedR; // Current speed on right wheel in mm/s
-        List<String[]> params;
+        double[] params = new double[3];
 
         int output; //  u(t) of wikipedia
         float zeroOffset = -13.25f;
@@ -88,10 +86,10 @@ public class MainActivity extends AbcvlibActivity {
         double e_t = 0; // e(t) of wikipedia
         double int_e_t; // integral of e(t) from wikipedia. Discrete, so just a sum here.
 
-        float k_p = 300;
+        double k_p = 300;
 //        float k_i = 0.0003f;
-        float k_i = 0;
-        float k_d = 1f;
+        double k_i = 0;
+        double k_d = 1f;
 //        float k_d = 0;
 
         float maxTiltAngle = setPoint + 50;
@@ -122,7 +120,9 @@ public class MainActivity extends AbcvlibActivity {
                 speedL = abcvlibQuadEncoders.getWheelSpeedL();
                 speedR = abcvlibQuadEncoders.getWheelSpeedR();
                 params = abcvlibSaveData.readData(csvFileString);
-
+                k_p = params[0];
+                k_i = params[1];
+                k_d = params[2];
 
                 // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
                 if(thetaDeg < maxTiltAngle && thetaDeg > minTiltAngle){
@@ -221,6 +221,17 @@ public class MainActivity extends AbcvlibActivity {
     public class SetPointCalibration implements Runnable{
         public void run(){
 
+        }
+    }
+
+    public class PythonControl implements Runnable{
+        public void run(){
+            while(true){
+                double[] params = new double[3];
+                params = abcvlibSaveData.readData(csvFileString);
+                int speed = (int) params[0];
+                abcvlibMotion.setWheelSpeed(speed, speed);
+            }
         }
     }
 }

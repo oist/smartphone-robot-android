@@ -53,17 +53,23 @@ public class AbcvlibSaveData {
 
     }
 
-    public List<String[]> readData(String csvString){
+    public double[] readData(String csvString){
 
-        List<String[]> myEntries = new ArrayList<>();
+        String line = "";
+        String[] lineArray;
+        double[] output = new double[3];
 
         try {
-            File csvfile = new File(csvString);
-            CSVReader reader = new CSVReader(new FileReader(csvfile.getAbsolutePath()));
-            myEntries = reader.readAll();
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(csvString));
+            line = bufferedReader.readLine();
+            lineArray = line.split(",");
+            for (int i = 0; i < lineArray.length; i++){
+                output[i] = Double.parseDouble(lineArray[i]);
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return myEntries;
+        return output;
     }
 }
