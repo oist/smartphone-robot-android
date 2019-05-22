@@ -9,6 +9,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
 import jp.oist.abcvlib.basic.AbcvlibActivity;
 
 /**
@@ -48,6 +53,7 @@ public class MainActivity extends AbcvlibActivity {
 //        PID pidThread = new PID();
 //        new Thread(pidThread).start();
 
+
 //        // Linear Back and Forth every 10 mm
 //        BackAndForth backAndForthThread = new BackAndForth();
 //        new Thread(backAndForthThread).start();
@@ -78,6 +84,7 @@ public class MainActivity extends AbcvlibActivity {
         double speedL; // Current speed on left wheel in mm/s
         double speedR; // Current speed on right wheel in mm/s
         double[] params = new double[3];
+
 
         int output; //  u(t) of wikipedia
         float zeroOffset = -13.25f;
@@ -120,6 +127,7 @@ public class MainActivity extends AbcvlibActivity {
                 speedL = abcvlibQuadEncoders.getWheelSpeedL();
                 speedR = abcvlibQuadEncoders.getWheelSpeedR();
                 params = abcvlibSaveData.readData(csvFileString);
+
                 k_p = params[0];
                 k_i = params[1];
                 k_d = params[2];
