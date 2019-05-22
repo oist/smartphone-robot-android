@@ -1,6 +1,12 @@
 package jp.oist.abcvlibapp;
 
+import android.content.res.AssetManager;
 import android.os.Bundle;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
 
 import jp.oist.abcvlib.basic.AbcvlibActivity;
 
@@ -22,6 +28,8 @@ public class MainActivity extends AbcvlibActivity {
      */
     private boolean wheelPolaritySwap = false;
 
+    private String csvFileString;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Passes Android App information up to parent classes for various usages. Do not modify
@@ -32,6 +40,15 @@ public class MainActivity extends AbcvlibActivity {
         // Setup Android GUI. Point this method to your main activity xml file or corresponding int
         // ID within the R class
         setContentView(R.layout.activity_main);
+
+        csvFileString = this.getApplicationInfo().dataDir + File.separatorChar + "raw" + File.separatorChar + "params.csv";
+        AssetManager assetManager = getAssets();
+
+        try {
+            InputStream is = assetManager.open("raw/params.csv");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         // PID Controller
         PID pidThread = new PID();
@@ -62,6 +79,7 @@ public class MainActivity extends AbcvlibActivity {
         double distanceR; // distances traveled by right wheel from start point (mm)
         double speedL; // Current speed on left wheel in mm/s
         double speedR; // Current speed on right wheel in mm/s
+        List<String[]> params;
 
         int output; //  u(t) of wikipedia
         float zeroOffset = -13.25f;
@@ -103,6 +121,8 @@ public class MainActivity extends AbcvlibActivity {
                 distanceR = abcvlibQuadEncoders.getDistanceR();
                 speedL = abcvlibQuadEncoders.getWheelSpeedL();
                 speedR = abcvlibQuadEncoders.getWheelSpeedR();
+                params = abcvlibSaveData.readData(csvFileString);
+
 
                 // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
                 if(thetaDeg < maxTiltAngle && thetaDeg > minTiltAngle){

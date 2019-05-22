@@ -1,11 +1,20 @@
 package jp.oist.abcvlib.basic;
 
 import android.os.Environment;
+import android.widget.Toast;
 
+import com.opencsv.CSVReader;
+
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Not used anywhere else in the library at this time. Leaving for possible future use.
@@ -42,5 +51,19 @@ public class AbcvlibSaveData {
             e.printStackTrace();
         }
 
+    }
+
+    public List<String[]> readData(String csvString){
+
+        List<String[]> myEntries = new ArrayList<>();
+
+        try {
+            File csvfile = new File(csvString);
+            CSVReader reader = new CSVReader(new FileReader(csvfile.getAbsolutePath()));
+            myEntries = reader.readAll();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return myEntries;
     }
 }
