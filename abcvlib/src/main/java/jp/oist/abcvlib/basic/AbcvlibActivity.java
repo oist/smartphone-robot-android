@@ -24,6 +24,7 @@ public class AbcvlibActivity extends IOIOActivity {
     public AbcvlibSensors abcvlibSensors;
     public AbcvlibMotion abcvlibMotion;
     public AbcvlibQuadEncoders abcvlibQuadEncoders;
+    public AbcvlibSaveData abcvlibSaveData;
 
     /**
      * Enable/disable sensor and IO logging. Only set to true when debugging as it uses a lot of
@@ -57,6 +58,7 @@ public class AbcvlibActivity extends IOIOActivity {
         abcvlibSensors = new AbcvlibSensors(this, loggerOn);
         abcvlibQuadEncoders = new AbcvlibQuadEncoders(loggerOn);
         abcvlibMotion = new AbcvlibMotion(abcvlibSensors, abcvlibQuadEncoders, PWM_FREQ);
+        abcvlibSaveData = new AbcvlibSaveData();
 
 //        abcvlibSensorsTest = new AbcvlibSensors(this);
 //        AbcvlibSensors.QuadratureThread quadratureThread = new AbcvlibSensors(this).new QuadratureThread();

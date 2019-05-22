@@ -10,7 +10,7 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.4.0'
+        classpath 'com.android.tools.build:gradle:3.4.1'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -50,9 +50,10 @@ dependencies {
     // Should likely avoid coverall imports like this and implement a gradle link for the OpenCV library as well
     api fileTree(include: ['*.aar'], dir: 'libs')
     testImplementation 'junit:junit:4.12'
-    implementation 'com.android.support:appcompat-v7:23.4.0'
+    implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'com.github.ytai.ioio:IOIOLibAndroid:5.07'
     implementation 'com.github.ytai.ioio:IOIOLibAndroidBluetooth:5.07'
     implementation 'com.github.ytai.ioio:IOIOLibAndroidAccessory:5.07'
     implementation 'com.github.ytai.ioio:IOIOLibAndroidDevice:5.07'
+    implementation 'com.opencsv:opencsv:4.0'
 }
