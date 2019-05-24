@@ -235,10 +235,13 @@ public class MainActivity extends AbcvlibActivity {
     public class PythonControl implements Runnable{
         public void run(){
             while(true){
-                double[] params = new double[3];
+                double[] params;
                 params = abcvlibSaveData.readData(csvFileString);
-                int speed = (int) params[0];
-                abcvlibMotion.setWheelSpeed(speed, speed);
+                int speedL = (int) params[0];
+                int speedR = (int) params[1];
+                double pythonTime = params[2];
+                double javaTime = System.nanoTime();
+                abcvlibMotion.setWheelSpeed(speedL, speedR);
             }
         }
     }
