@@ -1,6 +1,8 @@
 package jp.oist.abcvlib.basic;
 
+import android.content.Context;
 import android.os.Environment;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.opencsv.CSVReader;
@@ -19,7 +21,7 @@ import java.util.List;
 /**
  * Not used anywhere else in the library at this time. Leaving for possible future use.
  */
-public class AbcvlibSaveData {
+public class AbcvlibSaveData extends AbcvlibActivity{
 
     String saved="saved!";
 
@@ -67,9 +69,34 @@ public class AbcvlibSaveData {
                 output[i] = Double.parseDouble(lineArray[i]);
             }
 
+        } catch (NullPointerException e){
+
         } catch (IOException e) {
             e.printStackTrace();
+            Log.e("abcvlib", "File read failed: " + e.toString());
+
         }
         return output;
+    }
+
+    public void writeToFile(Context context, String savePath, double[] data) {
+
+        String androidDataString = "";
+        File file = new File(savePath);
+
+        for (int i = 0; i < data.length; i++){
+            androidDataString = androidDataString.concat(data[i] + ",");
+        }
+
+        FileOutputStream stream = new FileOutputStream(file);
+
+        try {
+            stream.write(androidDataString.getBytes());
+        }
+        catch (IOException e) {
+            Log.e("abcvlib", "File write failed: " + e.toString());
+        }finally {
+            stream.close();
+        }
     }
 }
