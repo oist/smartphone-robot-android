@@ -24,6 +24,11 @@ public class MainActivity extends AbcvlibActivity {
      */
     private boolean wheelPolaritySwap = false;
 
+    double k_p = 0;
+    double k_i = 0;
+    double k_d = 0;
+    float setPoint = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Passes Android App information up to parent classes for various usages. Do not modify
@@ -35,15 +40,14 @@ public class MainActivity extends AbcvlibActivity {
         // ID within the R class
         setContentView(R.layout.activity_main);
 
-//        String androidDataDir = "/sdcard/androidData";
-//        String controlDataDir = "/sdcard/controlData";
-        String androidDataDir = Environment.getExternalStorageDirectory().toString() + "/androidData";
-        String controlDataDir = Environment.getExternalStorageDirectory().toString() + "/controlData";
+//        String androidData = "/sdcard/androidData";
+//        String controlData = "/sdcard/controlData";
+        String androidData = "androidData";
+        String controlData = "controlData";
 
-//        // PID Controller
-//        PID pidThread = new PID(androidDataDir, controlDataDir);
-//        new Thread(pidThread).start();
-
+        // PID Controller
+        PID pidThread = new PID(androidData, controlData);
+        new Thread(pidThread).start();
 
 //        // Linear Back and Forth every 10 mm
 //        BackAndForth backAndForthThread = new BackAndForth();
@@ -58,7 +62,7 @@ public class MainActivity extends AbcvlibActivity {
 //        new Thread(setPointCalibration).start();
 
         // PythonControl
-        PythonControl pythonControl = new PythonControl(this, androidDataDir, controlDataDir);
+        PythonControl pythonControl = new PythonControl(this, androidData, controlData);
         new Thread(pythonControl).start();
 
     }
@@ -78,17 +82,9 @@ public class MainActivity extends AbcvlibActivity {
 
 
         int output; //  u(t) of wikipedia
-        float zeroOffset = -13.25f;
-        float calibrationHangAngle = -12f; // Set this after hanging robot upside down.
-        float setPoint = (2.0f * zeroOffset) - calibrationHangAngle; // SP of wikipedia
+
         double e_t = 0; // e(t) of wikipedia
         double int_e_t; // integral of e(t) from wikipedia. Discrete, so just a sum here.
-
-        double k_p = 300;
-//        float k_i = 0.0003f;
-        double k_i = 0;
-        double k_d = 1f;
-//        float k_d = 0;
 
         float maxTiltAngle = setPoint + 50;
         float minTiltAngle = setPoint - 50;
@@ -125,11 +121,6 @@ public class MainActivity extends AbcvlibActivity {
                 distanceR = abcvlibQuadEncoders.getDistanceR();
                 speedL = abcvlibQuadEncoders.getWheelSpeedL();
                 speedR = abcvlibQuadEncoders.getWheelSpeedR();
-                params = abcvlibSaveData.readData(controlDataDir);
-
-                k_p = params[0];
-                k_i = params[1];
-                k_d = params[2];
 
                 // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
                 if(thetaDeg < maxTiltAngle && thetaDeg > minTiltAngle){
@@ -255,16 +246,17 @@ public class MainActivity extends AbcvlibActivity {
                 readControlData();
                 writeAndroidData();
 
-                abcvlibMotion.setWheelSpeed(speedLSet, speedRSet);
+//                abcvlibMotion.setWheelSpeed(speedLSet, speedRSet);
 
             }
         }
 
         private void readControlData(){
             pythonControlData = abcvlibSaveData.readData(controlDataDir);
-            speedLSet = (int) pythonControlData[0];
-            speedRSet = (int) pythonControlData[1];
-            timeStampRemote = (double) pythonControlData[2];
+            k_p = (int) pythonControlData[0];
+            k_i = (int) pythonControlData[1];
+            k_d = (int) pythonControlData[2];
+            setPoint = (float) pythonControlData[3];
         }
 
         private void writeAndroidData(){

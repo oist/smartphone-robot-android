@@ -35,7 +35,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     private int indexCurrent = 1;
     private int indexPrevious = 0;
     private int loopCount = 1;
-    private int buffer = 50;
+    private int buffer = 5;
     private double[] timeStamp = new double[buffer];
     private double dt = 0;
     private double lp_freq = 100.0; // Low Pass Cutoff Freq
@@ -632,7 +632,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
     private void updateQuadEncoders(){
 
-        abcvlibQuadEncoders.setQuadVars(encoderCountLeftWheelLP[indexCurrent], encoderCountRightWheelLP[indexCurrent], indexCurrent, indexPrevious, timeStamp[indexCurrent]);
+        abcvlibQuadEncoders.setQuadVars(encoderCountLeftWheel[indexCurrent], encoderCountRightWheel[indexCurrent], indexCurrent, indexPrevious, timeStamp[indexCurrent]);
 
     }
 

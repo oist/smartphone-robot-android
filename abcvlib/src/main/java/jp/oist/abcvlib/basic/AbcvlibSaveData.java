@@ -10,6 +10,7 @@ import com.opencsv.CSVReader;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -55,47 +56,97 @@ public class AbcvlibSaveData extends AbcvlibActivity{
 
     }
 
-    public double[] readData(String csvString){
+    public double[] readData(String fileName){
 
         String line = "";
         String[] lineArray;
-        double[] output = new double[3];
+        double[] output = new double[4];
+        File file = getFile(fileName);
+        String filePath = file.getPath();
 
-        try {
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(csvString));
-            line = bufferedReader.readLine();
-            lineArray = line.split(",");
-            for (int i = 0; i < lineArray.length; i++){
-                output[i] = Double.parseDouble(lineArray[i]);
+        if (isExternalStorageReadable()){
+            try {
+                BufferedReader bufferedReader = new BufferedReader(new FileReader(filePath));
+                line = bufferedReader.readLine();
+                lineArray = line.split(",");
+                for (int i = 0; i < lineArray.length; i++){
+                    output[i] = Double.parseDouble(lineArray[i]);
+                }
+
+            } catch (NullPointerException e){
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                Log.e("abcvlib", "File read failed: " + e.toString());
+
             }
-
-        } catch (NullPointerException e){
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            Log.e("abcvlib", "File read failed: " + e.toString());
-
         }
+
         return output;
     }
 
-    public void writeToFile(Context context, String savePath, double[] data) {
+    public void writeToFile(Context context, String fileName, double[] data) {
 
         String androidDataString = "";
-        File file = new File(savePath);
+        File file = getFile(fileName);
 
         for (int i = 0; i < data.length; i++){
             androidDataString = androidDataString.concat(data[i] + ",");
         }
 
-        try {
-            FileOutputStream stream = new FileOutputStream(file);
-            stream.write(androidDataString.getBytes());
-        }
-        catch (IOException e) {
-            Log.e("abcvlib", "File write failed: " + e.toString());
-        }finally {
-            stream.close();
+        if (isExternalStorageWritable()){
+            FileOutputStream stream = null;
+            try {
+                stream = new FileOutputStream(file);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                stream.write(androidDataString.getBytes());
+            }
+            catch (IOException e) {
+                Log.e("abcvlib", "File write failed: " + e.toString());
+            }finally {
+                try {
+                    stream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
+
+    /* Checks if external storage is available for read and write */
+    public boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
+    /* Checks if external storage is available to at least read */
+    public boolean isExternalStorageReadable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state) ||
+                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
+    public File getFile(String fileName) {
+        // Get the directory for the user's public pictures directory.
+        File file = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS), fileName);
+        try {
+            file.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return file;
+    }
+
+
 }
