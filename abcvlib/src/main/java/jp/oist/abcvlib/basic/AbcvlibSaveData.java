@@ -88,9 +88,8 @@ public class AbcvlibSaveData extends AbcvlibActivity{
             androidDataString = androidDataString.concat(data[i] + ",");
         }
 
-        FileOutputStream stream = new FileOutputStream(file);
-
         try {
+            FileOutputStream stream = new FileOutputStream(file);
             stream.write(androidDataString.getBytes());
         }
         catch (IOException e) {
