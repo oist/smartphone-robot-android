@@ -1,18 +1,8 @@
 package jp.oist.abcvlibapp;
 
-import android.content.res.AssetManager;
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Environment;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
 
 import jp.oist.abcvlib.basic.AbcvlibActivity;
 
@@ -34,8 +24,6 @@ public class MainActivity extends AbcvlibActivity {
      */
     private boolean wheelPolaritySwap = false;
 
-    private String csvFileString;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Passes Android App information up to parent classes for various usages. Do not modify
@@ -47,10 +35,13 @@ public class MainActivity extends AbcvlibActivity {
         // ID within the R class
         setContentView(R.layout.activity_main);
 
-        csvFileString = Environment.getExternalStorageDirectory().toString() + "/params.csv";
+//        String androidDataDir = "/sdcard/androidData";
+//        String controlDataDir = "/sdcard/controlData";
+        String androidDataDir = Environment.getExternalStorageDirectory().toString() + "/androidData";
+        String controlDataDir = Environment.getExternalStorageDirectory().toString() + "/controlData";
 
 //        // PID Controller
-//        PID pidThread = new PID();
+//        PID pidThread = new PID(androidDataDir, controlDataDir);
 //        new Thread(pidThread).start();
 
 
@@ -67,7 +58,7 @@ public class MainActivity extends AbcvlibActivity {
 //        new Thread(setPointCalibration).start();
 
         // PythonControl
-        PythonControl pythonControl = new PythonControl();
+        PythonControl pythonControl = new PythonControl(this, androidDataDir, controlDataDir);
         new Thread(pythonControl).start();
 
     }
@@ -104,6 +95,14 @@ public class MainActivity extends AbcvlibActivity {
 
         private int stuckCount = 0;
 
+        String androidDataDir;
+        String controlDataDir;
+
+        public PID(String androidDataDir, String controlDataDir){
+            this.controlDataDir = controlDataDir;
+            this.androidDataDir = androidDataDir;
+        }
+
         public void run(){
 
             while(true) {
@@ -126,7 +125,7 @@ public class MainActivity extends AbcvlibActivity {
                 distanceR = abcvlibQuadEncoders.getDistanceR();
                 speedL = abcvlibQuadEncoders.getWheelSpeedL();
                 speedR = abcvlibQuadEncoders.getWheelSpeedR();
-                params = abcvlibSaveData.readData(csvFileString);
+                params = abcvlibSaveData.readData(controlDataDir);
 
                 k_p = params[0];
                 k_i = params[1];
@@ -233,16 +232,52 @@ public class MainActivity extends AbcvlibActivity {
     }
 
     public class PythonControl implements Runnable{
+
+        int speedLSet; // speed of left wheel set by python code
+        int speedRSet; // speed of right wheel set by python code
+        double timeStampRemote;
+        double[] pythonControlData;
+        double[] androidData = new double[8];
+        String androidDataDir;
+        String controlDataDir;
+        Context context;
+
+
+        public PythonControl(Context context, String androidDataDir, String controlDataDir){
+            this.context = context;
+            this.controlDataDir = controlDataDir;
+            this.androidDataDir = androidDataDir;
+        }
+
         public void run(){
             while(true){
-                double[] params;
-                params = abcvlibSaveData.readData(csvFileString);
-                int speedL = (int) params[0];
-                int speedR = (int) params[1];
-                double pythonTime = params[2];
-                double javaTime = System.nanoTime();
-                abcvlibMotion.setWheelSpeed(speedL, speedR);
+
+                readControlData();
+                writeAndroidData();
+
+                abcvlibMotion.setWheelSpeed(speedLSet, speedRSet);
+
             }
+        }
+
+        private void readControlData(){
+            pythonControlData = abcvlibSaveData.readData(controlDataDir);
+            speedLSet = (int) pythonControlData[0];
+            speedRSet = (int) pythonControlData[1];
+            timeStampRemote = (double) pythonControlData[2];
+        }
+
+        private void writeAndroidData(){
+            androidData[0] = abcvlibSensors.getThetaDeg();
+            androidData[1] = abcvlibSensors.getThetaDegDot();
+            androidData[2] = abcvlibQuadEncoders.getWheelCountL();
+            androidData[3] = abcvlibQuadEncoders.getWheelCountR();
+            androidData[4] = abcvlibQuadEncoders.getDistanceL();
+            androidData[5] = abcvlibQuadEncoders.getDistanceR();
+            androidData[6] = abcvlibQuadEncoders.getWheelSpeedL();
+            androidData[7] = abcvlibQuadEncoders.getWheelSpeedR();
+
+            abcvlibSaveData.writeToFile(context, androidDataDir, androidData);
         }
     }
 }
