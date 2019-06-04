@@ -2,9 +2,9 @@ package jp.oist.abcvlibapp;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.os.Environment;
 
 import jp.oist.abcvlib.basic.AbcvlibActivity;
+import jp.oist.abcvlib.basic.AbcvlibSocketClient;
 
 /**
  * Most basic Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors
@@ -44,6 +44,10 @@ public class MainActivity extends AbcvlibActivity {
 //        String controlData = "/sdcard/controlData";
         String androidData = "androidData";
         String controlData = "controlData";
+
+        // Python Socket Connection
+        AbcvlibSocketClient socketClient = new AbcvlibSocketClient("192.168.30.179", 65435);
+        new Thread(socketClient).start();
 
         // PID Controller
         PID pidThread = new PID(androidData, controlData);
