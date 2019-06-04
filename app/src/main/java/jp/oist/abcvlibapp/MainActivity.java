@@ -3,6 +3,9 @@ package jp.oist.abcvlibapp;
 import android.content.Context;
 import android.os.Bundle;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import jp.oist.abcvlib.basic.AbcvlibActivity;
 import jp.oist.abcvlib.basic.AbcvlibSocketClient;
 
@@ -27,7 +30,13 @@ public class MainActivity extends AbcvlibActivity {
     double k_p = 0;
     double k_i = 0;
     double k_d = 0;
-    float setPoint = 0;
+    double setPoint = 0;
+
+    private String androidData = "androidData";
+    private String controlData = "controlData";
+    private HashMap<String, Double> inputs = initializeInputs();
+    private HashMap<String, Double> controls = initializeControls();
+    private AbcvlibSocketClient socketClient = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,19 +49,13 @@ public class MainActivity extends AbcvlibActivity {
         // ID within the R class
         setContentView(R.layout.activity_main);
 
-//        String androidData = "/sdcard/androidData";
-//        String controlData = "/sdcard/controlData";
-        String androidData = "androidData";
-        String controlData = "controlData";
-
         // Python Socket Connection
-        AbcvlibSocketClient socketClient = new AbcvlibSocketClient("192.168.30.179", 65435);
+        socketClient = new AbcvlibSocketClient("192.168.30.179", 65435, inputs, controls);
         new Thread(socketClient).start();
 
-        // PID Controller
-        PID pidThread = new PID(androidData, controlData);
-        new Thread(pidThread).start();
-
+//        // PID Controller
+//        PID pidThread = new PID(androidData, controlData);
+//        new Thread(pidThread).start();
 //        // Linear Back and Forth every 10 mm
 //        BackAndForth backAndForthThread = new BackAndForth();
 //        new Thread(backAndForthThread).start();
@@ -66,7 +69,7 @@ public class MainActivity extends AbcvlibActivity {
 //        new Thread(setPointCalibration).start();
 
         // PythonControl
-        PythonControl pythonControl = new PythonControl(this, androidData, controlData);
+        PythonControl pythonControl = new PythonControl(this, inputs, controls);
         new Thread(pythonControl).start();
 
     }
@@ -90,8 +93,8 @@ public class MainActivity extends AbcvlibActivity {
         double e_t = 0; // e(t) of wikipedia
         double int_e_t; // integral of e(t) from wikipedia. Discrete, so just a sum here.
 
-        float maxTiltAngle = setPoint + 50;
-        float minTiltAngle = setPoint - 50;
+        double maxTiltAngle = setPoint + 50;
+        double minTiltAngle = setPoint - 50;
 
         private int stuckCount = 0;
 
@@ -231,17 +234,15 @@ public class MainActivity extends AbcvlibActivity {
         int speedLSet; // speed of left wheel set by python code
         int speedRSet; // speed of right wheel set by python code
         double timeStampRemote;
-        double[] pythonControlData;
         double[] androidData = new double[8];
-        String androidDataDir;
-        String controlDataDir;
+        HashMap<String, Double> androidDataDictionary;
+        HashMap<String, Double> controlDataDictionary;
         Context context;
 
-
-        public PythonControl(Context context, String androidDataDir, String controlDataDir){
+        public PythonControl(Context context, HashMap androidData, HashMap controlData){
             this.context = context;
-            this.controlDataDir = controlDataDir;
-            this.androidDataDir = androidDataDir;
+            this.controlDataDictionary = controlData;
+            this.androidDataDictionary = androidData;
         }
 
         public void run(){
@@ -256,24 +257,57 @@ public class MainActivity extends AbcvlibActivity {
         }
 
         private void readControlData(){
-            pythonControlData = abcvlibSaveData.readData(controlDataDir);
-            k_p = (int) pythonControlData[0];
-            k_i = (int) pythonControlData[1];
-            k_d = (int) pythonControlData[2];
-            setPoint = (float) pythonControlData[3];
+            controlDataDictionary = socketClient.getControlsSocket();
+            if (controlDataDictionary != null){
+                k_p = controlDataDictionary.get("k_p");
+                k_i = controlDataDictionary.get("k_i");
+                k_d = controlDataDictionary.get("k_d");
+                setPoint = controlDataDictionary.get("setPoint");
+            }
         }
 
         private void writeAndroidData(){
-            androidData[0] = abcvlibSensors.getThetaDeg();
-            androidData[1] = abcvlibSensors.getThetaDegDot();
-            androidData[2] = abcvlibQuadEncoders.getWheelCountL();
-            androidData[3] = abcvlibQuadEncoders.getWheelCountR();
-            androidData[4] = abcvlibQuadEncoders.getDistanceL();
-            androidData[5] = abcvlibQuadEncoders.getDistanceR();
-            androidData[6] = abcvlibQuadEncoders.getWheelSpeedL();
-            androidData[7] = abcvlibQuadEncoders.getWheelSpeedR();
 
-            abcvlibSaveData.writeToFile(context, androidDataDir, androidData);
+            androidDataDictionary.put("theta", abcvlibSensors.getThetaDeg());
+            androidDataDictionary.put("thetaDot", abcvlibSensors.getThetaDegDot());
+            androidDataDictionary.put("wheelCountL", abcvlibQuadEncoders.getWheelCountL());
+            androidDataDictionary.put("wheelCountR", abcvlibQuadEncoders.getWheelCountR());
+            androidDataDictionary.put("distanceL", abcvlibQuadEncoders.getDistanceL());
+            androidDataDictionary.put("distanceR", abcvlibQuadEncoders.getDistanceR());
+            androidDataDictionary.put("wheelSpeedL", abcvlibQuadEncoders.getWheelSpeedL());
+            androidDataDictionary.put("wheelSpeedR", abcvlibQuadEncoders.getWheelSpeedR());
+
+            socketClient.setInputsSocket(androidDataDictionary);
         }
+    }
+
+    private HashMap<String, Double> initializeInputs(){
+
+        HashMap<String, Double> dictionary = new HashMap<String, Double>();
+
+        dictionary.put("theta", 0.0);
+        dictionary.put("thetaDot", 0.0);
+        dictionary.put("wheelCountL", 0.0);
+        dictionary.put("wheelCountR", 0.0);
+        dictionary.put("distanceL", 0.0);
+        dictionary.put("distanceR", 0.0);
+        dictionary.put("wheelSpeedL", 0.0);
+        dictionary.put("wheelSpeedR", 0.0);
+
+        return dictionary;
+    }
+
+    private HashMap<String, Double> initializeControls(){
+
+        HashMap<String, Double> dictionary = new HashMap<String, Double>();
+
+        dictionary.put("k_p", 0.0);
+        dictionary.put("k_i", 0.0);
+        dictionary.put("k_d", 0.0);
+        dictionary.put("setPoint", 0.0);
+        dictionary.put("wheelSpeedLControl", 0.0);
+        dictionary.put("wheelSpeedRControl", 0.0);
+
+        return dictionary;
     }
 }
