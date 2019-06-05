@@ -289,7 +289,7 @@ public class AbcvlibSensors implements SensorEventListener {
     private void sendToLog() {
 
         // Compile thetaDegVectorMsg values to push to separate adb tag
-        String thetaVectorMsg = Double.toString(thetaDeg);
+//        String thetaVectorMsg = Double.toString(thetaDeg);
 
 //        // Compile thetaDegVectorMsg values to push to separate adb tag
 //        String thetaVectorVelMsg = Double.toString(angularVelocityDeg);
@@ -303,7 +303,7 @@ public class AbcvlibSensors implements SensorEventListener {
 //        // Compile dt_sample values to push to separate adb tag
 //        String dtGyroMsg = Double.toString(dtGyro);
 
-        Log.i("thetaVectorMsg", thetaVectorMsg);
+//        Log.i("thetaVectorMsg", thetaVectorMsg);
 //        Log.i("thetaVectorVelMsg", thetaVectorVelMsg);
 //        Log.i("dtRotation", dtRotationMsg);
 //        Log.i("thetaDotGyroMsg", thetaDotGyroMsg);

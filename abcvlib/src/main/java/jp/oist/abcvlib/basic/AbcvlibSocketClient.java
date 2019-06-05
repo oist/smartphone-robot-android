@@ -1,14 +1,17 @@
 package jp.oist.abcvlib.basic;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.HashMap;
 
 public class AbcvlibSocketClient implements Runnable{
 
@@ -16,75 +19,62 @@ public class AbcvlibSocketClient implements Runnable{
 
     private int serverPort = 0;
     private String serverIp = "";
-    public HashMap<String, Double> inputsSocket = null;
-    public HashMap<String, Double> controlsSocket = null;
+    public JSONObject inputs_S = null;
+    public JSONObject controls_S = null;
 
     BufferedWriter bufferedWriter = null;
     BufferedReader bufferedReader = null;
 
-    public AbcvlibSocketClient(String host, int port, HashMap<String, Double> inputs, HashMap<String, Double> controls){
+    public AbcvlibSocketClient(String host, int port, JSONObject inputs, JSONObject controls){
         this.serverIp = host;
         this.serverPort = port;
-        this.inputsSocket = inputs;
-        this.controlsSocket = controls;
+        this.inputs_S = inputs;
+        this.controls_S = controls;
     }
 
     @Override
     public void run() {
+        connect();
+    }
 
+    public void connect(){
         try{
             InetAddress serverAddr = InetAddress.getByName(serverIp);
             socket = new Socket(serverAddr, serverPort);
             bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-            while (true){
-                if (inputsSocket != null){
-                    writeInputs();
-                }
-                controlsSocket = getControls();
-                Thread.sleep(1000);
-            }
-
-        } catch (UnknownHostException | InterruptedException e1) {
-            e1.printStackTrace();
         } catch (IOException e1) {
             e1.printStackTrace();
         }
-
     }
 
-    public void setInputsSocket(HashMap<String, Double> input){
-        this.inputsSocket = input;
-    }
+    public JSONObject getControlsFromServer() throws NullPointerException{
 
-    public HashMap<String, Double> getControlsSocket(){
-        return this.controlsSocket;
-    }
-
-    private HashMap<String, Double> getControls(){
-
-        HashMap<String, Double> controls = null;
-        String readText = "";
+        String line = "";
+        JSONObject controls = null;
 
         try {
-            if (bufferedReader.ready()){
-                readText = bufferedReader.readLine();
+            while (!bufferedReader.ready()){
+                wait(1000);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+            while ((line = bufferedReader.readLine()) == null){
+                wait(1000);
+            }
+            controls = new JSONObject(line);
+        } catch (IOException | JSONException | InterruptedException e1) {
+            e1.printStackTrace();
         }
 
         return controls;
     }
 
-    private void writeInputs(){
+    public void writeInputsToServer(JSONObject inputs){
 
         String timeStamp =  Long.toString(System.nanoTime());
 
         try{
-            String inputsAll = printHashMap(inputsSocket);
-            bufferedWriter.write("time:" + timeStamp + " " + inputsAll);
+            bufferedWriter.write(inputs.toString());
             bufferedWriter.flush();
         } catch (IOException e){
             e.printStackTrace();
@@ -92,14 +82,4 @@ public class AbcvlibSocketClient implements Runnable{
 
     }
 
-    private String printHashMap(HashMap<String, Double> dictionary){
-        String output = "";
-        for (String name: dictionary.keySet()){
-            String key = name.toString();
-            String value = dictionary.get(name).toString();
-            output = output + " key:" + key + " value:" + value;
-        }
-
-        return output;
-    }
 }
