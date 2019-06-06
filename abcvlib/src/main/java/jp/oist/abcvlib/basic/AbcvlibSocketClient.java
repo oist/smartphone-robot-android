@@ -25,6 +25,8 @@ public class AbcvlibSocketClient implements Runnable{
     BufferedWriter bufferedWriter = null;
     BufferedReader bufferedReader = null;
 
+    public boolean ready = false;
+
     public AbcvlibSocketClient(String host, int port, JSONObject inputs, JSONObject controls){
         this.serverIp = host;
         this.serverPort = port;
@@ -47,22 +49,26 @@ public class AbcvlibSocketClient implements Runnable{
         } catch (IOException e1) {
             e1.printStackTrace();
         }
+        ready = true;
     }
 
-    public JSONObject getControlsFromServer() throws NullPointerException{
+    public JSONObject getControlsFromServer(){
 
         String line = "";
         JSONObject controls = null;
 
         try {
+            while (bufferedReader == null){
+                continue;
+            }
             while (!bufferedReader.ready()){
-                wait(1000);
+                continue;
             }
             while ((line = bufferedReader.readLine()) == null){
-                wait(1000);
+                continue;
             }
             controls = new JSONObject(line);
-        } catch (IOException | JSONException | InterruptedException e1) {
+        } catch (IOException | JSONException e1) {
             e1.printStackTrace();
         }
 

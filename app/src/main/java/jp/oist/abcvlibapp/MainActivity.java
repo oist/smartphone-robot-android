@@ -51,7 +51,7 @@ public class MainActivity extends AbcvlibActivity {
         setContentView(R.layout.activity_main);
 
         // Python Socket Connection
-        socketClient = new AbcvlibSocketClient("192.168.30.179", 65436, inputs, controls);
+        socketClient = new AbcvlibSocketClient("192.168.30.179", 65435, inputs, controls);
         new Thread(socketClient).start();
 
 //        // PID Controller
@@ -239,6 +239,9 @@ public class MainActivity extends AbcvlibActivity {
         JSONObject inputs_PC;
         JSONObject controls_PC;
         Context context;
+        double currentTime = 0.0;
+        double prevTime = 0.0;
+
 
         public PythonControl(Context context, JSONObject inputs, JSONObject controls){
             this.context = context;
@@ -247,23 +250,35 @@ public class MainActivity extends AbcvlibActivity {
         }
 
         public void run(){
-            while(true){
+
+            while(!socketClient.ready) {
+                continue;
+            }
+            while (true){
 
                 readControlData();
                 writeAndroidData();
 
 //                abcvlibMotion.setWheelSpeed(speedLSet, speedRSet);
-
             }
         }
 
         private void readControlData(){
-                controls_PC = socketClient.getControlsFromServer();
+            controls_PC = socketClient.getControlsFromServer();
+            try {
+                currentTime = Double.parseDouble(controls_PC.get("timeServer").toString());
+                double dt = currentTime - prevTime;
+                System.out.println(dt);
+                prevTime = currentTime;
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
 
         private void writeAndroidData(){
 
             try {
+                inputs_PC.put("timeAndroid", System.nanoTime() / 1000000000.0);
                 inputs_PC.put("theta", abcvlibSensors.getThetaDeg());
                 inputs_PC.put("thetaDot", abcvlibSensors.getThetaDegDot());
                 inputs_PC.put("wheelCountL", abcvlibQuadEncoders.getWheelCountL());
@@ -285,6 +300,7 @@ public class MainActivity extends AbcvlibActivity {
         JSONObject jsonObject = new JSONObject();
 
         try {
+            jsonObject.put("timeAndroid", 0.0);
             jsonObject.put("theta", 0.0);
             jsonObject.put("thetaDot", 0.0);
             jsonObject.put("wheelCountL", 0.0);
