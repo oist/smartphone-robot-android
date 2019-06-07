@@ -12,6 +12,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 
 public class AbcvlibSocketClient implements Runnable{
 
@@ -27,6 +28,10 @@ public class AbcvlibSocketClient implements Runnable{
 
     public boolean ready = false;
 
+    private String line = "";
+
+    private JSONObject controls;
+
     public AbcvlibSocketClient(String host, int port, JSONObject inputs, JSONObject controls){
         this.serverIp = host;
         this.serverPort = port;
@@ -36,6 +41,7 @@ public class AbcvlibSocketClient implements Runnable{
 
     @Override
     public void run() {
+        initializeControls();
         connect();
     }
 
@@ -53,9 +59,6 @@ public class AbcvlibSocketClient implements Runnable{
     }
 
     public JSONObject getControlsFromServer(){
-
-        String line = "";
-        JSONObject controls = null;
 
         try {
             while (bufferedReader == null){
@@ -88,4 +91,12 @@ public class AbcvlibSocketClient implements Runnable{
 
     }
 
+    private void initializeControls(){
+        String jsonString = "{\"timeServer\": 0, \"k_p\": 0, \"k_i\": 0, \"k_d\": 0, \"setPoint\": 0, \"wheelSpeedL\": 0, \"wheelSpeedR\": 0}";
+        try {
+            controls = new JSONObject(jsonString);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
 }

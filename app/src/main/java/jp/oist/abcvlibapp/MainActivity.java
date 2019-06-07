@@ -257,7 +257,7 @@ public class MainActivity extends AbcvlibActivity {
             while (true){
 
                 readControlData();
-                writeAndroidData();
+//                writeAndroidData();
 
 //                abcvlibMotion.setWheelSpeed(speedLSet, speedRSet);
             }
@@ -265,14 +265,14 @@ public class MainActivity extends AbcvlibActivity {
 
         private void readControlData(){
             controls_PC = socketClient.getControlsFromServer();
-            try {
-                currentTime = Double.parseDouble(controls_PC.get("timeServer").toString());
-                double dt = currentTime - prevTime;
-                System.out.println(dt);
-                prevTime = currentTime;
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+//            try {
+//                currentTime = Double.parseDouble(controls_PC.get("timeServer").toString());
+//                double dt = currentTime - prevTime;
+//                System.out.println(dt);
+//                prevTime = currentTime;
+//            } catch (JSONException e) {
+//                e.printStackTrace();
+//            }
         }
 
         private void writeAndroidData(){
