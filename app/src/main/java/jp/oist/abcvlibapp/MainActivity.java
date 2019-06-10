@@ -50,17 +50,17 @@ public class MainActivity extends AbcvlibActivity {
         // ID within the R class
         setContentView(R.layout.activity_main);
 
-        // Simple Test
-        SimpleTest simpleTest = new SimpleTest();
-        new Thread(simpleTest).start();
+//        // Simple Test
+//        SimpleTest simpleTest = new SimpleTest();
+//        new Thread(simpleTest).start();
 
         // Python Socket Connection
-//        socketClient = new AbcvlibSocketClient("192.168.30.179", 65434, inputs, controls);
-//        new Thread(socketClient).start();
+        socketClient = new AbcvlibSocketClient("192.168.30.179", 65434, inputs, controls);
+        new Thread(socketClient).start();
 
-        // PID Controller
-//        PID pidThread = new PID();
-//        new Thread(pidThread).start();
+        //PID Controller
+        PID pidThread = new PID();
+        new Thread(pidThread).start();
 
 //        // Linear Back and Forth every 10 mm
 //        BackAndForth backAndForthThread = new BackAndForth();
@@ -75,8 +75,8 @@ public class MainActivity extends AbcvlibActivity {
 //        new Thread(setPointCalibration).start();
 
         // PythonControl
-//        PythonControl pythonControl = new PythonControl(this);
-//        new Thread(pythonControl).start();
+        PythonControl pythonControl = new PythonControl(this);
+        new Thread(pythonControl).start();
 
     }
 
