@@ -70,7 +70,7 @@ public class MainActivity extends AbcvlibActivity {
 //        new Thread(setPointCalibration).start();
 
         // PythonControl
-        PythonControl pythonControl = new PythonControl(this, inputs, controls);
+        PythonControl pythonControl = new PythonControl(this);
         new Thread(pythonControl).start();
 
     }
@@ -99,12 +99,12 @@ public class MainActivity extends AbcvlibActivity {
 
         private int stuckCount = 0;
 
-        String androidDataDir;
-        String controlDataDir;
+        String androidInputsPID;
+        String controlsPID;
 
-        public PID(String androidDataDir, String controlDataDir){
-            this.controlDataDir = controlDataDir;
-            this.androidDataDir = androidDataDir;
+        public PID(String androidInputs, String controls){
+            this.controlsPID = controls;
+            this.androidInputsPID = androidInputs;
         }
 
         public void run(){
@@ -236,17 +236,13 @@ public class MainActivity extends AbcvlibActivity {
         int speedRSet; // speed of right wheel set by python code
         double timeStampRemote;
         double[] androidData = new double[8];
-        JSONObject inputs_PC;
-        JSONObject controls_PC;
         Context context;
         double currentTime = 0.0;
         double prevTime = 0.0;
 
 
-        public PythonControl(Context context, JSONObject inputs, JSONObject controls){
+        public PythonControl(Context context){
             this.context = context;
-            this.controls_PC = controls;
-            this.inputs_PC = inputs;
         }
 
         public void run(){
@@ -259,17 +255,22 @@ public class MainActivity extends AbcvlibActivity {
                 readControlData();
                 writeAndroidData();
 
-//                abcvlibMotion.setWheelSpeed(speedLSet, speedRSet);
+                try{
+                    abcvlibMotion.setWheelSpeed(Integer.parseInt(controls.get("wheelSpeedL").toString()),
+                            Integer.parseInt(controls.get("wheelSpeedR").toString()));
+                } catch (JSONException e1){
+                    e1.printStackTrace();
+                }
             }
         }
 
         private void readControlData(){
-            controls_PC = socketClient.getControlsFromServer();
+            controls = socketClient.getControlsFromServer();
             try {
-                currentTime = Double.parseDouble(controls_PC.get("timeServer").toString());
+                currentTime = Double.parseDouble(controls.get("timeServer").toString());
                 double dt = currentTime - prevTime;
 //                System.out.println(dt);
-                System.out.println("wheelSpeedL:" + controls_PC.get("wheelSpeedL"));
+                System.out.println("wheelSpeedL:" + controls.get("wheelSpeedL"));
                 prevTime = currentTime;
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -279,20 +280,20 @@ public class MainActivity extends AbcvlibActivity {
         private void writeAndroidData(){
 
             try {
-                inputs_PC.put("timeAndroid", System.nanoTime() / 1000000000.0);
-                inputs_PC.put("theta", abcvlibSensors.getThetaDeg());
-                inputs_PC.put("thetaDot", abcvlibSensors.getThetaDegDot());
-                inputs_PC.put("wheelCountL", abcvlibQuadEncoders.getWheelCountL());
-                inputs_PC.put("wheelCountR", abcvlibQuadEncoders.getWheelCountR());
-                inputs_PC.put("distanceL", abcvlibQuadEncoders.getDistanceL());
-                inputs_PC.put("distanceR", abcvlibQuadEncoders.getDistanceR());
-                inputs_PC.put("wheelSpeedL", abcvlibQuadEncoders.getWheelSpeedL());
-                inputs_PC.put("wheelSpeedR", abcvlibQuadEncoders.getWheelSpeedR());
+                inputs.put("timeAndroid", System.nanoTime() / 1000000000.0);
+                inputs.put("theta", abcvlibSensors.getThetaDeg());
+                inputs.put("thetaDot", abcvlibSensors.getThetaDegDot());
+                inputs.put("wheelCountL", abcvlibQuadEncoders.getWheelCountL());
+                inputs.put("wheelCountR", abcvlibQuadEncoders.getWheelCountR());
+                inputs.put("distanceL", abcvlibQuadEncoders.getDistanceL());
+                inputs.put("distanceR", abcvlibQuadEncoders.getDistanceR());
+                inputs.put("wheelSpeedL", abcvlibQuadEncoders.getWheelSpeedL());
+                inputs.put("wheelSpeedR", abcvlibQuadEncoders.getWheelSpeedR());
             } catch (JSONException e) {
                 e.printStackTrace();
             }
 
-            socketClient.writeInputsToServer(inputs_PC);
+            socketClient.writeInputsToServer(inputs);
         }
     }
 
