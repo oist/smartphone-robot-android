@@ -190,7 +190,7 @@ public class AbcvlibSensors implements SensorEventListener {
             dt = (timeStamps[indexCurrentRotation] - timeStamps[indexPreviousRotation]) / 1000000000f;
 
             SensorManager.getRotationMatrixFromVector(rotationMatrix , event.values);
-            SensorManager.remapCoordinateSystem(rotationMatrix, SensorManager.AXIS_X, SensorManager.AXIS_Z, rotationMatrixRemap);
+            SensorManager.remapCoordinateSystem(rotationMatrix, SensorManager.AXIS_MINUS_X, SensorManager.AXIS_Z, rotationMatrixRemap);
             SensorManager.getOrientation(rotationMatrixRemap, orientation);
             thetaRad = orientation[1]; //Pitch
 //            thetaRad = lowpassFilter(thetaRad, dt_sample, lp_freq_theta);

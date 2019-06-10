@@ -20,7 +20,7 @@ public class MainActivity extends AbcvlibActivity {
      * memory/disk space on the phone and may result in memory failure if run for a long time
      * such as any learning tasks.
      */
-    private boolean loggerOn = true;
+    private boolean loggerOn = false;
     /**
      * Enable/disable this to swap the polarity of the wheels such that the default forward
      * direction will be swapped (i.e. wheels will move cw vs ccw as forward).
@@ -50,13 +50,18 @@ public class MainActivity extends AbcvlibActivity {
         // ID within the R class
         setContentView(R.layout.activity_main);
 
-        // Python Socket Connection
-        socketClient = new AbcvlibSocketClient("192.168.30.179", 65434, inputs, controls);
-        new Thread(socketClient).start();
+        // Simple Test
+        SimpleTest simpleTest = new SimpleTest();
+        new Thread(simpleTest).start();
 
-//        // PID Controller
-//        PID pidThread = new PID(androidData, controlData);
+        // Python Socket Connection
+//        socketClient = new AbcvlibSocketClient("192.168.30.179", 65434, inputs, controls);
+//        new Thread(socketClient).start();
+
+        // PID Controller
+//        PID pidThread = new PID();
 //        new Thread(pidThread).start();
+
 //        // Linear Back and Forth every 10 mm
 //        BackAndForth backAndForthThread = new BackAndForth();
 //        new Thread(backAndForthThread).start();
@@ -70,9 +75,18 @@ public class MainActivity extends AbcvlibActivity {
 //        new Thread(setPointCalibration).start();
 
         // PythonControl
-        PythonControl pythonControl = new PythonControl(this);
-        new Thread(pythonControl).start();
+//        PythonControl pythonControl = new PythonControl(this);
+//        new Thread(pythonControl).start();
 
+    }
+
+    public class SimpleTest implements Runnable{
+
+        public void run(){
+            while(true){
+                System.out.println("theta:" + abcvlibSensors.getThetaDeg() + "thetaDot:" + abcvlibSensors.getThetaDegDot());
+            }
+        }
     }
 
     public class PID implements Runnable{
@@ -86,8 +100,6 @@ public class MainActivity extends AbcvlibActivity {
         double distanceR; // distances traveled by right wheel from start point (mm)
         double speedL; // Current speed on left wheel in mm/s
         double speedR; // Current speed on right wheel in mm/s
-        double[] params = new double[3];
-
 
         int output; //  u(t) of wikipedia
 
@@ -99,27 +111,9 @@ public class MainActivity extends AbcvlibActivity {
 
         private int stuckCount = 0;
 
-        String androidInputsPID;
-        String controlsPID;
-
-        public PID(String androidInputs, String controls){
-            this.controlsPID = controls;
-            this.androidInputsPID = androidInputs;
-        }
-
         public void run(){
 
             while(true) {
-
-                /*
-                Option 1: This simply directly sets a static value of 500 as the pulse width on
-                each wheel
-                 */
-//                MainActivity.super.abcvlibMotion.setWheelSpeed(-500,500);
-
-                /*
-                Option 2: This attempts to set the tilt angle to zero via a simple PID controller
-                */
 
                 thetaDeg = abcvlibSensors.getThetaDeg();
                 thetaDegDot = abcvlibSensors.getThetaDegDot();
@@ -155,6 +149,16 @@ public class MainActivity extends AbcvlibActivity {
         }
 
         private void linearController(){
+
+            try {
+                setPoint = Double.parseDouble(controls.get("setPoint").toString());
+                k_p = Double.parseDouble(controls.get("k_p").toString());
+                k_i = Double.parseDouble(controls.get("k_i").toString());
+                k_d = Double.parseDouble(controls.get("k_d").toString());
+            } catch (JSONException e){
+                e.printStackTrace();
+            }
+
             int_e_t = int_e_t + e_t;
             e_t = setPoint - thetaDeg;
 
@@ -255,12 +259,12 @@ public class MainActivity extends AbcvlibActivity {
                 readControlData();
                 writeAndroidData();
 
-                try{
-                    abcvlibMotion.setWheelSpeed(Integer.parseInt(controls.get("wheelSpeedL").toString()),
-                            Integer.parseInt(controls.get("wheelSpeedR").toString()));
-                } catch (JSONException e1){
-                    e1.printStackTrace();
-                }
+//                try{
+//                    abcvlibMotion.setWheelSpeed(Integer.parseInt(controls.get("wheelSpeedL").toString()),
+//                            Integer.parseInt(controls.get("wheelSpeedR").toString()));
+//                } catch (JSONException e1){
+//                    e1.printStackTrace();
+//                }
             }
         }
 
@@ -270,7 +274,7 @@ public class MainActivity extends AbcvlibActivity {
                 currentTime = Double.parseDouble(controls.get("timeServer").toString());
                 double dt = currentTime - prevTime;
 //                System.out.println(dt);
-                System.out.println("wheelSpeedL:" + controls.get("wheelSpeedL"));
+//                System.out.println("wheelSpeedL:" + controls.get("wheelSpeedL"));
                 prevTime = currentTime;
             } catch (JSONException e) {
                 e.printStackTrace();

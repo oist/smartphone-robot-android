@@ -30,7 +30,7 @@ public class AbcvlibActivity extends IOIOActivity {
      * Enable/disable sensor and IO logging. Only set to true when debugging as it uses a lot of
      * memory/disk space on the phone and may result in memory failure if run for a long time.
      */
-    public boolean loggerOn = true;
+    public boolean loggerOn = false;
 
     /**
      * Enable/disable this

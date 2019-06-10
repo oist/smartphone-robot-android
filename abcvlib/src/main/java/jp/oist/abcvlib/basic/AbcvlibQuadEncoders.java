@@ -226,24 +226,24 @@ public class AbcvlibQuadEncoders {
     }
 
     private void sendToLog() {
-
-        // Compile Encoder count data to push to adb log
-        String encoderCountMsg =  Double.toString(encoderCountLeftWheel) + " " +
-                Double.toString(encoderCountRightWheel);
-
-        // Compile distance values to push to separate adb tag
-        String distanceLMsg = Double.toString(distanceL) + " " +  Double.toString(distanceLLP) + " " + Double.toString(distanceR) + " " +  Double.toString(distanceRLP);
-
-        // Compile thetaDegVectorMsg values to push to separate adb tag
-        String speedMsg = Double.toString(speedLeftWheelLP) + " " + Double.toString(speedRightWheelLP);
-
-        // Compile avg and dt_sample values to push to separate adb tag
-        String dtMsg = Double.toString(dt_sample);
-
-        Log.i("encoderCountMsg", encoderCountMsg);
-        Log.i("distanceLMsg", distanceLMsg);
-        Log.i("speedMsg", speedMsg);
-        Log.i("dtMsg", dtMsg);
+//
+//        // Compile Encoder count data to push to adb log
+//        String encoderCountMsg =  Double.toString(encoderCountLeftWheel) + " " +
+//                Double.toString(encoderCountRightWheel);
+//
+//        // Compile distance values to push to separate adb tag
+//        String distanceLMsg = Double.toString(distanceL) + " " +  Double.toString(distanceLLP) + " " + Double.toString(distanceR) + " " +  Double.toString(distanceRLP);
+//
+//        // Compile thetaDegVectorMsg values to push to separate adb tag
+//        String speedMsg = Double.toString(speedLeftWheelLP) + " " + Double.toString(speedRightWheelLP);
+//
+//        // Compile avg and dt_sample values to push to separate adb tag
+//        String dtMsg = Double.toString(dt_sample);
+//
+//        Log.i("encoderCountMsg", encoderCountMsg);
+//        Log.i("distanceLMsg", distanceLMsg);
+//        Log.i("speedMsg", speedMsg);
+//        Log.i("dtMsg", dtMsg);
 
     }
 
