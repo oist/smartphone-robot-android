@@ -106,8 +106,8 @@ public class MainActivity extends AbcvlibActivity {
         double e_t = 0; // e(t) of wikipedia
         double int_e_t; // integral of e(t) from wikipedia. Discrete, so just a sum here.
 
-        double maxTiltAngle = setPoint + 50;
-        double minTiltAngle = setPoint - 50;
+        double maxTiltAngle = setPoint + 10;
+        double minTiltAngle = setPoint - 10;
 
         private int stuckCount = 0;
 
@@ -135,12 +135,8 @@ public class MainActivity extends AbcvlibActivity {
                     stuckCount = stuckCount + 1;
                 }
                 else{
-                    if (output == 1000){
-                        output = -1000;
-                    }
-                    else{
-                        output = 1000;
-                    }
+                    output = 0;
+                    stuckCount = 0;
                 }
 
                 abcvlibMotion.setWheelSpeed(output, output);
@@ -257,14 +253,10 @@ public class MainActivity extends AbcvlibActivity {
             while (true){
 
                 readControlData();
+                System.out.println(controls);
                 writeAndroidData();
+                System.out.println(inputs);
 
-//                try{
-//                    abcvlibMotion.setWheelSpeed(Integer.parseInt(controls.get("wheelSpeedL").toString()),
-//                            Integer.parseInt(controls.get("wheelSpeedR").toString()));
-//                } catch (JSONException e1){
-//                    e1.printStackTrace();
-//                }
             }
         }
 
