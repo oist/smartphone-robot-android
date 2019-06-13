@@ -6,6 +6,8 @@ import android.os.Bundle;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.concurrent.TimeUnit;
+
 import jp.oist.abcvlib.basic.AbcvlibActivity;
 import jp.oist.abcvlib.basic.AbcvlibSocketClient;
 
@@ -106,8 +108,9 @@ public class MainActivity extends AbcvlibActivity {
         double e_t = 0; // e(t) of wikipedia
         double int_e_t; // integral of e(t) from wikipedia. Discrete, so just a sum here.
 
-        double maxTiltAngle = setPoint + 10;
-        double minTiltAngle = setPoint - 10;
+        double maxAbsTilt = 10;
+        double maxTiltAngle = setPoint + maxAbsTilt;
+        double minTiltAngle = setPoint - maxAbsTilt;
 
         private int stuckCount = 0;
 
@@ -123,6 +126,8 @@ public class MainActivity extends AbcvlibActivity {
                 distanceR = abcvlibQuadEncoders.getDistanceR();
                 speedL = abcvlibQuadEncoders.getWheelSpeedL();
                 speedR = abcvlibQuadEncoders.getWheelSpeedR();
+                maxTiltAngle = setPoint + maxAbsTilt;
+                minTiltAngle = setPoint - maxAbsTilt;
 
                 // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
                 if(thetaDeg < maxTiltAngle && thetaDeg > minTiltAngle){
@@ -130,13 +135,19 @@ public class MainActivity extends AbcvlibActivity {
                     linearController();
                     stuckCount = 0;
                 }
-                else if(stuckCount < 500000){
+                else if(stuckCount < 500){
                     linearController();
                     stuckCount = stuckCount + 1;
                 }
                 else{
                     output = 0;
                     stuckCount = 0;
+                    abcvlibMotion.setWheelSpeed(output, output);
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 abcvlibMotion.setWheelSpeed(output, output);
@@ -148,6 +159,7 @@ public class MainActivity extends AbcvlibActivity {
 
             try {
                 setPoint = Double.parseDouble(controls.get("setPoint").toString());
+                maxAbsTilt = Double.parseDouble(controls.get("maxAbsTilt").toString());
                 k_p = Double.parseDouble(controls.get("k_p").toString());
                 k_i = Double.parseDouble(controls.get("k_i").toString());
                 k_d = Double.parseDouble(controls.get("k_d").toString());
@@ -253,9 +265,9 @@ public class MainActivity extends AbcvlibActivity {
             while (true){
 
                 readControlData();
-                System.out.println(controls);
+//                System.out.println(controls);
                 writeAndroidData();
-                System.out.println(inputs);
+//                System.out.println(inputs);
 
             }
         }
