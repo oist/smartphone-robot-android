@@ -57,7 +57,7 @@ public class MainActivity extends AbcvlibActivity {
 //        new Thread(simpleTest).start();
 
         // Python Socket Connection
-        socketClient = new AbcvlibSocketClient("192.168.30.179", 65434, inputs, controls);
+        socketClient = new AbcvlibSocketClient("192.168.16.191", 65434, inputs, controls);
         new Thread(socketClient).start();
 
         //PID Controller
@@ -135,7 +135,7 @@ public class MainActivity extends AbcvlibActivity {
                     linearController();
                     stuckCount = 0;
                 }
-                else if(stuckCount < 500){
+                else if(stuckCount < 4000){
                     linearController();
                     stuckCount = stuckCount + 1;
                 }
@@ -331,12 +331,15 @@ public class MainActivity extends AbcvlibActivity {
         JSONObject jsonObject = new JSONObject();
 
         try {
+            jsonObject.put("wheelSpeedL", 0.0);
+            jsonObject.put("wheelSpeedR", 0.0);
+            jsonObject.put("setPoint", 0.0);
+            jsonObject.put("maxAbsTilt", 10.0);
+            jsonObject.put("bounceFreq", 0.0);
             jsonObject.put("k_p", 0.0);
             jsonObject.put("k_i", 0.0);
             jsonObject.put("k_d", 0.0);
-            jsonObject.put("setPoint", 0.0);
-            jsonObject.put("wheelSpeedLControl", 0.0);
-            jsonObject.put("wheelSpeedRControl", 0.0);
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
