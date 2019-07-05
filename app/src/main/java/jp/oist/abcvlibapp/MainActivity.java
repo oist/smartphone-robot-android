@@ -112,11 +112,12 @@ public class MainActivity extends AbcvlibActivity {
 
         double e_t = 0; // e(t) of wikipedia
         double e_w = 0;
+
         double int_e_t; // integral of e(t) from wikipedia. Discrete, so just a sum here.
 
-        double maxAbsTilt = 10;
-        double maxTiltAngle = setPoint + maxAbsTilt;
-        double minTiltAngle = setPoint - maxAbsTilt;
+        double maxAbsTilt = 10; // in Degrees
+        double maxTiltAngle = setPoint + maxAbsTilt; // in Degrees
+        double minTiltAngle = setPoint - maxAbsTilt; // in Degrees
 
         private int stuckCount = 0;
 
@@ -212,7 +213,6 @@ public class MainActivity extends AbcvlibActivity {
                 d_tilt = Double.parseDouble(controls.get("d_tilt").toString());
                 p_wheel = Double.parseDouble(controls.get("p_wheel").toString());
 
-
             } catch (JSONException e){
                 e.printStackTrace();
             }
@@ -225,7 +225,6 @@ public class MainActivity extends AbcvlibActivity {
             double i_out = i_tilt * int_e_t;
             double d_out = d_tilt * thetaDegDot;
 
-            output = (int) Math.round(p_out + i_out + d_out);
         }
     }
 

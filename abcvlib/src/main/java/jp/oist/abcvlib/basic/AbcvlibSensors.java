@@ -56,7 +56,7 @@ public class AbcvlibSensors implements SensorEventListener {
      * Length of past timestamps and encoder values you keep in memory. 15 is not significant,
      * just what was deemed appropriate previously.
      */
-    private int historyLength = 3;
+    private int windowLength = 3;
     /**
      * Low Pass Filter cutoff freq
      */
@@ -87,11 +87,11 @@ public class AbcvlibSensors implements SensorEventListener {
     /**
      * thetaRad calculated from rotation vector
      */
-    private double thetaRad = 0;
+    private double[] thetaRad = new double[windowLength];
     /**
      * thetaRad converted to degrees.
      */
-    private double thetaDeg = 0;
+    private double[] thetaDeg = new double[windowLength];
     /**
      * rotation matrix
      */
@@ -103,14 +103,14 @@ public class AbcvlibSensors implements SensorEventListener {
     /**
      * angularVelocity calculated from RotationMatrix.
      */
-    private double angularVelocityRad = 0;
+    private double[] angularVelocityRad = new double[windowLength];
     /**
      * angularVelocityRad converted to degrees.
      */
-    private double angularVelocityDeg = 0;
-    private double thetaDotGyro = 0;
-    private double[] timeStampsGyro = new double[historyLength];
-    private double thetaDotGyroDeg = 0;
+    private double[] angularVelocityDeg = new double[windowLength];
+    private double[] thetaDotGyro = new double[windowLength];
+    private double[] timeStampsGyro = new double[windowLength];
+    private double[] thetaDotGyroDeg = new double[windowLength];
     private double dtGyro = 0;
     private long[] delayTimers = new long[5];
     private long[] delayTimeSteps = new long[5];
@@ -122,7 +122,7 @@ public class AbcvlibSensors implements SensorEventListener {
     /**
      * Keeps track of both gyro and accelerometer sensor timestamps
      */
-    private long timeStamps[] = new long[historyLength];
+    private long timeStamps[] = new long[windowLength];
     /**
     indexHistoryOldest calculates the index for the oldest encoder count still within
     the history. Using the most recent historical point could lead to speed calculations of zero
@@ -173,53 +173,44 @@ public class AbcvlibSensors implements SensorEventListener {
 
         Sensor sensor = event.sensor;
 
-        delayTimers[0] = System.nanoTime();
-
-
-        if(sensor.getType()==Sensor.TYPE_GYROSCOPE){
-
-            delayTimeSteps[1] = (System.nanoTime() - delayTimers[1]) / 1000000;
-            delayTimers[1] = System.nanoTime();
-
-            indexCurrentGyro = sensorChangeCountGyro % historyLength;
-            indexPreviousGyro = (sensorChangeCountGyro - 1) % historyLength;
-            // Rotation around x-axis
-            // See https://developer.android.com/reference/android/hardware/SensorEvent.html
-            thetaDotGyro = event.values[0];
-            thetaDotGyroDeg = (thetaDotGyro * (180 / Math.PI));
-            timeStampsGyro[indexCurrentGyro] = event.timestamp;
-            dtGyro = (timeStampsGyro[indexCurrentGyro] - timeStampsGyro[indexPreviousGyro]) / 1000000000f;
-            sensorChangeCountGyro++;
-            if (loggerOn){
-                sendToLog();
-            }
-
-        }
+//        if(sensor.getType()==Sensor.TYPE_GYROSCOPE){
+//
+//            indexCurrentGyro = sensorChangeCountGyro % windowLength;
+//            indexPreviousGyro = (sensorChangeCountGyro - 1) % windowLength;
+//            // Rotation around x-axis
+//            // See https://developer.android.com/reference/android/hardware/SensorEvent.html
+//            thetaDotGyro = event.values[0];
+//            thetaDotGyroDeg = (thetaDotGyro * (180 / Math.PI));
+//            timeStampsGyro[indexCurrentGyro] = event.timestamp;
+//            dtGyro = (timeStampsGyro[indexCurrentGyro] - timeStampsGyro[indexPreviousGyro]) / 1000000000f;
+//            sensorChangeCountGyro++;
+//            if (loggerOn){
+//                sendToLog();
+//            }
+//
+//        }
         if(sensor.getType()==Sensor.TYPE_ROTATION_VECTOR){
 
-            delayTimeSteps[2] = (System.nanoTime() - delayTimers[2]) / 1000000;
-            delayTimers[2] = System.nanoTime();
-
-            indexCurrentRotation = sensorChangeCountRotation % historyLength;
-            indexPreviousRotation = (sensorChangeCountRotation - 1) % historyLength;
-            indexHistoryOldest = (sensorChangeCountRotation + 1) % historyLength;
+            indexCurrentRotation = sensorChangeCountRotation % windowLength;
+            indexPreviousRotation = (sensorChangeCountRotation - 1) % windowLength;
+            indexHistoryOldest = (sensorChangeCountRotation + 1) % windowLength;
             timeStamps[indexCurrentRotation] = event.timestamp;
             dt = (timeStamps[indexCurrentRotation] - timeStamps[indexPreviousRotation]) / 1000000000f;
 
             SensorManager.getRotationMatrixFromVector(rotationMatrix , event.values);
             SensorManager.remapCoordinateSystem(rotationMatrix, SensorManager.AXIS_MINUS_X, SensorManager.AXIS_Z, rotationMatrixRemap);
             SensorManager.getOrientation(rotationMatrixRemap, orientation);
-            thetaRad = orientation[1]; //Pitch
+            thetaRad[indexCurrentRotation] = orientation[1]; //Pitch
 //            thetaRad = lowpassFilter(thetaRad, dt_sample, lp_freq_theta);
 
-//            angularVelocityRad[indexCurrentRotation] = (thetaRad[indexCurrentRotation] - thetaRad[indexPreviousRotation]) / 0.005;
+            angularVelocityRad[indexCurrentRotation] = (thetaRad[indexCurrentRotation] - thetaRad[indexPreviousRotation]) / dt;
 //            angularVelocityRad = lowpassFilter(angularVelocityRad, 0.005, lp_freq_thetaDot);
-//            if (sensorChangeCountRotation > historyLength){
+//            if (sensorChangeCountRotation > windowLength){
 //                angularVelocityRad[indexCurrentRotation] = runningAvg(angularVelocityRad, 3);
 //            }
 
-            thetaDeg = (thetaRad * (180 / Math.PI));
-//            angularVelocityDeg = (angularVelocityRad[indexCurrentRotation] * (180 / Math.PI));
+            thetaDeg[indexCurrentRotation] = (thetaRad[indexCurrentRotation] * (180 / Math.PI));
+            angularVelocityDeg[indexCurrentRotation] = (thetaDeg[indexCurrentRotation] - thetaDeg[indexPreviousRotation]) / dt;
 
             // Update all previous variables with current ones
             sensorChangeCountRotation++;
@@ -295,25 +286,25 @@ public class AbcvlibSensors implements SensorEventListener {
     /**
      * @return Phone tilt angle in radians
      */
-    public double getThetaRad(){ return thetaRad; }
+    public double getThetaRad(){ return thetaRad[indexCurrentRotation]; }
 
     /**
      * @return Phone tilt angle in degrees
      */
     public double getThetaDeg(){
-        return thetaDeg;
+        return thetaDeg[indexCurrentRotation];
     }
 
     /**
      * @return Phone tilt speed (angular velocity) in radians per second
      */
-    public double getThetaRadDot(){ return thetaDotGyro; }
+    public double getThetaRadDot(){ return angularVelocityRad[indexCurrentRotation]; }
 
     /**
      * @return Phone tilt speed (angular velocity) in degrees per second
      */
     public double getThetaDegDot(){
-        return thetaDotGyroDeg;
+        return angularVelocityDeg[indexCurrentRotation];
     }
 
     /**
@@ -327,7 +318,8 @@ public class AbcvlibSensors implements SensorEventListener {
      * linear velocity).
      * @param len length of array for keeping history
      */
-    public void setHistoryLength(int len) {historyLength = len; }
+    public void setWindowLength(int len) {
+        windowLength = len; }
 
     /**
      * Send accelerometer and gyroscope data, along with calculated tilt angles, speeds, etc. such
@@ -336,7 +328,10 @@ public class AbcvlibSensors implements SensorEventListener {
     private void sendToLog() {
 
         // Compile thetaDegVectorMsg values to push to separate adb tag
-//        String thetaVectorMsg = Double.toString(thetaDeg);
+        String thetaMsg = Double.toString(thetaDeg[indexCurrentRotation]);
+
+        // Compile thetaDegVectorMsg values to push to separate adb tag
+        String angularVelocityRadMsg = Double.toString(angularVelocityRad[indexCurrentRotation]);
 
 //        // Compile thetaDegVectorMsg values to push to separate adb tag
 //        String thetaVectorVelMsg = Double.toString(angularVelocityDeg);
@@ -350,7 +345,8 @@ public class AbcvlibSensors implements SensorEventListener {
 //        // Compile dt_sample values to push to separate adb tag
 //        String dtGyroMsg = Double.toString(dtGyro);
 
-//        Log.i("thetaVectorMsg", thetaVectorMsg);
+        Log.i("thetaMsg", thetaMsg);
+        Log.i("angularVelocityRadMsg", angularVelocityRadMsg);
 //        Log.i("thetaVectorVelMsg", thetaVectorVelMsg);
 //        Log.i("dtRotation", dtRotationMsg);
 //        Log.i("thetaDotGyroMsg", thetaDotGyroMsg);
