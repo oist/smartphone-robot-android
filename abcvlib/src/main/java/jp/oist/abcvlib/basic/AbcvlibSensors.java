@@ -7,6 +7,8 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
 
+import java.util.Arrays;
+
 /**
  * AbcvlibSensors reads and processes the data from the Android phone gryoscope and
  * accelerometer. The three main goals of this class are:
@@ -73,6 +75,8 @@ public class AbcvlibSensors implements SensorEventListener {
     private SensorManager sensorManager;
     private Sensor gyroscope;
     private Sensor rotation_sensor;
+    private Sensor accelerometer;
+    private Sensor accelerometer_uncalibrated;
 
     //----------------------------------------------------------------------------------------------
     /**
@@ -108,7 +112,9 @@ public class AbcvlibSensors implements SensorEventListener {
     private double[] timeStampsGyro = new double[historyLength];
     private double thetaDotGyroDeg = 0;
     private double dtGyro = 0;
-
+    private long[] delayTimers = new long[5];
+    private long[] delayTimeSteps = new long[5];
+    private float[] theta_uncalibrated = new float[6];
 
     //----------------------------------------------------------------------------------------------
 
@@ -141,6 +147,8 @@ public class AbcvlibSensors implements SensorEventListener {
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         rotation_sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        accelerometer_uncalibrated = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED);
         register();
     }
 
@@ -165,7 +173,13 @@ public class AbcvlibSensors implements SensorEventListener {
 
         Sensor sensor = event.sensor;
 
+        delayTimers[0] = System.nanoTime();
+
+
         if(sensor.getType()==Sensor.TYPE_GYROSCOPE){
+
+            delayTimeSteps[1] = (System.nanoTime() - delayTimers[1]) / 1000000;
+            delayTimers[1] = System.nanoTime();
 
             indexCurrentGyro = sensorChangeCountGyro % historyLength;
             indexPreviousGyro = (sensorChangeCountGyro - 1) % historyLength;
@@ -181,7 +195,10 @@ public class AbcvlibSensors implements SensorEventListener {
             }
 
         }
-        else if(sensor.getType()==Sensor.TYPE_ROTATION_VECTOR){
+        if(sensor.getType()==Sensor.TYPE_ROTATION_VECTOR){
+
+            delayTimeSteps[2] = (System.nanoTime() - delayTimers[2]) / 1000000;
+            delayTimers[2] = System.nanoTime();
 
             indexCurrentRotation = sensorChangeCountRotation % historyLength;
             indexPreviousRotation = (sensorChangeCountRotation - 1) % historyLength;
@@ -210,6 +227,15 @@ public class AbcvlibSensors implements SensorEventListener {
                 sendToLog();
             }
         }
+
+        else if (sensor.getType()==Sensor.TYPE_ACCELEROMETER){
+
+            delayTimeSteps[3] = (System.nanoTime() - delayTimers[3]) / 1000000;
+            delayTimers[3] = System.nanoTime();
+
+        }
+
+//        Log.i("Sensor Delay Timer", "Time between last sensor changes: " + Arrays.toString(delayTimeSteps));
     }
 
     /**
@@ -228,6 +254,18 @@ public class AbcvlibSensors implements SensorEventListener {
         } else {
             Log.e("SensorTesting", "No Default gyroscope Available.");
         }
+        // Check if rotation_sensor exists before trying to turn on the listener
+        if (accelerometer != null){
+            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+        } else {
+            Log.e("SensorTesting", "No Default accelerometer Available.");
+        }
+        // Check if rotation_sensor exists before trying to turn on the listener
+        if (accelerometer_uncalibrated != null){
+            sensorManager.registerListener(this, accelerometer_uncalibrated, SensorManager.SENSOR_DELAY_FASTEST);
+        } else {
+            Log.e("SensorTesting", "No Default accelerometer_uncalibrated Available.");
+        }
     }
 
     /**
@@ -243,6 +281,15 @@ public class AbcvlibSensors implements SensorEventListener {
         if (gyroscope != null){
             sensorManager.unregisterListener(this, gyroscope);
         }
+        // Check if rotation_sensor exists before trying to turn off the listener
+        if (accelerometer != null){
+            sensorManager.unregisterListener(this, accelerometer);
+        }
+        // Check if gyro exists before trying to turn off the listener
+        if (accelerometer_uncalibrated != null){
+            sensorManager.unregisterListener(this, accelerometer_uncalibrated);
+        }
+
     }
 
     /**
