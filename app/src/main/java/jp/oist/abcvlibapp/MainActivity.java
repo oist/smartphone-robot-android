@@ -2,10 +2,12 @@ package jp.oist.abcvlibapp;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.basic.AbcvlibActivity;
@@ -27,7 +29,7 @@ public class MainActivity extends AbcvlibActivity {
      * Enable/disable this to swap the polarity of the wheels such that the default forward
      * direction will be swapped (i.e. wheels will move cw vs ccw as forward).
      */
-    private boolean wheelPolaritySwap = false;
+    private boolean wheelPolaritySwap = true;
 
     double k_p = 0;
     double k_i = 0;
@@ -40,6 +42,8 @@ public class MainActivity extends AbcvlibActivity {
     private JSONObject inputs = initializeInputs();
     private JSONObject controls = initializeControls();
     private AbcvlibSocketClient socketClient = null;
+
+    private int avgCount = 1000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +61,7 @@ public class MainActivity extends AbcvlibActivity {
 //        new Thread(simpleTest).start();
 
         // Python Socket Connection
-        socketClient = new AbcvlibSocketClient("192.168.30.179", 65434, inputs, controls);
+        socketClient = new AbcvlibSocketClient("192.168.22.6", 65434, inputs, controls);
         new Thread(socketClient).start();
 
         //PID Controller
@@ -114,9 +118,26 @@ public class MainActivity extends AbcvlibActivity {
 
         private int stuckCount = 0;
 
+        long[] PIDTimer = new long[3];
+        long[] PIDTimeSteps = new long[4];
+        int timerCount = 1;
+        double thetaDiff;
+        long lastUpdateTime;
+        long updateTimeStep;
+
         public void run(){
 
             while(true) {
+
+                PIDTimer[0] = System.nanoTime();
+
+                thetaDiff = thetaDeg - abcvlibSensors.getThetaDeg();
+
+                if (thetaDiff !=0){
+                    updateTimeStep = PIDTimer[0]- lastUpdateTime;
+                    lastUpdateTime = PIDTimer[0];
+//                    Log.i("theta", "theta was updated in " + (updateTimeStep / 1000000) + " ms");
+                }
 
                 thetaDeg = abcvlibSensors.getThetaDeg();
                 thetaDegDot = abcvlibSensors.getThetaDegDot();
@@ -129,13 +150,15 @@ public class MainActivity extends AbcvlibActivity {
                 maxTiltAngle = setPoint + maxAbsTilt;
                 minTiltAngle = setPoint - maxAbsTilt;
 
+                PIDTimer[1] = System.nanoTime();
+
                 // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
                 if(thetaDeg < maxTiltAngle && thetaDeg > minTiltAngle){
 
                     linearController();
                     stuckCount = 0;
                 }
-                else if(stuckCount < 500){
+                else if(stuckCount < 4000){
                     linearController();
                     stuckCount = stuckCount + 1;
                 }
@@ -150,7 +173,29 @@ public class MainActivity extends AbcvlibActivity {
                     }
                 }
 
+                PIDTimer[2] = System.nanoTime();
+
                 abcvlibMotion.setWheelSpeed(output, output);
+
+                PIDTimeSteps[3] += System.nanoTime() - PIDTimer[2];
+                PIDTimeSteps[2] += PIDTimer[2] - PIDTimer[1];
+                PIDTimeSteps[1] += PIDTimer[1] - PIDTimer[0];
+                PIDTimeSteps[0] = PIDTimer[0];
+
+
+                // Take basic stats of every 1000 time step lengths rather than pushing all.
+                if (timerCount % avgCount == 0){
+
+                    for (int i=1; i < PIDTimeSteps.length; i++){
+
+                        PIDTimeSteps[i] = (PIDTimeSteps[i] / avgCount) / 1000000;
+
+                    }
+
+//                    Log.i("timers", "PIDTimer Averages = " + Arrays.toString(PIDTimeSteps));
+                }
+
+                timerCount ++;
 
             }
         }
@@ -252,6 +297,10 @@ public class MainActivity extends AbcvlibActivity {
         double currentTime = 0.0;
         double prevTime = 0.0;
 
+        long[] pythonControlTimer = new long[3];
+        long[] pythonControlTimeSteps = new long[3];
+
+        int timerCount = 1;
 
         public PythonControl(Context context){
             this.context = context;
@@ -264,10 +313,32 @@ public class MainActivity extends AbcvlibActivity {
             }
             while (true){
 
+                pythonControlTimer[0] = System.nanoTime();
                 readControlData();
 //                System.out.println(controls);
+                pythonControlTimer[1] = System.nanoTime();
                 writeAndroidData();
 //                System.out.println(inputs);
+                pythonControlTimeSteps[2] += System.nanoTime() - pythonControlTimer[1];
+                pythonControlTimeSteps[1] += pythonControlTimer[1] - pythonControlTimer[0];
+                pythonControlTimeSteps[0] = pythonControlTimer[0];
+
+
+                // Take basic stats of every 1000 time step lengths rather than pushing all.
+                if (timerCount % avgCount == 0){
+
+                    for (int i=1; i < pythonControlTimeSteps.length; i++){
+
+                        pythonControlTimeSteps[i] = (pythonControlTimeSteps[i] / avgCount) / 1000000;
+
+                    }
+
+                    Log.i("timers", "PythonControlTimer Averages = " + Arrays.toString(pythonControlTimeSteps));
+
+                }
+
+                timerCount ++;
+
 
             }
         }
@@ -331,12 +402,15 @@ public class MainActivity extends AbcvlibActivity {
         JSONObject jsonObject = new JSONObject();
 
         try {
+            jsonObject.put("wheelSpeedL", 0.0);
+            jsonObject.put("wheelSpeedR", 0.0);
+            jsonObject.put("setPoint", 0.0);
+            jsonObject.put("maxAbsTilt", 10.0);
+            jsonObject.put("bounceFreq", 0.0);
             jsonObject.put("k_p", 0.0);
             jsonObject.put("k_i", 0.0);
             jsonObject.put("k_d", 0.0);
-            jsonObject.put("setPoint", 0.0);
-            jsonObject.put("wheelSpeedLControl", 0.0);
-            jsonObject.put("wheelSpeedRControl", 0.0);
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
