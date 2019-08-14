@@ -31,11 +31,12 @@ public class MainActivity extends AbcvlibActivity {
      */
     private boolean wheelPolaritySwap = true;
 
-    double k_p = 0;
-    double k_i = 0;
-    double k_d = 0;
+    double p_tilt = 0;
+    double i_tilt = 0;
+    double d_tilt = 0;
     double setPoint = 0;
-    private String[] controlParams = {"k_p", "k_i", "k_d", "setPoint", "wheelSpeedL", "wheelSpeedR"};
+    double p_wheel = 0;
+    private String[] controlParams = {"p_tilt", "i_tilt", "d_tilt", "setPoint", "p_wheel", "wheelSpeedL", "wheelSpeedR"};
 
     private String androidData = "androidData";
     private String controlData = "controlData";
@@ -61,7 +62,7 @@ public class MainActivity extends AbcvlibActivity {
 //        new Thread(simpleTest).start();
 
         // Python Socket Connection
-        socketClient = new AbcvlibSocketClient("192.168.22.6", 65434, inputs, controls);
+        socketClient = new AbcvlibSocketClient("192.168.23.135", 65434, inputs, controls);
         new Thread(socketClient).start();
 
         //PID Controller
@@ -110,6 +111,7 @@ public class MainActivity extends AbcvlibActivity {
         int output; //  u(t) of wikipedia
 
         double e_t = 0; // e(t) of wikipedia
+        double e_w = 0;
         double int_e_t; // integral of e(t) from wikipedia. Discrete, so just a sum here.
 
         double maxAbsTilt = 10;
@@ -205,19 +207,23 @@ public class MainActivity extends AbcvlibActivity {
             try {
                 setPoint = Double.parseDouble(controls.get("setPoint").toString());
                 maxAbsTilt = Double.parseDouble(controls.get("maxAbsTilt").toString());
-                k_p = Double.parseDouble(controls.get("k_p").toString());
-                k_i = Double.parseDouble(controls.get("k_i").toString());
-                k_d = Double.parseDouble(controls.get("k_d").toString());
+                p_tilt = Double.parseDouble(controls.get("p_tilt").toString());
+                i_tilt = Double.parseDouble(controls.get("i_tilt").toString());
+                d_tilt = Double.parseDouble(controls.get("d_tilt").toString());
+                p_wheel = Double.parseDouble(controls.get("p_wheel").toString());
+
+
             } catch (JSONException e){
                 e.printStackTrace();
             }
 
             int_e_t = int_e_t + e_t;
             e_t = setPoint - thetaDeg;
+            e_w = -speedL;
 
-            double p_out = k_p * e_t;
-            double i_out = k_i * int_e_t;
-            double d_out = k_d * thetaDegDot;
+            double p_out = (p_tilt * e_t) + (p_wheel * e_w);
+            double i_out = i_tilt * int_e_t;
+            double d_out = d_tilt * thetaDegDot;
 
             output = (int) Math.round(p_out + i_out + d_out);
         }
@@ -407,9 +413,10 @@ public class MainActivity extends AbcvlibActivity {
             jsonObject.put("setPoint", 0.0);
             jsonObject.put("maxAbsTilt", 10.0);
             jsonObject.put("bounceFreq", 0.0);
-            jsonObject.put("k_p", 0.0);
-            jsonObject.put("k_i", 0.0);
-            jsonObject.put("k_d", 0.0);
+            jsonObject.put("p_tilt", 0.0);
+            jsonObject.put("i_tilt", 0.0);
+            jsonObject.put("d_tilt", 0.0);
+            jsonObject.put("p_wheel", 0.0);
 
         } catch (JSONException e) {
             e.printStackTrace();
