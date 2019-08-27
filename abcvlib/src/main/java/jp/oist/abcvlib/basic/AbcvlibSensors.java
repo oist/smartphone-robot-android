@@ -5,6 +5,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.SystemClock;
 import android.util.Log;
 
 import java.util.Arrays;
@@ -116,6 +117,12 @@ public class AbcvlibSensors implements SensorEventListener {
     private long[] delayTimeSteps = new long[5];
     private float[] theta_uncalibrated = new float[6];
 
+    float[] pythonSensorTimer = new float[3];
+    float[] pythonSensorTimeSteps = new float[3];
+    int timerCount = 1;
+    private int avgCount = 1000;
+
+
     //----------------------------------------------------------------------------------------------
 
     //----------------------------------------- Timestamps -----------------------------------------
@@ -173,6 +180,10 @@ public class AbcvlibSensors implements SensorEventListener {
 
         Sensor sensor = event.sensor;
 
+        // Timer for how often ANY sensor changes
+        pythonSensorTimeSteps[0] += System.nanoTime() - pythonSensorTimer[0];
+
+
 //        if(sensor.getType()==Sensor.TYPE_GYROSCOPE){
 //
 //            indexCurrentGyro = sensorChangeCountGyro % windowLength;
@@ -190,6 +201,9 @@ public class AbcvlibSensors implements SensorEventListener {
 //
 //        }
         if(sensor.getType()==Sensor.TYPE_ROTATION_VECTOR){
+
+            // Timer for only TYPE_ROTATION_VECTOR sensor change
+            pythonSensorTimeSteps[1] += System.nanoTime() - pythonSensorTimer[1];
 
             indexCurrentRotation = sensorChangeCountRotation % windowLength;
             indexPreviousRotation = (sensorChangeCountRotation - 1) % windowLength;
@@ -217,14 +231,39 @@ public class AbcvlibSensors implements SensorEventListener {
             if (loggerOn){
                 sendToLog();
             }
+
+            pythonSensorTimer[1] = System.nanoTime();
         }
 
         else if (sensor.getType()==Sensor.TYPE_ACCELEROMETER){
 
+            // Timer for only TYPE_ACCELEROMETER sensor change
+            pythonSensorTimeSteps[2] += System.nanoTime() - pythonSensorTimer[2];
+
             delayTimeSteps[3] = (System.nanoTime() - delayTimers[3]) / 1000000;
             delayTimers[3] = System.nanoTime();
 
+            pythonSensorTimer[2] = System.nanoTime();
+
         }
+
+        pythonSensorTimer[0] = System.nanoTime();
+
+        // Take basic stats of every 1000 time step lengths rather than pushing all.
+        if (timerCount % avgCount == 0){
+
+            for (int i=0; i < pythonSensorTimeSteps.length; i++){
+
+                pythonSensorTimeSteps[i] = (pythonSensorTimeSteps[i] / avgCount) / 1000000;
+
+            }
+
+            Log.i("timers", "PythonSensorTimer Averages = " + Arrays.toString(pythonSensorTimeSteps) + "(ms)");
+
+        }
+
+        timerCount ++;
+
 
 //        Log.i("Sensor Delay Timer", "Time between last sensor changes: " + Arrays.toString(delayTimeSteps));
     }
