@@ -27,31 +27,16 @@ android {
 
     defaultConfig {
         compileSdkVersion rootProject.ext.compileSdkVersion
+        buildToolsVersion rootProject.ext.buildToolsVersion
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode rootProject.ext.versionCode
+        versionName rootProject.ext.versionName
     }
-//    buildTypes {
-//        release {
-//            minifyEnabled false
-//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-//        }
-//        debug {
-//
-//        }
-//    }
+
 }
 
 dependencies {
-//    implementation "com.android.support:appcompat-v7:${rootProject.ext.supportLibVersion}"
-    api fileTree(include: ['*.jar'], dir: 'libs')
-    // Should likely avoid coverall imports like this and implement a gradle link for the OpenCV library as well
-    api fileTree(include: ['*.aar'], dir: 'libs')
-    testImplementation 'junit:junit:4.12'
-    implementation 'com.android.support:appcompat-v7:28.0.0'
-    implementation 'com.github.ytai.ioio:IOIOLibAndroid:5.07'
-    implementation 'com.github.ytai.ioio:IOIOLibAndroidBluetooth:5.07'
-    implementation 'com.github.ytai.ioio:IOIOLibAndroidAccessory:5.07'
-    implementation 'com.github.ytai.ioio:IOIOLibAndroidDevice:5.07'
-    implementation 'com.opencsv:opencsv:4.6'
-    implementation project(path: ':openCV411')
+    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    implementation project(path: ':abcvlib')
 }

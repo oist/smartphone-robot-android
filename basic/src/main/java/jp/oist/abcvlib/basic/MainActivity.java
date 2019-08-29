@@ -11,8 +11,26 @@ import android.os.Bundle;
  */
 public class MainActivity extends AbcvlibActivity {
 
+    /**
+     * Enable/disable sensor and IO logging. Only set to true when debugging as it uses a lot of
+     * memory/disk space on the phone and may result in memory failure if run for a long time
+     * such as any learning tasks.
+     */
+    private boolean loggerOn = false;
+    /**
+     * Enable/disable this to swap the polarity of the wheels such that the default forward
+     * direction will be swapped (i.e. wheels will move cw vs ccw as forward).
+     */
+    private boolean wheelPolaritySwap = true;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        // Passes Android App information up to parent classes for various usages. Do not modify
+        super.onCreate(savedInstanceState);
+        super.loggerOn = loggerOn;
+        super.wheelPolaritySwap = wheelPolaritySwap;
+
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
 

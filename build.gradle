@@ -22,18 +22,16 @@ allprojects {
     }
 }
 
-// This block encapsulates custom properties and makes them available to all
-// modules in the project.
 ext {
 
     compileSdkVersion = 28
     buildToolsVersion = '28.0.3'
-
     minSdkVersion = 21
     targetSdkVersion = 28
+    versionCode = 1
+    versionName = "1.0"
 
 }
-
 
 task clean(type: Delete) {
     delete rootProject.buildDir
