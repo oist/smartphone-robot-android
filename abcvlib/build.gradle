@@ -24,27 +24,25 @@ allprojects {
 }
 
 android {
-    compileSdkVersion 28
-    buildToolsVersion '28.0.3'
 
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 28
-        versionCode 1
-        versionName "1.0"
+        compileSdkVersion rootProject.ext.compileSdkVersion
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
     }
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-        debug {
-
-        }
-    }
+//    buildTypes {
+//        release {
+//            minifyEnabled false
+//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+//        }
+//        debug {
+//
+//        }
+//    }
 }
 
 dependencies {
+//    implementation "com.android.support:appcompat-v7:${rootProject.ext.supportLibVersion}"
     api fileTree(include: ['*.jar'], dir: 'libs')
     // Should likely avoid coverall imports like this and implement a gradle link for the OpenCV library as well
     api fileTree(include: ['*.aar'], dir: 'libs')

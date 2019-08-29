@@ -1,1 +1,1 @@
-include ':app', ':abcvlib', ':openCV411'
+include ':app', ':abcvlib', ':openCV411', ':basic'
