@@ -3,13 +3,14 @@ apply plugin: 'com.android.application'
 android {
 
     defaultConfig {
-        applicationId "jp.oist.remotePID"
+        applicationId "jp.oist.abcvlib.remotePID"
         compileSdkVersion rootProject.ext.compileSdkVersion
         buildToolsVersion rootProject.ext.buildToolsVersion
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode rootProject.ext.versionCode
         versionName rootProject.ext.versionName
+        testInstrumentationRunner rootProject.ext.testInstrumentationRunner
     }
 
     buildTypes {

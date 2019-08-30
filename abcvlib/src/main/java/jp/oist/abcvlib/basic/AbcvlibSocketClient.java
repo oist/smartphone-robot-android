@@ -1,5 +1,7 @@
 package jp.oist.abcvlib.basic;
 
+import android.util.Log;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -9,8 +11,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 
@@ -27,6 +31,8 @@ public class AbcvlibSocketClient implements Runnable{
     BufferedReader bufferedReader = null;
 
     public boolean ready = false;
+    public boolean readPermission = false;
+    public boolean writePermission = false;
 
     private String line = "";
 
@@ -49,31 +55,70 @@ public class AbcvlibSocketClient implements Runnable{
         try{
             InetAddress serverAddr = InetAddress.getByName(serverIp);
             socket = new Socket(serverAddr, serverPort);
+            Log.i("abcvlib", "Created new socket connection");
             bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-        } catch (IOException e1) {
-            e1.printStackTrace();
+        } catch (ConnectException e1){
+            try {
+                Thread.sleep(1000);
+                Log.i("abcvlib", "Waiting on Python server to initialize");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        } catch (IOException e2) {
+            e2.printStackTrace();
         }
         ready = true;
+        writePermission = true;
+        readPermission = false;
     }
 
     public JSONObject getControlsFromServer(){
 
+        int timeout = 50;
+        int timeoutCounter = 0;
+
         try {
             while (bufferedReader == null){
-                continue;
+                Log.i("abcvlib", "bufferedReader == null");
             }
             while (!bufferedReader.ready()){
-                continue;
+                if (timeoutCounter >= timeout){
+                    Log.i("abcvlib", "timeout counter exceeded. Assuming socket server closed. Retrying connection");
+                    closeAll();
+                    connect();
+                }
+                Log.i("abcvlib", "bufferedReader not ready @getControlsFromServer");
+                Thread.sleep(100);
+                timeoutCounter++;
             }
             while ((line = bufferedReader.readLine()) == null){
-                continue;
+                Log.i("abcvlib", "bufferedReader line is null");
             }
             controls = new JSONObject(line);
-        } catch (IOException | JSONException e1) {
-            e1.printStackTrace();
         }
+
+        catch (NullPointerException e2){
+            Log.i("abcvlib", "bufferedReader still null. Trying to reconnect to socket");
+            e2.printStackTrace();}
+
+        catch (IOException | JSONException e3) {
+            try {
+                Thread.sleep(1000);
+                connect();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            e3.printStackTrace();
+        }
+
+        catch (InterruptedException e4) {
+            e4.printStackTrace();
+        }
+
+        writePermission = true;
+        readPermission = false;
 
         return controls;
     }
@@ -85,9 +130,21 @@ public class AbcvlibSocketClient implements Runnable{
         try{
             bufferedWriter.write(inputs.toString());
             bufferedWriter.flush();
-        } catch (IOException e){
-            e.printStackTrace();
+        } catch (NullPointerException e1){
+            Log.i("abcvlib", "bufferedWriter still null. Trying to reconnect to socket");
+            e1.printStackTrace();
+        } catch (IOException e2){
+            try {
+                Thread.sleep(1000);
+                connect();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            e2.printStackTrace();
         }
+
+        writePermission = false;
+        readPermission = true;
 
     }
 
@@ -98,5 +155,12 @@ public class AbcvlibSocketClient implements Runnable{
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    private void closeAll() throws IOException {
+        ready = false;
+        bufferedReader.close();
+        bufferedWriter.close();
+        socket.close();
     }
 }

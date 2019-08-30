@@ -36,7 +36,7 @@ public class MainActivity extends AbcvlibActivity {
 
         // Setup Android GUI. Point this method to your main activity xml file or corresponding int
         // ID within the R class
-        setContentView(R.layout.activity_main);
+        setContentView(jp.oist.abcvlib.basic.R.layout.activity_main);
 
         // Create "runnable" object (similar to a thread, but recommended over overriding thread class)
         SimpleTest simpleTest = new SimpleTest();

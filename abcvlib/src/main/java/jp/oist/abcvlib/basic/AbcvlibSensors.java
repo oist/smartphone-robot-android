@@ -258,7 +258,7 @@ public class AbcvlibSensors implements SensorEventListener {
 
             }
 
-            Log.i("timers", "PythonSensorTimer Averages = " + Arrays.toString(pythonSensorTimeSteps) + "(ms)");
+//            Log.i("timers", "PythonSensorTimer Averages = " + Arrays.toString(pythonSensorTimeSteps) + "(ms)");
 
         }
 
