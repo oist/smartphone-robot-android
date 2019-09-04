@@ -20,6 +20,8 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.imgproc.Imgproc;
 
+import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -46,6 +48,7 @@ public class ColorBlobDetectionActivity extends CameraActivity implements OnTouc
     private Vision               visionObj;
     private List<Point>          centroids;
     private CameraBridgeViewBase mOpenCvCameraView;
+    private int                  mCameraId = 0;
     private AbcvlibActivity      abcvlibActivity;
 
     private BaseLoaderCallback  mLoaderCallback = new BaseLoaderCallback(this) {
@@ -74,7 +77,8 @@ public class ColorBlobDetectionActivity extends CameraActivity implements OnTouc
     @Override
     public void onCreate(Bundle savedInstanceState) {
 
-        abcvlibActivity = new AbcvlibActivity();
+        // I'd think there is a better way to fix the orientation in portrait without cropping everyting
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
         visionObj = new Vision();
         Log.i(TAG, "called onCreate");
         super.onCreate(savedInstanceState);
@@ -86,6 +90,16 @@ public class ColorBlobDetectionActivity extends CameraActivity implements OnTouc
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.color_blob_detection_activity_surface_view);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
+
+        abcvlibActivity = new AbcvlibActivity(this);
+        swapCamera();
+    }
+
+    @Override
+    public void onStart(){
+        super.onStart();
+        // As various parts of this need system services it cannot be started until
+        // the onCreate method finishes.
     }
 
     @Override
@@ -191,8 +205,10 @@ public class ColorBlobDetectionActivity extends CameraActivity implements OnTouc
             mDetector.process(mRgba);
             List<MatOfPoint> contours = mDetector.getContours();
             centroids = visionObj.Centroids(contours);
-            centerBlob();
-            Log.e(TAG, "Contours count: " + contours.size());
+            if (centroids.size() > 0){
+                centerBlob();
+            }
+            Log.i(TAG, "Contours count: " + contours.size());
             Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
 
             Mat colorLabel = mRgba.submat(4, 68, 4, 68);
@@ -219,27 +235,27 @@ public class ColorBlobDetectionActivity extends CameraActivity implements OnTouc
      */
     private void centerBlob(){
 
-        while (abcvlibActivity.abcvlibMotion == null){
-            //Wait until abcvlibMotion object has initialized within the constructor of
-            //abcvlibActivity
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        // For whatever reason, the columns below physically corresponds to the rows of the screen
-        // when in portrait mode.
-        if (centroids.get(0).x > (mRgba.cols() / 2)){
+        // For whatever reason, the rows below physically corresponds to the columns of the screen
+        // when in portrait mode. y=0 at top right of screen, increases toward left
+        // x=0 at top right of screen, increases as moving down.
+        if (centroids.get(0).y > (mRgba.rows() / 2)){
             // Turn right
             abcvlibActivity.abcvlibMotion.setWheelSpeed(300,0);
-            Log.i("abcvlib", "Turning Right");
+            Log.i("abcvlib", "turning right");
         } else {
             // Turn left
             abcvlibActivity.abcvlibMotion.setWheelSpeed(0,300);
-            Log.i("abcvlib", "Turning Left");
+            Log.i("abcvlib", "turning left");
 
         }
+        Log.i("abcvlib", "centroid y @" + centroids.get(0).y);
+
+    }
+
+    private void swapCamera() {
+        mCameraId = mCameraId^1; //bitwise not operation to flip 1 to 0 and vice versa
+        mOpenCvCameraView.disableView();
+        mOpenCvCameraView.setCameraIndex(mCameraId);
+        mOpenCvCameraView.enableView();
     }
 }

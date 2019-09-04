@@ -22,7 +22,7 @@ import java.util.List;
 /**
  * Not used anywhere else in the library at this time. Leaving for possible future use.
  */
-public class AbcvlibSaveData extends AbcvlibActivity{
+public class AbcvlibSaveData {
 
     String saved="saved!";
 

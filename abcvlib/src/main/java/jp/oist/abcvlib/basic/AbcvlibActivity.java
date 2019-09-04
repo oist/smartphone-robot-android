@@ -1,5 +1,6 @@
 package jp.oist.abcvlib.basic;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.WindowManager;
@@ -50,19 +51,20 @@ public class AbcvlibActivity extends IOIOActivity {
      */
     private final int PWM_FREQ = 1000;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        // Pass Android App information up to parent classes
-        super.onCreate(savedInstanceState);
+    public AbcvlibActivity(Context context) {
+        // Initialize AbcvlibSensors and AbcvlibMotion objects.
+        abcvlibSensors = new AbcvlibSensors(context, loggerOn);
+        abcvlibQuadEncoders = new AbcvlibQuadEncoders(loggerOn);
+        abcvlibMotion = new AbcvlibMotion(abcvlibSensors, abcvlibQuadEncoders, PWM_FREQ);
+        abcvlibSaveData = new AbcvlibSaveData();
+    }
+
+    public AbcvlibActivity() {
         // Initialize AbcvlibSensors and AbcvlibMotion objects.
         abcvlibSensors = new AbcvlibSensors(this, loggerOn);
         abcvlibQuadEncoders = new AbcvlibQuadEncoders(loggerOn);
         abcvlibMotion = new AbcvlibMotion(abcvlibSensors, abcvlibQuadEncoders, PWM_FREQ);
         abcvlibSaveData = new AbcvlibSaveData();
-
-//        abcvlibSensorsTest = new AbcvlibSensors(this);
-//        AbcvlibSensors.QuadratureThread quadratureThread = new AbcvlibSensors(this).new QuadratureThread();
-//        new Thread(quadratureThread).start();
 
         // Keeps screen from timing out
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
