@@ -29,7 +29,8 @@ import android.view.WindowManager;
 import android.view.View.OnTouchListener;
 import android.view.SurfaceView;
 
-//import jp.oist.abcvlib.vision.Vision;
+import jp.oist.abcvlib.vision.Vision;
+import jp.oist.abcvlib.basic.AbcvlibActivity;
 
 public class ColorBlobDetectionActivity extends CameraActivity implements OnTouchListener, CvCameraViewListener2 {
     private static final String  TAG              = "OCVSample::Activity";
@@ -42,9 +43,10 @@ public class ColorBlobDetectionActivity extends CameraActivity implements OnTouc
     private Mat                  mSpectrum;
     private Size                 SPECTRUM_SIZE;
     private Scalar               CONTOUR_COLOR;
-//    private Vision               visionObj;
+    private Vision               visionObj;
     private List<Point>          centroids;
     private CameraBridgeViewBase mOpenCvCameraView;
+    private AbcvlibActivity      abcvlibActivity;
 
     private BaseLoaderCallback  mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -72,7 +74,8 @@ public class ColorBlobDetectionActivity extends CameraActivity implements OnTouc
     @Override
     public void onCreate(Bundle savedInstanceState) {
 
-//        visionObj = new Vision();
+        abcvlibActivity = new AbcvlibActivity();
+        visionObj = new Vision();
         Log.i(TAG, "called onCreate");
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -187,7 +190,8 @@ public class ColorBlobDetectionActivity extends CameraActivity implements OnTouc
         if (mIsColorSelected) {
             mDetector.process(mRgba);
             List<MatOfPoint> contours = mDetector.getContours();
-//            centroids = visionObj.Centroids(contours);
+            centroids = visionObj.Centroids(contours);
+            centerBlob();
             Log.e(TAG, "Contours count: " + contours.size());
             Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
 
@@ -196,6 +200,7 @@ public class ColorBlobDetectionActivity extends CameraActivity implements OnTouc
 
             Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
             mSpectrum.copyTo(spectrumLabel);
+
         }
 
         return mRgba;
@@ -207,5 +212,34 @@ public class ColorBlobDetectionActivity extends CameraActivity implements OnTouc
         Imgproc.cvtColor(pointMatHsv, pointMatRgba, Imgproc.COLOR_HSV2RGB_FULL, 4);
 
         return new Scalar(pointMatRgba.get(0, 0));
+    }
+
+    /**
+     * Take centroids, determine which direction to turn then send wheel speed
+     */
+    private void centerBlob(){
+
+        while (abcvlibActivity.abcvlibMotion == null){
+            //Wait until abcvlibMotion object has initialized within the constructor of
+            //abcvlibActivity
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // For whatever reason, the columns below physically corresponds to the rows of the screen
+        // when in portrait mode.
+        if (centroids.get(0).x > (mRgba.cols() / 2)){
+            // Turn right
+            abcvlibActivity.abcvlibMotion.setWheelSpeed(300,0);
+            Log.i("abcvlib", "Turning Right");
+        } else {
+            // Turn left
+            abcvlibActivity.abcvlibMotion.setWheelSpeed(0,300);
+            Log.i("abcvlib", "Turning Left");
+
+        }
     }
 }

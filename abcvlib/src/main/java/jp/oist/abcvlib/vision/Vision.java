@@ -10,7 +10,10 @@ import java.util.List;
 
 public class Vision {
     public List<Point> Centroids(List<MatOfPoint> contour) {
-        List<Point> centroids = new ArrayList<Point>();
+        List<Point> centroids = new ArrayList<Point>(contour.size());
+        for (int i = 0; i < contour.size(); i++){
+            centroids.add(new Point());
+        }
         for (int i = 0; i < contour.size(); i++) {
 
             Moments moments = Imgproc.moments(contour.get(i), true);
