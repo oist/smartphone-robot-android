@@ -1,4 +1,4 @@
-package jp.oist.abcvlib.colorblobdetect;
+package jp.oist.abcvlib.vision;
 
 import java.util.ArrayList;
 import java.util.Iterator;
