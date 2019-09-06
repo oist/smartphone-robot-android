@@ -29,6 +29,7 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import ioio.lib.util.IOIOLooper;
@@ -214,7 +215,7 @@ public class AbcvlibActivity extends IOIOActivity implements OnTouchListener, Cv
     }
 
     protected List<? extends CameraBridgeViewBase> getCameraViewList() {
-        return new ArrayList<CameraBridgeViewBase>();
+        return Collections.singletonList(mOpenCvCameraView);
     }
 
     protected void onCameraPermissionGranted() {
