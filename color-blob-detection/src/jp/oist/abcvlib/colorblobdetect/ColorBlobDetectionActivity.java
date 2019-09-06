@@ -35,7 +35,8 @@ public class ColorBlobDetectionActivity extends AbcvlibActivity {
 
         if (mIsColorSelected) {
             mDetector.process(mRgba);
-            List<MatOfPoint> contours = mDetector.getContours();
+            contours = mDetector.getContours();
+            super.onCameraFrame(inputFrame);
             centroids = vision.Centroids(contours);
             vision.centerBlob(centroids, CENTER_ROW, CENTER_THRESHOLD);
         }

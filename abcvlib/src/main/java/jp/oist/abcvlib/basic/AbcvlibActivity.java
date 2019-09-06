@@ -313,7 +313,6 @@ public class AbcvlibActivity extends IOIOActivity implements OnTouchListener, Cv
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-        Log.i(TAG, "Contours count: " + contours.size());
         Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
 
         Mat colorLabel = mRgba.submat(4, 68, 4, 68);
