@@ -67,6 +67,12 @@ public class ColorBlobDetector {
         mMinContourArea = area;
     }
 
+    /**
+     * Take raw image, blur image, convert to HSV color, masks selected color, dialates mask, then
+     * generates contour objects. These contour objects need to be resized/scaled to fit image (not
+     * sure why), but this is also handled here.
+     * @param rgbaImage
+     */
     public void process(Mat rgbaImage) {
         Imgproc.pyrDown(rgbaImage, mPyrDownMat);
         Imgproc.pyrDown(mPyrDownMat, mPyrDownMat);
@@ -102,6 +108,12 @@ public class ColorBlobDetector {
         }
     }
 
+    /**
+     * This is a bit of a misnomer. This is not generating any contours, just giving access to the
+     * private variable countours via a get method. The actual generation is handled by the process()
+     * method
+     * @return
+     */
     public List<MatOfPoint> getContours() {
         return mContours;
     }
