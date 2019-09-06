@@ -50,6 +50,9 @@ public class ColorBlobDetectionActivity extends AbcvlibActivity implements OnTou
     private CameraBridgeViewBase mOpenCvCameraView;
     private int                  mCameraId = 0;
     private AbcvlibActivity      abcvlibActivity;
+    private Double               CENTER_THRESHOLD = 0.1; // How far centroid can be from absolute center before being considered centered.
+    private Double               CENTER_ROW;
+    private Double               CENTER_COL;
 
     private BaseLoaderCallback  mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -136,6 +139,9 @@ public class ColorBlobDetectionActivity extends AbcvlibActivity implements OnTou
 
     public void onCameraViewStarted(int width, int height) {
         mRgba = new Mat(height, width, CvType.CV_8UC4);
+        CENTER_COL = mRgba.cols() / 2.0;
+        CENTER_ROW = mRgba.rows() / 2.0;
+        Log.i("abcvlib", "CENTER_COL:" + CENTER_COL + " CENTER_ROW:" + CENTER_ROW);
         mDetector = new ColorBlobDetector();
         mSpectrum = new Mat();
         mBlobColorRgba = new Scalar(255);
@@ -205,9 +211,7 @@ public class ColorBlobDetectionActivity extends AbcvlibActivity implements OnTou
             mDetector.process(mRgba);
             List<MatOfPoint> contours = mDetector.getContours();
             centroids = visionObj.Centroids(contours);
-            if (centroids.size() > 0){
-                centerBlob();
-            }
+            centerBlob();
             Log.i(TAG, "Contours count: " + contours.size());
             Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
 
@@ -235,21 +239,25 @@ public class ColorBlobDetectionActivity extends AbcvlibActivity implements OnTou
      */
     private void centerBlob(){
 
-        // For whatever reason, the rows below physically corresponds to the columns of the screen
-        // when in portrait mode. y=0 at top right of screen, increases toward left
-        // x=0 at top right of screen, increases as moving down.
-        if (centroids.get(0).y > (mRgba.rows() / 2)){
-            // Turn right
-            abcvlibMotion.setWheelSpeed(300,0);
-            Log.i("abcvlib", "turning right");
-        } else {
-            // Turn left
-            abcvlibMotion.setWheelSpeed(0,300);
-            Log.i("abcvlib", "turning left");
-
+        if (centroids.size() > 0){
+            // For whatever reason, the rows below physically corresponds to the columns of the screen
+            // when in portrait mode. y=0 at top right of screen, increases toward left
+            // x=0 at top right of screen, increases as moving down.
+            if (centroids.get(0).y > (CENTER_ROW + (CENTER_ROW * CENTER_THRESHOLD))){
+                // Turn right
+                abcvlibMotion.setWheelSpeed(300,0);
+                Log.i("abcvlib", "turning right");
+            } else if (centroids.get(0).y < (CENTER_ROW - (CENTER_ROW * CENTER_THRESHOLD))){
+                // Turn left
+                abcvlibMotion.setWheelSpeed(0,300);
+                Log.i("abcvlib", "turning left");
+            } else {
+                // Stay put
+                abcvlibMotion.setWheelSpeed(0,0);
+                Log.i("abcvlib", "Blob is within threshold. Staying put");
+            }
+            Log.i("abcvlib", "centroid y @" + centroids.get(0).y);
         }
-        Log.i("abcvlib", "centroid y @" + centroids.get(0).y);
-
     }
 
     private void swapCamera() {
