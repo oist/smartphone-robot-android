@@ -34,7 +34,7 @@ import android.view.SurfaceView;
 import jp.oist.abcvlib.vision.Vision;
 import jp.oist.abcvlib.basic.AbcvlibActivity;
 
-public class ColorBlobDetectionActivity extends CameraActivity implements OnTouchListener, CvCameraViewListener2 {
+public class ColorBlobDetectionActivity extends AbcvlibActivity implements OnTouchListener, CvCameraViewListener2 {
     private static final String  TAG              = "OCVSample::Activity";
 
     private boolean              mIsColorSelected = false;
@@ -77,11 +77,12 @@ public class ColorBlobDetectionActivity extends CameraActivity implements OnTouc
     @Override
     public void onCreate(Bundle savedInstanceState) {
 
+        super.onCreate(savedInstanceState);
+
         // I'd think there is a better way to fix the orientation in portrait without cropping everyting
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
         visionObj = new Vision();
         Log.i(TAG, "called onCreate");
-        super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -91,7 +92,6 @@ public class ColorBlobDetectionActivity extends CameraActivity implements OnTouc
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
 
-        abcvlibActivity = new AbcvlibActivity(this);
         swapCamera();
     }
 
@@ -240,11 +240,11 @@ public class ColorBlobDetectionActivity extends CameraActivity implements OnTouc
         // x=0 at top right of screen, increases as moving down.
         if (centroids.get(0).y > (mRgba.rows() / 2)){
             // Turn right
-            abcvlibActivity.abcvlibMotion.setWheelSpeed(300,0);
+            abcvlibMotion.setWheelSpeed(300,0);
             Log.i("abcvlib", "turning right");
         } else {
             // Turn left
-            abcvlibActivity.abcvlibMotion.setWheelSpeed(0,300);
+            abcvlibMotion.setWheelSpeed(0,300);
             Log.i("abcvlib", "turning left");
 
         }

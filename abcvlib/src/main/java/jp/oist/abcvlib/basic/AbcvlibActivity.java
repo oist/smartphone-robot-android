@@ -1,13 +1,23 @@
 package jp.oist.abcvlib.basic;
 
+import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import org.opencv.android.CameraBridgeViewBase;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
+
+import static android.Manifest.permission.CAMERA;
 
 /**
  * AbcvlibActivity is where all of the other classes are initialized into objects. The objects
@@ -51,22 +61,15 @@ public class AbcvlibActivity extends IOIOActivity {
      */
     private final int PWM_FREQ = 1000;
 
-    public AbcvlibActivity(Context context) {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         // Initialize AbcvlibSensors and AbcvlibMotion objects.
-        abcvlibSensors = new AbcvlibSensors(context, loggerOn);
-        abcvlibQuadEncoders = new AbcvlibQuadEncoders(loggerOn);
-        abcvlibMotion = new AbcvlibMotion(abcvlibSensors, abcvlibQuadEncoders, PWM_FREQ);
-        abcvlibSaveData = new AbcvlibSaveData();
-    }
-
-    public AbcvlibActivity() {
-        // Initialize AbcvlibSensors and AbcvlibMotion objects.
-        abcvlibSensors = new AbcvlibSensors(this, loggerOn);
+        abcvlibSensors = new AbcvlibSensors(getBaseContext(), loggerOn);
         abcvlibQuadEncoders = new AbcvlibQuadEncoders(loggerOn);
         abcvlibMotion = new AbcvlibMotion(abcvlibSensors, abcvlibQuadEncoders, PWM_FREQ);
         abcvlibSaveData = new AbcvlibSaveData();
 
-        // Keeps screen from timing out
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
@@ -76,6 +79,49 @@ public class AbcvlibActivity extends IOIOActivity {
         Log.i("abcvlib", "onStop Log");
         abcvlibMotion.setWheelSpeed(0,0);
         super.onStop();
+    }
+
+    private static final int CAMERA_PERMISSION_REQUEST_CODE = 200;
+
+    protected List<? extends CameraBridgeViewBase> getCameraViewList() {
+        return new ArrayList<CameraBridgeViewBase>();
+    }
+
+    protected void onCameraPermissionGranted() {
+        List<? extends CameraBridgeViewBase> cameraViews = getCameraViewList();
+        if (cameraViews == null) {
+            return;
+        }
+        for (CameraBridgeViewBase cameraBridgeViewBase: cameraViews) {
+            if (cameraBridgeViewBase != null) {
+                cameraBridgeViewBase.setCameraPermissionGranted();
+            }
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        boolean havePermission = true;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{CAMERA}, CAMERA_PERMISSION_REQUEST_CODE);
+                havePermission = false;
+            }
+        }
+        if (havePermission) {
+            onCameraPermissionGranted();
+        }
+    }
+
+    @Override
+    @TargetApi(Build.VERSION_CODES.M)
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == CAMERA_PERMISSION_REQUEST_CODE && grantResults.length > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            onCameraPermissionGranted();
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     /**
