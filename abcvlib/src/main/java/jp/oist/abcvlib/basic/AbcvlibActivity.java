@@ -102,6 +102,8 @@ public class AbcvlibActivity extends IOIOActivity implements OnTouchListener, Cv
     private   int                  mCameraId = 0;
     protected boolean              mIsColorSelected = false;
     protected List<MatOfPoint>     contours;
+    protected int                  frameHeight;
+    protected int                  frameWidth;
 
 
 
@@ -131,17 +133,18 @@ public class AbcvlibActivity extends IOIOActivity implements OnTouchListener, Cv
         abcvlibQuadEncoders = new AbcvlibQuadEncoders(loggerOn);
         abcvlibMotion = new AbcvlibMotion(abcvlibSensors, abcvlibQuadEncoders, PWM_FREQ);
         abcvlibSaveData = new AbcvlibSaveData();
-        vision = new Vision(abcvlibMotion);
+        vision = new Vision(abcvlibMotion, 800, 480); // This will be overwritten when actual height and width are determined
 
         // TODO The view and layout should not be changed in the core library. Need to find a way to flag this on/off via the individual module activities
         if (mOpenCvCameraView == null){
+            setContentView(R.layout.color_blob_detection_surface_view);
             mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.color_blob_detection_activity_surface_view);
         }
 
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
 
-        // I'd think there is a better way to fix the orientation in portrait without cropping everyting
+//         I'd think there is a better way to fix the orientation in portrait without cropping everyting
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -200,11 +203,18 @@ public class AbcvlibActivity extends IOIOActivity implements OnTouchListener, Cv
         }
     }
 
-
     public void onCameraViewStarted(int width, int height) {
+
+        this.frameHeight = height;
+        this.frameWidth = width;
+        // TODO check if width and height are transposed or not.
+        CENTER_COL = width / 2.0;
+        CENTER_ROW = height / 2.0;
+
+        vision = new Vision(abcvlibMotion, height, width);
+
         mRgba = new Mat(height, width, CvType.CV_8UC4);
-        CENTER_COL = mRgba.cols() / 2.0;
-        CENTER_ROW = mRgba.rows() / 2.0;
+
         Log.i("abcvlib", "CENTER_COL:" + CENTER_COL + " CENTER_ROW:" + CENTER_ROW);
         mDetector = new ColorBlobDetector();
         mSpectrum = new Mat();

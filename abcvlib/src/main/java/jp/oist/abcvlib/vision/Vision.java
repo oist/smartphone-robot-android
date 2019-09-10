@@ -15,9 +15,19 @@ import jp.oist.abcvlib.basic.AbcvlibMotion;
 public class Vision {
 
     private AbcvlibMotion abcvlibMotion;
+    private double phi = 0;
+    private double CENTER_COL;
+    private double CENTER_ROW;
+    private double height;
+    private double width;
 
-    public Vision(AbcvlibMotion abcvlibMotion){
+    public Vision(AbcvlibMotion abcvlibMotion, int height, int width){
         this.abcvlibMotion = abcvlibMotion;
+        this.height = height;
+        this.width = width;
+        // TODO check is the col and rows are not transposed.
+        this.CENTER_COL = height / 2.0;
+        this.CENTER_ROW = width / 2.0;
     }
 
     public List<Point> Centroids(List<MatOfPoint> contour) {
@@ -61,6 +71,23 @@ public class Vision {
             }
             Log.i("abcvlib", "centroid y @" + centroids.get(0).y);
         }
+    }
+
+    /**
+     * Phi is not an actual measure of degrees or radians, but relative to the pixel density from the camera
+     * For example, if the centroid of interest is at the center of the vertical plane, phi = 0.
+     * If the centroid of interest if at the leftmost part of the screen, phi = -1. Likewise, if
+     * at the rightmost part of the screen, then phi = 1. As the actual angle depends on the optics
+     * of the camera, this is just a first attempt, but OpenCV may have more robust/accuarte 3D spatial
+     * metrics.
+     * @return
+     */
+    public double getPhi(List<Point> centroid){
+
+        //TODO handle multiple centroids somehow.
+        phi = (CENTER_COL - centroid.get(0).y) / CENTER_COL;
+
+        return phi;
     }
 
 }

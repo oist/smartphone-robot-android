@@ -48,7 +48,7 @@ public class MainActivity extends AbcvlibActivity {
         double distanceL; // distances traveled by left wheel from start point (mm)
         double distanceR; // distances traveled by right wheel from start point (mm)
 
-        int speed = 500; // PWM from 0 to 1000.
+        int speed = 1000; // PWM from 0 to 1000.
 
         public void run(){
 
