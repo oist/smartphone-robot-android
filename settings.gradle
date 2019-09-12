@@ -1,1 +1,1 @@
-include ':abcvlib', ':openCV411', ':basic', ':backAndForth', ':localPID', ':remotePID', ':color-blob-detection'
+include ':abcvlib', ':openCV411', ':basic', ':backAndForth', ':localPID', ':remotePID', ':color-blob-detection', 'setPath'

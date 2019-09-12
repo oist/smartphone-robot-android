@@ -104,6 +104,7 @@ public class AbcvlibActivity extends IOIOActivity implements OnTouchListener, Cv
     protected List<MatOfPoint>     contours;
     protected int                  frameHeight;
     protected int                  frameWidth;
+    protected boolean              CAMERA_APP = false;
 
 
 
@@ -136,20 +137,18 @@ public class AbcvlibActivity extends IOIOActivity implements OnTouchListener, Cv
         vision = new Vision(abcvlibMotion, 800, 480); // This will be overwritten when actual height and width are determined
 
         // TODO The view and layout should not be changed in the core library. Need to find a way to flag this on/off via the individual module activities
-        if (mOpenCvCameraView == null){
+        if (mOpenCvCameraView == null & CAMERA_APP){
             setContentView(R.layout.color_blob_detection_surface_view);
             mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.color_blob_detection_activity_surface_view);
+            mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
+            mOpenCvCameraView.setCvCameraViewListener(this);
+            // I'd think there is a better way to fix the orientation in portrait without cropping everyting
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
+            swapCamera();
         }
-
-        mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
-        mOpenCvCameraView.setCvCameraViewListener(this);
-
-//         I'd think there is a better way to fix the orientation in portrait without cropping everyting
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        swapCamera();
     }
 
     @Override
@@ -194,12 +193,14 @@ public class AbcvlibActivity extends IOIOActivity implements OnTouchListener, Cv
     public void onResume()
     {
         super.onResume();
-        if (!OpenCVLoader.initDebug()) {
-            Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
-            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);
-        } else {
-            Log.d(TAG, "OpenCV library found inside package. Using it!");
-            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+        if (CAMERA_APP){
+            if (!OpenCVLoader.initDebug()) {
+                Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
+                OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);
+            } else {
+                Log.d(TAG, "OpenCV library found inside package. Using it!");
+                mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+            }
         }
     }
 

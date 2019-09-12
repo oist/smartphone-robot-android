@@ -61,7 +61,7 @@ public class MainActivity extends AbcvlibActivity {
         setContentView(jp.oist.abcvlib.localpid.R.layout.activity_main);
 
         // Python Socket Connection
-        socketClient = new AbcvlibSocketClient("192.168.23.135", 65434, inputs, controls);
+        socketClient = new AbcvlibSocketClient("192.168.24.217", 65434, inputs, controls);
         new Thread(socketClient).start();
 
         //PID Controller
