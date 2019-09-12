@@ -81,7 +81,7 @@ public class AbcvlibSocketClient implements Runnable{
 
         try {
             while (bufferedReader == null){
-                Log.i("abcvlib", "bufferedReader == null");
+//                Log.i("abcvlib", "bufferedReader == null");
             }
             while (!bufferedReader.ready()){
                 if (timeoutCounter >= timeout){

@@ -5,7 +5,9 @@ import java.util.List;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDouble;
 import org.opencv.core.Point;
 import org.opencv.android.CameraBridgeViewBase;
 
@@ -35,10 +37,11 @@ public class ColorBlobDetectionActivity extends AbcvlibActivity {
     public void onCreate(Bundle savedInstanceState) {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.color_blob_detection_surface_view);
-        super.mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.color_blob_detection_activity_surface_view);
-        super.onCreate(savedInstanceState);
+//        super.mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.color_blob_detection_activity_surface_view);
+        super.CAMERA_APP = true; // enables various camera operations within AbcvlibActivity
         super.loggerOn = false;
         super.wheelPolaritySwap = true;
+        super.onCreate(savedInstanceState);
         controls = initializeControls();
         inputs = initializeInputs();
 
@@ -66,6 +69,7 @@ public class ColorBlobDetectionActivity extends AbcvlibActivity {
 
         // Take the inputFrame and convert to an RGB matrix object.
         mRgba = inputFrame.rgba();
+        Core.flip(super.mRgba, super.mRgba,1);
 
         // Only process blobs after color has been selected.
         if (mIsColorSelected) {
@@ -169,7 +173,7 @@ public class ColorBlobDetectionActivity extends AbcvlibActivity {
             error_theta = setPoint - thetaDeg;
 
             error_wheelSpeedL = 0.0 - speedL;
-            error_wheelSpeedR = 0.0 - speedR;
+//            error_wheelSpeedR = 0.0 - speedR;
             //TODO this polarity may be wrong.
             if (centroids != null && centroids.size() > 0){
                 error_phi = 0.0 - vision.getPhi(centroids);
@@ -178,12 +182,12 @@ public class ColorBlobDetectionActivity extends AbcvlibActivity {
             p_outL = (p_tilt * error_theta) + (p_wheel * error_wheelSpeedL) + (p_phi * error_phi);
             i_outL = i_tilt * int_e_t;
             d_outL = d_tilt * thetaDegDot;
-            p_outR = (p_tilt * error_theta) + (p_wheel * error_wheelSpeedR) - (p_phi * error_phi);
+            p_outR = (p_tilt * error_theta) + (p_wheel * error_wheelSpeedL) - (p_phi * error_phi);
             i_outR = i_tilt * int_e_t;
-            d_outR = d_tilt * thetaDegDot;
+//            d_outR = d_tilt * thetaDegDot;
 
             outputL = (int)(p_outL + d_outL);
-            outputR = (int)(p_outR + d_outR);
+            outputR = (int)(p_outR + d_outL);
 
             abcvlibMotion.setWheelSpeed(outputL, outputR);
 

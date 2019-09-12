@@ -142,8 +142,9 @@ public class AbcvlibActivity extends IOIOActivity implements OnTouchListener, Cv
             mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.color_blob_detection_activity_surface_view);
             mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
             mOpenCvCameraView.setCvCameraViewListener(this);
+            mOpenCvCameraView.enableFpsMeter();
             // I'd think there is a better way to fix the orientation in portrait without cropping everyting
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
+//            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
             swapCamera();
         }
 
