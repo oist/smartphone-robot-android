@@ -3,7 +3,7 @@ package jp.oist.abcvlib.basic;
 
 /**
  * AbcvlibMotion is a collection of methods that implement various predefined motions via
- * controlling the values of pulseWidthRightWheel and pulseWidthLeftWhee. These variables
+ * controlling the values of dutyCycleRightWheel and pulseWidthLeftWhee. These variables
  * indirectly control the speed of the wheel by adjusting the pulseWidth of the PWM signal sent
  * to each wheel.
  *
@@ -25,17 +25,14 @@ package jp.oist.abcvlib.basic;
 public class AbcvlibMotion {
 
     /**
-    Represents some int value from 0 to 1000 which indirectly controls the speed of the wheel.
-     0 representing a 0 microsecond pulse width (i.e. always zero) and 1000 representing
-     1000 microseconds, or 1 ms. As the PWM freq is set to 1000 Hz (1 pulse per 1/1000 seconds)
-     a value of 1 ms for the pulseWidthRightWheel would result in an always high voltage (i.e.
-    no pulses at all, just a flat DC high voltage).
+    Represents some int value from 0 to 100 which indirectly controls the speed of the wheel.
+     0 representing a 0% duty cycle (i.e. always zero) and 100 representing a 100% duty cycle.
     */
-    private int pulseWidthRightWheel = 0;
+    private int dutyCycleRightWheel = 0;
     /**
-     * @see #pulseWidthRightWheel
+     * @see #dutyCycleRightWheel
      */
-    private int pulseWidthLeftWheel = 0;
+    private int dutyCycleLeftWheel = 0;
 
     /**
      * Central Pattern Generator destabalizer initial parameters.
@@ -72,12 +69,18 @@ public class AbcvlibMotion {
     private int PWM_FREQ;
 
     /**
+     * A constant to convert between PWM_FREQ and Duty Cycle.
+     */
+    private int DUTY_CYCLE_CONST;
+
+    /**
      * Constructor to pass other module objects in. Keep public.
       */
     public AbcvlibMotion(AbcvlibSensors abcvlibSensors, AbcvlibQuadEncoders abcvlibQuadEncoders, Integer PWM_FREQ){
         this.abcvlibSensors = abcvlibSensors;
         this.abcvlibQuadEncoders = abcvlibQuadEncoders;
         this.PWM_FREQ = PWM_FREQ;
+        this.DUTY_CYCLE_CONST = PWM_FREQ / 100;
     }
 
     /**
@@ -90,36 +93,36 @@ public class AbcvlibMotion {
      */
     public void setWheelSpeed(int left, int right){
 
-        if (right > 1000){
-            right = 1000;
+        if (right > 100){
+            right = 100;
         }
-        else if (right < -1000){
-            right = -1000;
+        else if (right < -100){
+            right = -100;
         }
-        if (left > 1000){
-            left = 1000;
+        if (left > 100){
+            left = 100;
         }
-        else if (left < -1000){
-            left = -1000;
+        else if (left < -100){
+            left = -100;
         }
 
-        pulseWidthRightWheel = right;
+        dutyCycleRightWheel = right;
         // Wheels must be opposite polarity to turn in same direction
-        pulseWidthLeftWheel = -left;
+        dutyCycleLeftWheel = -left;
     }
 
     /**
      * @return Pulse Width of right wheel
      */
-    int getPwRight(){
-        return pulseWidthRightWheel;
+    int getDutyCycleRight(){
+        return dutyCycleRightWheel;
     }
 
     /**
      * @return Pulse Width of left wheel
      */
-    int getPwLeft(){
-        return pulseWidthLeftWheel;
+    int getDutyCycleLeft(){
+        return dutyCycleLeftWheel;
     }
 //
 //    /**
@@ -177,18 +180,18 @@ public class AbcvlibMotion {
 //    public static void linearfeedback(int k_p, int k_d1, int k_d2){
 //        k_d1 = k_d1 * 0.01F; // Just put these here for better readability
 //        k_d2 = k_d2 * 0.01F; // Just put these here for better readability
-//        pulseWidthRightWheel = (int) -((k_p * (abcvlibSensors.thetaDeg + c_p) + k_d1 * (abcvlibSensors.thetaDegDot + c_d1) + k_d2 * (abcvlibSensors.speedRightWheel + c_d2) + k_d2 * (abcvlibSensors.speedLeftWheel + c_d2)));
-//        pulseWidthLeftWheel=pulseWidthRightWheel;
+//        dutyCycleRightWheel = (int) -((k_p * (abcvlibSensors.thetaDeg + c_p) + k_d1 * (abcvlibSensors.thetaDegDot + c_d1) + k_d2 * (abcvlibSensors.speedRightWheel + c_d2) + k_d2 * (abcvlibSensors.speedLeftWheel + c_d2)));
+//        dutyCycleLeftWheel=dutyCycleRightWheel;
 //    }
 
 //    public static void cpg(int omega, int beta){
-//        pulseWidthRightWheel = (int) -cpgXY[1];
-//        pulseWidthLeftWheel = pulseWidthRightWheel;
+//        dutyCycleRightWheel = (int) -cpgXY[1];
+//        dutyCycleLeftWheel = dutyCycleRightWheel;
 //        cpgXY = cpgUpdate(cpgXY, ddt, abcvlibSensors.thetaDegDot, omega, beta);
 //    }
 //
 //    public static void sine(int t, int f){
-//        pulseWidthRightWheel = (int)(1000 * Math.sin(2 * Math.PI * f * t));
-//        pulseWidthLeftWheel = pulseWidthRightWheel;
+//        dutyCycleRightWheel = (int)(100 * Math.sin(2 * Math.PI * f * t));
+//        dutyCycleLeftWheel = dutyCycleRightWheel;
 //    }
 }

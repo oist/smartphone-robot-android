@@ -83,6 +83,7 @@ public class AbcvlibActivity extends IOIOActivity implements OnTouchListener, Cv
      *  setting PWM_FREQ too high may cause issues for certain microcontrollers.
      */
     private final int PWM_FREQ = 1000;
+    private final int DUTY_CYCLE_CONST = PWM_FREQ / 100;
 
     protected CameraBridgeViewBase mOpenCvCameraView;
     protected static final String TAG = "abcvlib";

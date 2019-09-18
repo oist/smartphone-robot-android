@@ -44,7 +44,7 @@ public class MainActivity extends AbcvlibActivity {
 
     public class setPath implements Runnable{
 
-        int speed = 600; // PWM from 0 to 1000.
+        int speed = 60; // Duty Cycle from 0 to 100.
 
         public void run(){
 

@@ -204,6 +204,11 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      */
     private int PWM_FREQ;
 
+    /**
+     * A constant to convert between PWM_FREQ and Duty Cycle.
+     */
+    private int DUTY_CYCLE_CONST;
+
     private AbcvlibSensors abcvlibSensors;
     private AbcvlibMotion abcvlibMotion;
     private AbcvlibQuadEncoders abcvlibQuadEncoders;
@@ -246,21 +251,21 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     private boolean input2LeftWheelState;
 
     /**
-     * PWM pulse width tracking variable. Values range from 0 to PWM_FREQ
+     * Duty cycle of PWM pulse width tracking variable. Values range from 0 to 100
      */
-    private int pulseWidthRightWheelNew;
+    private int dutyCycleRightWheelNew;
     /**
-     * @see #pulseWidthRightWheelNew
+     * @see #dutyCycleRightWheelNew
      */
-    private int pulseWidthRightWheelCurrent;
+    private int dutyCycleRightWheelCurrent;
     /**
-     * @see #pulseWidthRightWheelNew
+     * @see #dutyCycleRightWheelNew
      */
-    private int pulseWidthLeftWheelNew;
+    private int dutyCycleLeftWheelNew;
     /**
-     * @see #pulseWidthRightWheelNew
+     * @see #dutyCycleRightWheelNew
      */
-    private int pulseWidthLeftWheelCurrent;
+    private int dutyCycleLeftWheelCurrent;
 
     // Encoder counters
     /**
@@ -304,6 +309,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         this.abcvlibSensors = abcvlibSensors;
         this.abcvlibQuadEncoders = abcvlibQuadEncoders;
         this.PWM_FREQ = PWM_FREQ;
+        this.DUTY_CYCLE_CONST = PWM_FREQ / 100;
         this.loggerOn = loggerOn;
         this.wheelPolaritySwap = wheelPolaritySwap;
     }
@@ -487,24 +493,23 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
     private void getPwm() {
 
-        // pulseWidths are given in microseconds
-        pulseWidthRightWheelCurrent = abcvlibMotion.getPwRight();
-        pulseWidthLeftWheelCurrent = abcvlibMotion.getPwLeft();
+        dutyCycleRightWheelCurrent = abcvlibMotion.getDutyCycleRight();
+        dutyCycleLeftWheelCurrent = abcvlibMotion.getDutyCycleLeft();
 
-        pulseWidthRightWheelNew = pulseWidthLimiter(pulseWidthRightWheelCurrent);
-        pulseWidthLeftWheelNew = pulseWidthLimiter(pulseWidthLeftWheelCurrent);
+        dutyCycleRightWheelNew = dutyCycleLimiter(dutyCycleRightWheelCurrent);
+        dutyCycleLeftWheelNew = dutyCycleLimiter(dutyCycleLeftWheelCurrent);
 
     }
 
     /**
-     * Tests the sign of pulseWidth then determines how to set the input variables (IN1 and IN2)
+     * Tests the sign of dutyCycle then determines how to set the input variables (IN1 and IN2)
      * to control the Hubee Wheel direction. See input1RightWheelController doc for control table.
      * If you wanted to inverse polarity, just reverse the > signs to < in each if statement.
      */
     private void getIn1In2(){
 
         if (wheelPolaritySwap) {
-            if(pulseWidthRightWheelCurrent >= 0){
+            if(dutyCycleRightWheelCurrent >= 0){
                 input1RightWheelState = false;
                 input2RightWheelState = true;
             }else{
@@ -512,7 +517,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
                 input2RightWheelState = false;
             }
 
-            if(pulseWidthLeftWheelCurrent >= 0){
+            if(dutyCycleLeftWheelCurrent >= 0){
                 input1LeftWheelState = false;
                 input2LeftWheelState = true;
             }else{
@@ -521,7 +526,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             }
         }
         else {
-            if(pulseWidthRightWheelCurrent <= 0){
+            if(dutyCycleRightWheelCurrent <= 0){
                 input1RightWheelState = false;
                 input2RightWheelState = true;
             }else{
@@ -529,7 +534,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
                 input2RightWheelState = false;
             }
 
-            if(pulseWidthLeftWheelCurrent <= 0){
+            if(dutyCycleLeftWheelCurrent <= 0){
                 input1LeftWheelState = false;
                 input2LeftWheelState = true;
             }else{
@@ -564,7 +569,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         // while moving forward one wheel is moving ccw while the other is rotating cw.
         encoderCountRightWheel[indexCurrent] = encoderCountRightWheel[indexPrevious] -
                 encoderAddSubtractCount(input1RightWheelState, input2RightWheelState,
-                        pulseWidthRightWheelNew, pulseWidthLeftWheelNew, encoderARightWheelState,
+                        dutyCycleRightWheelNew, dutyCycleLeftWheelNew, encoderARightWheelState,
                         encoderBRightWheelState, encoderARightWheelStatePrevious,
                         encoderBRightWheelStatePrevious);
 
@@ -577,7 +582,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
         encoderCountLeftWheel[indexCurrent] = encoderCountLeftWheel[indexPrevious] +
                 encoderAddSubtractCount(input1LeftWheelState, input2LeftWheelState,
-                        pulseWidthRightWheelNew, pulseWidthLeftWheelNew, encoderALeftWheelState,
+                        dutyCycleRightWheelNew, dutyCycleLeftWheelNew, encoderALeftWheelState,
                         encoderBLeftWheelState, encoderALeftWheelStatePrevious,
                         encoderBLeftWheelStatePrevious);
 
@@ -595,10 +600,10 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             // Write all calculated values to the IOIO Board pins
             input1RightWheelController.write(input1RightWheelState);
             input2RightWheelController.write(input2RightWheelState);
-            pwmControllerRightWheel.setPulseWidth(pulseWidthRightWheelNew);
+            pwmControllerRightWheel.setPulseWidth(dutyCycleRightWheelNew * DUTY_CYCLE_CONST); //converting from duty cycle to pulse width
             input1LeftWheelController.write(input1LeftWheelState);
             input2LeftWheelController.write(input2LeftWheelState);
-            pwmControllerLeftWheel.setPulseWidth(pulseWidthLeftWheelNew);
+            pwmControllerLeftWheel.setPulseWidth(dutyCycleLeftWheelNew * DUTY_CYCLE_CONST);//converting from duty cycle to pulse width
 
         } catch (ConnectionLostException e){
             Log.i("abcvlib", "AbcvlibLooper.loop threw an ConnectionLostException");
@@ -611,23 +616,23 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         encoderBLeftWheelStatePrevious = encoderBLeftWheelState;
     }
 
-    private int pulseWidthLimiter(Integer pulseWidthOld){
+    private int dutyCycleLimiter(Integer dutyCycleOld){
 
-        final int MAX_PULSE_WIDTH = PWM_FREQ;
+        final int MAX_DUTY_CYCLE = PWM_FREQ / 10;
 
         /*
         The following two logical statements simply hard limit the pulseWidth to be less than
-        MAX_PULSE_WIDTH which represents the highest value it can be.
+        MAX_DUTY_CYCLE which represents the highest value it can be.
          */
-        int pulseWidthNew;
+        int dutyCycleNew;
 
-        if(pulseWidthOld < MAX_PULSE_WIDTH){
-            pulseWidthNew = Math.abs(pulseWidthOld);
+        if(dutyCycleOld < MAX_DUTY_CYCLE){
+            dutyCycleNew = Math.abs(dutyCycleOld);
         }else{
-            pulseWidthNew = MAX_PULSE_WIDTH;
+            dutyCycleNew = MAX_DUTY_CYCLE;
         }
 
-        return pulseWidthNew;
+        return dutyCycleNew;
     }
 
     private void updateQuadEncoders(){
@@ -665,8 +670,8 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
      * @return wheelCounts
      */
-    private int encoderAddSubtractCount(Boolean input1WheelStateIo, Boolean input2WheelStateIo, Integer pulseWidthRightWheelNew,
-                                Integer pulseWidthLeftWheelNew, Boolean encoderAWheelState, Boolean encoderBWheelState,
+    private int encoderAddSubtractCount(Boolean input1WheelStateIo, Boolean input2WheelStateIo, Integer dutyCycleRightWheelNew,
+                                Integer dutyCycleLeftWheelNew, Boolean encoderAWheelState, Boolean encoderBWheelState,
                                 Boolean encoderAWheelStatePrevious, Boolean encoderBWheelStatePrevious){
 
         int wheelCounts = 0;
@@ -676,7 +681,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         unconnected state. This ensures that you are only modifying the wheel counts when the wheel
         is moving either forward or backward (as opposed to being stopped/braked). Additionally
         the PWM pin will alter between H and L during normal operation, so checking if the
-        pulseWidthRightWheelNew values are above 0 will ensure only moving wheels are counted.
+        dutyCycleRightWheelNew values are above 0 will ensure only moving wheels are counted.
         The else statements can then differentiate between a stopped wheel and
         a misread from the quadrature encoders. This allows you to calculate the drift/error of the
         quadrature sensors to some degree, though you wouldn't be able to tell whether the drift is
@@ -685,7 +690,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         maybe decreasing the sampling rate will remove the number of times the encoders are read
         precisely at the wrong moment (both H or both L). Will this happen?
          */
-        if((input1WheelStateIo ^ input2WheelStateIo) && pulseWidthRightWheelNew > 0 && pulseWidthLeftWheelNew > 0){
+        if((input1WheelStateIo ^ input2WheelStateIo) && dutyCycleRightWheelNew > 0 && dutyCycleLeftWheelNew > 0){
             // Previous Encoder A HIGH, B HIGH
             if(encoderAWheelStatePrevious && encoderBWheelStatePrevious){
                 // Current Encoder A LOW, B HIGH
@@ -778,10 +783,10 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 //                Float.toString(encoderCountLeftWheel);
 //
 //        // Compile PWM data to push to adb log
-//        String pwmMsg = Float.toString(pulseWidthRightWheelCurrent) + " " +
-//                Float.toString(pulseWidthLeftWheelCurrent) + " " +
-//                Float.toString(pulseWidthRightWheelNew) + " " +
-//                Float.toString(pulseWidthLeftWheelNew);
+//        String pwmMsg = Float.toString(dutyCycleRightWheelCurrent) + " " +
+//                Float.toString(dutyCycleLeftWheelCurrent) + " " +
+//                Float.toString(dutyCycleRightWheelNew) + " " +
+//                Float.toString(dutyCycleLeftWheelNew);
 //
 //        // Compile encoderCount values to push to separate adb tag
 //        String countsSensorMsg = Integer.toString(abcvlibQuadEncoders.getWheelCountL()) + " " + Integer.toString(abcvlibQuadEncoders.getWheelCountR());
