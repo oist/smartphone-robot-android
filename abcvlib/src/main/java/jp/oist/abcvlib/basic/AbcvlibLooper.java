@@ -20,8 +20,6 @@ import ioio.lib.util.IOIOConnectionManager;
  * Board pin connections, reads the encoder values, and writes out the total encoder counts for
  * wheel speed calculations elsewhere.
  *
- * This thread updates every 1 ms.
- *
  * @author Jiexin Wang https://github.com/ha5ha6
  * @author Christopher Buckley https://github.com/topherbuckley
  */
@@ -202,12 +200,12 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     /**
      * PWM frequency. Do not modify locally. Modify at AbcvlibActivity level if necessary.
      */
-    private int PWM_FREQ;
+    private final int PWM_FREQ;
 
     /**
      * A constant to convert between PWM_FREQ and Duty Cycle.
      */
-    private int DUTY_CYCLE_CONST;
+    private final int DUTY_CYCLE_CONST;
 
     private AbcvlibSensors abcvlibSensors;
     private AbcvlibMotion abcvlibMotion;
@@ -402,7 +400,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
             timeStampUpdate();
 
-            getPwm();
+            getDutyCycle();
 
             getIn1In2();
 
@@ -491,7 +489,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         dt = (timeStamp[indexCurrent] - timeStamp[indexPrevious]) / 1000000000;
     }
 
-    private void getPwm() {
+    private void getDutyCycle() {
 
         dutyCycleRightWheelCurrent = abcvlibMotion.getDutyCycleRight();
         dutyCycleLeftWheelCurrent = abcvlibMotion.getDutyCycleLeft();
@@ -618,10 +616,10 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
     private int dutyCycleLimiter(Integer dutyCycleOld){
 
-        final int MAX_DUTY_CYCLE = PWM_FREQ / 10;
+        final int MAX_DUTY_CYCLE = 100;
 
         /*
-        The following two logical statements simply hard limit the pulseWidth to be less than
+        The following two logical statements simply hard limit the dutyCycle to be less than
         MAX_DUTY_CYCLE which represents the highest value it can be.
          */
         int dutyCycleNew;
@@ -771,6 +769,10 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     }
 
     private void sendToLog() {
+
+        // The following commented out code can be enabled to enable verbose logging of sensors,
+        // but it causes a fair bit of lag to the whole system making balancing quite difficult.
+        // Recommended only for debugging raw sensor data.
 
 //        // Compile Encoder state data to push to adb log
 //        String encoderStateMsg = Integer.toString((encoderARightWheelState) ? 1 : 0) + " " +

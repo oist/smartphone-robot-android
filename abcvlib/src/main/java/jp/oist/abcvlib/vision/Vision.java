@@ -85,7 +85,16 @@ public class Vision {
     public double getPhi(List<Point> centroid){
 
         //TODO handle multiple centroids somehow.
-        phi = (CENTER_COL - centroid.get(0).y) / CENTER_COL;
+        //TODO make centroid object thread-safe somehow. (Executor, ThreadPoolExecutor, and onPostExecute)
+        try {
+            phi = (CENTER_COL - centroid.get(0).y) / CENTER_COL;
+        } catch (IndexOutOfBoundsException e){
+            // This will happen fairly regularly I suppose since both PID thread and onCameraFrame
+            // both use the same object. If onCameraFrame fires after
+            // ColorBlobDetectionActivity.linearController finishes, then the initial value of centroid
+            // could change to a null value before the above code executes.
+            Log.e("abcvlib", "Index out of bounds exception on centroid object.");
+        }
 
         return phi;
     }

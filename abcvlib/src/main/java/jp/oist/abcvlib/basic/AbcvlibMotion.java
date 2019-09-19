@@ -66,12 +66,12 @@ public class AbcvlibMotion {
     /**
      * PWM frequency. Do not modify locally. Modify at AbcvlibActivity level if necessary.
      */
-    private int PWM_FREQ;
+    private final int PWM_FREQ;
 
     /**
      * A constant to convert between PWM_FREQ and Duty Cycle.
      */
-    private int DUTY_CYCLE_CONST;
+    private final int DUTY_CYCLE_CONST;
 
     /**
      * Constructor to pass other module objects in. Keep public.

@@ -59,7 +59,7 @@ public class MainActivity extends AbcvlibActivity {
         setContentView(jp.oist.abcvlib.remotePID.R.layout.activity_main);
 
         // Python Socket Connection
-        socketClient = new AbcvlibSocketClient("192.168.23.135", 65434, inputs, controls);
+        socketClient = new AbcvlibSocketClient("192.168.24.217", 65434, inputs, controls);
         new Thread(socketClient).start();
 
         //PID Controller
@@ -92,7 +92,7 @@ public class MainActivity extends AbcvlibActivity {
 
         double int_e_t; // integral of e(t) from wikipedia. Discrete, so just a sum here.
 
-        double maxAbsTilt = 10; // in Degrees
+        double maxAbsTilt = 30; // in Degrees
         double maxTiltAngle = setPoint + maxAbsTilt; // in Degrees
         double minTiltAngle = setPoint - maxAbsTilt; // in Degrees
 

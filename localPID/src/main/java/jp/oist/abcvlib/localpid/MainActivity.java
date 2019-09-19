@@ -60,7 +60,10 @@ public class MainActivity extends AbcvlibActivity {
         // ID within the R class
         setContentView(jp.oist.abcvlib.localpid.R.layout.activity_main);
 
-        // Python Socket Connection
+        // Python Socket Connection. Host IP:Port needs to be the same as python server.
+        // Todo: automatically detect host server or set this to static IP:Port. Tried UDP Broadcast,
+        //  but seems to be blocked by router. Could set up DNS and static hostname, but would
+        //  require intervention with IT
         socketClient = new AbcvlibSocketClient("192.168.24.217", 65434, inputs, controls);
         new Thread(socketClient).start();
 
@@ -93,7 +96,7 @@ public class MainActivity extends AbcvlibActivity {
 
         double int_e_t; // integral of e(t) from wikipedia. Discrete, so just a sum here.
 
-        double maxAbsTilt = 10; // in Degrees
+        double maxAbsTilt = 30; // in Degrees
         double maxTiltAngle = setPoint + maxAbsTilt; // in Degrees
         double minTiltAngle = setPoint - maxAbsTilt; // in Degrees
 
@@ -134,24 +137,14 @@ public class MainActivity extends AbcvlibActivity {
                 PIDTimer[1] = System.nanoTime();
 
                 // if tilt angle is within minTiltAngle and maxTiltAngle, use PD controller, else use bouncing non-linear controller
-                if(thetaDeg < maxTiltAngle && thetaDeg > minTiltAngle){
-
+                if(thetaDeg <= maxTiltAngle && thetaDeg >= minTiltAngle){
                     linearController();
-                    stuckCount = 0;
-                }
-                else if(stuckCount < 4000){
-                    linearController();
-                    stuckCount = stuckCount + 1;
-                }
-                else{
-                    output = 0;
-                    stuckCount = 0;
-                    abcvlibMotion.setWheelSpeed(output, output);
-                    try {
-                        TimeUnit.MILLISECONDS.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                } else if (thetaDeg < maxTiltAngle) {
+                    // Burst forward
+                    bouncing(100);
+                } else if (thetaDeg > minTiltAngle){
+                    // Burse Backward
+                    bouncing(-100);
                 }
 
                 PIDTimer[2] = System.nanoTime();
@@ -163,7 +156,6 @@ public class MainActivity extends AbcvlibActivity {
                 PIDTimeSteps[1] += PIDTimer[1] - PIDTimer[0];
                 PIDTimeSteps[0] = PIDTimer[0];
 
-
                 // Take basic stats of every 1000 time step lengths rather than pushing all.
                 if (timerCount % avgCount == 0){
 
@@ -173,11 +165,28 @@ public class MainActivity extends AbcvlibActivity {
 
                     }
 
-//                    Log.i("timers", "PIDTimer Averages = " + Arrays.toString(PIDTimeSteps));
+                    Log.i("timers", "PIDTimer Averages = " + Arrays.toString(PIDTimeSteps));
                 }
 
                 timerCount ++;
 
+
+            }
+        }
+
+        /*
+        direction controlls which direction to bounce.
+         */
+        private void bouncing(int bounceSpeed){
+
+            try {
+                // Primitive bouncing
+                abcvlibMotion.setWheelSpeed(-bounceSpeed, -bounceSpeed);
+                TimeUnit.MILLISECONDS.sleep(200);
+                abcvlibMotion.setWheelSpeed(bounceSpeed, bounceSpeed);
+                TimeUnit.MILLISECONDS.sleep(200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
 
