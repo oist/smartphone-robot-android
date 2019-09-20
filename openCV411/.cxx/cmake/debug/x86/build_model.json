@@ -1,0 +1,73 @@
+{
+  "variant": {
+    "module": {
+      "rootBuildGradleFolder": "/home/christopher/git/smartphone-robot/abcvlibApp",
+      "sdkFolder": "/home/christopher/Android/Sdk",
+      "isNativeCompilerSettingsCacheEnabled": false,
+      "isBuildOnlyTargetAbiEnabled": true,
+      "ideBuildTargetAbi": "x86_64,x86",
+      "splitsAbiFilterSet": [],
+      "intermediatesFolder": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/build/intermediates",
+      "gradleModulePathName": ":openCV411",
+      "moduleRootFolder": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411",
+      "makeFile": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/libcxx_helper/CMakeLists.txt",
+      "buildSystem": "CMAKE",
+      "compilerSettingsCacheFolder": "/home/christopher/git/smartphone-robot/abcvlibApp/.cxx",
+      "cxxFolder": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx",
+      "ndkFolder": "/home/christopher/Android/Sdk/ndk-bundle",
+      "ndkVersion": "20.0.5594570",
+      "ndkSupportedAbiList": [
+        "ARMEABI_V7A",
+        "ARM64_V8A",
+        "X86",
+        "X86_64"
+      ],
+      "ndkDefaultAbiList": [
+        "ARMEABI_V7A",
+        "ARM64_V8A",
+        "X86",
+        "X86_64"
+      ],
+      "cmakeToolchainFile": "."
+    },
+    "buildSystemArgumentList": [
+      "-DANDROID_STL\u003dc++_shared"
+    ],
+    "cFlagList": [],
+    "cppFlagsList": [],
+    "variantName": "debug",
+    "soFolder": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/build/intermediates/cmake/debug/lib",
+    "objFolder": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/build/intermediates/cmake/debug/obj",
+    "jsonFolder": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cmake/debug",
+    "gradleBuildOutputFolder": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cxx/debug",
+    "isDebuggableEnabled": true,
+    "validAbiList": [
+      "X86_64",
+      "X86"
+    ],
+    "buildTargetSet": [
+      "opencv_jni_shared"
+    ]
+  },
+  "abi": "X86",
+  "abiPlatformVersion": 16,
+  "cxxBuildFolder": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cmake/debug/x86",
+  "jsonFile": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cmake/debug/x86/android_gradle_build.json",
+  "gradleBuildOutputFolder": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cxx/debug/x86",
+  "objFolder": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/build/intermediates/cmake/debug/obj/x86",
+  "buildCommandFile": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cmake/debug/x86/build_command.txt",
+  "buildOutputFile": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cmake/debug/x86/build_output.txt",
+  "modelOutputFile": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cmake/debug/x86/build_model.json",
+  "cmake": {
+    "cmakeListsWrapperFile": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cxx/debug/x86/CMakeLists.txt",
+    "toolchainWrapperFile": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cxx/debug/x86/android_gradle_build.toolchain.cmake",
+    "buildGenerationStateFile": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cxx/debug/x86/build_generation_state.json",
+    "cacheKeyFile": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cxx/debug/x86/compiler_cache_key.json",
+    "compilerCacheUseFile": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cxx/debug/x86/compiler_cache_use.json",
+    "compilerCacheWriteFile": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cxx/debug/x86/compiler_cache_write.json",
+    "toolchainSettingsFromCacheFile": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cxx/debug/x86/compiler_settings_cache.cmake",
+    "cmakeWrappingBaseFolder": "."
+  },
+  "jsonGenerationLoggingRecordFile": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cmake/debug/x86/json_generation_record.json",
+  "compileCommandsJsonFile": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cmake/debug/x86/compile_commands.json"
+}

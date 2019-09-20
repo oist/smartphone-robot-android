@@ -1,0 +1,41 @@
+
+{
+	"buildFiles" : 
+	[
+		"/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/libcxx_helper/CMakeLists.txt"
+	],
+	"cleanCommands" : 
+	[
+		"/home/christopher/Android/Sdk/cmake/3.6.4111459/bin/cmake --build /home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cmake/release/arm64-v8a --target clean"
+	],
+	"cppFileExtensions" : [ "cpp" ],
+	"libraries" : 
+	{
+		"opencv_jni_shared-Release-arm64-v8a" : 
+		{
+			"abi" : "arm64-v8a",
+			"artifactName" : "opencv_jni_shared",
+			"buildCommand" : "/home/christopher/Android/Sdk/cmake/3.6.4111459/bin/cmake --build /home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cmake/release/arm64-v8a --target opencv_jni_shared",
+			"buildType" : "release",
+			"files" : 
+			[
+				
+				{
+					"flags" : "  --target=aarch64-none-linux-android21 --gcc-toolchain=/home/christopher/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64 --sysroot=/home/christopher/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/sysroot    -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -fno-addrsig -Wa,--noexecstack -Wformat -Werror=format-security   -O2 -DNDEBUG  -fPIC    -c ",
+					"src" : "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/libcxx_helper/dummy.cpp",
+					"workingDirectory" : "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cmake/release/arm64-v8a"
+				}
+			],
+			"output" : "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cmake/release/arm64-v8a/libopencv_jni_shared.a",
+			"toolchain" : "9089966729358940308"
+		}
+	},
+	"toolchains" : 
+	{
+		"9089966729358940308" : 
+		{
+			"cCompilerExecutable" : "/home/christopher/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/clang",
+			"cppCompilerExecutable" : "/home/christopher/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++"
+		}
+	}
+}
