@@ -46,7 +46,7 @@ public class ColorBlobDetectionActivity extends AbcvlibActivity {
         inputs = initializeInputs();
 
         // Python Socket Connection
-        socketClient = new AbcvlibSocketClient("192.168.24.217", 65434, inputs, controls);
+        socketClient = new AbcvlibSocketClient("192.168.26.93", 65434, inputs, controls);
         new Thread(socketClient).start();
 
         //PID Controller
