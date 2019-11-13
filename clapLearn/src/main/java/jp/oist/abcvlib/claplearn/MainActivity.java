@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -90,7 +91,8 @@ public class MainActivity extends AbcvlibActivity implements MicrophoneInputList
     final double alpha = 0.001; // learning rate
     final double beta = 1.0; // temperature?
     double reward; // reward based on spl
-    double rewardScaleFactor = 100.0; // reward = rmsdB / rewardScaleFactor
+    double rewardScaleFactor = 100.0; // (mRmsSmoothed / rewardScaleFactor) - rewardOffset
+    double rewardOffset = 1.5;
 
     ActionDistribution aD = new ActionDistribution();
 
@@ -111,7 +113,7 @@ public class MainActivity extends AbcvlibActivity implements MicrophoneInputList
         // Todo: automatically detect host server or set this to static IP:Port. Tried UDP Broadcast,
         //  but seems to be blocked by router. Could set up DNS and static hostname, but would
         //  require intervention with IT
-        socketClient = new AbcvlibSocketClient("192.168.26.93", 65434, inputs, controls);
+        socketClient = new AbcvlibSocketClient("192.168.28.151", 65434, inputs, controls);
         new Thread(socketClient).start();
 
         //PID Controller
@@ -319,6 +321,10 @@ public class MainActivity extends AbcvlibActivity implements MicrophoneInputList
 
         int timerCount = 1;
 
+        JSONArray qvalueArray = new JSONArray();
+        JSONArray weightArray = new JSONArray();
+        int arrayIndex = 0;
+
         public PythonControl(Context context){
             this.context = context;
         }
@@ -385,6 +391,22 @@ public class MainActivity extends AbcvlibActivity implements MicrophoneInputList
                 inputs.put("distanceR", abcvlibQuadEncoders.getDistanceR());
                 inputs.put("wheelSpeedL", abcvlibQuadEncoders.getWheelSpeedL());
                 inputs.put("wheelSpeedR", abcvlibQuadEncoders.getWheelSpeedR());
+                inputs.put("action", aD.get_selectedAction());
+                inputs.put("reward", reward);
+
+                arrayIndex = 0;
+                for (double qvalue : aD.qValues){
+                    qvalueArray.put(arrayIndex, qvalue);
+                    arrayIndex++;
+                }
+                arrayIndex = 0;
+                for (double weight : aD.weights){
+                    weightArray.put(arrayIndex, weight);
+                    arrayIndex++;
+                }
+
+                inputs.put("weights", weightArray);
+                inputs.put("qvalues", qvalueArray);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -444,7 +466,7 @@ public class MainActivity extends AbcvlibActivity implements MicrophoneInputList
             rmsdB = 20 + (20.0 * Math.log10(mGain * mRmsSmoothed));
 
             if (rmsdB >= 0){
-                reward = (mRmsSmoothed / rewardScaleFactor);
+                reward = (mRmsSmoothed / rewardScaleFactor) - rewardOffset;
 
                 // update qValues due to current level
                 aD.qValues[aD.get_selectedAction()] = (alpha * reward) + ((1.0 - alpha) * aD.qValues[aD.get_selectedAction()]);
@@ -457,9 +479,9 @@ public class MainActivity extends AbcvlibActivity implements MicrophoneInputList
 //                        " qValueSum: " + formatter.format(qValuesSum) +
 //                        " Weights: " + formatter.format(weights[0]) + "," +
 //                        formatter.format(weights[1]) + "," + formatter.format(weights[2]));
-                Log.i("qvalues", Double.toString(aD.qValues[0]) + " " + Double.toString(aD.qValues[1]) + " " + Double.toString(aD.qValues[2]));
-                Log.i("weights", Double.toString(aD.weights[0]) + " " + Double.toString(aD.weights[1]) + " " + Double.toString(aD.weights[2]));
-                Log.i("reward", Double.toString(reward));
+//                Log.i("qvalues", Double.toString(aD.qValues[0]) + " " + Double.toString(aD.qValues[1]) + " " + Double.toString(aD.qValues[2]));
+//                Log.i("weights", Double.toString(aD.weights[0]) + " " + Double.toString(aD.weights[1]) + " " + Double.toString(aD.weights[2]));
+//                Log.i("reward", Double.toString(reward));
             }
 
             // Set up a method that runs on the UI thread to update of the LED bar
@@ -623,7 +645,7 @@ public class MainActivity extends AbcvlibActivity implements MicrophoneInputList
 
         // Initial weights
         private int[] actions = {0, 1, 2};
-        public double[] weights = {0.33, 0.33, 0.33};
+        public double[] weights = {0.34, 0.34, 0.34};
         public double[] qValues = {1.0, 1.0, 1.0};
 
         private  double qValuesSum; // allotting memory for this as no numpy type array calcs available?
@@ -631,18 +653,27 @@ public class MainActivity extends AbcvlibActivity implements MicrophoneInputList
         private double randNum;
         private double selector;
         private int iterator;
+        private double sumOfWeights;
 
         public int actionSelect(){
 
-            randNum = Math.random();
+            sumOfWeights = 0;
+            for (double weight:weights){
+                sumOfWeights = sumOfWeights + weight;
+            }
+            randNum = Math.random() * sumOfWeights;
             selector = 0;
             iterator = -1;
 
             while (selector < randNum){
-                iterator++;
-                selector = selector + weights[iterator];
+                try {
+                    iterator++;
+                    selector = selector + weights[iterator];
+                }catch (ArrayIndexOutOfBoundsException e){
+                    Log.e("abcvlib", "weight index bound exceeded. randNum was greater than the sum of all weights. This can happen if the sum of all weights is less than 1.");
+                }
             }
-            // Asigning this as a read-only value to pass between threads.
+            // Assigning this as a read-only value to pass between threads.
             this._selectedAction = iterator;
 
             // represents the action to be selected
