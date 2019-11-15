@@ -52,14 +52,6 @@
 
     </LinearLayout>
 
-    <ToggleButton
-        android:id="@+id/on_off_toggle_button"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:checked="true"
-        android:text="On" />
-
     <LinearLayout
         android:id="@+id/linearLayout1"
         android:layout_width="match_parent"

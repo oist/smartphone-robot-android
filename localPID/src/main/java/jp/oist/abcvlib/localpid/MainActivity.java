@@ -63,7 +63,7 @@ public class MainActivity extends AbcvlibActivity {
         // Todo: automatically detect host server or set this to static IP:Port. Tried UDP Broadcast,
         //  but seems to be blocked by router. Could set up DNS and static hostname, but would
         //  require intervention with IT
-        socketClient = new AbcvlibSocketClient("192.168.26.93", 65434, inputs, controls);
+        socketClient = new AbcvlibSocketClient("192.168.28.151", 65434, inputs, controls);
         new Thread(socketClient).start();
 
         //PID Controller

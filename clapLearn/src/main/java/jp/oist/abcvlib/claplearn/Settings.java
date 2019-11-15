@@ -98,7 +98,7 @@ public class Settings extends Activity {
   private void readPreferences() {
     SharedPreferences preferences = getSharedPreferences("LevelMeter",
         MODE_PRIVATE);
-    mSampleRate = preferences.getInt("SampleRate", 20000);
+    mSampleRate = preferences.getInt("SampleRate", 16000);
   }
 
   private void setPreferences() {

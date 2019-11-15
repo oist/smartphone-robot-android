@@ -43,14 +43,14 @@ import android.util.Log;
  *
  */
 public class MicrophoneInput implements Runnable{
-  int mSampleRate = 20000;
+  int mSampleRate = 16000;
   int mAudioSource = MediaRecorder.AudioSource.VOICE_RECOGNITION;
   final int mChannelConfig = AudioFormat.CHANNEL_IN_MONO;
   final int mAudioFormat = AudioFormat.ENCODING_PCM_16BIT;
 
   private final MicrophoneInputListener mListener;
   private Thread mThread;
-  private boolean mRunning;
+  private boolean mRunning = false;
 
   AudioRecord recorder;
 
@@ -71,7 +71,9 @@ public class MicrophoneInput implements Runnable{
   }
 
   public void start() {
+    Log.i("abcvlib", "In MicInput.Start");
     if (false == mRunning) {
+      Log.i("abcvlib", "In MicInput mRunning logic");
       mRunning = true;
       mThread = new Thread(this);
       mThread.start();
@@ -91,13 +93,16 @@ public class MicrophoneInput implements Runnable{
 
   @Override
   public void run() {
-    // Buffer for 20 milliseconds of data, e.g. 400 samples at 20kHz.
-    short[] buffer20ms = new short[mSampleRate / 400];
+    // Buffer for 20 milliseconds of data, e.g. 320 samples at 16kHz.
+    Log.i("abcvlib", "In MicInput run method");
+    short[] buffer20ms = new short[mSampleRate / 320];
     // Buffer size of AudioRecord buffer, which will be at least 1 second.
     int buffer1000msSize = bufferSize(mSampleRate, mChannelConfig,
         mAudioFormat);
 
     try {
+      Log.i("abcvlib", "In MicInput try");
+
       recorder = new AudioRecord(
           mAudioSource,
           mSampleRate,
@@ -106,8 +111,9 @@ public class MicrophoneInput implements Runnable{
           buffer1000msSize);
       recorder.startRecording();
 
-      while (mRunning) {      
-        int numSamples = recorder.read(buffer20ms, 0, buffer20ms.length);        
+      while (mRunning) {
+
+        int numSamples = recorder.read(buffer20ms, 0, buffer20ms.length);
         mTotalSamples += numSamples;
         mListener.processAudioFrame(buffer20ms);
       }

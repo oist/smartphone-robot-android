@@ -1,13 +1,20 @@
 package jp.oist.abcvlib.claplearn;
 
 import android.content.Context;
+import android.media.AudioAttributes;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.text.style.TtsSpan;
 import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 import jp.oist.abcvlib.basic.AbcvlibActivity;
@@ -21,6 +28,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 import java.text.DecimalFormat;
+import java.util.Timer;
 
 import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 
@@ -57,6 +65,9 @@ public class MainActivity extends AbcvlibActivity implements MicrophoneInputList
     private JSONObject inputs = initializeInputs();
     private JSONObject controls = initializeControls();
     private AbcvlibSocketClient socketClient = null;
+    private MediaPlayerThread mediaPlayerThread;
+    private MediaPlayer mediaPlayer;
+    private AudioManager audioManager;
 
     private int avgCount = 1000;
     private boolean pidON = false;
@@ -77,7 +88,7 @@ public class MainActivity extends AbcvlibActivity implements MicrophoneInputList
     // For displaying error in calibration.
     double mDifferenceFromNominal = 0.0;
     double mRmsSmoothed;  // Temporally filtered version of RMS.
-    double mAlpha = 0.8;  // Coefficient of IIR smoothing filter for RMS.
+    double mAlpha = 0.9;  // Coefficient of IIR smoothing filter for RMS.
     private int mSampleRate;  // The audio sampling rate to use.
     private int mAudioSource;  // The audio source to use.
     private double rmsdB; // rmsdB value each loop. Written by processAudioFrame read by separate thread in ActionSelector
@@ -88,11 +99,15 @@ public class MainActivity extends AbcvlibActivity implements MicrophoneInputList
 
     private static final String TAG = "LevelMeterActivity";
 
-    final double alpha = 0.001; // learning rate
-    final double beta = 1.0; // temperature?
+    final double alpha = 0.1; // learning rate
+    final double beta = 3.0; // temperature
     double reward; // reward based on spl
-    double rewardScaleFactor = 100.0; // (mRmsSmoothed / rewardScaleFactor) - rewardOffset
+    double rewardSum = 0;
+    double rewardAvg = 0;
+    int ellapsedLoops = 1; // For use in the moving average of the reward.
+    double rewardScaleFactor = (100.0); // (mRmsSmoothed / rewardScaleFactor) - rewardOffset
     double rewardOffset = 1.5;
+    int timeRemaining = 0;
 
     ActionDistribution aD = new ActionDistribution();
 
@@ -105,9 +120,32 @@ public class MainActivity extends AbcvlibActivity implements MicrophoneInputList
         super.loggerOn = loggerOn;
         super.wheelPolaritySwap = wheelPolaritySwap;
 
-        // Setup Android GUI. Point this method to your main activity xml file or corresponding int
-        // ID within the R class
-        setContentView(jp.oist.abcvlib.claplearn.R.layout.main);
+        readPreferences();
+        // Google Code Below
+        // Here the micInput object is created for audio capture.
+        // It is set up to call this object to handle real time audio frames of
+        // PCM samples. The incoming frames will be handled by the
+        // processAudioFrame method below.
+        micInput = new MicrophoneInput(this);
+        micInput.setSampleRate(mSampleRate);
+        micInput.setAudioSource(mAudioSource);
+
+        // Read the layout and construct.
+        setContentView(R.layout.main);
+
+        // Get a handle that will be used in async thread post to update the
+        // display.
+        mBarLevel = (BarLevelDrawable)findViewById(R.id.bar_level_drawable_view);
+        mdBTextView = (TextView)findViewById(R.id.dBTextView);
+        mdBFractionTextView = (TextView)findViewById(R.id.dBFractionTextView);
+
+        micInput.start();
+
+        mediaPlayerThread = new MediaPlayerThread();
+        new Thread(mediaPlayerThread).start();
+//        // Setup Android GUI. Point this method to your main activity xml file or corresponding int
+//        // ID within the R class
+//        setContentView(jp.oist.abcvlib.claplearn.R.layout.main);
 
         // Python Socket Connection. Host IP:Port needs to be the same as python server.
         // Todo: automatically detect host server or set this to static IP:Port. Tried UDP Broadcast,
@@ -127,66 +165,6 @@ public class MainActivity extends AbcvlibActivity implements MicrophoneInputList
         // SPL Meter
         ActionSelector actionSelector = new ActionSelector();
         new Thread(actionSelector).start();
-
-        // Google Code Below
-        // Here the micInput object is created for audio capture.
-        // It is set up to call this object to handle real time audio frames of
-        // PCM samples. The incoming frames will be handled by the
-        // processAudioFrame method below.
-        micInput = new MicrophoneInput(this);
-
-        // Read the layout and construct.
-        setContentView(R.layout.main);
-
-        // Get a handle that will be used in async thread post to update the
-        // display.
-        mBarLevel = (BarLevelDrawable)findViewById(R.id.bar_level_drawable_view);
-        mdBTextView = (TextView)findViewById(R.id.dBTextView);
-        mdBFractionTextView = (TextView)findViewById(R.id.dBFractionTextView);
-
-        // Toggle Button handler.
-        final ToggleButton onOffButton=(ToggleButton)findViewById(
-                R.id.on_off_toggle_button);
-
-        readPreferences();
-        micInput.setSampleRate(mSampleRate);
-        micInput.setAudioSource(mAudioSource);
-        micInput.start();
-
-        ToggleButton.OnClickListener tbListener =
-                new ToggleButton.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (onOffButton.isChecked()) {
-                            readPreferences();
-                            micInput.setSampleRate(mSampleRate);
-                            micInput.setAudioSource(mAudioSource);
-                            micInput.start();
-                        } else {
-                            micInput.stop();
-                        }
-                    }
-                };
-        onOffButton.setOnClickListener(tbListener);
-
-
-        // Settings button, launches the settings dialog.
-
-        Button.OnClickListener settingsBtnListener =
-                new Button.OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-                        final ToggleButton onOffButton=(ToggleButton)findViewById(
-                                R.id.on_off_toggle_button);
-                        onOffButton.setChecked(false);
-                        MainActivity.this.micInput.stop();
-
-                        Intent settingsIntent = new Intent(MainActivity.this,
-                                Settings.class);
-                        MainActivity.this.startActivity(settingsIntent);
-                    }
-                };
 
     }
 
@@ -393,6 +371,10 @@ public class MainActivity extends AbcvlibActivity implements MicrophoneInputList
                 inputs.put("wheelSpeedR", abcvlibQuadEncoders.getWheelSpeedR());
                 inputs.put("action", aD.get_selectedAction());
                 inputs.put("reward", reward);
+                inputs.put("rewardAvg", rewardAvg);
+                inputs.put("timeRemaining", timeRemaining);
+
+                Log.i("abcvlib", "writeAndroidData reward: " + reward);
 
                 arrayIndex = 0;
                 for (double qvalue : aD.qValues){
@@ -416,31 +398,14 @@ public class MainActivity extends AbcvlibActivity implements MicrophoneInputList
     }
 
     /**
-     * Inner class to handle press of gain adjustment buttons.
-     */
-    private class DbClickListener implements Button.OnClickListener {
-        private double gainIncrement;
-
-        public DbClickListener(double gainIncrement) {
-            this.gainIncrement = gainIncrement;
-        }
-
-        @Override
-        public void onClick(View v) {
-            MainActivity.this.mGain *= Math.pow(10, gainIncrement / 20.0);
-            mDifferenceFromNominal -= gainIncrement;
-            DecimalFormat df = new DecimalFormat("##.# dB");
-            mGainTextView.setText(df.format(mDifferenceFromNominal));
-        }
-    }
-
-    /**
      * Method to read the sample rate and audio source preferences.
      */
     private void readPreferences() {
         SharedPreferences preferences = getSharedPreferences("LevelMeter",
                 MODE_PRIVATE);
-        mSampleRate = preferences.getInt("SampleRate", 20000);
+        Log.i("abcvlib", "mSampleRateBefore:" + mSampleRate);
+        mSampleRate = preferences.getInt("SampleRate", 16000);
+        Log.i("abcvlib", "mSampleRateAfter:" + mSampleRate);
         mAudioSource = preferences.getInt("AudioSource",
                 MediaRecorder.AudioSource.VOICE_RECOGNITION);
     }
@@ -457,55 +422,54 @@ public class MainActivity extends AbcvlibActivity implements MicrophoneInputList
             // Compute the RMS value. (Note that this does not remove DC).
             double rms = 0;
             for (int i = 0; i < audioFrame.length; i++) {
-                rms += audioFrame[i]*audioFrame[i];
+                rms += audioFrame[i] * audioFrame[i];
             }
-            rms = Math.sqrt(rms/audioFrame.length);
+            rms = Math.sqrt(rms / audioFrame.length);
 
             // Compute a smoothed version for less flickering of the display.
-            mRmsSmoothed = mRmsSmoothed * mAlpha + (1 - mAlpha) * rms;
+            mRmsSmoothed = (mRmsSmoothed * mAlpha) + (1 - mAlpha) * rms;
             rmsdB = 20 + (20.0 * Math.log10(mGain * mRmsSmoothed));
 
-            if (rmsdB >= 0){
-                reward = (mRmsSmoothed / rewardScaleFactor) - rewardOffset;
+            if (rmsdB != 0) {
+                reward = ((mRmsSmoothed / rewardScaleFactor) - rewardOffset);
+                rewardSum = rewardSum + ((mRmsSmoothed / rewardScaleFactor) - rewardOffset);
+                rewardAvg = rewardSum / ellapsedLoops;
 
-                // update qValues due to current level
-                aD.qValues[aD.get_selectedAction()] = (alpha * reward) + ((1.0 - alpha) * aD.qValues[aD.get_selectedAction()]);
-                // update weights from new qValues
-                aD.weights[aD.get_selectedAction()] = Math.exp(beta * aD.qValues[aD.get_selectedAction()]) / aD.getQValuesSum();
-//                Log.d("qvalues", "Action: " + String.valueOf(selectedAction) +
-//                        " rmsdB: " + formatter.format(rmsdB) + " reward: " +
-//                        formatter.format(reward) +
-//                        " qValue: " + formatter.format(qValues[selectedAction]) +
-//                        " qValueSum: " + formatter.format(qValuesSum) +
-//                        " Weights: " + formatter.format(weights[0]) + "," +
-//                        formatter.format(weights[1]) + "," + formatter.format(weights[2]));
-//                Log.i("qvalues", Double.toString(aD.qValues[0]) + " " + Double.toString(aD.qValues[1]) + " " + Double.toString(aD.qValues[2]));
-//                Log.i("weights", Double.toString(aD.weights[0]) + " " + Double.toString(aD.weights[1]) + " " + Double.toString(aD.weights[2]));
-//                Log.i("reward", Double.toString(reward));
+//                Log.i("abcvlib", "AudioFrame reward=" + reward + "; " +
+//                        "rewardSum=" + rewardSum + "; mRmsSmoothed=" + mRmsSmoothed +
+//                        "; ellapsedLoops=" + ellapsedLoops);
+
+                ellapsedLoops++;
+
+
+                // Set up a method that runs on the UI thread to update of the LED bar
+                // and numerical display.
+
+                mBarLevel.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        // The bar has an input range of [0.0 ; 1.0] and 10 segments.
+                        // Each LED corresponds to 6 dB.
+                        mBarLevel.setLevel((mOffsetdB + rmsdB) / 60);
+
+                        DecimalFormat df = new DecimalFormat("##");
+                        mdBTextView.setText(df.format(rmsdB));
+
+                        DecimalFormat df_fraction = new DecimalFormat("#");
+                        int one_decimal = (int) (Math.round(Math.abs(rmsdB * 10))) % 10;
+                        mdBFractionTextView.setText(Integer.toString(one_decimal));
+                        mDrawing = false;
+                    }
+                });
             }
-
-            // Set up a method that runs on the UI thread to update of the LED bar
-            // and numerical display.
-            mBarLevel.post(new Runnable() {
-                @Override
-                public void run() {
-                    // The bar has an input range of [0.0 ; 1.0] and 10 segments.
-                    // Each LED corresponds to 6 dB.
-                    mBarLevel.setLevel((mOffsetdB + rmsdB) / 60);
-
-                    DecimalFormat df = new DecimalFormat("##");
-                    mdBTextView.setText(df.format(rmsdB));
-
-                    DecimalFormat df_fraction = new DecimalFormat("#");
-                    int one_decimal = (int) (Math.round(Math.abs(rmsdB * 10))) % 10;
-                    mdBFractionTextView.setText(Integer.toString(one_decimal));
-                    mDrawing = false;
-                }
-            });
-        } else {
+            else {
+                Log.i("abcvlib", "rmsdB=0");
+            }
+        }
+        else {
             mDrawingCollided++;
             Log.v(TAG, "Level bar update collision, i.e. update took longer " +
-                    "than 20ms. Collision count" + Double.toString(mDrawingCollided));
+                        "than 20ms. Collision count" + Double.toString(mDrawingCollided));
         }
     }
 
@@ -555,24 +519,40 @@ public class MainActivity extends AbcvlibActivity implements MicrophoneInputList
     public class ActionSelector implements Runnable{
 
         int speed = 100; // Duty Cycle from 0 to 100.
-        long actionCycle = 10000; // How long each action is carried out in ms
+        long actionCycle = 5000; // How long each action is carried out in ms
         int selectedAction;
 
         public void run() {
             while(true) {
 
                 selectedAction = aD.actionSelect();
-//                Log.i("distribution", "Action: " + String.valueOf(selectedAction) +
-//                        " Probability: " + weights[selectedAction] +
-//                        " qValue: " + qValues[selectedAction]);
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        CountDownTimer countDownTimer = new CountDownTimer(10000, 1000) {
+
+                            public void onTick(long millisUntilFinished) {
+                                timeRemaining = Math.round(millisUntilFinished / 1000);
+                            }
+
+                            public void onFinish() {
+
+                            }
+                        }.start();
+                    }
+
+                });
+
                 sendToGUI();
 
                 switch (selectedAction){
                     case 0:
-                        backAndForth();
+                        turnLeft();
                         break;
                     case 1:
-                        turnInCircles();
+                        turnRight();
                         break;
                     case 2:
                         balance();
@@ -580,6 +560,9 @@ public class MainActivity extends AbcvlibActivity implements MicrophoneInputList
                     default:
                         Log.i("distribution", "default case selected with action = " + selectedAction);
                 }
+
+                // Update Q-value at the end of each.
+                updateValues();
 
             }
         }
@@ -597,32 +580,24 @@ public class MainActivity extends AbcvlibActivity implements MicrophoneInputList
             });
         }
 
-        private void backAndForth(){
-            pidON = false;
-            abcvlibMotion.setWheelSpeed(0, 0);
-
-            // Set Initial Speed
-            try {
-                long period = (long) Math.round(actionCycle / 4);
-                abcvlibMotion.setWheelSpeed(speed, speed);
-                Thread.sleep(period);
-                abcvlibMotion.setWheelSpeed(-speed, -speed);
-                Thread.sleep(period);
-                abcvlibMotion.setWheelSpeed(speed, speed);
-                Thread.sleep(period);
-                abcvlibMotion.setWheelSpeed(-speed, -speed);
-                Thread.sleep(period);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        private void turnInCircles(){
+        private void turnLeft(){
             pidON = false;
             abcvlibMotion.setWheelSpeed(0, 0);
             try {
                 // Turn left
                 abcvlibMotion.setWheelSpeed(speed / 3, speed);
+                Thread.sleep(actionCycle);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        private void turnRight(){
+            pidON = false;
+            abcvlibMotion.setWheelSpeed(0, 0);
+            try {
+                // Turn left
+                abcvlibMotion.setWheelSpeed(speed, speed / 3);
                 Thread.sleep(actionCycle);
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -638,6 +613,26 @@ public class MainActivity extends AbcvlibActivity implements MicrophoneInputList
                 e.printStackTrace();
             }
         }
+
+        private void updateValues(){
+            // Cap rewardAvg to some maximum to prevent kids from being TOO loud
+            if (rewardAvg >= 2){
+                rewardAvg = 2;
+            }
+            // update qValues due to current level
+            aD.qValues[aD.get_selectedAction()] = (alpha * rewardAvg) + ((1.0 - alpha) * aD.qValues[aD.get_selectedAction()]);
+            // update weights from new qValues
+            aD.getQValuesSum();
+            for (int i=0; i < aD.weights.length; i++){
+                aD.weights[i] = Math.exp(beta * aD.qValues[i]) / aD.qValuesSum;
+            }
+            reward = -rewardOffset;
+            rewardAvg = 0;
+            rewardSum = 0;
+            rmsdB = 0;
+            mRmsSmoothed = 0;
+            ellapsedLoops = 1;
+        }
     }
 
     // TODO weights and selectedAction should be private to this, then an instance of this class should be global to MainActivity
@@ -646,7 +641,7 @@ public class MainActivity extends AbcvlibActivity implements MicrophoneInputList
         // Initial weights
         private int[] actions = {0, 1, 2};
         public double[] weights = {0.34, 0.34, 0.34};
-        public double[] qValues = {1.0, 1.0, 1.0};
+        public double[] qValues = {0.1,0.1,0.1};
 
         private  double qValuesSum; // allotting memory for this as no numpy type array calcs available?
         private int _selectedAction;
@@ -692,4 +687,27 @@ public class MainActivity extends AbcvlibActivity implements MicrophoneInputList
             return _selectedAction;
         }
     }
+
+    private class MediaPlayerThread implements Runnable{
+
+        public void run(){
+
+            audioManager = (AudioManager) MainActivity.this.getSystemService(MainActivity.this.AUDIO_SERVICE);
+            mediaPlayer = new MediaPlayer();
+            Uri loc = Uri.parse("android.resource://jp.oist.abcvlib.claplearn/" + R.raw.custommix);
+
+            try {
+                mediaPlayer.setDataSource(MainActivity.this, loc);
+                mediaPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
+                mediaPlayer.setLooping(true);
+                mediaPlayer.prepare();
+            } catch (IllegalArgumentException | SecurityException| IllegalStateException | IOException e) {
+                e.printStackTrace();
+            }
+            audioManager.requestAudioFocus(null, AudioManager.STREAM_ALARM,AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+            mediaPlayer.start();
+
+        }
+    }
+
 }
