@@ -616,8 +616,8 @@ public class MainActivity extends AbcvlibActivity implements MicrophoneInputList
 
         private void updateValues(){
             // Cap rewardAvg to some maximum to prevent kids from being TOO loud
-            if (rewardAvg >= 2){
-                rewardAvg = 2;
+            if (rewardAvg >= 3){
+                rewardAvg = 3;
             }
             // update qValues due to current level
             aD.qValues[aD.get_selectedAction()] = (alpha * rewardAvg) + ((1.0 - alpha) * aD.qValues[aD.get_selectedAction()]);
