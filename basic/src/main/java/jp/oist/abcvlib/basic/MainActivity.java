@@ -1,6 +1,11 @@
 package jp.oist.abcvlib.basic;
 
 import android.os.Bundle;
+import android.util.Log;
+
+import java.util.HashMap;
+
+import jp.oist.abcvlib.AbcvlibActivity;
 
 
 /**
@@ -12,24 +17,18 @@ import android.os.Bundle;
 public class MainActivity extends AbcvlibActivity {
 
     /**
-     * Enable/disable sensor and IO logging. Only set to true when debugging as it uses a lot of
-     * memory/disk space on the phone and may result in memory failure if run for a long time
-     * such as any learning tasks.
+     * Various booleans to switch on/off various functionalities. All of these have default values
+     * within AbcvlibActivity, so they can be supplied or will default to typical values.
      */
-    private boolean loggerOn = false;
-    /**
-     * Enable/disable this to swap the polarity of the wheels such that the default forward
-     * direction will be swapped (i.e. wheels will move cw vs ccw as forward).
-     */
-    private boolean wheelPolaritySwap = true;
+    private static HashMap<String, Boolean> switches;
+    static {
+        switches = new HashMap<>();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        // Passes Android App information up to parent classes for various usages. Do not modify
-        super.onCreate(savedInstanceState);
-        super.loggerOn = loggerOn;
-        super.wheelPolaritySwap = wheelPolaritySwap;
+        initialzer("192.168.28.151", 65434, switches);
 
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
@@ -51,7 +50,7 @@ public class MainActivity extends AbcvlibActivity {
         public void run(){
             while(true){
                 // Prints theta and angular velocity to android logcat
-                System.out.println("theta:" + abcvlibSensors.getThetaDeg() + "thetaDot:" + abcvlibSensors.getThetaDegDot());
+                Log.v(TAG, "theta:" + inputs.motionSensors.getThetaDeg() + "thetaDot:" + inputs.motionSensors.getThetaDegDot());
             }
         }
     }

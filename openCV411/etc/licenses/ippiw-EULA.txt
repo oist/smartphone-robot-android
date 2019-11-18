@@ -15,7 +15,7 @@ Use and Redistribution.  You may use and redistribute the software (the
   permitted.
 
 Limited patent license.  Intel grants you a world-wide, royalty-free,
-non-exclusive license under patents it now or hereafter owns or controls to
+non-exclusive license under patents it now or hereafter owns or socketMsg to
 make, have made, use, import, offer to sell and sell ("Utilize") this Software,
 but solely to the extent that any such patent is necessary to Utilize the
 Software alone. The patent license shall not apply to any combinations which

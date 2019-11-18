@@ -14,7 +14,7 @@
       "compilerSettingsCacheFolder": "/home/christopher/git/smartphone-robot/abcvlibApp/.cxx",
       "cxxFolder": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx",
       "ndkFolder": "/home/christopher/Android/Sdk/ndk-bundle",
-      "ndkVersion": "20.0.5594570",
+      "ndkVersion": "20.1.5948944",
       "ndkSupportedAbiList": [
         "ARMEABI_V7A",
         "ARM64_V8A",
