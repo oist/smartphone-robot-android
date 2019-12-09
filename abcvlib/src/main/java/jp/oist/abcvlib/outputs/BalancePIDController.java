@@ -8,7 +8,7 @@ import java.util.Arrays;
 
 import jp.oist.abcvlib.AbcvlibActivity;
 
-public class BalancePIDController implements Runnable{
+public class BalancePIDController extends AbcvlibController{
 
     // Initialize all sensor reading variables
     double p_tilt = 0;
@@ -26,9 +26,6 @@ public class BalancePIDController implements Runnable{
     double distanceR; // distances traveled by right wheel from start point (mm)
     double speedL; // Current speed on left wheel in mm/s
     double speedR; // Current speed on right wheel in mm/s
-
-    int outputL = 0; //  u(t) of wikipedia
-    int outputR = 0;
 
     double e_t = 0; // e(t) of wikipedia
     double e_w = 0; // error betweeen actual and desired wheel speed (default 0)
@@ -53,12 +50,16 @@ public class BalancePIDController implements Runnable{
     public BalancePIDController(AbcvlibActivity abcvlibActivity){
 
         this.abcvlibActivity = abcvlibActivity;
+        Log.d("abcvlib", "BalanceApp Created");
+
 
     }
 
     public void run(){
 
         while(abcvlibActivity.balanceApp) {
+
+//            Log.v("abcvlib", "In balanceApp.run");
 
             PIDTimer[0] = System.nanoTime();
 
@@ -85,7 +86,11 @@ public class BalancePIDController implements Runnable{
 
             PIDTimer[1] = System.nanoTime();
 
-            linearController();
+            try {
+                linearController();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
             PIDTimer[2] = System.nanoTime();
 
@@ -112,20 +117,27 @@ public class BalancePIDController implements Runnable{
         }
     }
 
-    private void linearController(){
+    private void linearController() throws InterruptedException {
 
-        if (abcvlibActivity.outputs.socketClient.socketMsgIn != null){
+        try {
+            if (abcvlibActivity.outputs.socketClient.socketMsgIn != null){
 
-            try {
-                setPoint = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("setPoint").toString());
-                p_tilt = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("p_tilt").toString());
-                i_tilt = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("i_tilt").toString());
-                d_tilt = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("d_tilt").toString());
-                p_wheel = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("p_wheel").toString());
+                try {
+                    setPoint = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("setPoint").toString());
+                    p_tilt = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("p_tilt").toString());
+                    i_tilt = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("i_tilt").toString());
+                    d_tilt = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("d_tilt").toString());
+                    p_wheel = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("p_wheel").toString());
 
-            } catch (JSONException e){
-                e.printStackTrace();
+//                Log.v("abcvlib", "linearConroller updated values from socketClient");
+
+                } catch (JSONException e){
+                    e.printStackTrace();
+                }
             }
+        } catch (NullPointerException e){
+            e.printStackTrace();
+            Thread.sleep(1000);
         }
 
         // TODO this needs to account for length of time on each interval, or overall time length. Here this just assumes a width of 1 for all intervals.
@@ -137,13 +149,10 @@ public class BalancePIDController implements Runnable{
         double i_out = i_tilt * int_e_t;
         double d_out = d_tilt * thetaDegDot;
 
-        outputL = (int)(p_out + i_out + d_out);
-        outputR = outputL;
+//        Log.v("abcvlib", "linearController loop finished");
+
+        setOutput((p_out + i_out + d_out), (p_out + i_out + d_out));
 
     }
 
-    // Todo this may need splitting between each wheel at some point.
-    public int getOutput(){
-        return outputL;
-    }
 }

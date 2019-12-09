@@ -10,7 +10,7 @@ import java.util.List;
 
 import jp.oist.abcvlib.AbcvlibActivity;
 
-public class CenterBlobController implements Runnable{
+public class CenterBlobController extends AbcvlibController{
 
 
     private AbcvlibActivity abcvlibActivity;

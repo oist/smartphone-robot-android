@@ -209,6 +209,7 @@ public abstract class AbcvlibActivity extends IOIOActivity {
 //                e.printStackTrace();
 //            }
 //        }
+        Log.d("abcvlib", "createIOIOLooper Finished");
         return new AbcvlibLooper(this, loggerOn, wheelPolaritySwap);
     }
 }

@@ -55,6 +55,7 @@ public class SocketClient implements Runnable{
 
     @Override
     public void run() {
+        Log.v("abcvlib", "SocketClient1");
         connect();
         while(!ready) {
             try {
@@ -63,6 +64,8 @@ public class SocketClient implements Runnable{
                 e.printStackTrace();
             }
         }
+        Log.v("abcvlib", "SocketClient4");
+
         while (abcvlibActivity.pythonControlApp){
 
             if (abcvlibActivity.timersOn){
@@ -70,6 +73,8 @@ public class SocketClient implements Runnable{
             }
 
             readControlData();
+
+            Log.v("abcvlib", "SocketClient5");
 
             if (abcvlibActivity.loggerOn){
                 System.out.println(abcvlibActivity.outputs.controls);
@@ -79,6 +84,8 @@ public class SocketClient implements Runnable{
             }
 
             writeAndroidData();
+
+            Log.v("abcvlib", "SocketClient6");
 
             if (abcvlibActivity.loggerOn){
                 System.out.println(abcvlibActivity.inputs.stateVariables);
@@ -101,6 +108,9 @@ public class SocketClient implements Runnable{
     }
 
     public void connect(){
+
+        Log.v("abcvlib", "SocketClient2");
+
         try{
             InetAddress serverAddr = InetAddress.getByName(serverIp);
             socket = new Socket(serverAddr, serverPort);
@@ -121,6 +131,8 @@ public class SocketClient implements Runnable{
         ready = true;
         writePermission = true;
         readPermission = false;
+        Log.v("abcvlib", "SocketClient3");
+
     }
 
     private void readControlData(){

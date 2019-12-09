@@ -1,8 +1,12 @@
 package jp.oist.abcvlib.outputs;
 
+import android.util.Log;
+
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import jp.oist.abcvlib.AbcvlibActivity;
 
@@ -15,6 +19,9 @@ public class Outputs implements OutputsInterface {
     protected SocketClient socketClient;
     private Thread socketClientThread;
     public BalancePIDController balancePIDController;
+    private GrandController grandController;
+    private Thread grandControllerThread;
+    private ArrayList<AbcvlibController> controllers = new ArrayList<>();
 
     public Outputs(AbcvlibActivity abcvlibActivity, String hostIP, int port){
 
@@ -30,12 +37,16 @@ public class Outputs implements OutputsInterface {
                     controls, abcvlibActivity);
             socketClientThread = new Thread(socketClient);
             socketClientThread.start();
+            Log.v("abcvlib", "socketClient Started");
         }
 
         if (abcvlibActivity.balanceApp){
             balancePIDController = new BalancePIDController(abcvlibActivity);
             pidControllerThread = new Thread(balancePIDController);
             pidControllerThread.start();
+            controllers.add(balancePIDController);
+            Log.v("abcvlib", "BalanceApp Started");
+
         }
 
         // Todo need some method to handle combining balancePIDController output with another controller
@@ -45,15 +56,12 @@ public class Outputs implements OutputsInterface {
             centerBlobController = new CenterBlobController(abcvlibActivity);
             centerBlobControllerThread = new Thread(centerBlobController);
             centerBlobControllerThread.start();
+            controllers.add(centerBlobController);
         }
 //
-//        grandController = new GrandController(abcvlibActivity, loggerOn, balancePIDController, centerBlobController);
-//        grandControllerThread = new Thread(grandController);
-//        grandControllerThread.start();
-    }
-
-    private void grandController(){
-
+        grandController = new GrandController(abcvlibActivity, controllers);
+        grandControllerThread = new Thread(grandController);
+        grandControllerThread.start();
     }
 
     @Override
@@ -75,7 +83,5 @@ public class Outputs implements OutputsInterface {
     public void setPID() {
 
     }
-
-
 
 }

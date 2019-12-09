@@ -85,6 +85,7 @@ public class MainActivity extends AbcvlibActivity {
                 totalOutput = (int) Math.round(outputs.balancePIDController.getOutput() + controllerOutput);
                 Log.i(TAG, "controllerOut:" + controllerOutput + " balancerOut:" + outputs.balancePIDController.getOutput() + "total:" + totalOutput);
                 outputs.motion.setWheelOutput(totalOutput, totalOutput);
+
             }
         }
     }

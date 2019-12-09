@@ -295,17 +295,13 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     private double[] encoderCountLeftWheelLP = new double[buffer];
     private double[] encoderCountRightWheelLP = new double[buffer];
 
-    // Constructor to pass other module objects in. Default loggerOn value to false
-    public AbcvlibLooper(AbcvlibActivity abcvlibActivity, QuadEncoders quadEncoders){
-        this(abcvlibActivity, false, false);
-    }
-
     // Constructor to pass other module objects in. No default loggerOn. Needs to remain public
     // despite what Android Studio says
     public AbcvlibLooper(AbcvlibActivity abcvlibActivity, Boolean loggerOn, Boolean wheelPolaritySwap){
         this.abcvlibActivity = abcvlibActivity;
         this.loggerOn = loggerOn;
         this.wheelPolaritySwap = wheelPolaritySwap;
+        Log.d("abcvlib", "AbcvlibLooper constructor finished");
     }
 
     /**
@@ -336,6 +332,9 @@ public class AbcvlibLooper extends BaseIOIOLooper {
          necessary in order to properly use the PWM based methods (though not sure if these are even
          used). The 5V tolerant pins are not necessary as the IOIO Board PWM is a 3.3V peak signal.
          */
+
+        Log.d("abcvlib", "AbcvlibLooper setup() started");
+
         final int INPUT1_RIGHT_WHEEL_PIN = 2;
         final int INPUT2_RIGHT_WHEEL_PIN = 3;
         final int PWM_RIGHT_WHEEL_PIN = 4;
@@ -377,6 +376,9 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             throw e;
         }
 
+        Log.d("abcvlib", "AbcvlibLooper setup() finished");
+
+
     }
 
     /**
@@ -393,6 +395,8 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     public void loop() throws ConnectionLostException, InterruptedException{
 
         try {
+
+            Log.d("abcvlib", "In AbcvlibLooper loop");
 
             timeStampUpdate();
 
@@ -444,6 +448,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      */
     @Override
     public void disconnected() {
+        Log.d("abcvlib", "AbcvlibLooper disconnected");
     }
 
     /**
@@ -575,6 +580,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
         try {
             // Write all calculated values to the IOIO Board pins
+            Log.d("abcvlib", "rightWheel:" + (dutyCycleRightWheelNew * DUTY_CYCLE_CONST));
             input1RightWheelController.write(input1RightWheelState);
             input2RightWheelController.write(input2RightWheelState);
             pwmControllerRightWheel.setPulseWidth(dutyCycleRightWheelNew * DUTY_CYCLE_CONST); //converting from duty cycle to pulse width

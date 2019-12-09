@@ -66,7 +66,7 @@ public class MainActivity extends AbcvlibActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        initialzer("192.168.28.151", 65434, switches);
+        initialzer("192.168.29.131", 65434, switches);
 
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
