@@ -17,25 +17,25 @@ public class GrandController extends AbcvlibController{
     }
 
     @Override
-    public Output getOutput() {
-        return output;
-    }
-
-    public void setOutput(double left, double right) {
-        output.left = left;
-        output.right = right;
-    }
-
-    @Override
     public void run() {
 
         while (abcvlibActivity.appRunning){
             setOutput(0, 0);
             for (AbcvlibController controller : controllers){
-                setOutput((this.output.left + controller.output.left), (this.output.left + controller.output.right));
+
+                Output controllerOutput = controller.getOutput();
+
+                Log.d("abcvlib", controller.toString() + "output:" + controllerOutput.left);
+
+                setOutput((output.left + controllerOutput.left), (output.right + controllerOutput.right));
             }
             Log.d("abcvlib", "grandController output:" + output.left);
             abcvlibActivity.outputs.motion.setWheelOutput((int) output.left, (int) output.right);
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
     }

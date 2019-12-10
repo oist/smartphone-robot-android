@@ -55,7 +55,7 @@ public class SocketClient implements Runnable{
 
     @Override
     public void run() {
-        Log.v("abcvlib", "SocketClient1");
+//        Log.v("abcvlib", "SocketClient1");
         connect();
         while(!ready) {
             try {
@@ -64,7 +64,7 @@ public class SocketClient implements Runnable{
                 e.printStackTrace();
             }
         }
-        Log.v("abcvlib", "SocketClient4");
+//        Log.v("abcvlib", "SocketClient4");
 
         while (abcvlibActivity.pythonControlApp){
 
@@ -74,7 +74,7 @@ public class SocketClient implements Runnable{
 
             readControlData();
 
-            Log.v("abcvlib", "SocketClient5");
+//            Log.v("abcvlib", "SocketClient5");
 
             if (abcvlibActivity.loggerOn){
                 System.out.println(abcvlibActivity.outputs.controls);
@@ -85,7 +85,7 @@ public class SocketClient implements Runnable{
 
             writeAndroidData();
 
-            Log.v("abcvlib", "SocketClient6");
+//            Log.v("abcvlib", "SocketClient6");
 
             if (abcvlibActivity.loggerOn){
                 System.out.println(abcvlibActivity.inputs.stateVariables);
@@ -109,7 +109,7 @@ public class SocketClient implements Runnable{
 
     public void connect(){
 
-        Log.v("abcvlib", "SocketClient2");
+//        Log.v("abcvlib", "SocketClient2");
 
         try{
             InetAddress serverAddr = InetAddress.getByName(serverIp);
@@ -131,7 +131,7 @@ public class SocketClient implements Runnable{
         ready = true;
         writePermission = true;
         readPermission = false;
-        Log.v("abcvlib", "SocketClient3");
+//        Log.v("abcvlib", "SocketClient3");
 
     }
 
@@ -160,8 +160,8 @@ public class SocketClient implements Runnable{
             if (abcvlibActivity.inputs.quadEncoders != null){
                 abcvlibActivity.inputs.stateVariables.put("wheelCountL", abcvlibActivity.inputs.quadEncoders.getWheelCountL());
                 abcvlibActivity.inputs.stateVariables.put("wheelCountR", abcvlibActivity.inputs.quadEncoders.getWheelCountR());
-                abcvlibActivity.inputs.stateVariables.put("distanceL", abcvlibActivity.inputs.quadEncoders.getDistanceL());
-                abcvlibActivity.inputs.stateVariables.put("distanceR", abcvlibActivity.inputs.quadEncoders.getDistanceR());
+                abcvlibActivity.inputs.stateVariables.put("wheelDistanceL", abcvlibActivity.inputs.quadEncoders.getDistanceL());
+                abcvlibActivity.inputs.stateVariables.put("wheelDistanceR", abcvlibActivity.inputs.quadEncoders.getDistanceR());
                 abcvlibActivity.inputs.stateVariables.put("wheelSpeedL", abcvlibActivity.inputs.quadEncoders.getWheelSpeedL());
                 abcvlibActivity.inputs.stateVariables.put("wheelSpeedR", abcvlibActivity.inputs.quadEncoders.getWheelSpeedR());
             }
@@ -210,7 +210,7 @@ public class SocketClient implements Runnable{
                     closeAll();
                     connect();
                 }
-                Log.v("abcvlib", "bufferedReader not ready @getControlsFromServer");
+//                Log.v("abcvlib", "bufferedReader not ready @getControlsFromServer");
                 Thread.sleep(100);
                 timeoutCounter++;
             }
@@ -218,7 +218,7 @@ public class SocketClient implements Runnable{
                 Log.d("abcvlib", "bufferedReader line is null");
             }
             socketMsgIn = new JSONObject(line);
-            Log.v("abcvlib", "wrote to socketMsgIn");
+//            Log.v("abcvlib", "wrote to socketMsgIn");
         }
 
         catch (NullPointerException e2){
@@ -242,7 +242,7 @@ public class SocketClient implements Runnable{
         writePermission = true;
         readPermission = false;
 
-        Log.v("abcvlib", "Read data from server");
+//        Log.v("abcvlib", "Read data from server");
         return socketMsgIn;
     }
 
@@ -252,7 +252,7 @@ public class SocketClient implements Runnable{
 
         try{
             bufferedWriter.write(inputs.toString());
-            Log.v("abcvlib", "Wrote inputs to server");
+//            Log.v("abcvlib", "Wrote inputs to server");
             bufferedWriter.flush();
         } catch (NullPointerException e1){
             Log.i("abcvlib", "bufferedWriter still null. Trying to reconnect to socket");

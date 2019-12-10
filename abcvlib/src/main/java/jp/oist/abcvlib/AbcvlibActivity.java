@@ -117,14 +117,8 @@ public abstract class AbcvlibActivity extends IOIOActivity {
         }
     }
 
-    /**
-     * This must be called from child class
-     * @param hostIP
-     * @param hostPort
-     * @param switches
-     */
-    protected void initialzer(String hostIP, int hostPort, HashMap<String, Boolean> switches){
-
+    protected void initialzer(String hostIP, int hostPort, HashMap<String, Boolean> switches,
+                              AbcvlibController controller){
         // loop over each hashmap entry to set the boolean switches needed in this class
         for (HashMap.Entry<String, Boolean> entry : switches.entrySet()){
             switch (entry.getKey()){
@@ -162,7 +156,7 @@ public abstract class AbcvlibActivity extends IOIOActivity {
         }
 
         inputs = new Inputs(this);
-        outputs = new Outputs(this, hostIP, hostPort);
+        outputs = new Outputs(this, hostIP, hostPort, controller);
 
         if (actionSelectorApp){
             aD = new ActionDistribution();
@@ -175,6 +169,18 @@ public abstract class AbcvlibActivity extends IOIOActivity {
 
         // Tell all child classes it is ok to proceed.
         this.appRunning = true;
+    }
+
+    /**
+     * Default null controller
+     * @param hostIP
+     * @param hostPort
+     * @param switches
+     */
+    protected void initialzer(String hostIP, int hostPort, HashMap<String, Boolean> switches){
+
+        initialzer(hostIP, hostPort, switches, null);
+
     }
 
 

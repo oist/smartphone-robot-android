@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.AbcvlibActivity;
 import jp.oist.abcvlib.inputs.Inputs;
+import jp.oist.abcvlib.outputs.AbcvlibController;
 import jp.oist.abcvlib.outputs.SocketClient;
 
 /**
@@ -41,7 +42,7 @@ public class MainActivity extends AbcvlibActivity {
         /*
          * Tell initilizer to set up the PID controlled balancer
          */
-        switches.put("balanceApp", true);
+        switches.put("balanceApp", false);
         /*
         Control various things from python interface
          */
@@ -51,7 +52,9 @@ public class MainActivity extends AbcvlibActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        initialzer("192.168.28.151", 65434, switches);
+        CustomController customController = new CustomController();
+
+        initialzer("192.168.29.131", 65434, switches, customController);
 
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
@@ -60,33 +63,63 @@ public class MainActivity extends AbcvlibActivity {
         // ID within the R class
         setContentView(jp.oist.abcvlib.setpathbalancer.R.layout.activity_main);
 
-        // Linear Back and Forth every 10 mm
-//        setPath setPathThread = new setPath();
-//        new Thread(setPathThread).start();
+        new Thread(customController).start();
 
     }
 
-    public class setPath implements Runnable{
+    public class CustomController extends AbcvlibController {
 
-        double actualSpeed = 0;
-        double setSpeed = 10; // mm/s.
-        double error_speed = 0; // difference between actual and setSpeed;
-        double controllerOutput = 0;
-        int totalOutput = 0;
+        ActualSpeed actualSpeed = new ActualSpeed();
+        ErrorSpeed errorSpeed = new ErrorSpeed();
+
+        double setSpeed = 0; // mm/s.
         double d_s = 0; // derivative controller for speed of wheels
 
         public void run(){
 
-            while(true) {
+            while(appRunning) {
 
-                actualSpeed = inputs.quadEncoders.getWheelSpeedL();
-                error_speed = setSpeed - actualSpeed;
-                controllerOutput = error_speed * d_s;
-                totalOutput = (int) Math.round(outputs.balancePIDController.getOutput() + controllerOutput);
-                Log.i(TAG, "controllerOut:" + controllerOutput + " balancerOut:" + outputs.balancePIDController.getOutput() + "total:" + totalOutput);
-                outputs.motion.setWheelOutput(totalOutput, totalOutput);
+                actualSpeed.left = inputs.quadEncoders.getWheelSpeedL();
+                actualSpeed.right = inputs.quadEncoders.getWheelSpeedR();
+                Log.d(TAG, "actualSpeedLeft:" + actualSpeed.left);
+
+                errorSpeed.left = setSpeed - actualSpeed.left;
+                errorSpeed.right = setSpeed - actualSpeed.right;
+                Log.d(TAG, "errorSpeed:" + errorSpeed.left);
+
+
+                if (outputs.socketClient.socketMsgIn != null) {
+
+                    try {
+                        setSpeed = Double.parseDouble(outputs.socketClient.socketMsgIn.get("wheelSpeedL").toString());
+                        Log.d(TAG, "setSpeed:" + setSpeed);
+                        d_s = Double.parseDouble(outputs.socketClient.socketMsgIn.get("wheelSpeedControl").toString());
+                        Log.d(TAG, "d_s:" + d_s);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                setOutput(errorSpeed.left * d_s, errorSpeed.right * d_s);
+                Log.d(TAG, "customController out:" + (errorSpeed.left * d_s));
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
             }
         }
+
+        private class ActualSpeed{
+            double left;
+            double right;
+        }
+
+        private class ErrorSpeed{
+            double left;
+            double right;
+        }
+
     }
 }

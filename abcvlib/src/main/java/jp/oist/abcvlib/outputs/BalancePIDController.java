@@ -149,9 +149,14 @@ public class BalancePIDController extends AbcvlibController{
         double i_out = i_tilt * int_e_t;
         double d_out = d_tilt * thetaDegDot;
 
-//        Log.v("abcvlib", "linearController loop finished");
+//        Log.v("abcvlib", "balanceController out:" + (p_out + i_out + d_out));
 
         setOutput((p_out + i_out + d_out), (p_out + i_out + d_out));
+
+        Output testOutput = getOutput();
+
+//        Log.v("abcvlib", this.toString() + testOutput.left);
+
 
     }
 

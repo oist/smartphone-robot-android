@@ -16,14 +16,18 @@ public class Outputs implements OutputsInterface {
     private CenterBlobController centerBlobController;
     protected Thread pidControllerThread;
     public Motion motion;
-    protected SocketClient socketClient;
+    public SocketClient socketClient;
     private Thread socketClientThread;
     public BalancePIDController balancePIDController;
     private GrandController grandController;
     private Thread grandControllerThread;
     private ArrayList<AbcvlibController> controllers = new ArrayList<>();
 
-    public Outputs(AbcvlibActivity abcvlibActivity, String hostIP, int port){
+    public Outputs(AbcvlibActivity abcvlibActivity, String hostIP, int port, AbcvlibController controller){
+
+        if (controller != null){
+            controllers.add(controller);
+        }
 
         //BalancePIDController Controller
         motion = new Motion(abcvlibActivity);
@@ -59,9 +63,11 @@ public class Outputs implements OutputsInterface {
             controllers.add(centerBlobController);
         }
 //
-        grandController = new GrandController(abcvlibActivity, controllers);
-        grandControllerThread = new Thread(grandController);
-        grandControllerThread.start();
+        if (!controllers.isEmpty()){
+            grandController = new GrandController(abcvlibActivity, controllers);
+            grandControllerThread = new Thread(grandController);
+            grandControllerThread.start();
+        }
     }
 
     @Override
