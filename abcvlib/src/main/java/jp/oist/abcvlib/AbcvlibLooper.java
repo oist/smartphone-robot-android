@@ -653,9 +653,12 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
      * @return wheelCounts
      */
-    private int encoderAddSubtractCount(Boolean input1WheelStateIo, Boolean input2WheelStateIo, Integer dutyCycleRightWheelNew,
-                                Integer dutyCycleLeftWheelNew, Boolean encoderAWheelState, Boolean encoderBWheelState,
-                                Boolean encoderAWheelStatePrevious, Boolean encoderBWheelStatePrevious){
+    private int encoderAddSubtractCount(Boolean input1WheelStateIo, Boolean input2WheelStateIo,
+                                        Integer dutyCycleRightWheelNew,
+                                        Integer dutyCycleLeftWheelNew, Boolean encoderAWheelState,
+                                        Boolean encoderBWheelState,
+                                        Boolean encoderAWheelStatePrevious,
+                                        Boolean encoderBWheelStatePrevious){
 
         int wheelCounts = 0;
         /*
