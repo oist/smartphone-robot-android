@@ -396,8 +396,6 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
         try {
 
-            Log.d("abcvlib", "In AbcvlibLooper loop");
-
             timeStampUpdate();
 
             getDutyCycle();
@@ -580,7 +578,6 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
         try {
             // Write all calculated values to the IOIO Board pins
-            Log.d("abcvlib", "rightWheel:" + (dutyCycleRightWheelNew * DUTY_CYCLE_CONST));
             input1RightWheelController.write(input1RightWheelState);
             input2RightWheelController.write(input2RightWheelState);
             pwmControllerRightWheel.setPulseWidth(dutyCycleRightWheelNew * DUTY_CYCLE_CONST); //converting from duty cycle to pulse width
@@ -676,76 +673,74 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         maybe decreasing the sampling rate will remove the number of times the encoders are read
         precisely at the wrong moment (both H or both L). Will this happen?
          */
-        if((input1WheelStateIo ^ input2WheelStateIo) && dutyCycleRightWheelNew > 0 && dutyCycleLeftWheelNew > 0){
-            // Previous Encoder A HIGH, B HIGH
-            if(encoderAWheelStatePrevious && encoderBWheelStatePrevious){
-                // Current Encoder A LOW, B HIGH
-                if(!encoderAWheelState && encoderBWheelState){
-                    wheelCounts++;
-                }
-                // Current Encoder A HIGH, B LOW
-                else if(encoderAWheelState && !encoderBWheelState){
-                    wheelCounts--;
-                }
-                else{
+        // Previous Encoder A HIGH, B HIGH
+        if(encoderAWheelStatePrevious && encoderBWheelStatePrevious){
+            // Current Encoder A LOW, B HIGH
+            if(!encoderAWheelState && encoderBWheelState){
+                wheelCounts++;
+            }
+            // Current Encoder A HIGH, B LOW
+            else if(encoderAWheelState && !encoderBWheelState){
+                wheelCounts--;
+            }
+            else{
 //                    Log.w("abcvlibEncoder", "quadErrorCount = " + quadErrorCount + " Quadrature encoders read H/H or L/L when they " +
 //                            "should have read H/L or L/H");
-                    quadErrorCount++;
-                    newData = false;
-                }
+                quadErrorCount++;
+                newData = false;
             }
-            // Previous Encoder A LOW, B HIGH
-            else if(!encoderAWheelStatePrevious && encoderBWheelStatePrevious){
-                // Current Encoder A LOW, B LOW
-                if(!encoderAWheelState && !encoderBWheelState){
-                    wheelCounts++;
-                }
-                // Current Encoder A HIGH, B HIGH
-                else if(encoderAWheelState && encoderBWheelState){
-                    wheelCounts--;
-                }
-                else{
+        }
+        // Previous Encoder A LOW, B HIGH
+        else if(!encoderAWheelStatePrevious && encoderBWheelStatePrevious){
+            // Current Encoder A LOW, B LOW
+            if(!encoderAWheelState && !encoderBWheelState){
+                wheelCounts++;
+            }
+            // Current Encoder A HIGH, B HIGH
+            else if(encoderAWheelState && encoderBWheelState){
+                wheelCounts--;
+            }
+            else{
 //                    Log.w("abcvlibEncoder", "quadErrorCount = " + quadErrorCount + " Quadrature encoders read H/L or L/H when they " +
 //                            "should have read H/H or L/L");
-                    quadErrorCount++;
-                    newData = false;
-                }
+                quadErrorCount++;
+                newData = false;
             }
-            // Previous Encoder A LOW, B LOW. Leave "always true" warning from Android Studio for
-            // readability.
-            else if(!encoderAWheelStatePrevious && !encoderBWheelStatePrevious){
-                // Current Encoder A HIGH, B LOW
-                if(encoderAWheelState && !encoderBWheelState){
-                    wheelCounts++;
-                }
-                // Current Encoder A LOW, B HIGH
-                else if(!encoderAWheelState && encoderBWheelState){
-                    wheelCounts--;
-                }
-                else{
+        }
+        // Previous Encoder A LOW, B LOW. Leave "always true" warning from Android Studio for
+        // readability.
+        else if(!encoderAWheelStatePrevious && !encoderBWheelStatePrevious){
+            // Current Encoder A HIGH, B LOW
+            if(encoderAWheelState && !encoderBWheelState){
+                wheelCounts++;
+            }
+            // Current Encoder A LOW, B HIGH
+            else if(!encoderAWheelState && encoderBWheelState){
+                wheelCounts--;
+            }
+            else{
 //                    Log.w("abcvlibEncoder", "quadErrorCount = " + quadErrorCount + " Quadrature encoders read H/H or L/L when they " +
 //                            "should have read H/L or L/H");
-                    quadErrorCount++;
-                    newData = false;
-                }
+                quadErrorCount++;
+                newData = false;
             }
-            // Previous Encoder A HIGH, B LOW. Leave "always true" warning from Android Studio for
-            // readability.
-            else if(encoderAWheelStatePrevious &&! encoderBWheelStatePrevious){
-                // Current Encoder A HIGH, B HIGH
-                if(encoderAWheelState && encoderBWheelState){
-                    wheelCounts++;
-                }
-                // Current Encoder A LOW, B LOW
-                else if(!encoderAWheelState && !encoderBWheelState){
-                    wheelCounts--;
-                }
-                else{
+        }
+        // Previous Encoder A HIGH, B LOW. Leave "always true" warning from Android Studio for
+        // readability.
+        else if(encoderAWheelStatePrevious &&! encoderBWheelStatePrevious){
+            // Current Encoder A HIGH, B HIGH
+            if(encoderAWheelState && encoderBWheelState){
+                wheelCounts++;
+            }
+            // Current Encoder A LOW, B LOW
+            else if(!encoderAWheelState && !encoderBWheelState){
+                wheelCounts--;
+            }
+            else{
 //                    Log.w("abcvlibEncoder", "quadErrorCount = " + quadErrorCount + " Quadrature encoders read H/L or L/H when they " +
 //                            "should have read H/H or L/L");
-                    quadErrorCount++;
-                    newData = false;
-                }
+                quadErrorCount++;
+                newData = false;
             }
         }
 

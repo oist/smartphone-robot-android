@@ -45,7 +45,6 @@ public class Vision implements View.OnTouchListener, CameraBridgeViewBase.CvCame
     public static final int CAMERA_PERMISSION_REQUEST_CODE = 200;
     private int mCameraId = 0;
     public CameraBridgeViewBase mOpenCvCameraView;
-    public boolean cameraApp = false;
 
     protected static final String TAG = "abcvlib";
 
@@ -66,6 +65,7 @@ public class Vision implements View.OnTouchListener, CameraBridgeViewBase.CvCame
     private List<Point> centroid;
 
 
+    // Todo this needs to be created before onCreate is called. How to ensure this?
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(abcvlibActivity) {
         @Override
         public void onManagerConnected(int status) {
@@ -89,10 +89,10 @@ public class Vision implements View.OnTouchListener, CameraBridgeViewBase.CvCame
         this.height = height;
         this.width = width;
         // TODO check is the col and rows are not transposed.
-        this.CENTER_COL = height / 2.0;
-        this.CENTER_ROW = width / 2.0;
+        this.CENTER_COL = width / 2.0;
+        this.CENTER_ROW = height / 2.0;
 
-        if (mOpenCvCameraView == null & abcvlibActivity.cameraApp){
+        if (mOpenCvCameraView == null & abcvlibActivity.switches.cameraApp){
             abcvlibActivity.requestWindowFeature(Window.FEATURE_NO_TITLE);
             abcvlibActivity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             abcvlibActivity.setContentView(R.layout.color_blob_detection_surface_view);
@@ -103,6 +103,7 @@ public class Vision implements View.OnTouchListener, CameraBridgeViewBase.CvCame
             // I'd think there is a better way to fix the orientation in portrait without cropping everyting
 //            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
             swapCamera();
+//            OpenCVLoader.initDebug();
         }
 
     }
@@ -126,7 +127,7 @@ public class Vision implements View.OnTouchListener, CameraBridgeViewBase.CvCame
     }
 
     public void onResume(){
-        if (cameraApp){
+        if (abcvlibActivity.switches.cameraApp){
             if (!OpenCVLoader.initDebug()) {
                 Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
                 OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, abcvlibActivity, mLoaderCallback);
@@ -182,7 +183,6 @@ public class Vision implements View.OnTouchListener, CameraBridgeViewBase.CvCame
         return centroids;
     }
 
-    // Todo this should be moved to Vision or Inputs
     public void onCameraViewStarted(int width, int height) {
 
         this.frameHeight = height;
@@ -207,7 +207,6 @@ public class Vision implements View.OnTouchListener, CameraBridgeViewBase.CvCame
         mRgba.release();
     }
 
-    // Todo move to vision somehow?
     public boolean onTouch(View v, MotionEvent event) {
         int cols = mRgba.cols();
         int rows = mRgba.rows();

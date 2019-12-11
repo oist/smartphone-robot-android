@@ -32,11 +32,12 @@ public class Outputs implements OutputsInterface {
         //BalancePIDController Controller
         motion = new Motion(abcvlibActivity);
 
+        // Todo: make all these threads self contained like in MicrophoneInput so you can set join/stop methods
         // Python Socket Connection. Host IP:Port needs to be the same as python server.
         // Todo: automatically detect host server or set this to static IP:Port. Tried UDP Broadcast,
         //  but seems to be blocked by router. Could set up DNS and static hostname, but would
         //  require intervention with IT
-        if (abcvlibActivity.pythonControlApp){
+        if (abcvlibActivity.switches.pythonControlApp){
             socketClient = new SocketClient(hostIP, port, abcvlibActivity.inputs.stateVariables,
                     controls, abcvlibActivity);
             socketClientThread = new Thread(socketClient);
@@ -44,7 +45,7 @@ public class Outputs implements OutputsInterface {
             Log.v("abcvlib", "socketClient Started");
         }
 
-        if (abcvlibActivity.balanceApp){
+        if (abcvlibActivity.switches.balanceApp){
             balancePIDController = new BalancePIDController(abcvlibActivity);
             pidControllerThread = new Thread(balancePIDController);
             pidControllerThread.start();
@@ -56,7 +57,7 @@ public class Outputs implements OutputsInterface {
         // Todo need some method to handle combining balancePIDController output with another controller
         //  (centerBlobApp, setPath, etc.). Maybe some grandController on another thread that reads in the
         //  output from balancePIDController along with the output from e.g. centerBlobApp() and path().
-        if (abcvlibActivity.centerBlobApp){
+        if (abcvlibActivity.switches.centerBlobApp){
             centerBlobController = new CenterBlobController(abcvlibActivity);
             centerBlobControllerThread = new Thread(centerBlobController);
             centerBlobControllerThread.start();

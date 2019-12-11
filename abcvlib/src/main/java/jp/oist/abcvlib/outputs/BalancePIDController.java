@@ -16,6 +16,7 @@ public class BalancePIDController extends AbcvlibController{
     double d_tilt = 0;
     double setPoint = 0;
     double p_wheel = 0;
+    double expWeight = 0;
 
     // BalancePIDController Setup
     double thetaDeg; // tilt of phone with vertical being 0.
@@ -57,7 +58,16 @@ public class BalancePIDController extends AbcvlibController{
 
     public void run(){
 
-        while(abcvlibActivity.balanceApp) {
+        while (!abcvlibActivity.appRunning){
+            try {
+                Log.i("abcvlib", this.toString() + "Waiting for appRunning to be true");
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        while(abcvlibActivity.switches.balanceApp && abcvlibActivity.appRunning) {
 
 //            Log.v("abcvlib", "In balanceApp.run");
 
@@ -68,7 +78,7 @@ public class BalancePIDController extends AbcvlibController{
             if (thetaDiff !=0){
                 updateTimeStep = PIDTimer[0]- lastUpdateTime;
                 lastUpdateTime = PIDTimer[0];
-                if (abcvlibActivity.loggerOn){
+                if (abcvlibActivity.switches.loggerOn){
                     Log.i("theta", "theta was updated in " + (updateTimeStep / 1000000) + " ms");
                 }
             }
@@ -79,8 +89,8 @@ public class BalancePIDController extends AbcvlibController{
             wheelCountL = abcvlibActivity.inputs.quadEncoders.getWheelCountR();
             distanceL = abcvlibActivity.inputs.quadEncoders.getDistanceL();
             distanceR = abcvlibActivity.inputs.quadEncoders.getDistanceR();
-            speedL = abcvlibActivity.inputs.quadEncoders.getWheelSpeedL();
-            speedR = abcvlibActivity.inputs.quadEncoders.getWheelSpeedR();
+            speedL = abcvlibActivity.inputs.quadEncoders.getWheelSpeedL_LP();
+            speedR = abcvlibActivity.inputs.quadEncoders.getWheelSpeedR_LP();
             maxTiltAngle = setPoint + maxAbsTilt;
             minTiltAngle = setPoint - maxAbsTilt;
 
@@ -108,7 +118,7 @@ public class BalancePIDController extends AbcvlibController{
 
                 }
 
-                if (abcvlibActivity.loggerOn){
+                if (abcvlibActivity.switches.loggerOn){
                     Log.i("timers", "PIDTimer Averages = " + Arrays.toString(PIDTimeSteps));
                 }
             }
@@ -128,6 +138,7 @@ public class BalancePIDController extends AbcvlibController{
                     i_tilt = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("i_tilt").toString());
                     d_tilt = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("d_tilt").toString());
                     p_wheel = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("p_wheel").toString());
+                    expWeight = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("expWeight").toString());
 
 //                Log.v("abcvlib", "linearConroller updated values from socketClient");
 
@@ -139,6 +150,8 @@ public class BalancePIDController extends AbcvlibController{
             e.printStackTrace();
             Thread.sleep(1000);
         }
+
+        abcvlibActivity.inputs.quadEncoders.setExpWeight(expWeight);
 
         // TODO this needs to account for length of time on each interval, or overall time length. Here this just assumes a width of 1 for all intervals.
         int_e_t = int_e_t + e_t;

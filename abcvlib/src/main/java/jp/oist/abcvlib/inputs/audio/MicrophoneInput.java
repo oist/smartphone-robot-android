@@ -1,91 +1,55 @@
 package jp.oist.abcvlib.inputs.audio;
 
+import android.content.SharedPreferences;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.util.Log;
 
-/**
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * This is a simple class that encapsulates the audio input and provides a
- *  callback interface for real-time audio processing.
- *
- * This method is set up to provide 50 frames per second (i.e. 20 ms frames)
- * independent of sampling rate.
- *
- * To use it
- * 1) implement the MicrophoneInputListener interface e.g.
- *     class MyAwesomeClass implements MicrophoneInputListener {...}
- * 2) Create the object, e.g.
- *     micInput = new MicrophoneInput(this);
- * 3) Implement processAudioFrame in your MyAwesomeClass
- *     public void processAudioFrame(short[] audioFrame) {...}.
- *
- * An example is provided in LevelMeterActivity.
- *
- * Audio capture runs in a separate thread which is set up when start() is
- * called and destroyed when stop() is called.
- *
- * @author Trausti Kristjansson
- *
- */
+import java.util.ArrayList;
+
+import jp.oist.abcvlib.AbcvlibActivity;
+
+import static android.content.Context.MODE_PRIVATE;
+
 public class MicrophoneInput implements Runnable{
 
-
-    int mSampleRate = 16000;
-    int mAudioSource = MediaRecorder.AudioSource.VOICE_RECOGNITION;
-    final int mChannelConfig = AudioFormat.CHANNEL_IN_MONO;
-    final int mAudioFormat = AudioFormat.ENCODING_PCM_16BIT;
-
-    private final MicrophoneInputListener mListener;
+    private static final String TAG = "abcvlib";
+    private AbcvlibActivity abcvlibActivity;
     private Thread mThread;
-    private boolean mRunning = false;
 
-    AudioRecord recorder;
+    private int mSampleRate = 16000;
+    private double bufferLength = 20; //milliseconds
+    private double bufferSampleCount = mSampleRate / bufferLength;
+    // The Google ASR input requirements state that audio input sensitivity
+    // should be set such that 90 dB SPL at 1000 Hz yields RMS of 2500 for
+    // 16-bit samples, i.e. 20 * log_10(2500 / mGain) = 90.
+    private double mGain = 2500.0 / Math.pow(10.0, 90.0 / 20.0);
+    private double mRmsSmoothed;  // Temporally filtered version of RMS.
+    private double rms;
+    private double rmsdB;
 
-    int mTotalSamples = 0;
+    // Leq Calcs
+    private double leqLength = 5; // seconds
+    private double leqArrayLength = (mSampleRate / bufferSampleCount) * leqLength;
+    private long startTime; // nanoseconds
+    private double[] leqBuffer = new double[(int) leqArrayLength];
 
-    private static final String TAG = "MicrophoneInput";
+    //todo add some Leq values for longer term averages
+    private int mTotalSamples = 0;
 
-    public MicrophoneInput(MicrophoneInputListener listener) {
-        mListener = listener;
-    }
-
-    public void setSampleRate(int sampleRate) {
-        mSampleRate = sampleRate;
-    }
-
-    public void setAudioSource(int audioSource) {
-        mAudioSource = audioSource;
+    public MicrophoneInput(AbcvlibActivity abcvlibActivity){
+        this.abcvlibActivity = abcvlibActivity;
     }
 
     public void start() {
-        Log.i("abcvlib", "In MicInput.Start");
-        if (false == mRunning) {
-            Log.i("abcvlib", "In MicInput mRunning logic");
-            mRunning = true;
-            mThread = new Thread(this);
-            mThread.start();
-        }
+        mThread = new Thread(this);
+        mThread.start();
     }
 
     public void stop() {
         try {
-            if (mRunning) {
-                mRunning = false;
-                mThread.join(10);
-            }
+            mThread.join(10);
         } catch (InterruptedException e) {
             Log.v(TAG, "InterruptedException.", e);
         }
@@ -93,17 +57,27 @@ public class MicrophoneInput implements Runnable{
 
     @Override
     public void run() {
+        startTime = System.nanoTime();
         // Buffer for 20 milliseconds of data, e.g. 320 samples at 16kHz.
         Log.i("abcvlib", "In MicInput run method");
-        short[] buffer20ms = new short[mSampleRate / 320];
+        short[] buffer = new short[(int) bufferSampleCount];
         // Buffer size of AudioRecord buffer, which will be at least 1 second.
+        int mChannelConfig = AudioFormat.CHANNEL_IN_MONO;
+        int mAudioFormat = AudioFormat.ENCODING_PCM_16BIT;
         int buffer1000msSize = bufferSize(mSampleRate, mChannelConfig,
                 mAudioFormat);
+
+        SharedPreferences preferences = abcvlibActivity.getSharedPreferences("LevelMeter", MODE_PRIVATE);
+        int mSampleRate = preferences.getInt("SampleRate", 16000);
+        int mAudioSource = preferences.getInt("AudioSource",
+                MediaRecorder.AudioSource.VOICE_RECOGNITION);
+        setSampleRate(mSampleRate);
+        setAudioSource(mAudioSource);
 
         try {
             Log.i("abcvlib", "In MicInput try");
 
-            recorder = new AudioRecord(
+            AudioRecord recorder = new AudioRecord(
                     mAudioSource,
                     mSampleRate,
                     mChannelConfig,
@@ -111,25 +85,27 @@ public class MicrophoneInput implements Runnable{
                     buffer1000msSize);
             recorder.startRecording();
 
-            while (mRunning) {
-
-                int numSamples = recorder.read(buffer20ms, 0, buffer20ms.length);
-                mTotalSamples += numSamples;
-                mListener.processAudioFrame(buffer20ms);
+            while (!abcvlibActivity.appRunning){
+                try {
+                    Log.i("abcvlib", this.toString() + "Waiting for appRunning to be true");
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
+
+            while (abcvlibActivity.appRunning) {
+                int numSamples = recorder.read(buffer, 0, buffer.length);
+                mTotalSamples += numSamples;
+                processAudioFrame(buffer);
+            }
+
             recorder.stop();
+            stop();
         } catch(Throwable x) {
             Log.v(TAG, "Error reading audio", x);
         } finally {
         }
-    }
-
-    public int totalSamples() {
-        return mTotalSamples;
-    }
-
-    public void setTotalSamples(int totalSamples) {
-        mTotalSamples = totalSamples;
     }
 
     /**
@@ -149,5 +125,45 @@ public class MicrophoneInput implements Runnable{
             buffSize = sampleRateInHz;
         }
         return buffSize;
+    }
+
+    public void processAudioFrame(short[] audioFrame) {
+        // Compute the RMS value. (Note that this does not remove DC).
+        rms = 0;
+        for (short value : audioFrame) {
+            rms += value * value;
+        }
+        rms = Math.sqrt(rms / audioFrame.length);
+
+        // Compute a smoothed version for less flickering of the display.
+        // Coefficient of IIR smoothing filter for RMS.
+        double mAlpha = 0.9;
+        mRmsSmoothed = (mRmsSmoothed * mAlpha) + (1 - mAlpha) * rms;
+        rmsdB = 20 + (20.0 * Math.log10(mGain * mRmsSmoothed));
+
+
+    }
+
+    private void setSampleRate(int sampleRate) {
+        mSampleRate = sampleRate;
+    }
+
+    private void setAudioSource(int audioSource) {
+    }
+
+    public int getTotalSamples() {
+        return mTotalSamples;
+    }
+
+    public void setTotalSamples(int totalSamples) {
+        mTotalSamples = totalSamples;
+    }
+
+    public double getRms() {
+        return rms;
+    }
+
+    public double getRmsdB() {
+        return rmsdB;
     }
 }

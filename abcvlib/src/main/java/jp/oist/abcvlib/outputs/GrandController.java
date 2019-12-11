@@ -19,20 +19,33 @@ public class GrandController extends AbcvlibController{
     @Override
     public void run() {
 
+        while (!abcvlibActivity.appRunning){
+            try {
+                Log.i("abcvlib", this.toString() + "Waiting for appRunning to be true");
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
         while (abcvlibActivity.appRunning){
             setOutput(0, 0);
             for (AbcvlibController controller : controllers){
 
                 Output controllerOutput = controller.getOutput();
 
-                Log.d("abcvlib", controller.toString() + "output:" + controllerOutput.left);
+                if (abcvlibActivity.switches.loggerOn){
+                    Log.v("abcvlib", controller.toString() + "output:" + controllerOutput.left);
+                }
 
                 setOutput((output.left + controllerOutput.left), (output.right + controllerOutput.right));
             }
-            Log.d("abcvlib", "grandController output:" + output.left);
+            if (abcvlibActivity.switches.loggerOn){
+                Log.v("abcvlib", "grandController output:" + output.left);
+            }
             abcvlibActivity.outputs.motion.setWheelOutput((int) output.left, (int) output.right);
             try {
-                Thread.sleep(1);
+                Thread.sleep(3);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

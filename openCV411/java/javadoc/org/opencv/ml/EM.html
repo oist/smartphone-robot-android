@@ -282,14 +282,14 @@ extends <a href="../../../org/opencv/ml/StatModel.html" title="class in org.open
 <tr id="i10" class="altColor">
 <td class="colFirst"><code>float</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../org/opencv/ml/EM.html#predict-org.opencv.core.Mat-">predict</a></span>(<a href="../../../org/opencv/core/Mat.html" title="class in org.opencv.core">Mat</a>&nbsp;samples)</code>
-<div class="block">Returns posterior probabilities for the provided samples</div>
+<div class="block">Returns posterior weights for the provided samples</div>
 </td>
 </tr>
 <tr id="i11" class="rowColor">
 <td class="colFirst"><code>float</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../org/opencv/ml/EM.html#predict-org.opencv.core.Mat-org.opencv.core.Mat-">predict</a></span>(<a href="../../../org/opencv/core/Mat.html" title="class in org.opencv.core">Mat</a>&nbsp;samples,
        <a href="../../../org/opencv/core/Mat.html" title="class in org.opencv.core">Mat</a>&nbsp;results)</code>
-<div class="block">Returns posterior probabilities for the provided samples</div>
+<div class="block">Returns posterior weights for the provided samples</div>
 </td>
 </tr>
 <tr id="i12" class="altColor">
@@ -297,7 +297,7 @@ extends <a href="../../../org/opencv/ml/StatModel.html" title="class in org.open
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../org/opencv/ml/EM.html#predict-org.opencv.core.Mat-org.opencv.core.Mat-int-">predict</a></span>(<a href="../../../org/opencv/core/Mat.html" title="class in org.opencv.core">Mat</a>&nbsp;samples,
        <a href="../../../org/opencv/core/Mat.html" title="class in org.opencv.core">Mat</a>&nbsp;results,
        int&nbsp;flags)</code>
-<div class="block">Returns posterior probabilities for the provided samples</div>
+<div class="block">Returns posterior weights for the provided samples</div>
 </td>
 </tr>
 <tr id="i13" class="rowColor">
@@ -774,13 +774,13 @@ extends <a href="../../../org/opencv/ml/StatModel.html" title="class in org.open
 <li class="blockList">
 <h4>predict</h4>
 <pre>public&nbsp;float&nbsp;predict(<a href="../../../org/opencv/core/Mat.html" title="class in org.opencv.core">Mat</a>&nbsp;samples)</pre>
-<div class="block">Returns posterior probabilities for the provided samples</div>
+<div class="block">Returns posterior weights for the provided samples</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
 <dd><code><a href="../../../org/opencv/ml/StatModel.html#predict-org.opencv.core.Mat-">predict</a></code>&nbsp;in class&nbsp;<code><a href="../../../org/opencv/ml/StatModel.html" title="class in org.opencv.ml">StatModel</a></code></dd>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>samples</code> - The input samples, floating-point matrix
-     posterior probabilities for each sample from the input</dd>
+     posterior weights for each sample from the input</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>automatically generated</dd>
 </dl>
@@ -794,14 +794,14 @@ extends <a href="../../../org/opencv/ml/StatModel.html" title="class in org.open
 <h4>predict</h4>
 <pre>public&nbsp;float&nbsp;predict(<a href="../../../org/opencv/core/Mat.html" title="class in org.opencv.core">Mat</a>&nbsp;samples,
                      <a href="../../../org/opencv/core/Mat.html" title="class in org.opencv.core">Mat</a>&nbsp;results)</pre>
-<div class="block">Returns posterior probabilities for the provided samples</div>
+<div class="block">Returns posterior weights for the provided samples</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
 <dd><code><a href="../../../org/opencv/ml/StatModel.html#predict-org.opencv.core.Mat-org.opencv.core.Mat-">predict</a></code>&nbsp;in class&nbsp;<code><a href="../../../org/opencv/ml/StatModel.html" title="class in org.opencv.ml">StatModel</a></code></dd>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>samples</code> - The input samples, floating-point matrix</dd>
 <dd><code>results</code> - The optional output \( nSamples \times nClusters\) matrix of results. It contains
-     posterior probabilities for each sample from the input</dd>
+     posterior weights for each sample from the input</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>automatically generated</dd>
 </dl>
@@ -816,14 +816,14 @@ extends <a href="../../../org/opencv/ml/StatModel.html" title="class in org.open
 <pre>public&nbsp;float&nbsp;predict(<a href="../../../org/opencv/core/Mat.html" title="class in org.opencv.core">Mat</a>&nbsp;samples,
                      <a href="../../../org/opencv/core/Mat.html" title="class in org.opencv.core">Mat</a>&nbsp;results,
                      int&nbsp;flags)</pre>
-<div class="block">Returns posterior probabilities for the provided samples</div>
+<div class="block">Returns posterior weights for the provided samples</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
 <dd><code><a href="../../../org/opencv/ml/StatModel.html#predict-org.opencv.core.Mat-org.opencv.core.Mat-int-">predict</a></code>&nbsp;in class&nbsp;<code><a href="../../../org/opencv/ml/StatModel.html" title="class in org.opencv.ml">StatModel</a></code></dd>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>samples</code> - The input samples, floating-point matrix</dd>
 <dd><code>results</code> - The optional output \( nSamples \times nClusters\) matrix of results. It contains
-     posterior probabilities for each sample from the input</dd>
+     posterior weights for each sample from the input</dd>
 <dd><code>flags</code> - This parameter will be ignored</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>automatically generated</dd>
@@ -844,7 +844,7 @@ extends <a href="../../../org/opencv/ml/StatModel.html" title="class in org.open
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>sample</code> - A sample for classification. It should be a one-channel matrix of
          \(1 \times dims\) or \(dims \times 1\) size.</dd>
-<dd><code>probs</code> - Optional output matrix that contains posterior probabilities of each component
+<dd><code>probs</code> - Optional output matrix that contains posterior weights of each component
          given the sample. It has \(1 \times nclusters\) size and CV_64FC1 type.
 
      The method returns a two-element double vector. Zero element is a likelihood logarithm value for
@@ -1129,7 +1129,7 @@ extends <a href="../../../org/opencv/ml/StatModel.html" title="class in org.open
 <dd><code>labels</code> - The optional output "class label" for each sample:
          \(\texttt{labels}_i=\texttt{arg max}_k(p_{i,k}), i=1..N\) (indices of the most probable
          mixture component for each sample). It has \(nsamples \times 1\) size and CV_32SC1 type.</dd>
-<dd><code>probs</code> - The optional output matrix that contains posterior probabilities of each Gaussian
+<dd><code>probs</code> - The optional output matrix that contains posterior weights of each Gaussian
          mixture component given the each sample. It has \(nsamples \times nclusters\) size and
          CV_64FC1 type.</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
@@ -1289,7 +1289,7 @@ extends <a href="../../../org/opencv/ml/StatModel.html" title="class in org.open
 <dd><code>labels</code> - The optional output "class label" for each sample:
          \(\texttt{labels}_i=\texttt{arg max}_k(p_{i,k}), i=1..N\) (indices of the most probable
          mixture component for each sample). It has \(nsamples \times 1\) size and CV_32SC1 type.</dd>
-<dd><code>probs</code> - The optional output matrix that contains posterior probabilities of each Gaussian
+<dd><code>probs</code> - The optional output matrix that contains posterior weights of each Gaussian
          mixture component given the each sample. It has \(nsamples \times nclusters\) size and
          CV_64FC1 type.</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
@@ -1307,14 +1307,14 @@ extends <a href="../../../org/opencv/ml/StatModel.html" title="class in org.open
                       <a href="../../../org/opencv/core/Mat.html" title="class in org.opencv.core">Mat</a>&nbsp;probs0)</pre>
 <div class="block">Estimate the Gaussian mixture parameters from a samples set.
 
-     This variation starts with Maximization step. You need to provide initial probabilities
+     This variation starts with Maximization step. You need to provide initial weights
      \(p_{i,k}\) to use this option.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>samples</code> - Samples from which the Gaussian mixture model will be estimated. It should be a
          one-channel matrix, each row of which is a sample. If the matrix does not have CV_64F type
          it will be converted to the inner matrix of such type for the further computing.</dd>
-<dd><code>probs0</code> - the probabilities
+<dd><code>probs0</code> - the weights
          each sample. It has \(nsamples \times 1\) size and CV_64FC1 type.
          \(\texttt{labels}_i=\texttt{arg max}_k(p_{i,k}), i=1..N\) (indices of the most probable
          mixture component for each sample). It has \(nsamples \times 1\) size and CV_32SC1 type.
@@ -1336,14 +1336,14 @@ extends <a href="../../../org/opencv/ml/StatModel.html" title="class in org.open
                       <a href="../../../org/opencv/core/Mat.html" title="class in org.opencv.core">Mat</a>&nbsp;logLikelihoods)</pre>
 <div class="block">Estimate the Gaussian mixture parameters from a samples set.
 
-     This variation starts with Maximization step. You need to provide initial probabilities
+     This variation starts with Maximization step. You need to provide initial weights
      \(p_{i,k}\) to use this option.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>samples</code> - Samples from which the Gaussian mixture model will be estimated. It should be a
          one-channel matrix, each row of which is a sample. If the matrix does not have CV_64F type
          it will be converted to the inner matrix of such type for the further computing.</dd>
-<dd><code>probs0</code> - the probabilities</dd>
+<dd><code>probs0</code> - the weights</dd>
 <dd><code>logLikelihoods</code> - The optional output matrix that contains a likelihood logarithm value for
          each sample. It has \(nsamples \times 1\) size and CV_64FC1 type.
          \(\texttt{labels}_i=\texttt{arg max}_k(p_{i,k}), i=1..N\) (indices of the most probable
@@ -1367,14 +1367,14 @@ extends <a href="../../../org/opencv/ml/StatModel.html" title="class in org.open
                       <a href="../../../org/opencv/core/Mat.html" title="class in org.opencv.core">Mat</a>&nbsp;labels)</pre>
 <div class="block">Estimate the Gaussian mixture parameters from a samples set.
 
-     This variation starts with Maximization step. You need to provide initial probabilities
+     This variation starts with Maximization step. You need to provide initial weights
      \(p_{i,k}\) to use this option.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>samples</code> - Samples from which the Gaussian mixture model will be estimated. It should be a
          one-channel matrix, each row of which is a sample. If the matrix does not have CV_64F type
          it will be converted to the inner matrix of such type for the further computing.</dd>
-<dd><code>probs0</code> - the probabilities</dd>
+<dd><code>probs0</code> - the weights</dd>
 <dd><code>logLikelihoods</code> - The optional output matrix that contains a likelihood logarithm value for
          each sample. It has \(nsamples \times 1\) size and CV_64FC1 type.</dd>
 <dd><code>labels</code> - The optional output "class label" for each sample:
@@ -1400,20 +1400,20 @@ extends <a href="../../../org/opencv/ml/StatModel.html" title="class in org.open
                       <a href="../../../org/opencv/core/Mat.html" title="class in org.opencv.core">Mat</a>&nbsp;probs)</pre>
 <div class="block">Estimate the Gaussian mixture parameters from a samples set.
 
-     This variation starts with Maximization step. You need to provide initial probabilities
+     This variation starts with Maximization step. You need to provide initial weights
      \(p_{i,k}\) to use this option.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>samples</code> - Samples from which the Gaussian mixture model will be estimated. It should be a
          one-channel matrix, each row of which is a sample. If the matrix does not have CV_64F type
          it will be converted to the inner matrix of such type for the further computing.</dd>
-<dd><code>probs0</code> - the probabilities</dd>
+<dd><code>probs0</code> - the weights</dd>
 <dd><code>logLikelihoods</code> - The optional output matrix that contains a likelihood logarithm value for
          each sample. It has \(nsamples \times 1\) size and CV_64FC1 type.</dd>
 <dd><code>labels</code> - The optional output "class label" for each sample:
          \(\texttt{labels}_i=\texttt{arg max}_k(p_{i,k}), i=1..N\) (indices of the most probable
          mixture component for each sample). It has \(nsamples \times 1\) size and CV_32SC1 type.</dd>
-<dd><code>probs</code> - The optional output matrix that contains posterior probabilities of each Gaussian
+<dd><code>probs</code> - The optional output matrix that contains posterior weights of each Gaussian
          mixture component given the each sample. It has \(nsamples \times nclusters\) size and
          CV_64FC1 type.</dd>
 <dt><span class="returnLabel">Returns:</span></dt>

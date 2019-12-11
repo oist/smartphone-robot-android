@@ -1,82 +1,88 @@
 package jp.oist.abcvlib.claplearn;
 
 import android.os.Bundle;
-
-import jp.oist.abcvlib.AbcvlibActivity;
-
+import android.util.Log;
 import android.widget.TextView;
 
-import java.util.HashMap;
-
+import jp.oist.abcvlib.AbcvlibActivity;
+import jp.oist.abcvlib.learning.ActionDistribution;
 
 /**
  * Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors
  * Initializes socket connection with external python server
- * Runs BalancePIDController controller locally on Android, but takes BalancePIDController parameters from python GUI
+ * Runs basic Q-learning demo with reward based on 5s average microphone levels.
  * @author Christopher Buckley https://github.com/topherbuckley
  */
 public class ClapLearn extends AbcvlibActivity {
 
-    private static HashMap<String, Boolean> switches;
-    static {
-        switches = new HashMap<>();
-        /*
-         * Enable/disable sensor and IO logging. Only set to true when debugging as it uses a lot of
-         * memory/disk space on the phone and may result in memory failure if run for a long time
-         * such as any learning tasks.
-         */
-        switches.put("loggerOn", false);
-        /*
-         * Enable/disable this to swap the polarity of the wheels such that the default forward
-         * direction will be swapped (i.e. wheels will move cw vs ccw as forward).
-         */
-        switches.put("wheelPolaritySwap", true);
-        /*
-         * Tell initilizer to set up the PID controlled balancer
-         */
-        switches.put("balance", true);
-        /*
-         * Does the app use the camera as an input?
-         */
-        switches.put("cameraApp", false);
-        /*
-         * Controller to center blob when tracked. Can be used on top of balance and results will be
-         * additive
-         */
-        switches.put("centerBlob", false);
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Passes states up to Android Activity. Do not modify
-        super.onCreate(savedInstanceState);
+
+//        double[] weights = {0.34, 0.34, 0.34};
+        double[] weights = {0.34, 0.34, 0.34};
+        double[] qValues = {0.1, 0.1, 0.1};
+        double learningRate = 0.1;
+        double temperature = 5.0;
+        aD = new ActionDistribution(weights, qValues, learningRate, temperature);
+
+        switches.pythonControlApp = true;
+        switches.micApp = true;
+        switches.actionSelectorApp = true;
+
         // Passes Android App information up to parent classes for various usages.
-        initialzer("192.168.28.151", 65434, switches);
+        initialzer(this, "192.168.29.131", 65434);
+
         // Read the layout and construct.
         setContentView(R.layout.main);
+
+        // Passes states up to Android Activity. Do not modify
+        super.onCreate(savedInstanceState);
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
+    public synchronized double determineReward(){
+        // Choose action based on current probabilities.
+        int selectedAction = aD.actionSelect();
+
+        switch (selectedAction){
+            case 0:
+                Log.i("abcvlib", "Selected Action 0");
+                break;
+            case 1:
+                Log.i("abcvlib", "Selected Action 1");
+                break;
+            case 2:
+                Log.i("abcvlib", "Selected Action 2");
+                break;
+            default:
+                Log.i("distribution", "default case selected with action = " + selectedAction);
+        }
+
+        double reward = calcReward();
+
+        aD.setReward(reward);
+        Log.i("abcvlib", "reward:" + reward);
+
+        aD.updateValues(reward, selectedAction);
+        Log.i("abcvlib", "updateValues");
+
+        return reward;
     }
 
-    /**
-     *  This method gets called by the micInput object owned by this activity.
-     *  It first computes the RMS value and then it sets up a bit of
-     *  code/closure that runs on the UI thread that does the actual drawing.
-     */
+    private double calcReward(){
+        // Update your reward however you please.
+        long startTime = System.nanoTime();
+        int iterations = 0;
+        double reward = 0;
 
-    public void setAudioFile(){
-        // Set audiofile up here
-    }
+        while (System.nanoTime() <= (startTime + 5000000000.0)){
+            double normalizedLevel = ((inputs.micInput.getRmsdB() / 35) - 1);
+            reward = reward + normalizedLevel;
+            iterations++;
+            Thread.yield();
+        }
 
-    public void setWheelOutput(double left, double right){
-        // Set wheeloutput here
-    }
-
-    public void setPID(){
-        // Set PID params here
+        return (reward / iterations);
     }
 
 }

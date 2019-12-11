@@ -18,5 +18,4 @@ public interface InputsInterface {
     // Listeners
     void onSpatialUpdate(); // Accelerometer and gyro updates
     void onQuadUpdate(); // Quadrature encoder updates
-    void processAudioFrame(short[] audioFrame); // Microphone updates
 }

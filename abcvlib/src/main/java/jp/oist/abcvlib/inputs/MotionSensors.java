@@ -227,7 +227,7 @@ public class MotionSensors implements SensorEventListener {
 
             // Update all previous variables with current ones
             sensorChangeCountRotation++;
-            if (abcvlibActivity.loggerOn){
+            if (abcvlibActivity.switches.loggerOn){
                 sendToLog();
             }
 
@@ -262,6 +262,9 @@ public class MotionSensors implements SensorEventListener {
         }
 
         timerCount ++;
+
+        // Todo: does this sleep the main thread or is this running on something else at this point?
+        Thread.yield();
 
 
 //        Log.i("Sensor Delay Timer", "Time between last sensor changes: " + Arrays.toString(delayTimeSteps));

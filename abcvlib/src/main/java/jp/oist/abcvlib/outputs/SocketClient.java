@@ -55,42 +55,32 @@ public class SocketClient implements Runnable{
 
     @Override
     public void run() {
-//        Log.v("abcvlib", "SocketClient1");
         connect();
         while(!ready) {
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            Thread.yield();
         }
-//        Log.v("abcvlib", "SocketClient4");
 
-        while (abcvlibActivity.pythonControlApp){
+        while (abcvlibActivity.switches.pythonControlApp){
 
-            if (abcvlibActivity.timersOn){
+            if (abcvlibActivity.switches.timersOn){
                 pythonControlTimer[0] = System.nanoTime();
             }
 
             readControlData();
 
-//            Log.v("abcvlib", "SocketClient5");
-
-            if (abcvlibActivity.loggerOn){
+            if (abcvlibActivity.switches.loggerOn){
                 System.out.println(abcvlibActivity.outputs.controls);
             }
-            if (abcvlibActivity.timersOn){
+            if (abcvlibActivity.switches.timersOn){
                 pythonControlTimer[1] = System.nanoTime();
             }
 
             writeAndroidData();
 
-//            Log.v("abcvlib", "SocketClient6");
-
-            if (abcvlibActivity.loggerOn){
+            if (abcvlibActivity.switches.loggerOn){
                 System.out.println(abcvlibActivity.inputs.stateVariables);
             }
-            if (abcvlibActivity.timersOn){
+            if (abcvlibActivity.switches.timersOn){
                 pythonControlTimeSteps[2] += System.nanoTime() - pythonControlTimer[1];
                 pythonControlTimeSteps[1] += pythonControlTimer[1] - pythonControlTimer[0];
                 pythonControlTimeSteps[0] = pythonControlTimer[0];
@@ -137,7 +127,7 @@ public class SocketClient implements Runnable{
 
     private void readControlData(){
         abcvlibActivity.outputs.setControls(getControlsFromServer());
-        if (abcvlibActivity.timersOn){
+        if (abcvlibActivity.switches.timersOn){
             try {
                 currentTime = Double.parseDouble(abcvlibActivity.outputs.controls.get("timeServer").toString());
                 double dt = currentTime - prevTime;
@@ -164,6 +154,9 @@ public class SocketClient implements Runnable{
                 abcvlibActivity.inputs.stateVariables.put("wheelDistanceR", abcvlibActivity.inputs.quadEncoders.getDistanceR());
                 abcvlibActivity.inputs.stateVariables.put("wheelSpeedL", abcvlibActivity.inputs.quadEncoders.getWheelSpeedL());
                 abcvlibActivity.inputs.stateVariables.put("wheelSpeedR", abcvlibActivity.inputs.quadEncoders.getWheelSpeedR());
+                abcvlibActivity.inputs.stateVariables.put("wheelSpeedL_LP", abcvlibActivity.inputs.quadEncoders.getWheelSpeedL_LP());
+                abcvlibActivity.inputs.stateVariables.put("wheelSpeedR_LP", abcvlibActivity.inputs.quadEncoders.getWheelSpeedR_LP());
+                abcvlibActivity.inputs.stateVariables.put("expWeight", abcvlibActivity.inputs.quadEncoders.getExpWeight());
             }
             if (abcvlibActivity.aD != null){
                 abcvlibActivity.inputs.stateVariables.put("action", abcvlibActivity.aD.getSelectedAction());
@@ -181,10 +174,12 @@ public class SocketClient implements Runnable{
 
                 abcvlibActivity.inputs.stateVariables.put("weights", weightArray);
                 abcvlibActivity.inputs.stateVariables.put("qvalues", qvalueArray);
+
+                abcvlibActivity.inputs.stateVariables.put("reward", abcvlibActivity.aD.getReward());
             }
-            if (abcvlibActivity.aS != null){
-                abcvlibActivity.inputs.stateVariables.put("reward", abcvlibActivity.aS.getReward());
-                abcvlibActivity.inputs.stateVariables.put("rewardAvg", abcvlibActivity.aS.getRewardAvg());
+            if (abcvlibActivity.inputs.micInput != null){
+                abcvlibActivity.inputs.stateVariables.put("rms", abcvlibActivity.inputs.micInput.getRms());
+                abcvlibActivity.inputs.stateVariables.put("rmsdB", abcvlibActivity.inputs.micInput.getRmsdB());
             }
 
         } catch (JSONException e) {
@@ -202,7 +197,7 @@ public class SocketClient implements Runnable{
         try {
             while (bufferedReader == null){
                 Log.d("abcvlib", "bufferedReader == null");
-                Thread.sleep(5);
+                Thread.sleep(100);
             }
             while (!bufferedReader.ready()){
                 if (timeoutCounter >= timeout){

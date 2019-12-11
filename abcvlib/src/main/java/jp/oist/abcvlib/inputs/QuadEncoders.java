@@ -2,7 +2,7 @@ package jp.oist.abcvlib.inputs;
 
 import android.util.Log;
 
-public class QuadEncoders implements Runnable {
+public class QuadEncoders {
 
 
     private int windowLength = 5;
@@ -14,6 +14,7 @@ public class QuadEncoders implements Runnable {
     private boolean loggerOn;
     double dt_sample = 0;
     double dt_window = 0;
+    double expWeight = 0.03;
 
     //----------------------------------- Wheel speed metrics --------------------------------------
     /**
@@ -49,6 +50,8 @@ public class QuadEncoders implements Runnable {
      */
     private double distanceL = 0;
 
+    private double distanceLPrevious = 0;
+    private double distanceRPrevious = 0;
     private double distanceLLP = 0;
     private double distanceLLPPrevious = 0;
     private double distanceRLP = 0;
@@ -115,6 +118,26 @@ public class QuadEncoders implements Runnable {
     }
 
     /**
+     * @return Current speed of left wheel in encoder counts per second with a Low Pass filter.
+     * May want to convert to rotations per second if the encoder resolution (counts per revolution)
+     * is known.
+     */
+    public double getWheelSpeedL_LP() {
+
+        return speedLeftWheelLP;
+    }
+
+    /**
+     * @return Current speed of left wheel in encoder counts per second with a Low Pass filter.
+     * May want to convert to rotations per second if the encoder resolution (counts per revolution)
+     * is known.
+     */
+    public double getWheelSpeedR_LP() {
+
+        return speedRightWheelLP;
+    }
+
+    /**
      * Sets the encoder count for the right wheel. This shouldn't normally be used by the user. This
      * method exists for the AbcvlibLooper class to get/set encoder counts as the AbcvlibLooper
      * class is responsible for constantly reading the encoder values from the IOIOBoard.
@@ -153,11 +176,12 @@ public class QuadEncoders implements Runnable {
 
         double mmPerCount = (2 * Math.PI * 30) / 128;
 
+        distanceLPrevious = distanceL;
         distanceLLPPrevious = distanceLLP;
 
         distanceL = encoderCountLeftWheel * mmPerCount;
 
-        distanceLLP = exponentialAvg(distanceL, distanceLLP, dt_sample, dt_window);
+        distanceLLP = exponentialAvg(distanceL, distanceLLP, 1);
 
     }
 
@@ -171,11 +195,12 @@ public class QuadEncoders implements Runnable {
 
         double mmPerCount = (2 * Math.PI * 30) / 128;
 
+        distanceRPrevious = distanceR;
         distanceRLPPrevious = distanceRLP;
 
         distanceR = encoderCountRightWheel * mmPerCount;
 
-        distanceRLP = exponentialAvg(distanceR, distanceRLP, dt_sample, dt_window);
+        distanceRLP = exponentialAvg(distanceR, distanceRLP, 1);
 
     }
 
@@ -187,8 +212,8 @@ public class QuadEncoders implements Runnable {
 
         if (dt_sample != 0) {
             // Calculate the speed of each wheel in mm/s.
-            speedLeftWheel = (distanceLLP - distanceLLPPrevious) / dt_sample;
-            speedLeftWheelLP = exponentialAvg(speedLeftWheel, speedLeftWheelLP, dt_sample, dt_window);
+            speedLeftWheel = (distanceL - distanceLPrevious) / dt_sample;
+            speedLeftWheelLP = exponentialAvg(speedLeftWheel, speedLeftWheelLP, expWeight);
         }
         else{
             Log.i("sensorDebugging", "dt_sample == 0");
@@ -204,8 +229,8 @@ public class QuadEncoders implements Runnable {
 
         if (dt_sample != 0) {
             // Calculate the speed of each wheel in mm/s.
-            speedRightWheel = (distanceRLP - distanceRLPPrevious) / dt_sample;
-            speedRightWheelLP = exponentialAvg(speedRightWheel, speedRightWheelLP, dt_sample, dt_window);
+            speedRightWheel = (distanceR - distanceRPrevious) / dt_sample;
+            speedRightWheelLP = exponentialAvg(speedRightWheel, speedRightWheelLP, expWeight);
         }
         else{
             Log.i("sensorDebugging", "dt_sample == 0");
@@ -221,6 +246,14 @@ public class QuadEncoders implements Runnable {
         distance = count * mmPerCount;
 
         return distance;
+    }
+
+    public double getExpWeight(){
+        return expWeight;
+    }
+
+    public void setExpWeight(double weight){
+        expWeight = weight;
     }
 
     private void sendToLog() {
@@ -245,16 +278,11 @@ public class QuadEncoders implements Runnable {
 
     }
 
-    private double exponentialAvg(double sample, double expAvg, double dt_sample, double dt_window){
+    private double exponentialAvg(double sample, double expAvg, double weighting){
 
-        double weighting = Math.exp(-1.0 * dt_sample / dt_window);
-        expAvg = (1.0 - weighting) * sample + (weighting * expAvg);
+        expAvg = (1.0 - weighting) * expAvg + (weighting * sample);
 
         return expAvg;
     }
 
-    @Override
-    public void run() {
-
-    }
 }

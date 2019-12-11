@@ -1,3 +1,2 @@
-include ':abcvlib', ':openCV411', ':basic', ':backAndForth', ':localPID', ':remotePID',
-        ':color-blob-detection', ':setPath', ':mating', ':clapLearn', ':setPathBalancer',
-        ':testAbstract'
+include ':abcvlib', ':openCV411', ':basic', ':backAndForth', ':pidBalancer',
+        ':color-blob-detection', ':setPath', ':clapLearn', ':compoundController'

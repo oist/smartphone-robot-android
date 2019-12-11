@@ -80,7 +80,7 @@ public class Motion {
             left = -100;
         }
 
-        if (abcvlibActivity.wheelPolaritySwap){
+        if (abcvlibActivity.switches.wheelPolaritySwap){
             dutyCycleRightWheel = -right;
             // Wheels must be opposite polarity to turn in same direction
             dutyCycleLeftWheel = left;

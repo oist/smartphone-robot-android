@@ -5,7 +5,6 @@ import android.util.Log;
 import org.json.JSONException;
 import org.opencv.core.Point;
 
-import java.util.Arrays;
 import java.util.List;
 
 import jp.oist.abcvlib.AbcvlibActivity;
@@ -15,9 +14,10 @@ public class CenterBlobController extends AbcvlibController{
 
     private AbcvlibActivity abcvlibActivity;
 
-    private int avgCount = 1000;
     private double phi;
     private double CENTER_COL;
+    private double p_phi;
+    private List<Point> centroid;
 
     public CenterBlobController(AbcvlibActivity abcvlibActivity){
 
@@ -28,10 +28,39 @@ public class CenterBlobController extends AbcvlibController{
 
     public void run(){
 
-        while(abcvlibActivity.appRunning && abcvlibActivity.centerBlobApp) {
+        while (!abcvlibActivity.appRunning){
+            try {
+                Log.i("abcvlib", this.toString() + "Waiting for appRunning to be true");
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
 
-            phi = getPhi(abcvlibActivity.inputs.vision.getCentroid());
+        while(abcvlibActivity.appRunning && abcvlibActivity.switches.centerBlobApp) {
 
+            Log.d("abcvlib", "in CenterBlobController 1");
+
+            centroid = abcvlibActivity.inputs.vision.getCentroid();
+
+            if (centroid != null && abcvlibActivity.outputs.socketClient.socketMsgIn != null){
+
+                phi = getPhi(centroid);
+                Log.d("abcvlib", "phi:" + phi);
+
+                try {
+                    p_phi = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("p_phi").toString());
+                    Log.d("abcvlib", "p_phi:" + p_phi);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                // Todo check polarity on these turns. Could be opposite
+                setOutput(-(phi * p_phi), (phi * p_phi));
+
+                Log.d("abcvlib", "CenterBlobController left:" + output.left + " right:" + output.right);
+            }
+            Thread.yield();
         }
     }
 
@@ -56,6 +85,9 @@ public class CenterBlobController extends AbcvlibController{
             // ColorBlobDetectionActivity.linearController finishes, then the initial value of centroid
             // could change to a null value before the above code executes.
             Log.e("abcvlib", "Index out of bounds exception on centroid object.");
+        } catch (NullPointerException e){
+            Log.e("abcvlib", "centroid not availble for find phi yet");
+            e.printStackTrace();
         }
 
         return phi;

@@ -1,18 +1,18 @@
 package jp.oist.abcvlib;
 
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
-import java.util.HashMap;
-
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
 import jp.oist.abcvlib.learning.ActionDistribution;
 import jp.oist.abcvlib.learning.ActionSelector;
+import jp.oist.abcvlib.learning.RewardGenerator;
 import jp.oist.abcvlib.outputs.*;
 import jp.oist.abcvlib.inputs.*;
 import jp.oist.abcvlib.inputs.vision.*;
@@ -28,7 +28,7 @@ import jp.oist.abcvlib.inputs.vision.*;
  * @author Christopher Buckley https://github.com/topherbuckley
  *
  */
-public abstract class AbcvlibActivity extends IOIOActivity {
+public abstract class AbcvlibActivity extends IOIOActivity implements RewardGenerator {
 
     // Publically accessible objects that encapsulate a lot other core functionality
     public Inputs inputs;
@@ -36,33 +36,18 @@ public abstract class AbcvlibActivity extends IOIOActivity {
     public ActionDistribution aD;
     public ActionSelector aS;
     private Thread actionSelectorThread;
+    public Switches switches = new Switches();
 
-    // Default Booleans
-    public boolean loggerOn = false;
-    public boolean wheelPolaritySwap = false;
-    public boolean motionSensorApp = true;
-    public boolean quadEncoderApp = true;
-    public boolean pythonControlApp = false;
-    public boolean balanceApp = false;
-    public boolean cameraApp = false;
-    public boolean centerBlobApp = false;
-    public boolean micApp = false;
-    public boolean actionSelectorApp = false;
     /**
      * Lets various loops know its time to wrap things up when false, and prevents other loops from
-     * starting until true.
+     * starting until true. Set to true after AbcvlibActivity.initializer() finishes.
      */
     public boolean appRunning = false;
-
-    /*
-    Enables measurements of time intervals between various functions and outputs to Logcat
-    */
-    public boolean timersOn = false;
 
     // Other generics
     protected static final String TAG = "abcvlib";
 
-    public    int                  avgCount = 1000;
+    public int avgCount = 1000;
 
     protected void onCreate(Bundle savedInstanceState) {
         if(!appRunning){
@@ -75,10 +60,10 @@ public abstract class AbcvlibActivity extends IOIOActivity {
 
     @Override
     protected void onStart() {
-        super.onStart();
-        if (cameraApp){
+        if (switches.cameraApp){
             inputs.vision.onStart();
         }
+        super.onStart();
     }
 
     @Override
@@ -93,78 +78,45 @@ public abstract class AbcvlibActivity extends IOIOActivity {
     @Override
     public void onPause()
     {
-        super.onPause();
-        if (cameraApp){
+        if (switches.cameraApp){
             inputs.vision.onPause();
         }
+
+        super.onPause();
         outputs.motion.setWheelOutput(0, 0);
     }
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
-        if (cameraApp) {
+        if (switches.cameraApp) {
             inputs.vision.onDestroy();
         }
+        super.onDestroy();
     }
 
     @Override
     public void onResume()
     {
-        super.onResume();
-        if (cameraApp){
+        if (switches.cameraApp){
             inputs.vision.onResume();
         }
+        super.onResume();
     }
 
-    protected void initialzer(String hostIP, int hostPort, HashMap<String, Boolean> switches,
-                              AbcvlibController controller){
-        // loop over each hashmap entry to set the boolean switches needed in this class
-        for (HashMap.Entry<String, Boolean> entry : switches.entrySet()){
-            switch (entry.getKey()){
-                case "loggerOn":
-                    this.loggerOn = entry.getValue();
-                    break;
-                case "wheelPolaritySwap":
-                    this.wheelPolaritySwap = entry.getValue();
-                    break;
-                case "motionSensorApp":
-                    this.motionSensorApp = entry.getValue();
-                    break;
-                case "quadEncoderApp":
-                    this.quadEncoderApp = entry.getValue();
-                    break;
-                case "pythonControlApp":
-                    this.pythonControlApp = entry.getValue();
-                    break;
-                case "balanceApp":
-                    this.balanceApp = entry.getValue();
-                    break;
-                case "cameraApp":
-                    this.cameraApp = entry.getValue();
-                    break;
-                case "centerBlobApp":
-                    this.centerBlobApp = entry.getValue();
-                    break;
-                case "micApp":
-                    this.micApp = entry.getValue();
-                    break;
-                case "actionSelectorApp":
-                    this.actionSelectorApp = entry.getValue();
-                    break;
+    protected void initialzer(AbcvlibActivity abcvlibActivity, String hostIP, int hostPort, AbcvlibController controller){
+
+        //Todo some logic here to test for boolean combinations that would lead to errors.
+        // e.g. balanceApp without pythonControlApp
+
+        inputs = new Inputs(abcvlibActivity);
+        outputs = new Outputs(abcvlibActivity, hostIP, hostPort, controller);
+
+        if (switches.actionSelectorApp){
+            if (aD == null){
+                aD = new ActionDistribution();
             }
-        }
-
-        inputs = new Inputs(this);
-        outputs = new Outputs(this, hostIP, hostPort, controller);
-
-        if (actionSelectorApp){
-            aD = new ActionDistribution();
             aS = new ActionSelector(this);
-
-            ActionSelector actionSelector = new ActionSelector(this);
-            actionSelectorThread = new Thread(actionSelector);
-            actionSelectorThread.start();
+            aS.start();
         }
 
         // Tell all child classes it is ok to proceed.
@@ -175,11 +127,19 @@ public abstract class AbcvlibActivity extends IOIOActivity {
      * Default null controller
      * @param hostIP
      * @param hostPort
-     * @param switches
      */
-    protected void initialzer(String hostIP, int hostPort, HashMap<String, Boolean> switches){
+    protected void initialzer(AbcvlibActivity abcvlibActivity, String hostIP, int hostPort){
 
-        initialzer(hostIP, hostPort, switches, null);
+        initialzer(abcvlibActivity, hostIP, hostPort, null);
+
+    }
+
+    /**
+     * null initializer for basic module or those not interacting with anything other than itself
+     */
+    protected void initialzer(AbcvlibActivity abcvlibActivity){
+
+        initialzer(abcvlibActivity, null, 0, null);
 
     }
 
@@ -216,6 +176,10 @@ public abstract class AbcvlibActivity extends IOIOActivity {
 //            }
 //        }
         Log.d("abcvlib", "createIOIOLooper Finished");
-        return new AbcvlibLooper(this, loggerOn, wheelPolaritySwap);
+        return new AbcvlibLooper(this, switches.loggerOn, switches.wheelPolaritySwap);
+    }
+
+    public double determineReward(){
+        return 0;
     }
 }
