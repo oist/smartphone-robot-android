@@ -4,10 +4,6 @@ title __BACKANDFORTH's Class Diagram__\n
 
   namespace jp.oist.abcvlib.backandforth {
     class jp.oist.abcvlib.backandforth.MainActivity {
-        ~ balance : boolean
-        ~ cameraApp : boolean
-        ~ loggerOn : boolean
-        ~ wheelPolaritySwap : boolean
         # onCreate()
     }
   }

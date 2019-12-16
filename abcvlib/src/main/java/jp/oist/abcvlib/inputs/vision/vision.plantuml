@@ -25,7 +25,6 @@ title __VISION's Class Diagram__\n
       namespace vision {
         class jp.oist.abcvlib.inputs.vision.Vision {
             {static} + CAMERA_PERMISSION_REQUEST_CODE : int
-            + cameraApp : boolean
             # CENTER_THRESHOLD : Double
             {static} # TAG : String
             # contours : List<MatOfPoint>

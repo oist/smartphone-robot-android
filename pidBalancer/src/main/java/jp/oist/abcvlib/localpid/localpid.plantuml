@@ -5,10 +5,6 @@ title __LOCALPID's Class Diagram__\n
   namespace jp.oist.abcvlib {
     namespace localpid {
       class jp.oist.abcvlib.localpid.MainActivity {
-          ~ balance : boolean
-          ~ cameraApp : boolean
-          ~ loggerOn : boolean
-          ~ wheelPolaritySwap : boolean
           # onCreate()
       }
     }

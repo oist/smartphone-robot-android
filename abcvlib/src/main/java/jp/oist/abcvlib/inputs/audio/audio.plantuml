@@ -6,35 +6,32 @@ title __AUDIO's Class Diagram__\n
     namespace inputs {
       namespace audio {
         class jp.oist.abcvlib.inputs.audio.MicrophoneInput {
-            ~ mAudioFormat : int
-            ~ mAudioSource : int
-            ~ mChannelConfig : int
-            ~ mSampleRate : int
-            ~ mTotalSamples : int
-            ~ recorder : AudioRecord
             {static} - TAG : String
-            - mRunning : boolean
+            - bufferLength : double
+            - bufferSampleCount : double
+            - leqArrayLength : double
+            - leqBuffer : double[]
+            - leqLength : double
+            - mGain : double
+            - mRmsSmoothed : double
+            - mSampleRate : int
             - mThread : Thread
+            - mTotalSamples : int
+            - rms : double
+            - rmsdB : double
+            - startTime : long
             + MicrophoneInput()
+            + getRms()
+            + getRmsdB()
+            + getTotalSamples()
+            + processAudioFrame()
             + run()
-            + setAudioSource()
-            + setSampleRate()
             + setTotalSamples()
             + start()
             + stop()
-            + totalSamples()
             - bufferSize()
-        }
-      }
-    }
-  }
-  
-
-  namespace jp.oist.abcvlib {
-    namespace inputs {
-      namespace audio {
-        interface jp.oist.abcvlib.inputs.audio.MicrophoneInputListener {
-            {abstract} + processAudioFrame()
+            - setAudioSource()
+            - setSampleRate()
         }
       }
     }
@@ -42,7 +39,7 @@ title __AUDIO's Class Diagram__\n
   
 
   jp.oist.abcvlib.inputs.audio.MicrophoneInput .up.|> java.lang.Runnable
-  jp.oist.abcvlib.inputs.audio.MicrophoneInput o-- jp.oist.abcvlib.inputs.audio.MicrophoneInputListener : mListener
+  jp.oist.abcvlib.inputs.audio.MicrophoneInput o-- jp.oist.abcvlib.AbcvlibActivity : abcvlibActivity
 
 
 right footer

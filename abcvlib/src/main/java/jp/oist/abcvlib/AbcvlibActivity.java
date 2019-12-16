@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import ioio.lib.util.IOIOLooper;
@@ -55,6 +56,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
         }
         else{
             super.onCreate(savedInstanceState);
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
     }
 

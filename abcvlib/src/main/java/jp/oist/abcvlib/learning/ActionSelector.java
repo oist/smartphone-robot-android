@@ -40,8 +40,7 @@ public class ActionSelector implements Runnable{
 
         while(abcvlibActivity.appRunning) {
 
-            reward = abcvlibActivity.determineReward();
-            Log.i("abcvlib", "reward:" + reward);
+            abcvlibActivity.determineReward();
 
             Thread.yield();
         }

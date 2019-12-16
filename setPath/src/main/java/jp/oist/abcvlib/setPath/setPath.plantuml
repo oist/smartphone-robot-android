@@ -4,8 +4,6 @@ title __SETPATH's Class Diagram__\n
 
   namespace jp.oist.abcvlib.setPath {
     class jp.oist.abcvlib.setPath.MainActivity {
-        ~ loggerOn : boolean
-        ~ wheelPolaritySwap : boolean
         # onCreate()
     }
   }

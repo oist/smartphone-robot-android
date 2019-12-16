@@ -18,7 +18,6 @@ public class ClapLearn extends AbcvlibActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-//        double[] weights = {0.34, 0.34, 0.34};
         double[] weights = {0.34, 0.34, 0.34};
         double[] qValues = {0.1, 0.1, 0.1};
         double learningRate = 0.1;
@@ -74,14 +73,16 @@ public class ClapLearn extends AbcvlibActivity {
         long startTime = System.nanoTime();
         int iterations = 0;
         double reward = 0;
+        double timeInterval = 5000000000.0; // 5 seconds in nanoseconds
 
-        while (System.nanoTime() <= (startTime + 5000000000.0)){
+        // add up levels for timeInterval then divide by total iterations to find average
+        while (System.nanoTime() <= (startTime + timeInterval)){
+            // 35 dB is appx the ambient noise level in the room. Trying to make ambient -> 0.
             double normalizedLevel = ((inputs.micInput.getRmsdB() / 35) - 1);
             reward = reward + normalizedLevel;
             iterations++;
             Thread.yield();
         }
-
         return (reward / iterations);
     }
 

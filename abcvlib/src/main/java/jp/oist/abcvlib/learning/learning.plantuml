@@ -5,19 +5,25 @@ title __LEARNING's Class Diagram__\n
   namespace jp.oist.abcvlib {
     namespace learning {
       class jp.oist.abcvlib.learning.ActionDistribution {
-          - beta : double
+          - learningRate : double
           - qValues : double[]
-          - qValuesSum : double
+          - reward : double
           - selectedAction : int
+          - temperature : double
           - weights : double[]
           + ActionDistribution()
           + ActionDistribution()
-          + getBeta()
+          + actionSelect()
+          + getQValue()
+          + getReward()
           + getSelectedAction()
+          + getTemperature()
           + getWeights()
           + getqValues()
-          + getqValuesSum()
-          ~ actionSelect()
+          + setQValue()
+          + setReward()
+          + setWeights()
+          + updateValues()
       }
     }
   }
@@ -26,31 +32,29 @@ title __LEARNING's Class Diagram__\n
   namespace jp.oist.abcvlib {
     namespace learning {
       class jp.oist.abcvlib.learning.ActionSelector {
-          ~ actionCycle : long
-          ~ alpha : double
-          ~ appRunning : boolean
-          ~ beta : double
-          ~ ellapsedLoops : int
-          ~ rewardOffset : double
-          ~ rewardScaleFactor : double
-          ~ rewardSum : double
-          ~ selectedAction : int
-          ~ speed : int
+          - mThread : Thread
           - reward : double
-          - rewardAvg : double
-          - rmsdB : double
           + ActionSelector()
           + getReward()
-          + getRewardAvg()
           + run()
-          - updateValues()
+          + start()
+          + stop()
+      }
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib {
+    namespace learning {
+      interface jp.oist.abcvlib.learning.RewardGenerator {
+          {abstract} + determineReward()
       }
     }
   }
   
 
   jp.oist.abcvlib.learning.ActionSelector .up.|> java.lang.Runnable
-  jp.oist.abcvlib.learning.ActionSelector o-- jp.oist.abcvlib.learning.ActionDistribution : aD
+  jp.oist.abcvlib.learning.ActionSelector o-- jp.oist.abcvlib.AbcvlibActivity : abcvlibActivity
 
 
 right footer

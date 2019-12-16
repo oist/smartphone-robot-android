@@ -4,10 +4,6 @@ title __BASIC's Class Diagram__\n
 
   namespace jp.oist.abcvlib.basic {
     class jp.oist.abcvlib.basic.MainActivity {
-        ~ balance : boolean
-        ~ cameraApp : boolean
-        ~ loggerOn : boolean
-        ~ wheelPolaritySwap : boolean
         # onCreate()
     }
   }

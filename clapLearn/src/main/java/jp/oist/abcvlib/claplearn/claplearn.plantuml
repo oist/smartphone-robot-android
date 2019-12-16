@@ -5,15 +5,9 @@ title __CLAPLEARN's Class Diagram__\n
   namespace jp.oist.abcvlib {
     namespace claplearn {
       class jp.oist.abcvlib.claplearn.ClapLearn {
-          ~ balance : boolean
-          ~ cameraApp : boolean
-          ~ loggerOn : boolean
-          ~ wheelPolaritySwap : boolean
-          + onPause()
-          + setAudioFile()
-          + setPID()
-          + setWheelOutput()
+          + determineReward()
           # onCreate()
+          - calcReward()
       }
     }
   }

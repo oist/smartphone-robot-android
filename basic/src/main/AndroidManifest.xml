@@ -3,7 +3,7 @@
     package="jp.oist.abcvlib.basic">
 
     <application>
-        <activity android:name=".MainActivity">
+        <activity android:name="jp.oist.abcvlib.basic.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

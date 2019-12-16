@@ -6,17 +6,15 @@ title __ABCVLIB's Class Diagram__\n
     abstract class jp.oist.abcvlib.AbcvlibActivity {
         + appRunning : boolean
         + avgCount : int
-        + loggerOn : boolean
-        + timersOn : boolean
-        + wheelPolaritySwap : boolean
         {static} # TAG : String
-        # pidON : boolean
         - actionSelectorThread : Thread
+        + determineReward()
         + onDestroy()
         + onPause()
         + onRequestPermissionsResult()
         + onResume()
         # createIOIOLooper()
+        # initialzer()
         # initialzer()
         # initialzer()
         # onCreate()
@@ -74,7 +72,6 @@ title __ABCVLIB's Class Diagram__\n
         - timeStamp : double[]
         - wheelPolaritySwap : boolean
         + AbcvlibLooper()
-        + AbcvlibLooper()
         + disconnected()
         + getBuffer()
         + getDt()
@@ -99,11 +96,30 @@ title __ABCVLIB's Class Diagram__\n
   }
   
 
+  namespace jp.oist.abcvlib {
+    class jp.oist.abcvlib.Switches {
+        + actionSelectorApp : boolean
+        + balanceApp : boolean
+        + cameraApp : boolean
+        + centerBlobApp : boolean
+        + loggerOn : boolean
+        + micApp : boolean
+        + motionSensorApp : boolean
+        + pythonControlApp : boolean
+        + quadEncoderApp : boolean
+        + timersOn : boolean
+        + wheelPolaritySwap : boolean
+    }
+  }
+  
+
+  jp.oist.abcvlib.AbcvlibActivity .up.|> jp.oist.abcvlib.learning.RewardGenerator
   jp.oist.abcvlib.AbcvlibActivity -up-|> ioio.lib.util.android.IOIOActivity
   jp.oist.abcvlib.AbcvlibActivity o-- jp.oist.abcvlib.learning.ActionDistribution : aD
   jp.oist.abcvlib.AbcvlibActivity o-- jp.oist.abcvlib.learning.ActionSelector : aS
   jp.oist.abcvlib.AbcvlibActivity o-- jp.oist.abcvlib.inputs.Inputs : inputs
   jp.oist.abcvlib.AbcvlibActivity o-- jp.oist.abcvlib.outputs.Outputs : outputs
+  jp.oist.abcvlib.AbcvlibActivity o-- jp.oist.abcvlib.Switches : switches
   jp.oist.abcvlib.AbcvlibLooper -up-|> ioio.lib.util.BaseIOIOLooper
   jp.oist.abcvlib.AbcvlibLooper o-- jp.oist.abcvlib.AbcvlibActivity : abcvlibActivity
 

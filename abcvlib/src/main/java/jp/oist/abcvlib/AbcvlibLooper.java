@@ -429,14 +429,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             Log.e("abcvlib", "connection lost in AbcvlibLooper.loop");
         }
 
-        try {
-            // TODO Not sure if this is necessary. Seems like better thread wait/notify would be better?
-            IOIOConnectionManager.Thread.sleep(1);
-        } catch (InterruptedException e) {
-            Log.i("abcvlib", "AbcvlibLooper.loop threw an InteruptedException in loop");
-            e.printStackTrace();
-            throw e;
-        }
+        IOIOConnectionManager.Thread.yield();
     }
 
     /**

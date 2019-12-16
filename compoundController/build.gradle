@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 android {
 
     defaultConfig {
-        applicationId "jp.oist.abcvlib.setPathBalancer"
+        applicationId "jp.oist.abcvlib.compoundController"
         compileSdkVersion rootProject.ext.compileSdkVersion
         buildToolsVersion rootProject.ext.buildToolsVersion
         minSdkVersion rootProject.ext.minSdkVersion

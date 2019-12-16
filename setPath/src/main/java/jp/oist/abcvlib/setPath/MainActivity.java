@@ -13,14 +13,14 @@ public class MainActivity extends AbcvlibActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        initialzer();
+        initialzer(this);
 
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
 
         // Setup Android GUI. Point this method to your main activity xml file or corresponding int
         // ID within the R class
-        setContentView(jp.oist.abcvlib.setPath.R.layout.activity_main);
+        setContentView(R.layout.activity_main);
 
         // Linear Back and Forth every 10 mm
         setPath setPathThread = new setPath();

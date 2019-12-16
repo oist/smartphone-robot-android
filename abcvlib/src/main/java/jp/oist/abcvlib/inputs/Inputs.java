@@ -14,7 +14,7 @@ import jp.oist.abcvlib.inputs.vision.Vision;
 
 import static android.content.Context.MODE_PRIVATE;
 
-public class Inputs implements InputsInterface, CameraBridgeViewBase.CvCameraViewListener2 {
+public class Inputs implements CameraBridgeViewBase.CvCameraViewListener2 {
 
     public MotionSensors motionSensors; // Doesn't need thread since handled by sensorManager or SensorService
     public Vision vision; // Doesn't need thread since this is started by CameraBridgeViewBase
@@ -67,14 +67,6 @@ public class Inputs implements InputsInterface, CameraBridgeViewBase.CvCameraVie
         return jsonObject;
     }
 
-    @Override
-    public void onSpatialUpdate() {
-
-    }
-    @Override
-    public void onQuadUpdate() {
-
-    }
     @Override
     public void onCameraViewStarted(int width, int height) {
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">LevelMeter</string>
+    <string name="app_name">clapLearn</string>
     <string name="toast_message">On or Off</string>
     <string name="settings_ok">ok</string>
     <string name="adjust_sensitivity">Calibrate sensitivity</string>

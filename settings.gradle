@@ -1,2 +1,2 @@
 include ':abcvlib', ':openCV411', ':basic', ':backAndForth', ':pidBalancer',
-        ':color-blob-detection', ':setPath', ':clapLearn', ':compoundController'
+        ':colorBlobFollower', ':setPath', ':clapLearn', ':compoundController', ':allAccess'

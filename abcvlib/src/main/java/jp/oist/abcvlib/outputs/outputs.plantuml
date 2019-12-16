@@ -4,6 +4,26 @@ title __OUTPUTS's Class Diagram__\n
 
   namespace jp.oist.abcvlib {
     namespace outputs {
+      abstract class jp.oist.abcvlib.outputs.AbcvlibController {
+          # setOutput()
+          ~ getOutput()
+      }
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib {
+    namespace outputs {
+      class jp.oist.abcvlib.outputs.AbcvlibController.Output {
+          + left : double
+          + right : double
+      }
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib {
+    namespace outputs {
       class jp.oist.abcvlib.outputs.BalancePIDController {
           ~ PIDTimeSteps : long[]
           ~ PIDTimer : long[]
@@ -12,13 +32,13 @@ title __OUTPUTS's Class Diagram__\n
           ~ distanceR : double
           ~ e_t : double
           ~ e_w : double
+          ~ expWeight : double
           ~ i_tilt : double
           ~ int_e_t : double
           ~ lastUpdateTime : long
           ~ maxAbsTilt : double
           ~ maxTiltAngle : double
           ~ minTiltAngle : double
-          ~ output : int
           ~ p_tilt : double
           ~ p_wheel : double
           ~ setPoint : double
@@ -32,8 +52,6 @@ title __OUTPUTS's Class Diagram__\n
           ~ wheelCountL : double
           ~ wheelCountR : double
           - avgCount : int
-          - loggerOn : boolean
-          - pidON : boolean
           + BalancePIDController()
           + run()
           - linearController()
@@ -46,8 +64,8 @@ title __OUTPUTS's Class Diagram__\n
     namespace outputs {
       class jp.oist.abcvlib.outputs.CenterBlobController {
           - CENTER_COL : double
-          - avgCount : int
-          - loggerOn : boolean
+          - centroid : List<Point>
+          - p_phi : double
           - phi : double
           + CenterBlobController()
           + getPhi()
@@ -67,6 +85,18 @@ title __OUTPUTS's Class Diagram__\n
           + readData()
           + savedata()
           + writeToFile()
+      }
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib {
+    namespace outputs {
+      class jp.oist.abcvlib.outputs.GrandController {
+          - controllers : ArrayList<AbcvlibController>
+          + addController()
+          + run()
+          ~ GrandController()
       }
     }
   }
@@ -105,13 +135,14 @@ title __OUTPUTS's Class Diagram__\n
       class jp.oist.abcvlib.outputs.Outputs {
           # pidControllerThread : Thread
           - centerBlobControllerThread : Thread
+          - controllers : ArrayList<AbcvlibController>
+          - grandControllerThread : Thread
           - socketClientThread : Thread
           + Outputs()
           + setAudioFile()
           + setControls()
           + setPID()
           + setWheelOutput()
-          - grandController()
       }
     }
   }
@@ -167,19 +198,26 @@ title __OUTPUTS's Class Diagram__\n
   }
   
 
-  jp.oist.abcvlib.outputs.BalancePIDController .up.|> java.lang.Runnable
+  jp.oist.abcvlib.outputs.AbcvlibController .up.|> java.lang.Runnable
+  jp.oist.abcvlib.outputs.AbcvlibController o-- jp.oist.abcvlib.outputs.AbcvlibController.Output : output
+  jp.oist.abcvlib.outputs.AbcvlibController +-down- jp.oist.abcvlib.outputs.AbcvlibController.Output
+  jp.oist.abcvlib.outputs.BalancePIDController -up-|> jp.oist.abcvlib.outputs.AbcvlibController
   jp.oist.abcvlib.outputs.BalancePIDController o-- jp.oist.abcvlib.AbcvlibActivity : abcvlibActivity
-  jp.oist.abcvlib.outputs.CenterBlobController .up.|> java.lang.Runnable
+  jp.oist.abcvlib.outputs.CenterBlobController -up-|> jp.oist.abcvlib.outputs.AbcvlibController
   jp.oist.abcvlib.outputs.CenterBlobController o-- jp.oist.abcvlib.AbcvlibActivity : abcvlibActivity
+  jp.oist.abcvlib.outputs.GrandController -up-|> jp.oist.abcvlib.outputs.AbcvlibController
+  jp.oist.abcvlib.outputs.GrandController o-- jp.oist.abcvlib.AbcvlibActivity : abcvlibActivity
   jp.oist.abcvlib.outputs.MediaPlayerRunnable .up.|> java.lang.Runnable
   jp.oist.abcvlib.outputs.MediaPlayerRunnable o-- jp.oist.abcvlib.AbcvlibActivity : abcvlibActivity
+  jp.oist.abcvlib.outputs.Motion o-- jp.oist.abcvlib.AbcvlibActivity : abcvlibActivity
   jp.oist.abcvlib.outputs.Motion o-- jp.oist.abcvlib.inputs.MotionSensors : motionSensors
   jp.oist.abcvlib.outputs.Motion o-- jp.oist.abcvlib.inputs.QuadEncoders : quadEncoders
   jp.oist.abcvlib.outputs.Outputs .up.|> jp.oist.abcvlib.outputs.OutputsInterface
+  jp.oist.abcvlib.outputs.Outputs o-- jp.oist.abcvlib.outputs.BalancePIDController : balancePIDController
   jp.oist.abcvlib.outputs.Outputs o-- jp.oist.abcvlib.outputs.Motion : motion
   jp.oist.abcvlib.outputs.Outputs o-- jp.oist.abcvlib.outputs.SocketClient : socketClient
-  jp.oist.abcvlib.outputs.Outputs o-- jp.oist.abcvlib.outputs.BalancePIDController : balancePIDController
   jp.oist.abcvlib.outputs.Outputs o-- jp.oist.abcvlib.outputs.CenterBlobController : centerBlobController
+  jp.oist.abcvlib.outputs.Outputs o-- jp.oist.abcvlib.outputs.GrandController : grandController
   jp.oist.abcvlib.outputs.SocketClient .up.|> java.lang.Runnable
   jp.oist.abcvlib.outputs.SocketClient o-- jp.oist.abcvlib.AbcvlibActivity : abcvlibActivity
 

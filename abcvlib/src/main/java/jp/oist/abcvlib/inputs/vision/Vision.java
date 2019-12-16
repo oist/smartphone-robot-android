@@ -94,7 +94,6 @@ public class Vision implements View.OnTouchListener, CameraBridgeViewBase.CvCame
 
         if (mOpenCvCameraView == null & abcvlibActivity.switches.cameraApp){
             abcvlibActivity.requestWindowFeature(Window.FEATURE_NO_TITLE);
-            abcvlibActivity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             abcvlibActivity.setContentView(R.layout.color_blob_detection_surface_view);
             mOpenCvCameraView = abcvlibActivity.findViewById(R.id.color_blob_detection_activity_surface_view);
             mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
