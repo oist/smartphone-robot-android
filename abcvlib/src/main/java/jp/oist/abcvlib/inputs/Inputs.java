@@ -33,7 +33,7 @@ public class Inputs implements CameraBridgeViewBase.CvCameraViewListener2 {
         }
 
         if (abcvlibActivity.switches.cameraApp) {
-            vision = new Vision(abcvlibActivity, 800, 480);
+            vision = new Vision(abcvlibActivity, 400, 240);
         }
 
         if (abcvlibActivity.switches.micApp){

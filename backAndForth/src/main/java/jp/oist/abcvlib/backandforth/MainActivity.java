@@ -1,7 +1,10 @@
 package jp.oist.abcvlib.backandforth;
 
 import android.os.Bundle;
+import android.renderscript.ScriptGroup;
+
 import jp.oist.abcvlib.AbcvlibActivity;
+import jp.oist.abcvlib.inputs.Inputs;
 
 /**
  * Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors
