@@ -21,6 +21,7 @@ public class Inputs implements CameraBridgeViewBase.CvCameraViewListener2 {
     public QuadEncoders quadEncoders; // Doesnt need thread since AbcvlibLooper is handling this already
     public JSONObject stateVariables;
     public MicrophoneInput micInput;
+    public Battery battery;
 
     public Inputs(AbcvlibActivity abcvlibActivity){
 
@@ -29,7 +30,7 @@ public class Inputs implements CameraBridgeViewBase.CvCameraViewListener2 {
         }
 
         if (abcvlibActivity.switches.quadEncoderApp) {
-            quadEncoders = new QuadEncoders();
+            quadEncoders = new QuadEncoders(abcvlibActivity);
         }
 
         if (abcvlibActivity.switches.cameraApp) {
@@ -40,6 +41,8 @@ public class Inputs implements CameraBridgeViewBase.CvCameraViewListener2 {
             micInput = new MicrophoneInput(abcvlibActivity);
             micInput.start();
         }
+
+        battery = new Battery();
 
         stateVariables = initializeStateVariables();
 

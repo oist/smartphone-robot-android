@@ -2,6 +2,7 @@ package jp.oist.abcvlib.basic;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.TextView;
 
 import jp.oist.abcvlib.AbcvlibActivity;
 
@@ -35,12 +36,22 @@ public class MainActivity extends AbcvlibActivity {
 
     public class SimpleTest implements Runnable{
 
+        TextView voltageDisplay = findViewById(R.id.voltage);
+
         // Every runnable needs a public run method
         public void run(){
             while(appRunning){
                 // Prints theta and angular velocity to android logcat
-                Log.v(TAG, "theta:" + inputs.motionSensors.getThetaDeg() + " thetaDot:" +
-                        inputs.motionSensors.getThetaDegDot());
+                Log.i(TAG, "theta:" + inputs.motionSensors.getThetaDeg() + " thetaDot:" +
+                        inputs.motionSensors.getThetaDegDot() + "Battery Voltage:" + inputs.battery.getVoltage());
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Stuff that updates the UI
+                        voltageDisplay.setText(inputs.battery.getVoltage() + "V");
+                    }
+                });
             }
         }
     }

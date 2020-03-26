@@ -2,6 +2,7 @@ package jp.oist.abcvlib;
 
 import android.util.Log;
 
+import ioio.lib.api.AnalogInput;
 import ioio.lib.api.DigitalInput;
 import ioio.lib.api.DigitalOutput;
 import ioio.lib.api.IOIO;
@@ -9,7 +10,6 @@ import ioio.lib.api.PwmOutput;
 import ioio.lib.api.exception.ConnectionLostException;
 import ioio.lib.util.BaseIOIOLooper;
 import ioio.lib.util.IOIOConnectionManager;
-import jp.oist.abcvlib.inputs.QuadEncoders;
 
 /**
  * AbcvlibLooper provides the connection with the IOIOBoard by allowing access to the loop
@@ -201,6 +201,12 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      * @see #input1RightWheelController
      */
     private DigitalOutput input2LeftWheelController;
+    /**
+     * Monitors onboard battery voltage (note this is not the smartphone battery voltage. The
+     * smartphone battery should always be fully charged as it will draw current from the onboard
+     * battery until the onboard battery dies)
+     */
+    private AnalogInput batteryVoltageMonitor;
 
     //     --------------Pulse Width Modulation (PWM)----------------
     /**
@@ -347,6 +353,8 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         final int ENCODER_A_LEFT_WHEEL_PIN=15;
         final int ENCODER_B_LEFT_WHEEL_PIN=16;
 
+        final int BATTERY_VOLTAGE=22;
+
         /* Initializing all wheel controller values to low would result in both wheels being in
          the "Stop-NoBrake" mode according to the Hubee control table. Not sure if this state
          is required for some reason or just what was defaulted to. **/
@@ -354,6 +362,8 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         input2RightWheelController = ioio_.openDigitalOutput(INPUT2_RIGHT_WHEEL_PIN,false);
         input1LeftWheelController = ioio_.openDigitalOutput(INPUT1_LEFT_WHEEL_PIN,false);
         input2LeftWheelController = ioio_.openDigitalOutput(INPUT2_LEFT_WHEEL_PIN,false);
+
+        batteryVoltageMonitor = ioio_.openAnalogInput(BATTERY_VOLTAGE);
 
         // This try-catch statement should likely be refined to handle common errors/exceptions
         try{
@@ -410,15 +420,13 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
             updateQuadEncoders();
 
+            updateBatteryVoltage();
 
             if (newDataLeft || newDataRight) {
-
                 if (loggerOn) {
                     // Log stuff
                 }
-
                 indexUpdate();
-
             }
             else {
 //                Log.i("abcvlibLooper", "No new data");
@@ -611,6 +619,22 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     private void updateQuadEncoders(){
 
         abcvlibActivity.inputs.quadEncoders.setQuadVars(encoderCountLeftWheel[indexCurrent], encoderCountRightWheel[indexCurrent], indexCurrent, indexPrevious, timeStamp[indexCurrent]);
+
+    }
+
+    private void updateBatteryVoltage(){
+
+        double batteryVoltage = 0;
+
+        try {
+            batteryVoltage = batteryVoltageMonitor.getVoltage();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ConnectionLostException e) {
+            e.printStackTrace();
+        }
+
+        abcvlibActivity.inputs.battery.setVoltage(batteryVoltage, timeStamp[indexCurrent]);
 
     }
 
