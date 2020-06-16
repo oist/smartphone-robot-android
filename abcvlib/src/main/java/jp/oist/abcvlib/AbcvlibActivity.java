@@ -58,6 +58,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
             super.onCreate(savedInstanceState);
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
+        Log.i(TAG, "End of AbcvlibActivity.onCreate");
     }
 
     @Override
@@ -66,6 +67,8 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
             inputs.vision.onStart();
         }
         super.onStart();
+        Log.i(TAG, "End of AbcvlibActivity.onStart");
+
     }
 
     @Override
@@ -75,6 +78,8 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
         outputs.motion.setWheelOutput(0, 0);
         Toast.makeText(this, "In onStop", Toast.LENGTH_LONG).show();
         Log.i(TAG, "onStop Log");
+        Log.i(TAG, "End of AbcvlibActivity.onStop");
+
     }
 
     @Override
@@ -86,6 +91,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
 
         super.onPause();
         outputs.motion.setWheelOutput(0, 0);
+        Log.i(TAG, "End of AbcvlibActivity.onPause");
     }
 
     @Override
@@ -94,6 +100,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
             inputs.vision.onDestroy();
         }
         super.onDestroy();
+        Log.i(TAG, "End of AbcvlibActivity.onDestroy");
     }
 
     @Override
@@ -103,12 +110,15 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
             inputs.vision.onResume();
         }
         super.onResume();
+        Log.i(TAG, "End of AbcvlibActivity.onResume");
     }
 
     protected void initialzer(AbcvlibActivity abcvlibActivity, String hostIP, int hostPort, AbcvlibController controller){
 
         //Todo some logic here to test for boolean combinations that would lead to errors.
         // e.g. balanceApp without pythonControlApp
+
+        Log.i(TAG, "Start of AbcvlibActivity.initializer");
 
         inputs = new Inputs(abcvlibActivity);
         outputs = new Outputs(abcvlibActivity, hostIP, hostPort, controller);
@@ -123,6 +133,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
 
         // Tell all child classes it is ok to proceed.
         this.appRunning = true;
+        Log.i(TAG, "End of AbcvlibActivity.initializer");
     }
 
     /**

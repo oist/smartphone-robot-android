@@ -19,7 +19,7 @@ public class Switches {
      * Enable/disable this to swap the polarity of the wheels such that the default forward
      * direction will be swapped (i.e. wheels will move cw vs ccw as forward).
      */
-    public boolean wheelPolaritySwap = false;
+    public boolean wheelPolaritySwap = true;
     /**
      * Enable readings from phone gyroscope, accelerometer, and sensor fusion software sensors
      * determining the angle of tile, angular velocity, etc

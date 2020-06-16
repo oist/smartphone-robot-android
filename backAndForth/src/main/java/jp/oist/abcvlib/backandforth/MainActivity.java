@@ -2,6 +2,7 @@ package jp.oist.abcvlib.backandforth;
 
 import android.os.Bundle;
 import android.renderscript.ScriptGroup;
+import android.util.Log;
 
 import jp.oist.abcvlib.AbcvlibActivity;
 import jp.oist.abcvlib.inputs.Inputs;
@@ -38,23 +39,37 @@ public class MainActivity extends AbcvlibActivity {
         double distanceL; // distances traveled by left wheel from start point (mm)
         double distanceR; // distances traveled by right wheel from start point (mm)
 
-        int speed = 60; // Duty cycle from 0 to 100.
+        int speed = 50; // Duty cycle from 0 to 100.
 
         public void run(){
 
             // Set Initial Speed
             outputs.motion.setWheelOutput(speed, speed);
 
+            Log.i(TAG, "Step 1");
+
             while(appRunning) {
 
-                distanceL = inputs.quadEncoders.getDistanceL();
-                distanceR = inputs.quadEncoders.getDistanceR();
+//                distanceL = inputs.quadEncoders.getDistanceL();
+//                distanceR = inputs.quadEncoders.getDistanceR();
+//                Log.i(TAG, "distanceL = " + distanceL + ", distanceR = " + distanceR);
+//
+//                if (distanceR >= 200){
+//                    outputs.motion.setWheelOutput(-speed, -speed);
+//                }
+//                else if (distanceR <= -200){
+//                    outputs.motion.setWheelOutput(speed, speed);
+//                }
 
-                if (distanceR >= 200){
+                try {
+                    Thread.sleep(1000);
+                    outputs.motion.setWheelOutput(0, 0);
+                    Thread.sleep(5000);
                     outputs.motion.setWheelOutput(-speed, -speed);
-                }
-                else if (distanceR <= -200){
+                    Thread.sleep(1000);
                     outputs.motion.setWheelOutput(speed, speed);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
 
             }

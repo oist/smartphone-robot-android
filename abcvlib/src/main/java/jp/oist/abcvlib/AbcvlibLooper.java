@@ -353,7 +353,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         final int ENCODER_A_LEFT_WHEEL_PIN=15;
         final int ENCODER_B_LEFT_WHEEL_PIN=16;
 
-        final int BATTERY_VOLTAGE=22;
+//        final int BATTERY_VOLTAGE=22;
 
         /* Initializing all wheel controller values to low would result in both wheels being in
          the "Stop-NoBrake" mode according to the Hubee control table. Not sure if this state
@@ -363,7 +363,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         input1LeftWheelController = ioio_.openDigitalOutput(INPUT1_LEFT_WHEEL_PIN,false);
         input2LeftWheelController = ioio_.openDigitalOutput(INPUT2_LEFT_WHEEL_PIN,false);
 
-        batteryVoltageMonitor = ioio_.openAnalogInput(BATTERY_VOLTAGE);
+//        batteryVoltageMonitor = ioio_.openAnalogInput(BATTERY_VOLTAGE);
 
         // This try-catch statement should likely be refined to handle common errors/exceptions
         try{
@@ -420,7 +420,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
             updateQuadEncoders();
 
-            updateBatteryVoltage();
+//            updateBatteryVoltage();
 
             if (newDataLeft || newDataRight) {
                 if (loggerOn) {
@@ -491,11 +491,15 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
     private void getDutyCycle() {
 
+        Log.i("abcvlib", "Start AbcvlibLooper.getDutyCycle" + dutyCycleLeftWheelCurrent + "," + dutyCycleRightWheelCurrent);
+
         dutyCycleRightWheelCurrent = abcvlibActivity.outputs.motion.getDutyCycleRight();
         dutyCycleLeftWheelCurrent = abcvlibActivity.outputs.motion.getDutyCycleLeft();
 
         dutyCycleRightWheelNew = dutyCycleLimiter(dutyCycleRightWheelCurrent);
         dutyCycleLeftWheelNew = dutyCycleLimiter(dutyCycleLeftWheelCurrent);
+
+        Log.i("abcvlib", "End AbcvlibLooper.getDutyCycle" + dutyCycleLeftWheelCurrent + "," + dutyCycleRightWheelCurrent);
 
     }
 
@@ -622,21 +626,21 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
     }
 
-    private void updateBatteryVoltage(){
-
-        double batteryVoltage = 0;
-
-        try {
-            batteryVoltage = batteryVoltageMonitor.getVoltage();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ConnectionLostException e) {
-            e.printStackTrace();
-        }
-
-        abcvlibActivity.inputs.battery.setVoltage(batteryVoltage, timeStamp[indexCurrent]);
-
-    }
+//    private void updateBatteryVoltage(){
+//
+//        double batteryVoltage = 0;
+//
+//        try {
+//            batteryVoltage = batteryVoltageMonitor.getVoltage();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        } catch (ConnectionLostException e) {
+//            e.printStackTrace();
+//        }
+//
+//        abcvlibActivity.inputs.battery.setVoltage(batteryVoltage, timeStamp[indexCurrent]);
+//
+//    }
 
     /**
      Input all IO values from Hubee Wheel and output either +1, or -1 to add or subtract one wheel
