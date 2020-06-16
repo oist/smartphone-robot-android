@@ -2,7 +2,19 @@ package jp.oist.abcvlib.basic;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Size;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.camera.core.ImageAnalysis;
+import androidx.camera.core.ImageProxy;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.camera.lifecycle.ProcessCameraProvider;
+
+import com.google.common.util.concurrent.ListenableFuture;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 import jp.oist.abcvlib.AbcvlibActivity;
 
@@ -14,10 +26,12 @@ import jp.oist.abcvlib.AbcvlibActivity;
  */
 public class MainActivity extends AbcvlibActivity {
 
+    private Executor cameraExecutor;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        switches.cameraApp = true;
+        //switches.cameraApp = true;
 
         // Initalizes various objects in parent class.
         initialzer(this);
@@ -28,6 +42,24 @@ public class MainActivity extends AbcvlibActivity {
         // Setup Android GUI. Point this method to your main activity xml file or corresponding int
         // ID within the R class
         setContentView(R.layout.activity_main);
+
+        ListenableFuture cameraProviderFuture = ProcessCameraProvider.getInstance(this);
+
+        ImageAnalysis imageAnalysis =
+                new ImageAnalysis.Builder()
+                        .setTargetResolution(new Size(1280, 720))
+                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                        .build();
+
+        imageAnalysis.setAnalyzer(cameraExecutor, new ImageAnalysis.Analyzer() {
+            @Override
+            public void analyze(@NonNull ImageProxy image) {
+                long timestamp = image.getImageInfo().getTimestamp();
+                Log.i(TAG, "Image taken:" + timestamp);
+            }
+        });
+
+        cameraProvider.bindToLifecycle((LifecycleOwner) this, cameraSelector, imageAnalysis);
 
         // Create "runnable" object (similar to a thread, but recommended over overriding thread class)
         SimpleTest simpleTest = new SimpleTest();
