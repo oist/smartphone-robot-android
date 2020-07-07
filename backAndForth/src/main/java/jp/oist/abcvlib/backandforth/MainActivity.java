@@ -27,6 +27,8 @@ public class MainActivity extends AbcvlibActivity {
         // ID within the R class
         setContentView(R.layout.activity_main);
 
+        Log.i(TAG, "Step 0");
+
         // Linear Back and Forth every 10 mm
         BackAndForth backAndForthThread = new BackAndForth();
         new Thread(backAndForthThread).start();
@@ -35,10 +37,6 @@ public class MainActivity extends AbcvlibActivity {
 
     public class BackAndForth implements Runnable{
 
-        // PID Setup
-        double distanceL; // distances traveled by left wheel from start point (mm)
-        double distanceR; // distances traveled by right wheel from start point (mm)
-
         int speed = 50; // Duty cycle from 0 to 100.
 
         public void run(){
@@ -46,28 +44,23 @@ public class MainActivity extends AbcvlibActivity {
             // Set Initial Speed
             outputs.motion.setWheelOutput(speed, speed);
 
-            Log.i(TAG, "Step 1");
+            Log.i(TAG, "wheelspeed=" + speed);
 
             while(appRunning) {
-
-//                distanceL = inputs.quadEncoders.getDistanceL();
-//                distanceR = inputs.quadEncoders.getDistanceR();
-//                Log.i(TAG, "distanceL = " + distanceL + ", distanceR = " + distanceR);
-//
-//                if (distanceR >= 200){
-//                    outputs.motion.setWheelOutput(-speed, -speed);
-//                }
-//                else if (distanceR <= -200){
-//                    outputs.motion.setWheelOutput(speed, speed);
-//                }
 
                 try {
                     Thread.sleep(1000);
                     outputs.motion.setWheelOutput(0, 0);
-                    Thread.sleep(5000);
+                    Log.i(TAG, "wheelspeed=0");
+                    Thread.sleep(1000);
                     outputs.motion.setWheelOutput(-speed, -speed);
+                    Log.i(TAG, "wheelspeed=" + -speed);
+                    Thread.sleep(1000);
+                    outputs.motion.setWheelOutput(0, 0);
+                    Log.i(TAG, "wheelspeed=" + "0");
                     Thread.sleep(1000);
                     outputs.motion.setWheelOutput(speed, speed);
+                    Log.i(TAG, "wheelspeed=" + speed);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

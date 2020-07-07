@@ -1,7 +1,7 @@
 {
   "stringTable": {
     "0": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cmake/debug/x86",
-    "1": "--target=i686-none-linux-android16 --gcc-toolchain=/home/christopher/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64 --sysroot=/home/christopher/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -fno-addrsig -Wa,--noexecstack -Wformat -Werror=format-security -O0 -fno-limit-debug-info -fPIC"
+    "1": "--target=i686-none-linux-android16 --gcc-toolchain=/home/christopher/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64 --sysroot=/home/christopher/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -O0 -fno-limit-debug-info -fPIC"
   },
   "buildFiles": [
     "/home/christopher/Android/Sdk/ndk-bundle/build/cmake/android.toolchain.cmake",

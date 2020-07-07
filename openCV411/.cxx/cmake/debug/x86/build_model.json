@@ -146,7 +146,7 @@
       ],
       "ndkMetaPlatforms": {
         "min": 16,
-        "max": 29,
+        "max": 30,
         "aliases": {
           "20": 19,
           "25": 24,
@@ -162,7 +162,8 @@
           "O": 26,
           "O-MR1": 27,
           "P": 28,
-          "Q": 29
+          "Q": 29,
+          "R": 30
         }
       },
       "ndkSupportedAbiList": [
@@ -172,7 +173,7 @@
         "X86_64"
       ],
       "ndkDefaultStl": "LIBCXX_STATIC",
-      "ndkVersion": "20.1.5948944",
+      "ndkVersion": "21.3.6528147",
       "project": {
         "compilerSettingsCacheFolder": "/home/christopher/git/smartphone-robot/abcvlibApp/.cxx",
         "cxxFolder": "/home/christopher/git/smartphone-robot/abcvlibApp/.cxx",

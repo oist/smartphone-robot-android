@@ -1,16 +1,20 @@
 {
   "buildFiles": [
+    "/home/christopher/Android/Sdk/ndk-bundle/build/cmake/android.toolchain.cmake",
+    "/home/christopher/Android/Sdk/ndk-bundle/build/cmake/platforms.cmake",
     "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/libcxx_helper/CMakeLists.txt"
   ],
   "cleanCommands": [
-    "/home/christopher/Android/Sdk/cmake/3.6.4111459/bin/cmake --build /home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cmake/debug/armeabi-v7a --target clean"
+    "/home/christopher/Android/Sdk/cmake/3.10.2.4988404/bin/ninja -C \"/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cmake/debug/armeabi-v7a\" clean"
   ],
+  "buildTargetsCommand": "/home/christopher/Android/Sdk/cmake/3.10.2.4988404/bin/ninja  -C \"/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cmake/debug/armeabi-v7a\" {LIST_OF_TARGETS_TO_BUILD}",
   "libraries": {
     "opencv_jni_shared-Debug-armeabi-v7a": {
       "artifactName": "opencv_jni_shared",
-      "buildCommand": "/home/christopher/Android/Sdk/cmake/3.6.4111459/bin/cmake --build /home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cmake/debug/armeabi-v7a --target opencv_jni_shared",
+      "buildCommand": "/home/christopher/Android/Sdk/cmake/3.10.2.4988404/bin/ninja -C \"/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cmake/debug/armeabi-v7a\" opencv_jni_shared",
       "abi": "armeabi-v7a",
-      "output": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cmake/debug/armeabi-v7a/libopencv_jni_shared.a"
+      "output": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cmake/debug/armeabi-v7a/libopencv_jni_shared.a",
+      "runtimeFiles": []
     }
   }
 }

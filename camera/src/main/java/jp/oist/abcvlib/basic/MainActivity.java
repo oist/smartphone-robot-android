@@ -59,7 +59,7 @@ public class MainActivity extends AbcvlibActivity {
             }
         });
 
-        cameraProvider.bindToLifecycle((LifecycleOwner) this, cameraSelector, imageAnalysis);
+        //cameraProvider.bindToLifecycle((LifecycleOwner) this, cameraSelector, imageAnalysis);
 
         // Create "runnable" object (similar to a thread, but recommended over overriding thread class)
         SimpleTest simpleTest = new SimpleTest();

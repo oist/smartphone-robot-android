@@ -31,6 +31,8 @@ public class Outputs implements OutputsInterface {
 
         //BalancePIDController Controller
         motion = new Motion(abcvlibActivity);
+        Log.v("abcvlib", "motion object created");
+
 
         // Todo: make all these threads self contained like in MicrophoneInput so you can set join/stop methods
         // Python Socket Connection. Host IP:Port needs to be the same as python server.
