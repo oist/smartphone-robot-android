@@ -12,6 +12,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.FormatFlagsConversionMismatchException;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import jp.oist.abcvlib.AbcvlibActivity;
@@ -48,15 +50,14 @@ public class MainActivity extends AbcvlibActivity {
     public class Motion implements Runnable{
 
         int[] speeds = {100, 0, -100, 0}; // Duty cycle from 0 to 100.
-        int timestepTtl = 2000;
+        int timestepTtl = 200000;
         int cycles = 2;
-//        AtomicInteger stepCount = new AtomicInteger();
-        int stepCount = 0;
-        int indexCnt = 0;
+        int stepCount = 1;
         int arrayLength = speeds.length * timestepTtl * cycles;
 
         int[] indexTracker = new int[arrayLength];
         long[] timestampCustom = new long[arrayLength];
+        long[] timestampRelative = new long[arrayLength];
         long[] timestampDiff = new long[arrayLength];
         double[] wLSet = new double[arrayLength]; // Angular velocity on Left wheel Setpoint
         double[] wLMeasured = new double[arrayLength]; // Angular velocity on Left wheel Measured
@@ -65,20 +66,13 @@ public class MainActivity extends AbcvlibActivity {
         double[] wPMeasured = new double[arrayLength]; // Angular velocity of Phone Measured
         double[] tPMeasured = new double[arrayLength]; // theta tilt angle of Phone Measured
 
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+
         public void run(){
-            String header = "stepCount" + ", " + "timestamp" + ", " + "timestampDiff" + ", " + "wLSet" + ", " + "wLMeasured" + ", " + "wRSet" +
+            String header = "stepCount" + ", " + "timestampAbsolute" + ", " + "timestampRelative" + ", " + "timestampDiff" + ", " + "wLSet" + ", " + "wLMeasured" + ", " + "wRSet" +
                     ", " + "wRMeasured" + ", " + "wPMeasured" + ", " + "tPMeasured";
             writeToFile(header, false);
-//            for (int m = 0; m < 200; m++){
-//                if (m > 0) {
-//                    timestampCustom[m] = System.nanoTime();
-//                    timestampDiff[m] = timestampCustom[m] - timestampCustom[m - 1];
-//                }
-//                else {
-//                    timestampCustom[m] = System.nanoTime();
-//                    timestampDiff[m] = timestampCustom[m];
-//                }
-//            }
+
             int i = 0;
 
             while (i < cycles){
@@ -87,33 +81,50 @@ public class MainActivity extends AbcvlibActivity {
 
                 while (k < speeds.length){
                     // Set wheel speed
-//                    outputs.motion.setWheelOutput(speeds[k], speeds[k]);
+                    outputs.motion.setWheelOutput(speeds[k], speeds[k]);
 
                     int t = 0;
 
-                    while (t < timestepTtl - 1){
+                    while (t < timestepTtl){
 //                         Wait t timesteps and record all variables for each step
-                        indexCnt = ((i + 1) * (k + 1) * (t + 1));
-                        indexTracker[indexCnt] = indexCnt;
 
-                        timestampCustom[indexCnt] = System.nanoTime();
-                        timestampDiff[indexCnt] = (timestampCustom[indexCnt] - timestampCustom[indexCnt - 1]) / 1000000;
-
-//                        wLSet[indexCnt] = speeds[k] * (12.5/100); // Convert pulse with % to rad/s assuming max angular vel is 12.5 rad/s
-//                        wRSet[indexCnt] = wLSet[indexCnt];
-//                        wLMeasured[indexCnt] = inputs.quadEncoders.getWheelSpeedL() * (2*Math.PI / 128); // in rad/s assuming 128 counts per single rotation of wheel.
-//                        wRMeasured[indexCnt] = inputs.quadEncoders.getWheelSpeedL() * (2*Math.PI / 128);
-//                        wPMeasured[indexCnt] = inputs.motionSensors.getThetaRadDot();
-//                        tPMeasured[indexCnt] = inputs.motionSensors.getThetaRad();
+                        if (stepCount < timestampDiff.length - 1){
+                            timestampCustom[stepCount] = System.nanoTime();
+                            timestampRelative[stepCount] = timestampCustom[stepCount] - timestampCustom[1];
+                            timestampDiff[stepCount] = (timestampCustom[stepCount] - timestampCustom[stepCount - 1]);
+                            wLSet[stepCount] = speeds[k] * (12.5/100); // Convert pulse with % to rad/s assuming max angular vel is 12.5 rad/s
+                            wRSet[stepCount] = wLSet[stepCount];
+                            wLMeasured[stepCount] = inputs.quadEncoders.getWheelSpeedL() * (2*Math.PI / 128); // in rad/s assuming 128 counts per single rotation of wheel.
+                            wRMeasured[stepCount] = inputs.quadEncoders.getWheelSpeedL() * (2*Math.PI / 128);
+                            wPMeasured[stepCount] = inputs.motionSensors.getThetaRadDot();
+                            tPMeasured[stepCount] = inputs.motionSensors.getThetaRad();
+                        }
 
                         stepCount++;
                         t++;
                     }
+
+                    // for each event
+                    executor.submit(new Runnable() {
+                        public void run()
+                        {
+                            int l = 0;
+                            while (l < timestampDiff.length){
+                                String data = String.valueOf(stepCount) + ", " + String.valueOf(timestampCustom[l]) + ", " +
+                                        String.valueOf(timestampRelative[l]) + "," + String.valueOf(timestampDiff[l]) +
+                                        ", " + String.valueOf(wLSet[l]) + ", " + String.valueOf(wLMeasured[l]) +
+                                        ", " + String.valueOf(wRSet[l]) + ", " + String.valueOf(wRMeasured[l]) +
+                                        ", " + String.valueOf(wPMeasured[l]) + ", " + String.valueOf(tPMeasured[l]);
+                                writeToFile(data, true);
+                                l++;
+                            }
+                        }
+                    });
+
                     k++;
                 }
                 i++;
             }
-
 //            AtomicInteger i = new AtomicInteger();
 //
 //            while (i.get() < cycles){
@@ -154,54 +165,8 @@ public class MainActivity extends AbcvlibActivity {
 //                }
 //                i.incrementAndGet();
 //            }
-
-            Log.d(TAG + "test", Arrays.toString(indexTracker));
-            Log.d(TAG + "test", Arrays.toString(timestampCustom));
-            Log.d(TAG + "test", Arrays.toString(timestampDiff));
-
-            double diffAvg = 0;
-            double diffMax = 0;
-            double diffMin = 0;
-            int minPos = 0;
-            int maxPos = 0;
-            for (int m = 2; m < timestampDiff.length; m++) {
-                if (timestampDiff[m] < diffMin){
-                    diffMin = timestampDiff[m];
-                    minPos = m;
-                }
-                if (timestampDiff[m] > diffMax){
-                    diffMax = timestampDiff[m];
-                    maxPos = m;
-                }
-                diffAvg = diffAvg + timestampDiff[m];
-            }
-            diffAvg = (diffAvg / timestampDiff.length); //in ms
-            diffMax = diffMax;
-            diffMin = diffMin;
-            Log.d(TAG + "test", "Avg TimeDiff = " + String.valueOf(diffAvg) + " ms" + ", Min TimeDiff = " + String.valueOf(diffMin) + " ms @Index:" + minPos + ", Max TimeDiff = " + String.valueOf(diffMax) + " ms @Index:" + maxPos);
-            Log.d(TAG + "test", "Total Indicies=" + timestampDiff.length);
-
             int l = 0;
-            while (l < timestampDiff.length){
-                String data = String.valueOf(l) + ", " + String.valueOf(timestampCustom[l]) + ", " + String.valueOf(timestampDiff[l]) +
-                        ", " + String.valueOf(wLSet[l]) + ", " + String.valueOf(wLMeasured[l]) +
-                        ", " + String.valueOf(wRSet[l]) + ", " + String.valueOf(wRMeasured[l]) +
-                        ", " + String.valueOf(wPMeasured[l]) + ", " + String.valueOf(tPMeasured[l]);
-                writeToFile(data, true);
-                l++;
-            }
 
-//            AtomicInteger p = new AtomicInteger();
-//
-//            while (p.get() < timestamp.length){
-//                int l = p.get();
-//                String data = String.valueOf(l) + ", " + String.valueOf(timestamp[l]) +
-//                        ", " + String.valueOf(wLSet[l]) + ", " + String.valueOf(wLMeasured[l]) +
-//                        ", " + String.valueOf(wRSet[l]) + ", " + String.valueOf(wRMeasured[l]) +
-//                        ", " + String.valueOf(wPMeasured[l]) + ", " + String.valueOf(tPMeasured[l]);
-//                writeToFile(data, true);
-//                p.incrementAndGet();
-//            }
         }
 
         private void writeToFile(String data, Boolean append) {
