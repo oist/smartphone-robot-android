@@ -1,32 +1,33 @@
 package jp.oist.abcvlib.basic;
 
+import android.annotation.SuppressLint;
+import android.graphics.Rect;
+import android.media.Image;
 import android.os.Bundle;
 import android.util.Log;
-import android.util.Size;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageProxy;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.camera.lifecycle.ProcessCameraProvider;
 
-import com.google.common.util.concurrent.ListenableFuture;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.objects.DetectedObject;
+import com.google.mlkit.vision.objects.ObjectDetection;
+import com.google.mlkit.vision.objects.ObjectDetector;
+import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
+import java.util.List;
 
 import jp.oist.abcvlib.AbcvlibActivity;
 
 /**
- * Most basic Android application showing connection to IOIOBoard and Android Sensors
- * Shows basics of setting up any standard Android Application framework, and a simple log output of
- * theta and angular velocity via Logcat using onboard Android sensors.
  * @author Christopher Buckley https://github.com/topherbuckley
  */
 public class MainActivity extends AbcvlibActivity {
 
-    private Executor cameraExecutor;
+    ObjectDetector objectDetector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,52 +44,58 @@ public class MainActivity extends AbcvlibActivity {
         // ID within the R class
         setContentView(R.layout.activity_main);
 
-        ListenableFuture cameraProviderFuture = ProcessCameraProvider.getInstance(this);
-
-        ImageAnalysis imageAnalysis =
-                new ImageAnalysis.Builder()
-                        .setTargetResolution(new Size(1280, 720))
-                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+        // Live detection and tracking
+        ObjectDetectorOptions options =
+                new ObjectDetectorOptions.Builder()
+                        .setDetectorMode(ObjectDetectorOptions.STREAM_MODE)
                         .build();
 
-        imageAnalysis.setAnalyzer(cameraExecutor, new ImageAnalysis.Analyzer() {
-            @Override
-            public void analyze(@NonNull ImageProxy image) {
-                long timestamp = image.getImageInfo().getTimestamp();
-                Log.i(TAG, "Image taken:" + timestamp);
-            }
-        });
+        objectDetector = ObjectDetection.getClient(options);
 
-        //cameraProvider.bindToLifecycle((LifecycleOwner) this, cameraSelector, imageAnalysis);
-
-        // Create "runnable" object (similar to a thread, but recommended over overriding thread class)
-        SimpleTest simpleTest = new SimpleTest();
-        // Start the runnable thread
-        new Thread(simpleTest).start();
+        YourAnalyzer yourAnalyzer = new YourAnalyzer();
 
     }
 
-    public class SimpleTest implements Runnable{
+    private class YourAnalyzer implements ImageAnalysis.Analyzer {
 
-        TextView voltageDisplay = findViewById(R.id.voltage);
+        @Override
+        public void analyze(ImageProxy imageProxy) {
+            @SuppressLint("UnsafeExperimentalUsageError") Image mediaImage = imageProxy.getImage();
+            if (mediaImage != null) {
+                InputImage image =
+                        InputImage.fromMediaImage(mediaImage, imageProxy.getImageInfo().getRotationDegrees());
+                // Pass image to an ML Kit Vision API
+                // ...
+                objectDetector.process(image)
+                        .addOnSuccessListener(
+                                new OnSuccessListener<List<DetectedObject>>() {
+                                    @Override
+                                    public void onSuccess(List<DetectedObject> detectedObjects) {
+                                        // Task completed successfully
+                                        objectHandler(detectedObjects);
+                                    }
+                                })
+                        .addOnFailureListener(
+                                new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        // Task failed with an exception
+                                        Log.d(TAG, "objectDetector failed to process image");
+                                    }
+                                });
 
-        // Every runnable needs a public run method
-        public void run(){
-            while(appRunning){
-                // Prints theta and angular velocity to android logcat
-                Log.i(TAG, "theta:" + inputs.motionSensors.getThetaDeg() + " thetaDot:" +
-                        inputs.motionSensors.getThetaDegDot() + "Battery Voltage:" + inputs.battery.getVoltage());
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        // Stuff that updates the UI
-                        voltageDisplay.setText(inputs.battery.getVoltage() + "V");
-                    }
-                });
             }
         }
-    }
+
+        private void objectHandler(List<DetectedObject> detectedObjects){
+            for (DetectedObject detectedObject : detectedObjects) {
+                Rect boundingBox = detectedObject.getBoundingBox();
+                Integer trackingId = detectedObject.getTrackingId();
+                }
+            }
+
+        }
+
 
 }
 
