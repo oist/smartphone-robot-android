@@ -37,7 +37,8 @@ public class MainActivity extends AbcvlibActivity {
 
     public class BackAndForth implements Runnable{
 
-        int speed = 50; // Duty cycle from 0 to 100.
+        int speed = 100; // Duty cycle from 0 to 100.
+        int sleeptime = 10000;
 
         public void run(){
 
@@ -49,13 +50,13 @@ public class MainActivity extends AbcvlibActivity {
             while(appRunning) {
 
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(sleeptime);
                     outputs.motion.setWheelOutput(0, 0);
                     Log.i(TAG, "wheelspeed=0");
                     Thread.sleep(1000);
                     outputs.motion.setWheelOutput(-speed, -speed);
                     Log.i(TAG, "wheelspeed=" + -speed);
-                    Thread.sleep(1000);
+                    Thread.sleep(sleeptime);
                     outputs.motion.setWheelOutput(0, 0);
                     Log.i(TAG, "wheelspeed=" + "0");
                     Thread.sleep(1000);

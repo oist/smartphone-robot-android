@@ -40,7 +40,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     private double[] timeStamp = new double[buffer];
     private double dt = 0;
     private double lp_freq = 100.0; // Low Pass Cutoff Freq
-    private int quadErrorCount = 0;
+    private int quadZeroCount = 0;
     private boolean newData = true;
     private boolean newDataLeft = true;
     private boolean newDataRight = true;
@@ -422,15 +422,17 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
             updateBatteryVoltage();
 
-            if (newDataLeft || newDataRight) {
-                if (loggerOn) {
-                    // Log stuff
-                }
-                indexUpdate();
-            }
-            else {
-//                Log.i("abcvlibLooper", "No new data");
-            }
+            indexUpdate();
+
+//            if (newDataLeft || newDataRight) {
+//                if (loggerOn) {
+//                    // Log stuff
+//                }
+//                indexUpdate();
+//            }
+//            else {
+////                Log.i("abcvlibLooper", "No new data");
+//            }
 
         }
         catch (ConnectionLostException e){
@@ -707,7 +709,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             else{
 //                    Log.w("abcvlibEncoder", "quadErrorCount = " + quadErrorCount + " Quadrature encoders read H/H or L/L when they " +
 //                            "should have read H/L or L/H");
-                quadErrorCount++;
+                quadZeroCount++;
                 newData = false;
             }
         }
@@ -724,7 +726,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             else{
 //                    Log.w("abcvlibEncoder", "quadErrorCount = " + quadErrorCount + " Quadrature encoders read H/L or L/H when they " +
 //                            "should have read H/H or L/L");
-                quadErrorCount++;
+                quadZeroCount++;
                 newData = false;
             }
         }
@@ -742,7 +744,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             else{
 //                    Log.w("abcvlibEncoder", "quadErrorCount = " + quadErrorCount + " Quadrature encoders read H/H or L/L when they " +
 //                            "should have read H/L or L/H");
-                quadErrorCount++;
+                quadZeroCount++;
                 newData = false;
             }
         }
@@ -760,7 +762,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             else{
 //                    Log.w("abcvlibEncoder", "quadErrorCount = " + quadErrorCount + " Quadrature encoders read H/L or L/H when they " +
 //                            "should have read H/H or L/L");
-                quadErrorCount++;
+                quadZeroCount++;
                 newData = false;
             }
         }
