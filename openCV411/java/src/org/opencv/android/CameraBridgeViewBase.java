@@ -54,6 +54,9 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
     protected boolean mCameraPermissionGranted = false;
     protected FpsMeter mFpsMeter = null;
 
+
+    public int frameWidth;
+    public int frameHeight;
     public static final int CAMERA_ID_ANY   = -1;
     public static final int CAMERA_ID_BACK  = 99;
     public static final int CAMERA_ID_FRONT = 98;
@@ -523,6 +526,9 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
             calcWidth = accessor.getWidth(size);
             calcHeight = accessor.getHeight(size);
         }
+
+        frameHeight = calcHeight;
+        frameWidth = calcWidth;
 
         return new Size(calcWidth, calcHeight);
     }

@@ -13,13 +13,13 @@ public class ColorBlobDetectionActivity extends AbcvlibActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
 
-        switches.loggerOn = true;
+        switches.loggerOn = false;
         switches.balanceApp = true;
         switches.pythonControlApp = true;
         switches.cameraApp = true;
         switches.centerBlobApp = true;
 
-        initialzer(this, "192.168.29.131", 65434);
+        initialzer(this, "10.9.23.131", 3000);
 
         super.onCreate(savedInstanceState);
     }

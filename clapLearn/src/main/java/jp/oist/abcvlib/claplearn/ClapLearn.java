@@ -29,7 +29,7 @@ public class ClapLearn extends AbcvlibActivity {
         switches.actionSelectorApp = true;
 
         // Passes Android App information up to parent classes for various usages.
-        initialzer(this, "192.168.29.131", 65434);
+        initialzer(this, "192.168.20.26", 65434);
 
         // Read the layout and construct.
         setContentView(R.layout.main);

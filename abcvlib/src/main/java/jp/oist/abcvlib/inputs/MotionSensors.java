@@ -386,8 +386,8 @@ public class MotionSensors implements SensorEventListener {
 //        // Compile dt_sample values to push to separate adb tag
 //        String dtGyroMsg = Double.toString(dtGyro);
 
-        Log.i("thetaMsg", thetaMsg);
-        Log.i("angularVelocityRadMsg", angularVelocityRadMsg);
+//        Log.i("thetaMsg", thetaMsg);
+//        Log.i("angularVelocityRadMsg", angularVelocityRadMsg);
 //        Log.i("thetaVectorVelMsg", thetaVectorVelMsg);
 //        Log.i("dtRotation", dtRotationMsg);
 //        Log.i("thetaDotGyroMsg", thetaDotGyroMsg);

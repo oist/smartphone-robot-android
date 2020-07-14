@@ -79,7 +79,7 @@ public class BalancePIDController extends AbcvlibController{
                 updateTimeStep = PIDTimer[0]- lastUpdateTime;
                 lastUpdateTime = PIDTimer[0];
                 if (abcvlibActivity.switches.loggerOn){
-                    Log.i("theta", "theta was updated in " + (updateTimeStep / 1000000) + " ms");
+                    Log.v("theta", "theta was updated in " + (updateTimeStep / 1000000) + " ms");
                 }
             }
 
@@ -119,7 +119,7 @@ public class BalancePIDController extends AbcvlibController{
                 }
 
                 if (abcvlibActivity.switches.loggerOn){
-                    Log.i("timers", "PIDTimer Averages = " + Arrays.toString(PIDTimeSteps));
+                    Log.v("timers", "PIDTimer Averages = " + Arrays.toString(PIDTimeSteps));
                 }
             }
 

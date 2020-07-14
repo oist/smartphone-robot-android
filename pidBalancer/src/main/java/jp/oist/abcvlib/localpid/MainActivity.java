@@ -19,7 +19,7 @@ public class MainActivity extends AbcvlibActivity {
         switches.pythonControlApp = true;
 
         // Note the previously optional parameters that handle the connection to the python server
-        initialzer(this,"192.168.29.131", 65434);
+        initialzer(this,"192.168.20.26", 3000);
 
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);

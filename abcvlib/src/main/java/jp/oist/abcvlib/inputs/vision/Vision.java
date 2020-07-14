@@ -7,7 +7,6 @@ import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
-import android.view.WindowManager;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -62,7 +61,8 @@ public class Vision implements View.OnTouchListener, CameraBridgeViewBase.CvCame
     protected Double               CENTER_THRESHOLD = 0.1; // How far centroid can be from absolute center before being considered centered.
     protected boolean              mIsColorSelected = false;
     protected List<MatOfPoint>     contours;
-    private List<Point> centroid;
+    protected double[]             blobSizes;
+    private List<Point> centroids;
 
 
     // Todo this needs to be created before onCreate is called. How to ensure this?
@@ -73,6 +73,7 @@ public class Vision implements View.OnTouchListener, CameraBridgeViewBase.CvCame
                 case LoaderCallbackInterface.SUCCESS:
                 {
                     Log.i(TAG, "OpenCV loaded successfully");
+                    mOpenCvCameraView.setMaxFrameSize(400,400);
                     mOpenCvCameraView.enableView();
                     mOpenCvCameraView.setOnTouchListener(Vision.this);
                 } break;
@@ -86,8 +87,6 @@ public class Vision implements View.OnTouchListener, CameraBridgeViewBase.CvCame
 
     public Vision(final AbcvlibActivity abcvlibActivity, int height, int width){
         this.abcvlibActivity = abcvlibActivity;
-        this.height = height;
-        this.width = width;
         // TODO check is the col and rows are not transposed.
         this.CENTER_COL = width / 2.0;
         this.CENTER_ROW = height / 2.0;
@@ -198,7 +197,7 @@ public class Vision implements View.OnTouchListener, CameraBridgeViewBase.CvCame
         mSpectrum = new Mat();
         mBlobColorRgba = new Scalar(255);
         mBlobColorHsv = new Scalar(255);
-        SPECTRUM_SIZE = new Size(200, 64);
+        SPECTRUM_SIZE = new Size(100, 32);
         CONTOUR_COLOR = new Scalar(255,0,0,255);
     }
 
@@ -209,16 +208,30 @@ public class Vision implements View.OnTouchListener, CameraBridgeViewBase.CvCame
     public boolean onTouch(View v, MotionEvent event) {
         int cols = mRgba.cols();
         int rows = mRgba.rows();
+        int width = mOpenCvCameraView.getWidth();
+        int height = mOpenCvCameraView.getHeight();
 
-        int xOffset = (mOpenCvCameraView.getWidth() - cols) / 2;
-        int yOffset = (mOpenCvCameraView.getHeight() - rows) / 2;
+        int xOffset = (width - cols) / 2;
+        int yOffset = (height - rows) / 2;
 
-        int x = (int)event.getX() - xOffset;
-        int y = (int)event.getY() - yOffset;
+        Log.i(TAG, "width:" + width + ", height:" + height);
+        Log.i(TAG, "cols:" + cols + ", rows:" + rows);
+        Log.i(TAG, "x:" + String.valueOf(event.getX()) + ", y:" + String.valueOf((event.getY())));
+
+//        int x = (int)event.getX() - xOffset;
+//        int y = (int)event.getY() - yOffset;
+//        int x = Math.round(event.getX() * ((float)rows / (float)mOpenCvCameraView.getWidth()));
+//        int y =  Math.round(event.getY() * ((float)cols / (float)mOpenCvCameraView.getHeight()));
+        int y = Math.round((width - event.getX()) * ((float)rows / (float)mOpenCvCameraView.getWidth()));
+        int x =  Math.round((height - event.getY()) * ((float)cols / (float)mOpenCvCameraView.getHeight()));
+
 
         Log.i(TAG, "Touch image coordinates: (" + x + ", " + y + ")");
 
-        if ((x < 0) || (y < 0) || (x > cols) || (y > rows)) return false;
+        if ((x < 0) || (y < 0) || (x > cols) || (y > rows)) {
+            Log.i(TAG, "Row or Col count wrong");
+            return false;
+        }
 
         Rect touchedRect = new Rect();
 
@@ -276,7 +289,12 @@ public class Vision implements View.OnTouchListener, CameraBridgeViewBase.CvCame
 
             Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
 
-            centroid = Centroids(contours);
+            centroids = Centroids(contours);
+
+            blobSizes = new double[contours.size()];
+            for (int i = 0; i < contours.size(); i++) {
+                blobSizes[i] = Imgproc.contourArea(contours.get(i));
+            }
 
             Mat colorLabel = mRgba.submat(4, 68, 4, 68);
             colorLabel.setTo(mBlobColorRgba);
@@ -287,8 +305,12 @@ public class Vision implements View.OnTouchListener, CameraBridgeViewBase.CvCame
         return mRgba;
     }
 
-    public List<Point> getCentroid(){
-        return centroid;
+    public List<Point> getCentroids(){
+        return centroids;
+    }
+
+    public double[] getBlobSizes(){
+        return blobSizes;
     }
 
     public double getCENTER_COL(){

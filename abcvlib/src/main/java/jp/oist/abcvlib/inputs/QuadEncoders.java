@@ -16,7 +16,7 @@ public class QuadEncoders {
     private int quadCount = windowLength;
     double dt_sample = 0;
     double dt_window = 0;
-    double expWeight = 0.9;
+    double expWeight = 0.1;
 
     //----------------------------------- Wheel speed metrics --------------------------------------
     /**

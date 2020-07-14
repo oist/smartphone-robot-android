@@ -55,6 +55,7 @@ public class SocketClient implements Runnable{
 
     @Override
     public void run() {
+        Log.i("abcvlib", "SocketClient.run");
         connect();
         while(!ready) {
             Thread.yield();
@@ -99,10 +100,12 @@ public class SocketClient implements Runnable{
 
     public void connect(){
 
-//        Log.v("abcvlib", "SocketClient2");
+        Log.v("abcvlib", "SocketClient.connect");
 
         try{
+            Log.v("abcvlib", "SocketClient.connectTry");
             InetAddress serverAddr = InetAddress.getByName(serverIp);
+            Log.v("abcvlib", "Prior to creating socket. IP:" + serverAddr + ", Port:" + serverPort);
             socket = new Socket(serverAddr, serverPort);
             Log.i("abcvlib", "Created new socket connection");
             bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
@@ -111,7 +114,7 @@ public class SocketClient implements Runnable{
         } catch (ConnectException e1){
             try {
                 Thread.sleep(1000);
-                Log.i("abcvlib", "Waiting on Python server to initialize");
+                Log.i("abcvlib", "Waiting on Python server to initialize. Exception:" + e1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

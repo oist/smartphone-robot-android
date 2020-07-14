@@ -1,5 +1,6 @@
 package jp.oist.abcvlib.outputs;
 
+import android.os.SystemClock;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -17,7 +18,12 @@ public class CenterBlobController extends AbcvlibController{
     private double phi;
     private double CENTER_COL;
     private double p_phi;
-    private List<Point> centroid;
+    private List<Point> centroids;
+    int noBlobInFrameCounter = 0;
+    int blobInFrameCounter = 0;
+    int backingUpFrameCounter = 0;
+    long noBlobInFrameStartTime;
+    long backingUpStartTime;
 
     public CenterBlobController(AbcvlibActivity abcvlibActivity){
 
@@ -39,26 +45,84 @@ public class CenterBlobController extends AbcvlibController{
 
         while(abcvlibActivity.appRunning && abcvlibActivity.switches.centerBlobApp) {
 
-            Log.d("abcvlib", "in CenterBlobController 1");
+//            Log.d("abcvlib", "in CenterBlobController 1");
 
-            centroid = abcvlibActivity.inputs.vision.getCentroid();
+            centroids = abcvlibActivity.inputs.vision.getCentroids();
+            double[] blobSizes = abcvlibActivity.inputs.vision.getBlobSizes();
+            double staticApproachSpeed = 10;
+            double variableApproachSpeed = 0;
 
-            if (centroid != null && abcvlibActivity.outputs.socketClient.socketMsgIn != null){
+            // Todo eliminate hard dependence on python connection. Should be able to run alone with hard set values;
+            if (centroids != null && blobSizes != null && blobSizes.length != 0 && abcvlibActivity.outputs.socketClient.socketMsgIn != null){
 
-                phi = getPhi(centroid);
-                Log.d("abcvlib", "phi:" + phi);
+                noBlobInFrameCounter = 0;
+                backingUpFrameCounter = 0;
+                blobInFrameCounter++;
+
+                phi = getPhi(centroids);
+                Log.d("centerblob", "phi:" + phi);
+                Log.d("centerblob", "Blob size:" + blobSizes[0]);
 
                 try {
                     p_phi = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("p_phi").toString());
-                    Log.d("abcvlib", "p_phi:" + p_phi);
+                    Log.d("centerblob", "p_phi:" + p_phi);
+                    variableApproachSpeed = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("wheelSpeedL").toString());
+                    Log.d("centerblob", "wheelSpeed:" + variableApproachSpeed);
+                    staticApproachSpeed = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("staticApproachSpeed").toString());
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
 
                 // Todo check polarity on these turns. Could be opposite
-                setOutput(-(phi * p_phi), (phi * p_phi));
+                double outputLeft = -(phi * p_phi) + (staticApproachSpeed + (variableApproachSpeed / blobSizes[0]));
+                double outputRight = (phi * p_phi) + (staticApproachSpeed + (variableApproachSpeed / blobSizes[0]));
+                setOutput(outputLeft, outputRight);
 
-                Log.d("abcvlib", "CenterBlobController left:" + output.left + " right:" + output.right);
+                Log.d("centerblob", "CenterBlobController left:" + output.left + " right:" + output.right);
+
+            }else if (abcvlibActivity.outputs.socketClient.socketMsgIn != null){
+
+                Log.v("centerblob", "No blobs in sight");
+
+                if (noBlobInFrameCounter == 0) {
+                    noBlobInFrameStartTime = System.nanoTime();
+                }
+
+                noBlobInFrameCounter++;
+                blobInFrameCounter = 0;
+
+                try {
+                    p_phi = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("p_phi").toString());
+                    Log.d("centerblob", "p_phi:" + p_phi);
+                    variableApproachSpeed = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("wheelSpeedL").toString());
+                    Log.d("centerblob", "wheelSpeed:" + variableApproachSpeed);
+                    staticApproachSpeed = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("staticApproachSpeed").toString());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                Log.v("centerblob", "No blobs. Prior to timing logic");
+
+                if (System.nanoTime() - noBlobInFrameStartTime > (3e9)){
+                    if (backingUpFrameCounter == 0){
+                        backingUpStartTime = System.nanoTime();
+                        Log.v("centerblob", "No blobs. Setting backingupStartTime = 0");
+                        backingUpFrameCounter++;
+                    }else{
+                        if (System.nanoTime() - backingUpStartTime > 3e9){
+                            setOutput(35, 0);
+                        }else{
+                            double outputLeft = -2.0 * staticApproachSpeed;
+                            double outputRight = outputLeft;
+                            setOutput(outputLeft, outputRight);
+                            backingUpFrameCounter++;
+                        }
+                    }
+                }else{
+                    double outputLeft = staticApproachSpeed;
+                    double outputRight = staticApproachSpeed;
+                    setOutput(outputLeft, outputRight);
+                }
             }
             Thread.yield();
         }

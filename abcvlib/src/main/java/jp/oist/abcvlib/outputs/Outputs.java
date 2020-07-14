@@ -40,6 +40,7 @@ public class Outputs implements OutputsInterface {
         //  but seems to be blocked by router. Could set up DNS and static hostname, but would
         //  require intervention with IT
         if (abcvlibActivity.switches.pythonControlApp){
+            Log.i("abcvlib", "Prior to Creating socketClient. IP:" + hostIP + ", Port:" + port);
             socketClient = new SocketClient(hostIP, port, abcvlibActivity.inputs.stateVariables,
                     controls, abcvlibActivity);
             socketClientThread = new Thread(socketClient);
