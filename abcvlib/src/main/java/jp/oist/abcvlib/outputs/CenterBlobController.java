@@ -15,15 +15,17 @@ public class CenterBlobController extends AbcvlibController{
 
     private AbcvlibActivity abcvlibActivity;
 
-    private double phi;
+    private double phi = 0;
     private double CENTER_COL;
-    private double p_phi;
+    private double p_phi = -35;
     private List<Point> centroids;
     int noBlobInFrameCounter = 0;
     int blobInFrameCounter = 0;
     int backingUpFrameCounter = 0;
     long noBlobInFrameStartTime;
     long backingUpStartTime;
+    long searchingFrameCounter;
+    long searchingStartTime;
 
     public CenterBlobController(AbcvlibActivity abcvlibActivity){
 
@@ -49,20 +51,10 @@ public class CenterBlobController extends AbcvlibController{
 
             centroids = abcvlibActivity.inputs.vision.getCentroids();
             double[] blobSizes = abcvlibActivity.inputs.vision.getBlobSizes();
-            double staticApproachSpeed = 10;
+            double staticApproachSpeed = 50;
             double variableApproachSpeed = 0;
 
-            // Todo eliminate hard dependence on python connection. Should be able to run alone with hard set values;
-            if (centroids != null && blobSizes != null && blobSizes.length != 0 && abcvlibActivity.outputs.socketClient.socketMsgIn != null){
-
-                noBlobInFrameCounter = 0;
-                backingUpFrameCounter = 0;
-                blobInFrameCounter++;
-
-                phi = getPhi(centroids);
-                Log.d("centerblob", "phi:" + phi);
-                Log.d("centerblob", "Blob size:" + blobSizes[0]);
-
+            if (abcvlibActivity.outputs.socketClient.socketMsgIn != null){
                 try {
                     p_phi = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("p_phi").toString());
                     Log.d("centerblob", "p_phi:" + p_phi);
@@ -72,6 +64,18 @@ public class CenterBlobController extends AbcvlibController{
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
+            }
+
+            // Todo eliminate hard dependence on python connection. Should be able to run alone with hard set values;
+            if (centroids != null && blobSizes != null && blobSizes.length != 0){
+
+                noBlobInFrameCounter = 0;
+                backingUpFrameCounter = 0;
+                blobInFrameCounter++;
+
+                phi = getPhi(centroids);
+                Log.d("centerblob", "phi:" + phi);
+                Log.d("centerblob", "Blob size:" + blobSizes[0]);
 
                 // Todo check polarity on these turns. Could be opposite
                 double outputLeft = -(phi * p_phi) + (staticApproachSpeed + (variableApproachSpeed / blobSizes[0]));
@@ -80,7 +84,8 @@ public class CenterBlobController extends AbcvlibController{
 
                 Log.d("centerblob", "CenterBlobController left:" + output.left + " right:" + output.right);
 
-            }else if (abcvlibActivity.outputs.socketClient.socketMsgIn != null){
+            }
+            else{
 
                 Log.v("centerblob", "No blobs in sight");
 
@@ -91,16 +96,6 @@ public class CenterBlobController extends AbcvlibController{
                 noBlobInFrameCounter++;
                 blobInFrameCounter = 0;
 
-                try {
-                    p_phi = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("p_phi").toString());
-                    Log.d("centerblob", "p_phi:" + p_phi);
-                    variableApproachSpeed = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("wheelSpeedL").toString());
-                    Log.d("centerblob", "wheelSpeed:" + variableApproachSpeed);
-                    staticApproachSpeed = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("staticApproachSpeed").toString());
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
                 Log.v("centerblob", "No blobs. Prior to timing logic");
 
                 if (System.nanoTime() - noBlobInFrameStartTime > (3e9)){
@@ -110,7 +105,13 @@ public class CenterBlobController extends AbcvlibController{
                         backingUpFrameCounter++;
                     }else{
                         if (System.nanoTime() - backingUpStartTime > 3e9){
-                            setOutput(35, 0);
+                            if (searchingFrameCounter == 0){
+                                searchingStartTime = System.nanoTime();
+                                searchingFrameCounter++;
+                            }else{
+                                setOutput(35, 0);
+                                searchingFrameCounter++;
+                            }
                         }else{
                             double outputLeft = -2.0 * staticApproachSpeed;
                             double outputRight = outputLeft;
