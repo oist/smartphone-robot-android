@@ -67,6 +67,7 @@ public class CenterBlobController extends AbcvlibController{
             }
 
             // Todo eliminate hard dependence on python connection. Should be able to run alone with hard set values;
+            // If there are blobs with centroids...
             if (centroids != null && blobSizes != null && blobSizes.length != 0){
 
                 noBlobInFrameCounter = 0;
@@ -98,28 +99,41 @@ public class CenterBlobController extends AbcvlibController{
 
                 Log.v("centerblob", "No blobs. Prior to timing logic");
 
+                // If no blob in frame for 3 seconds...
                 if (System.nanoTime() - noBlobInFrameStartTime > (3e9)){
+                    // If just starting to backup
                     if (backingUpFrameCounter == 0){
                         backingUpStartTime = System.nanoTime();
                         Log.v("centerblob", "No blobs. Setting backingupStartTime = 0");
                         backingUpFrameCounter++;
-                    }else{
-                        if (System.nanoTime() - backingUpStartTime > 3e9){
-                            if (searchingFrameCounter == 0){
-                                searchingStartTime = System.nanoTime();
-                                searchingFrameCounter++;
-                            }else{
-                                setOutput(35, 0);
-                                searchingFrameCounter++;
-                            }
-                        }else{
-                            double outputLeft = -2.0 * staticApproachSpeed;
-                            double outputRight = outputLeft;
-                            setOutput(outputLeft, outputRight);
-                            backingUpFrameCounter++;
+                    }
+                    // If backing up for more than 3 seconds.
+                    else if (System.nanoTime() - backingUpStartTime > 3e9) {
+                        if (searchingFrameCounter == 0) {
+                            searchingStartTime = System.nanoTime();
+                            searchingFrameCounter++;
+                        }
+                        // Searching for less than 3 sec? Continue to search (turn).
+                        else if (System.nanoTime() - searchingStartTime < 3e9) {
+                            setOutput(35, 0);
+                            searchingFrameCounter++;
+                        }
+                        // Searching for more than 3 sec? Try backing up again.
+                        else{
+                            backingUpFrameCounter = 0;
+                            searchingFrameCounter = 0;
                         }
                     }
-                }else{
+                    // Continue backing up
+                    else{
+                        double outputLeft = -2.0 * staticApproachSpeed;
+                        double outputRight = outputLeft;
+                        setOutput(outputLeft, outputRight);
+                        backingUpFrameCounter++;
+                    }
+                }
+                // blob has not been in frame for less than 3 seconds. Continue Forward.
+                else{
                     double outputLeft = staticApproachSpeed;
                     double outputRight = staticApproachSpeed;
                     setOutput(outputLeft, outputRight);
