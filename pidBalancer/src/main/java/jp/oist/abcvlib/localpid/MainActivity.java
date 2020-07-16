@@ -17,6 +17,7 @@ public class MainActivity extends AbcvlibActivity {
         // Various switches are available to turn on/off core functionality.
         switches.balanceApp = true;
         switches.pythonControlApp = true;
+        switches.wheelPolaritySwap = false;
 
         // Note the previously optional parameters that handle the connection to the python server
         initialzer(this,"192.168.20.26", 3000);
