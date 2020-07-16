@@ -30,7 +30,6 @@ public class CenterBlobController extends AbcvlibController{
     public CenterBlobController(AbcvlibActivity abcvlibActivity){
 
         this.abcvlibActivity = abcvlibActivity;
-        this.CENTER_COL = abcvlibActivity.inputs.vision.getCENTER_COL();
 
     }
 
@@ -157,6 +156,7 @@ public class CenterBlobController extends AbcvlibController{
         //TODO handle multiple centroids somehow.
         //TODO make centroid object thread-safe somehow. (Executor, ThreadPoolExecutor, and onPostExecute)
         try {
+            this.CENTER_COL = abcvlibActivity.inputs.vision.getCENTER_COL();
             phi = (CENTER_COL - centroid.get(0).y) / CENTER_COL;
         } catch (IndexOutOfBoundsException e){
             // This will happen fairly regularly I suppose since both PID thread and onCameraFrame

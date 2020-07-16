@@ -87,9 +87,6 @@ public class Vision implements View.OnTouchListener, CameraBridgeViewBase.CvCame
 
     public Vision(final AbcvlibActivity abcvlibActivity, int height, int width){
         this.abcvlibActivity = abcvlibActivity;
-        // TODO check is the col and rows are not transposed.
-        this.CENTER_COL = width / 2.0;
-        this.CENTER_ROW = height / 2.0;
 
         if (mOpenCvCameraView == null & abcvlibActivity.switches.cameraApp){
             abcvlibActivity.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -98,6 +95,9 @@ public class Vision implements View.OnTouchListener, CameraBridgeViewBase.CvCame
             mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
             mOpenCvCameraView.setCvCameraViewListener(this);
             mOpenCvCameraView.enableFpsMeter();
+            // TODO this needs to be set only after setMaxFrameSize from CameraBridgeViewBase is set.
+            this.CENTER_COL = mOpenCvCameraView.frameHeight / 2.0;
+            this.CENTER_ROW = mOpenCvCameraView.frameWidth / 2.0;
             // I'd think there is a better way to fix the orientation in portrait without cropping everyting
 //            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
             swapCamera();
@@ -185,9 +185,9 @@ public class Vision implements View.OnTouchListener, CameraBridgeViewBase.CvCame
 
         this.frameHeight = height;
         this.frameWidth = width;
-        // TODO check if width and height are transposed or not.
-        CENTER_COL = width / 2.0;
-        CENTER_ROW = height / 2.0;
+        // TODO check if width and height are transposed or not. Check if set via setMaxFrameSize or not.
+        CENTER_COL = height / 2.0;
+        CENTER_ROW = width / 2.0;
 
         mRgba = new Mat(height, width, CvType.CV_8UC4);
         mRgbaTrans = new Mat(width, height, CvType.CV_8UC4);

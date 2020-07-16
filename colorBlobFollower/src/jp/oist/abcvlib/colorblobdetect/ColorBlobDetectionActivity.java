@@ -19,7 +19,7 @@ public class ColorBlobDetectionActivity extends AbcvlibActivity {
         switches.cameraApp = true;
         switches.centerBlobApp = true;
 
-        initialzer(this, "10.9.23.131", 3000);
+        initialzer(this, "192.168.20.26", 3000);
 
         super.onCreate(savedInstanceState);
     }
