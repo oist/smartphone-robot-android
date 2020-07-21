@@ -9,10 +9,10 @@ import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-//import androidx.annotation.NonNull;
-//import androidx.lifecycle.Lifecycle;
-//import androidx.lifecycle.LifecycleOwner;
-//import androidx.lifecycle.LifecycleRegistry;
+import androidx.annotation.NonNull;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.LifecycleRegistry;
 
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
@@ -34,7 +34,7 @@ import jp.oist.abcvlib.inputs.vision.*;
  * @author Christopher Buckley https://github.com/topherbuckley
  *
  */
-public abstract class AbcvlibActivity extends IOIOActivity implements RewardGenerator {
+public abstract class AbcvlibActivity extends IOIOActivity implements RewardGenerator, LifecycleOwner {
 
     // Publically accessible objects that encapsulate a lot other core functionality
     public Inputs inputs;
@@ -43,7 +43,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     public ActionSelector aS;
     private Thread actionSelectorThread;
     public Switches switches = new Switches();
-//    private LifecycleRegistry lifecycleRegistry;
+    private LifecycleRegistry lifecycleRegistry;
 
 
     /**
@@ -66,8 +66,8 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
 
-//        lifecycleRegistry = new LifecycleRegistry(this);
-//        lifecycleRegistry.markState(Lifecycle.State.CREATED);
+        lifecycleRegistry = new LifecycleRegistry(this);
+        lifecycleRegistry.markState(Lifecycle.State.CREATED);
 
         Log.i(TAG, "End of AbcvlibActivity.onCreate");
     }
@@ -78,8 +78,6 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
             inputs.vision.onStart();
         }
         super.onStart();
-
-//        lifecycleRegistry.markState(Lifecycle.State.STARTED);
 
         Log.i(TAG, "End of AbcvlibActivity.onStart");
     }
@@ -181,11 +179,11 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
-//    @NonNull
-//    @Override
-//    public Lifecycle getLifecycle() {
-//        return lifecycleRegistry;
-//    }
+    @NonNull
+    @Override
+    public Lifecycle getLifecycle() {
+        return lifecycleRegistry;
+    }
 
     /**
      Overriding here passes the initialized AbcvlibLooper object to the IOIOLooper class which
