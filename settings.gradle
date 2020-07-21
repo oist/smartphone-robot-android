@@ -1,2 +1,3 @@
 include ':abcvlib', ':openCV411', ':basic', ':backAndForth', ':pidBalancer',
-        ':colorBlobFollower', ':setPath', ':clapLearn', ':compoundController', ':allAccess', ':physicstest'
+        ':colorBlobFollower', ':setPath', ':clapLearn', ':compoundController', ':allAccess',
+        ':physicstest', ':camera'

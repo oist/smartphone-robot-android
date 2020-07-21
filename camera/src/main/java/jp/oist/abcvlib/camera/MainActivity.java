@@ -9,6 +9,7 @@ import android.graphics.Rect;
 import android.media.Image;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Size;
 import android.view.Window;
 import android.widget.Toast;
 
@@ -23,6 +24,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.camera.view.PreviewView;
 import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.gms.tasks.Task;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -87,17 +89,32 @@ public class MainActivity extends AbcvlibActivity{
                         .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
                         .build();
 
-                YourAnalyzer yourAnalyzer = new YourAnalyzer();
-
+//                YourAnalyzer yourAnalyzer = new YourAnalyzer();
+//
                 ImageAnalysis imageAnalysis =
                         new ImageAnalysis.Builder()
 //                        .setTargetResolution(new Size(400, 400))
                                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                                 .build();
+//
+//                imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), yourAnalyzer);
 
-                imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), yourAnalyzer);
+//                ImageAnalysis imageAnalysis =
+//                        new ImageAnalysis.Builder()
+//                                .setTargetResolution(new Size(1280, 720))
+//                                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+//                                .build();
 
-                Camera camera = cameraProvider.bindToLifecycle(this, cameraSelector, imageAnalysis, preview);
+                imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), new ImageAnalysis.Analyzer() {
+                    @Override
+                    public void analyze(@NonNull ImageProxy image) {
+                        int rotationDegrees = image.getImageInfo().getRotationDegrees();
+                        // insert your code here.
+                    }
+                });
+
+
+                cameraProvider.bindToLifecycle(this, cameraSelector, imageAnalysis, preview);
 
                 preview.setSurfaceProvider(previewView.createSurfaceProvider());
 
