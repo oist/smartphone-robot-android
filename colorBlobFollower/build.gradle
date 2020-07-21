@@ -31,4 +31,5 @@ dependencies {
     //implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(':openCV411')
     implementation project(path: ':abcvlib')
+    def camerax_version = '1.0.0-beta06'
 }
