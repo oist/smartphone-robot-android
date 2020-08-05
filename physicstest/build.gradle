@@ -21,6 +21,4 @@ android {
     }
 }
 
-dependencies {
-    implementation project(path: ':abcvlib')
-}
+

@@ -1,3 +1,4 @@
-include ':abcvlib', ':openCV411', ':basic', ':backAndForth', ':pidBalancer',
+include ':abcvlib', ':openCV411', ':basic',
+        ':backAndForth', ':pidBalancer',
         ':colorBlobFollower', ':setPath', ':clapLearn', ':compoundController', ':allAccess',
         ':physicstest', ':camera'
