@@ -192,7 +192,7 @@ public class MainActivity extends AbcvlibActivity{
                 // Pass image to an ML Kit Vision API
                 Task<List<Barcode>> result = scanner.process(image);
 
-                result.addOnSuccessListener(new OnSuccessListener<List<Barcode>>() {
+                result.addOnSuccessListener(executor, new OnSuccessListener<List<Barcode>>() {
                     @Override
                     public void onSuccess(List<Barcode> barcodes) {
                         // Task completed successfully
@@ -254,7 +254,7 @@ public class MainActivity extends AbcvlibActivity{
 
                 result.addOnSuccessListener(new OnSuccessListener<List<DetectedObject>>() {
                     @Override
-                    public void onSuccess(List<DetectedObject> detectedObjects) {
+                    public void onSuccess(@NonNull List<DetectedObject> detectedObjects) {
                         // Task completed successfully
                         Log.i("CameraXApp3", "scanner task successful");
                         processObjects(detectedObjects);
