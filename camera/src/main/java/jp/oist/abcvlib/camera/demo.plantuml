@@ -1,0 +1,481 @@
+@startuml
+
+title __DEMO's Class Diagram__\n
+
+  namespace jp.oist.abcvlib.camera {
+    class jp.oist.abcvlib.camera.BitmapUtils {
+        {static} - TAG : String
+        {static} + convertBitmapToNv21Buffer()
+        {static} + convertBitmapToNv21Bytes()
+        {static} + convertBitmapToYv12Buffer()
+        {static} + convertBitmapToYv12Bytes()
+        {static} + getBitmap()
+        {static} + getBitmap()
+        {static} + getBitmapFromAsset()
+        {static} + getBitmapFromContentUri()
+        {static} - areUVPlanesNV21()
+        {static} - encodeToNv21()
+        {static} - getExifOrientationTag()
+        {static} - nv21Toyv12()
+        {static} - rotateBitmap()
+        {static} - unpackPlane()
+        {static} - yuv420ThreePlanesToNV21()
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib.camera {
+    class jp.oist.abcvlib.camera.CameraImageGraphic {
+        - bitmap : Bitmap
+        + CameraImageGraphic()
+        + draw()
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib.camera {
+    class jp.oist.abcvlib.camera.CameraSource {
+        {static} + CAMERA_FACING_BACK : int
+        {static} + CAMERA_FACING_FRONT : int
+        {static} + DEFAULT_REQUESTED_CAMERA_PREVIEW_HEIGHT : int
+        {static} + DEFAULT_REQUESTED_CAMERA_PREVIEW_WIDTH : int
+        {static} + IMAGE_FORMAT : int
+        # activity : Activity
+        {static} - ASPECT_RATIO_TOLERANCE : float
+        {static} - DUMMY_TEXTURE_NAME : int
+        {static} - TAG : String
+        - bytesToByteBuffer : Map<byte[], ByteBuffer>
+        - camera : Camera
+        - dummySurfaceTexture : SurfaceTexture
+        - facing : int
+        - previewSize : Size
+        - processingThread : Thread
+        - processorLock : Object
+        - requestedAutoFocus : boolean
+        - requestedFps : float
+        - rotationDegrees : int
+        - usingSurfaceTexture : boolean
+        + CameraSource()
+        {static} + generateValidPreviewSizeList()
+        + getCameraFacing()
+        + getPreviewSize()
+        + release()
+        {static} + selectSizePair()
+        + setFacing()
+        + setMachineLearningFrameProcessor()
+        + start()
+        + start()
+        + stop()
+        - cleanScreen()
+        - createCamera()
+        - createPreviewBuffer()
+        {static} - getIdForRequestedCamera()
+        {static} - selectPreviewFpsRange()
+        - setRotation()
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib.camera {
+    class jp.oist.abcvlib.camera.CameraSource.CameraPreviewCallback {
+        + onPreviewFrame()
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib.camera {
+    class jp.oist.abcvlib.camera.CameraSource.FrameProcessingRunnable {
+        - active : boolean
+        - lock : Object
+        - pendingFrameData : ByteBuffer
+        + run()
+        ~ FrameProcessingRunnable()
+        ~ release()
+        ~ setActive()
+        ~ setNextFrame()
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib.camera {
+    class jp.oist.abcvlib.camera.CameraSource.SizePair {
+        + picture : Size
+        + preview : Size
+        + SizePair()
+        ~ SizePair()
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib.camera {
+    class jp.oist.abcvlib.camera.CameraSourcePreview {
+        {static} - TAG : String
+        - context : Context
+        - startRequested : boolean
+        - surfaceAvailable : boolean
+        - surfaceView : SurfaceView
+        + CameraSourcePreview()
+        + release()
+        + start()
+        + stop()
+        # onLayout()
+        - isPortraitMode()
+        - start()
+        - startIfReady()
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib.camera {
+    class jp.oist.abcvlib.camera.CameraSourcePreview.SurfaceCallback {
+        + surfaceChanged()
+        + surfaceCreated()
+        + surfaceDestroyed()
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib.camera {
+    class jp.oist.abcvlib.camera.CameraXLivePreviewActivity {
+        {static} - AUTOML_LABELING : String
+        {static} - BARCODE_SCANNING : String
+        {static} - FACE_DETECTION : String
+        {static} - IMAGE_LABELING : String
+        {static} - IMAGE_LABELING_CUSTOM : String
+        {static} - OBJECT_DETECTION : String
+        {static} - OBJECT_DETECTION_CUSTOM : String
+        {static} - PERMISSION_REQUESTS : int
+        {static} - STATE_LENS_FACING : String
+        {static} - STATE_SELECTED_MODEL : String
+        {static} - TAG : String
+        {static} - TEXT_RECOGNITION : String
+        - analysisUseCase : ImageAnalysis
+        - cameraProvider : ProcessCameraProvider
+        - cameraSelector : CameraSelector
+        - lensFacing : int
+        - needUpdateGraphicOverlayImageSourceInfo : boolean
+        - previewUseCase : Preview
+        - previewView : PreviewView
+        - selectedModel : String
+        + onCheckedChanged()
+        + onCreateOptionsMenu()
+        + onDestroy()
+        + onItemSelected()
+        + onNothingSelected()
+        + onOptionsItemSelected()
+        + onRequestPermissionsResult()
+        + onResume()
+        # onCreate()
+        # onPause()
+        # onSaveInstanceState()
+        - allPermissionsGranted()
+        - bindAllCameraUseCases()
+        - bindAnalysisUseCase()
+        - bindPreviewUseCase()
+        - getRequiredPermissions()
+        - getRuntimePermissions()
+        {static} - isPermissionGranted()
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib.camera {
+    class jp.oist.abcvlib.camera.CameraXViewModel {
+        {static} - TAG : String
+        - cameraProviderLiveData : MutableLiveData<ProcessCameraProvider>
+        + CameraXViewModel()
+        + getProcessCameraProvider()
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib.camera {
+    class jp.oist.abcvlib.camera.ChooserActivity {
+        {static} - CLASSES : Class<?>[]
+        {static} - DESCRIPTION_IDS : int[]
+        {static} - PERMISSION_REQUESTS : int
+        {static} - TAG : String
+        + onItemClick()
+        # onCreate()
+        - allPermissionsGranted()
+        - getRequiredPermissions()
+        - getRuntimePermissions()
+        {static} - isPermissionGranted()
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib.camera {
+    class jp.oist.abcvlib.camera.ChooserActivity.MyArrayAdapter {
+        - classes : Class<?>[]
+        - context : Context
+        - descriptionIds : int[]
+        + getView()
+        ~ MyArrayAdapter()
+        ~ setDescriptionIds()
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib.camera {
+    class jp.oist.abcvlib.camera.FrameMetadata {
+        - height : int
+        - rotation : int
+        - width : int
+        + getHeight()
+        + getRotation()
+        + getWidth()
+        - FrameMetadata()
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib.camera {
+    class jp.oist.abcvlib.camera.FrameMetadata.Builder {
+        - height : int
+        - rotation : int
+        - width : int
+        + build()
+        + setHeight()
+        + setRotation()
+        + setWidth()
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib.camera {
+    class jp.oist.abcvlib.camera.GraphicOverlay {
+        - graphics : List<Graphic>
+        - imageHeight : int
+        - imageWidth : int
+        - isImageFlipped : boolean
+        - lock : Object
+        - needUpdateTransformation : boolean
+        - postScaleHeightOffset : float
+        - postScaleWidthOffset : float
+        - scaleFactor : float
+        - transformationMatrix : Matrix
+        + GraphicOverlay()
+        + add()
+        + clear()
+        + getImageHeight()
+        + getImageWidth()
+        + remove()
+        + setImageSourceInfo()
+        # onDraw()
+        - updateTransformationIfNeeded()
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib.camera {
+    abstract class jp.oist.abcvlib.camera.GraphicOverlay.Graphic {
+        + Graphic()
+        {abstract} + draw()
+        + getApplicationContext()
+        + getTransformationMatrix()
+        + isImageFlipped()
+        + postInvalidate()
+        + scale()
+        + translateX()
+        + translateY()
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib.camera {
+    class jp.oist.abcvlib.camera.InferenceInfoGraphic {
+        {static} - TEXT_COLOR : int
+        {static} - TEXT_SIZE : float
+        - framesPerSecond : Integer
+        - latency : double
+        - textPaint : Paint
+        + InferenceInfoGraphic()
+        + draw()
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib.camera {
+    class jp.oist.abcvlib.camera.LivePreviewActivity {
+        {static} - AUTOML_LABELING : String
+        {static} - BARCODE_SCANNING : String
+        {static} - FACE_DETECTION : String
+        {static} - IMAGE_LABELING : String
+        {static} - IMAGE_LABELING_CUSTOM : String
+        {static} - OBJECT_DETECTION : String
+        {static} - OBJECT_DETECTION_CUSTOM : String
+        {static} - PERMISSION_REQUESTS : int
+        {static} - TAG : String
+        {static} - TEXT_RECOGNITION : String
+        - selectedModel : String
+        + onCheckedChanged()
+        + onCreateOptionsMenu()
+        + onDestroy()
+        + onItemSelected()
+        + onNothingSelected()
+        + onOptionsItemSelected()
+        + onRequestPermissionsResult()
+        + onResume()
+        # onCreate()
+        # onPause()
+        - allPermissionsGranted()
+        - createCameraSource()
+        - getRequiredPermissions()
+        - getRuntimePermissions()
+        {static} - isPermissionGranted()
+        - startCameraSource()
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib.camera {
+    class jp.oist.abcvlib.camera.ScopedExecutor {
+        - executor : Executor
+        - shutdown : AtomicBoolean
+        + ScopedExecutor()
+        + execute()
+        + shutdown()
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib.camera {
+    class jp.oist.abcvlib.camera.StillImageActivity {
+        ~ isLandScape : boolean
+        {static} - AUTOML_LABELING : String
+        {static} - BARCODE_SCANNING : String
+        {static} - FACE_DETECTION : String
+        {static} - IMAGE_LABELING : String
+        {static} - IMAGE_LABELING_CUSTOM : String
+        {static} - KEY_IMAGE_URI : String
+        {static} - KEY_SELECTED_SIZE : String
+        {static} - OBJECT_DETECTION : String
+        {static} - OBJECT_DETECTION_CUSTOM : String
+        {static} - REQUEST_CHOOSE_IMAGE : int
+        {static} - REQUEST_IMAGE_CAPTURE : int
+        {static} - SIZE_1024_768 : String
+        {static} - SIZE_640_480 : String
+        {static} - SIZE_SCREEN : String
+        {static} - TAG : String
+        {static} - TEXT_RECOGNITION : String
+        - imageMaxHeight : int
+        - imageMaxWidth : int
+        - imageUri : Uri
+        - preview : ImageView
+        - selectedMode : String
+        - selectedSize : String
+        + onCreateOptionsMenu()
+        + onOptionsItemSelected()
+        + onResume()
+        + onSaveInstanceState()
+        # onActivityResult()
+        # onCreate()
+        - createImageProcessor()
+        - getTargetedWidthHeight()
+        - populateFeatureSelector()
+        - populateSizeSelector()
+        - startCameraIntentForResult()
+        - startChooseImageIntentForResult()
+        - tryReloadAndDetectInImage()
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib.camera {
+    interface jp.oist.abcvlib.camera.VisionImageProcessor {
+        {abstract} + processBitmap()
+        {abstract} + processByteBuffer()
+        {abstract} + processImageProxy()
+        {abstract} + stop()
+    }
+  }
+  
+
+  namespace jp.oist.abcvlib.camera {
+    abstract class jp.oist.abcvlib.camera.VisionProcessorBase {
+        {static} # MANUAL_TESTING_LOG : String
+        {static} - TAG : String
+        - activityManager : ActivityManager
+        - fpsTimer : Timer
+        - frameProcessedInOneSecondInterval : int
+        - framesPerSecond : int
+        - isShutdown : boolean
+        - latestImage : ByteBuffer
+        - maxRunMs : long
+        - minRunMs : long
+        - numRuns : int
+        - processingImage : ByteBuffer
+        - totalRunMs : long
+        + processBitmap()
+        + processByteBuffer()
+        + processImageProxy()
+        + stop()
+        # VisionProcessorBase()
+        {abstract} # detectInImage()
+        {abstract} # onFailure()
+        {abstract} # onSuccess()
+        - processImage()
+        - processLatestImage()
+        - requestDetectInImage()
+    }
+  }
+  
+
+  jp.oist.abcvlib.camera.CameraImageGraphic -up-|> jp.oist.abcvlib.camera.GraphicOverlay.Graphic
+  jp.oist.abcvlib.camera.CameraSource o-- jp.oist.abcvlib.camera.VisionImageProcessor : frameProcessor
+  jp.oist.abcvlib.camera.CameraSource o-- jp.oist.abcvlib.camera.GraphicOverlay : graphicOverlay
+  jp.oist.abcvlib.camera.CameraSource o-- jp.oist.abcvlib.camera.CameraSource.FrameProcessingRunnable : processingRunnable
+  jp.oist.abcvlib.camera.CameraSource +-down- jp.oist.abcvlib.camera.CameraSource.CameraPreviewCallback
+  jp.oist.abcvlib.camera.CameraSource +-down- jp.oist.abcvlib.camera.CameraSource.FrameProcessingRunnable
+  jp.oist.abcvlib.camera.CameraSource +-down- jp.oist.abcvlib.camera.CameraSource.SizePair
+  jp.oist.abcvlib.camera.CameraSource.CameraPreviewCallback .up.|> android.hardware.Camera.PreviewCallback
+  jp.oist.abcvlib.camera.CameraSource.FrameProcessingRunnable .up.|> java.lang.Runnable
+  jp.oist.abcvlib.camera.CameraSourcePreview -up-|> android.view.ViewGroup
+  jp.oist.abcvlib.camera.CameraSourcePreview o-- jp.oist.abcvlib.camera.CameraSource : cameraSource
+  jp.oist.abcvlib.camera.CameraSourcePreview o-- jp.oist.abcvlib.camera.GraphicOverlay : overlay
+  jp.oist.abcvlib.camera.CameraSourcePreview +-down- jp.oist.abcvlib.camera.CameraSourcePreview.SurfaceCallback
+  jp.oist.abcvlib.camera.CameraSourcePreview.SurfaceCallback .up.|> android.view.SurfaceHolder.Callback
+  jp.oist.abcvlib.camera.CameraXLivePreviewActivity .up.|> android.widget.AdapterView.OnItemSelectedListener
+  jp.oist.abcvlib.camera.CameraXLivePreviewActivity .up.|> android.widget.CompoundButton.OnCheckedChangeListener
+  jp.oist.abcvlib.camera.CameraXLivePreviewActivity .up.|> androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback
+  jp.oist.abcvlib.camera.CameraXLivePreviewActivity -up-|> androidx.appcompat.app.AppCompatActivity
+  jp.oist.abcvlib.camera.CameraXLivePreviewActivity o-- jp.oist.abcvlib.camera.GraphicOverlay : graphicOverlay
+  jp.oist.abcvlib.camera.CameraXLivePreviewActivity o-- jp.oist.abcvlib.camera.VisionImageProcessor : imageProcessor
+  jp.oist.abcvlib.camera.CameraXViewModel -up-|> androidx.lifecycle.AndroidViewModel
+  jp.oist.abcvlib.camera.ChooserActivity .up.|> android.widget.AdapterView.OnItemClickListener
+  jp.oist.abcvlib.camera.ChooserActivity .up.|> androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback
+  jp.oist.abcvlib.camera.ChooserActivity -up-|> androidx.appcompat.app.AppCompatActivity
+  jp.oist.abcvlib.camera.ChooserActivity +-down- jp.oist.abcvlib.camera.ChooserActivity.MyArrayAdapter
+  jp.oist.abcvlib.camera.ChooserActivity.MyArrayAdapter -up-|> android.widget.ArrayAdapter
+  jp.oist.abcvlib.camera.FrameMetadata +-down- jp.oist.abcvlib.camera.FrameMetadata.Builder
+  jp.oist.abcvlib.camera.GraphicOverlay -up-|> android.view.View
+  jp.oist.abcvlib.camera.GraphicOverlay +-down- jp.oist.abcvlib.camera.GraphicOverlay.Graphic
+  jp.oist.abcvlib.camera.GraphicOverlay.Graphic o-- jp.oist.abcvlib.camera.GraphicOverlay : overlay
+  jp.oist.abcvlib.camera.InferenceInfoGraphic -up-|> jp.oist.abcvlib.camera.GraphicOverlay.Graphic
+  jp.oist.abcvlib.camera.InferenceInfoGraphic o-- jp.oist.abcvlib.camera.GraphicOverlay : overlay
+  jp.oist.abcvlib.camera.LivePreviewActivity .up.|> android.widget.AdapterView.OnItemSelectedListener
+  jp.oist.abcvlib.camera.LivePreviewActivity .up.|> android.widget.CompoundButton.OnCheckedChangeListener
+  jp.oist.abcvlib.camera.LivePreviewActivity .up.|> androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback
+  jp.oist.abcvlib.camera.LivePreviewActivity -up-|> androidx.appcompat.app.AppCompatActivity
+  jp.oist.abcvlib.camera.LivePreviewActivity o-- jp.oist.abcvlib.camera.CameraSource : cameraSource
+  jp.oist.abcvlib.camera.LivePreviewActivity o-- jp.oist.abcvlib.camera.GraphicOverlay : graphicOverlay
+  jp.oist.abcvlib.camera.LivePreviewActivity o-- jp.oist.abcvlib.camera.CameraSourcePreview : preview
+  jp.oist.abcvlib.camera.ScopedExecutor .up.|> java.util.concurrent.Executor
+  jp.oist.abcvlib.camera.StillImageActivity -up-|> androidx.appcompat.app.AppCompatActivity
+  jp.oist.abcvlib.camera.StillImageActivity o-- jp.oist.abcvlib.camera.GraphicOverlay : graphicOverlay
+  jp.oist.abcvlib.camera.StillImageActivity o-- jp.oist.abcvlib.camera.VisionImageProcessor : imageProcessor
+  jp.oist.abcvlib.camera.VisionProcessorBase .up.|> jp.oist.abcvlib.camera.VisionImageProcessor
+  jp.oist.abcvlib.camera.VisionProcessorBase o-- jp.oist.abcvlib.camera.ScopedExecutor : executor
+  jp.oist.abcvlib.camera.VisionProcessorBase o-- jp.oist.abcvlib.camera.FrameMetadata : latestImageMetaData
+  jp.oist.abcvlib.camera.VisionProcessorBase o-- jp.oist.abcvlib.camera.FrameMetadata : processingMetaData
+
+
+right footer
+
+
+PlantUML diagram generated by SketchIt! (https://bitbucket.org/pmesmeur/sketch.it)
+For more information about this tool, please contact philippe.mesmeur@gmail.com
+endfooter
+
+@enduml

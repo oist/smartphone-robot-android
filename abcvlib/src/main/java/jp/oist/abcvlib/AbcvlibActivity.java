@@ -6,6 +6,8 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LifecycleRegistry;
+import androidx.lifecycle.ViewModelStore;
+import androidx.lifecycle.ViewModelStoreOwner;
 
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -34,7 +36,8 @@ import jp.oist.abcvlib.inputs.vision.*;
  * @author Christopher Buckley https://github.com/topherbuckley
  *
  */
-public abstract class AbcvlibActivity extends IOIOActivity implements RewardGenerator, LifecycleOwner {
+public abstract class AbcvlibActivity extends IOIOActivity implements RewardGenerator, LifecycleOwner,
+        ViewModelStoreOwner {
 
     // Publically accessible objects that encapsulate a lot other core functionality
     public Inputs inputs;
@@ -183,6 +186,12 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     @Override
     public Lifecycle getLifecycle() {
         return lifecycleRegistry;
+    }
+
+    @NonNull
+    @Override
+    public ViewModelStore getViewModelStore() {
+        return this;
     }
 
     /**

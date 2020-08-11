@@ -177,7 +177,6 @@
       "project": {
         "compilerSettingsCacheFolder": "/home/christopher/git/smartphone-robot/abcvlibApp/.cxx",
         "cxxFolder": "/home/christopher/git/smartphone-robot/abcvlibApp/.cxx",
-        "ideBuildTargetAbi": "armeabi-v7a,armeabi",
         "isBuildOnlyTargetAbiEnabled": true,
         "isCmakeBuildCohabitationEnabled": false,
         "isNativeCompilerSettingsCacheEnabled": false,
@@ -201,7 +200,10 @@
     "objFolder": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/build/intermediates/cmake/debug/obj",
     "variantName": "debug",
     "validAbiList": [
-      "ARMEABI_V7A"
+      "ARMEABI_V7A",
+      "ARM64_V8A",
+      "X86",
+      "X86_64"
     ],
     "prefabDirectory": "/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cmake/debug/prefab",
     "prefabPackageDirectoryList": []
