@@ -2,8 +2,6 @@ package jp.oist.abcvlib.core;
 
 import android.annotation.TargetApi;
 
-//import androidx.lifecycle.LifecycleRegistry;
-
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -41,8 +39,6 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     public ActionSelector aS;
     private Thread actionSelectorThread;
     public Switches switches = new Switches();
-//    private LifecycleRegistry lifecycleRegistry;
-
 
     /**
      * Lets various loops know its time to wrap things up when false, and prevents other loops from
@@ -63,9 +59,6 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
             super.onCreate(savedInstanceState);
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
-        
-//        lifecycleRegistry = new LifecycleRegistry(this);
-//        lifecycleRegistry.markState(Lifecycle.State.CREATED);
 
         Log.i(TAG, "End of AbcvlibActivity.onCreate");
     }
@@ -166,7 +159,6 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
 
     }
 
-
     @Override
     @TargetApi(Build.VERSION_CODES.M)
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
@@ -176,18 +168,6 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
-
-//    @NonNull
-//    @Override
-//    public Lifecycle getLifecycle() {
-//        return lifecycleRegistry;
-//    }
-
-//    @NonNull
-//    @Override
-//    public ViewModelStore getViewModelStore() {
-//        return this;
-//    }
 
     /**
      Overriding here passes the initialized AbcvlibLooper object to the IOIOLooper class which
