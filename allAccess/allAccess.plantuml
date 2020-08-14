@@ -14,7 +14,7 @@ title __ALLACCESS's Class Diagram__\n
   }
   
 
-  jp.oist.abcvlib.allaccess.MainActivity -up-|> jp.oist.abcvlib.AbcvlibActivity
+  jp.oist.abcvlib.allaccess.MainActivity -up-|> jp.oist.abcvlib.core.AbcvlibActivity
 
 
 right footer

@@ -3,7 +3,7 @@
 title __ABCVLIB's Class Diagram__\n
 
   namespace jp.oist.abcvlib {
-    abstract class jp.oist.abcvlib.AbcvlibActivity {
+    abstract class jp.oist.abcvlib.core.AbcvlibActivity {
     }
   }
   
@@ -184,24 +184,24 @@ title __ABCVLIB's Class Diagram__\n
   }
   
 
-  jp.oist.abcvlib.AbcvlibActivity .up.|> jp.oist.abcvlib.learning.RewardGenerator
-  jp.oist.abcvlib.AbcvlibActivity -up-|> ioio.lib.util.android.IOIOActivity
-  jp.oist.abcvlib.AbcvlibActivity o-- jp.oist.abcvlib.learning.ActionDistribution : aD
-  jp.oist.abcvlib.AbcvlibActivity o-- jp.oist.abcvlib.learning.ActionSelector : aS
-  jp.oist.abcvlib.AbcvlibActivity o-- jp.oist.abcvlib.inputs.Inputs : inputs
-  jp.oist.abcvlib.AbcvlibActivity o-- jp.oist.abcvlib.outputs.Outputs : outputs
-  jp.oist.abcvlib.AbcvlibActivity o-- jp.oist.abcvlib.Switches : switches
+  jp.oist.abcvlib.core.AbcvlibActivity .up.|> jp.oist.abcvlib.learning.RewardGenerator
+  jp.oist.abcvlib.core.AbcvlibActivity -up-|> ioio.lib.util.android.IOIOActivity
+  jp.oist.abcvlib.core.AbcvlibActivity o-- jp.oist.abcvlib.learning.ActionDistribution : aD
+  jp.oist.abcvlib.core.AbcvlibActivity o-- jp.oist.abcvlib.learning.ActionSelector : aS
+  jp.oist.abcvlib.core.AbcvlibActivity o-- jp.oist.abcvlib.inputs.Inputs : inputs
+  jp.oist.abcvlib.core.AbcvlibActivity o-- jp.oist.abcvlib.outputs.Outputs : outputs
+  jp.oist.abcvlib.core.AbcvlibActivity o-- jp.oist.abcvlib.Switches : switches
   jp.oist.abcvlib.AbcvlibLooper -up-|> ioio.lib.util.BaseIOIOLooper
-  jp.oist.abcvlib.AbcvlibLooper o-- jp.oist.abcvlib.AbcvlibActivity : abcvlibActivity
+  jp.oist.abcvlib.AbcvlibLooper o-- jp.oist.abcvlib.core.AbcvlibActivity : abcvlibActivity
   jp.oist.abcvlib.inputs.Inputs .up.|> org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2
   jp.oist.abcvlib.inputs.Inputs o-- jp.oist.abcvlib.inputs.audio.MicrophoneInput : micInput
   jp.oist.abcvlib.inputs.Inputs o-- jp.oist.abcvlib.inputs.MotionSensors : motionSensors
   jp.oist.abcvlib.inputs.Inputs o-- jp.oist.abcvlib.inputs.QuadEncoders : quadEncoders
   jp.oist.abcvlib.inputs.Inputs o-- jp.oist.abcvlib.inputs.vision.Vision : vision
   jp.oist.abcvlib.inputs.MotionSensors .up.|> android.hardware.SensorEventListener
-  jp.oist.abcvlib.inputs.MotionSensors o-- jp.oist.abcvlib.AbcvlibActivity : abcvlibActivity
+  jp.oist.abcvlib.inputs.MotionSensors o-- jp.oist.abcvlib.core.AbcvlibActivity : abcvlibActivity
   jp.oist.abcvlib.inputs.audio.MicrophoneInput .up.|> java.lang.Runnable
-  jp.oist.abcvlib.inputs.audio.MicrophoneInput o-- jp.oist.abcvlib.AbcvlibActivity : abcvlibActivity
+  jp.oist.abcvlib.inputs.audio.MicrophoneInput o-- jp.oist.abcvlib.core.AbcvlibActivity : abcvlibActivity
   jp.oist.abcvlib.inputs.vision.ColorBlobDetector o-- org.opencv.core.Mat : mDilatedMask
   jp.oist.abcvlib.inputs.vision.ColorBlobDetector o-- org.opencv.core.Mat : mHierarchy
   jp.oist.abcvlib.inputs.vision.ColorBlobDetector o-- org.opencv.core.Mat : mHsvMat
@@ -222,21 +222,21 @@ title __ABCVLIB's Class Diagram__\n
   jp.oist.abcvlib.inputs.vision.Vision o-- org.opencv.core.Scalar : mBlobColorRgba
   jp.oist.abcvlib.inputs.vision.Vision o-- jp.oist.abcvlib.inputs.vision.ColorBlobDetector : mDetector
   jp.oist.abcvlib.inputs.vision.Vision o-- org.opencv.core.Mat : mSpectrum
-  jp.oist.abcvlib.inputs.vision.Vision o-- jp.oist.abcvlib.AbcvlibActivity : abcvlibActivity
+  jp.oist.abcvlib.inputs.vision.Vision o-- jp.oist.abcvlib.core.AbcvlibActivity : abcvlibActivity
   jp.oist.abcvlib.inputs.vision.Vision o-- org.opencv.android.BaseLoaderCallback : mLoaderCallback
   jp.oist.abcvlib.learning.ActionSelector .up.|> java.lang.Runnable
-  jp.oist.abcvlib.learning.ActionSelector o-- jp.oist.abcvlib.AbcvlibActivity : abcvlibActivity
+  jp.oist.abcvlib.learning.ActionSelector o-- jp.oist.abcvlib.core.AbcvlibActivity : abcvlibActivity
   jp.oist.abcvlib.outputs.AbcvlibController .up.|> java.lang.Runnable
   jp.oist.abcvlib.outputs.AbcvlibController o-- jp.oist.abcvlib.outputs.AbcvlibController.Output : output
   jp.oist.abcvlib.outputs.BalancePIDController -up-|> jp.oist.abcvlib.outputs.AbcvlibController
-  jp.oist.abcvlib.outputs.BalancePIDController o-- jp.oist.abcvlib.AbcvlibActivity : abcvlibActivity
+  jp.oist.abcvlib.outputs.BalancePIDController o-- jp.oist.abcvlib.core.AbcvlibActivity : abcvlibActivity
   jp.oist.abcvlib.outputs.CenterBlobController -up-|> jp.oist.abcvlib.outputs.AbcvlibController
-  jp.oist.abcvlib.outputs.CenterBlobController o-- jp.oist.abcvlib.AbcvlibActivity : abcvlibActivity
+  jp.oist.abcvlib.outputs.CenterBlobController o-- jp.oist.abcvlib.core.AbcvlibActivity : abcvlibActivity
   jp.oist.abcvlib.outputs.GrandController -up-|> jp.oist.abcvlib.outputs.AbcvlibController
-  jp.oist.abcvlib.outputs.GrandController o-- jp.oist.abcvlib.AbcvlibActivity : abcvlibActivity
+  jp.oist.abcvlib.outputs.GrandController o-- jp.oist.abcvlib.core.AbcvlibActivity : abcvlibActivity
   jp.oist.abcvlib.outputs.MediaPlayerRunnable .up.|> java.lang.Runnable
-  jp.oist.abcvlib.outputs.MediaPlayerRunnable o-- jp.oist.abcvlib.AbcvlibActivity : abcvlibActivity
-  jp.oist.abcvlib.outputs.Motion o-- jp.oist.abcvlib.AbcvlibActivity : abcvlibActivity
+  jp.oist.abcvlib.outputs.MediaPlayerRunnable o-- jp.oist.abcvlib.core.AbcvlibActivity : abcvlibActivity
+  jp.oist.abcvlib.outputs.Motion o-- jp.oist.abcvlib.core.AbcvlibActivity : abcvlibActivity
   jp.oist.abcvlib.outputs.Motion o-- jp.oist.abcvlib.inputs.MotionSensors : motionSensors
   jp.oist.abcvlib.outputs.Motion o-- jp.oist.abcvlib.inputs.QuadEncoders : quadEncoders
   jp.oist.abcvlib.outputs.Outputs .up.|> jp.oist.abcvlib.outputs.OutputsInterface
@@ -246,7 +246,7 @@ title __ABCVLIB's Class Diagram__\n
   jp.oist.abcvlib.outputs.Outputs o-- jp.oist.abcvlib.outputs.CenterBlobController : centerBlobController
   jp.oist.abcvlib.outputs.Outputs o-- jp.oist.abcvlib.outputs.GrandController : grandController
   jp.oist.abcvlib.outputs.SocketClient .up.|> java.lang.Runnable
-  jp.oist.abcvlib.outputs.SocketClient o-- jp.oist.abcvlib.AbcvlibActivity : abcvlibActivity
+  jp.oist.abcvlib.outputs.SocketClient o-- jp.oist.abcvlib.core.AbcvlibActivity : abcvlibActivity
 
 
 right footer

@@ -3,7 +3,7 @@ package jp.oist.abcvlib.allaccess;
 import android.os.Bundle;
 import android.util.Log;
 
-import jp.oist.abcvlib.AbcvlibActivity;
+import jp.oist.abcvlib.core.AbcvlibActivity;
 
 /**
  * Most basic Android application showing connection to IOIOBoard and Android Sensors

@@ -15,7 +15,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import jp.oist.abcvlib.AbcvlibActivity;
+import jp.oist.abcvlib.core.AbcvlibActivity;
 
 /**
  * Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors

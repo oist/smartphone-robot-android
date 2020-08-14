@@ -4,7 +4,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
-import jp.oist.abcvlib.AbcvlibActivity;
+import jp.oist.abcvlib.core.AbcvlibActivity;
 
 /**
  * Most basic Android application showing connection to IOIOBoard and Android Sensors
@@ -26,6 +26,8 @@ public class MainActivity extends AbcvlibActivity {
         // Setup Android GUI. Point this method to your main activity xml file or corresponding int
         // ID within the R class
         setContentView(R.layout.activity_main);
+
+        determineReward();
 
         // Create "runnable" object (similar to a thread, but recommended over overriding thread class)
         SimpleTest simpleTest = new SimpleTest();

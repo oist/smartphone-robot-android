@@ -9,7 +9,7 @@ title __COLORBLOBDETECT's Class Diagram__\n
   }
   
 
-  jp.oist.abcvlib.colorblobdetect.ColorBlobDetectionActivity -up-|> jp.oist.abcvlib.AbcvlibActivity
+  jp.oist.abcvlib.colorblobdetect.ColorBlobDetectionActivity -up-|> jp.oist.abcvlib.core.AbcvlibActivity
 
 
 right footer

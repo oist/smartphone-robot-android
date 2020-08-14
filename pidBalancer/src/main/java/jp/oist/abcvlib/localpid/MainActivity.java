@@ -1,7 +1,7 @@
 package jp.oist.abcvlib.localpid;
 
 import android.os.Bundle;
-import jp.oist.abcvlib.AbcvlibActivity;
+import jp.oist.abcvlib.core.AbcvlibActivity;
 
 /**
  * Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors

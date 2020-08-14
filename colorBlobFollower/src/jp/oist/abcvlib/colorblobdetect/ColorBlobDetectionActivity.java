@@ -4,7 +4,7 @@ import android.os.Bundle;
 
 import org.opencv.android.OpenCVLoader;
 
-import jp.oist.abcvlib.AbcvlibActivity;
+import jp.oist.abcvlib.core.AbcvlibActivity;
 
 
 public class ColorBlobDetectionActivity extends AbcvlibActivity {

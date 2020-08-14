@@ -4,7 +4,7 @@ import android.os.Bundle;
 import android.renderscript.ScriptGroup;
 import android.util.Log;
 
-import jp.oist.abcvlib.AbcvlibActivity;
+import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.inputs.Inputs;
 
 /**

@@ -17,7 +17,7 @@ title __SETPATH's Class Diagram__\n
   }
   
 
-  jp.oist.abcvlib.setPath.MainActivity -up-|> jp.oist.abcvlib.AbcvlibActivity
+  jp.oist.abcvlib.setPath.MainActivity -up-|> jp.oist.abcvlib.core.AbcvlibActivity
   jp.oist.abcvlib.setPath.MainActivity +-down- jp.oist.abcvlib.setPath.MainActivity.setPath
   jp.oist.abcvlib.setPath.MainActivity.setPath .up.|> java.lang.Runnable
 

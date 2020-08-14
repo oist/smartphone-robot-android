@@ -4,7 +4,7 @@ import android.os.Bundle;
 
 import org.json.JSONException;
 
-import jp.oist.abcvlib.AbcvlibActivity;
+import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.outputs.AbcvlibController;
 
 /**

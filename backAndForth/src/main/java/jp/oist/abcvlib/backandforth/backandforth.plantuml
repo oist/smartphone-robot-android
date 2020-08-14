@@ -19,7 +19,7 @@ title __BACKANDFORTH's Class Diagram__\n
   }
   
 
-  jp.oist.abcvlib.backandforth.MainActivity -up-|> jp.oist.abcvlib.AbcvlibActivity
+  jp.oist.abcvlib.backandforth.MainActivity -up-|> jp.oist.abcvlib.core.AbcvlibActivity
   jp.oist.abcvlib.backandforth.MainActivity +-down- jp.oist.abcvlib.backandforth.MainActivity.BackAndForth
   jp.oist.abcvlib.backandforth.MainActivity.BackAndForth .up.|> java.lang.Runnable
 

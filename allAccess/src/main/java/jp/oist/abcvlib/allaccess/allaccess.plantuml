@@ -16,7 +16,7 @@ title __ALLACCESS's Class Diagram__\n
   }
   
 
-  jp.oist.abcvlib.allaccess.MainActivity -up-|> jp.oist.abcvlib.AbcvlibActivity
+  jp.oist.abcvlib.allaccess.MainActivity -up-|> jp.oist.abcvlib.core.AbcvlibActivity
   jp.oist.abcvlib.allaccess.MainActivity +-down- jp.oist.abcvlib.allaccess.MainActivity.SimpleTest
   jp.oist.abcvlib.allaccess.MainActivity.SimpleTest .up.|> java.lang.Runnable
 

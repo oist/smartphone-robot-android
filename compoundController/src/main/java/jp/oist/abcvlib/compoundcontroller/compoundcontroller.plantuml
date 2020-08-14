@@ -24,7 +24,7 @@ title __COMPOUNDCONTROLLER's Class Diagram__\n
   }
   
 
-  jp.oist.abcvlib.compoundcontroller.MainActivity -up-|> jp.oist.abcvlib.AbcvlibActivity
+  jp.oist.abcvlib.compoundcontroller.MainActivity -up-|> jp.oist.abcvlib.core.AbcvlibActivity
   jp.oist.abcvlib.compoundcontroller.MainActivity +-down- jp.oist.abcvlib.compoundcontroller.MainActivity.CustomController
   jp.oist.abcvlib.compoundcontroller.MainActivity.CustomController -up-|> jp.oist.abcvlib.outputs.AbcvlibController
 

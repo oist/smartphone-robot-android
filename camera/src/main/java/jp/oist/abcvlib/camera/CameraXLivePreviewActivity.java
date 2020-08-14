@@ -77,7 +77,7 @@ import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions;
 
 import java.util.ArrayList;
 import java.util.List;
-import jp.oist.abcvlib.AbcvlibActivity;
+import jp.oist.abcvlib.core.AbcvlibActivity;
 
 /**
  * Live preview demo app for ML Kit APIs using CameraX.

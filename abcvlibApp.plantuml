@@ -391,13 +391,13 @@ title __ABCVLIBAPP's Class Diagram__\n
   
 
   namespace jp.oist.abcvlib {
-    class jp.oist.abcvlib.R {
+    class jp.oist.abcvlib.core.R {
     }
   }
   
 
   namespace jp.oist.abcvlib {
-    class jp.oist.abcvlib.R {
+    class jp.oist.abcvlib.core.R {
     }
   }
   
