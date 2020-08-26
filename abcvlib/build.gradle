@@ -32,7 +32,6 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode rootProject.ext.versionCode
         versionName rootProject.ext.versionName
-        testInstrumentationRunner rootProject.ext.testInstrumentationRunner
     }
 
 }
@@ -40,12 +39,6 @@ android {
 dependencies {
     api project(path: ':IOIOLibAndroid')
     api project(path: ':IOIOLibCore')
-    testImplementation 'junit:junit:4.12'
-//    implementation 'androidx.appcompat:appcompat:1.2.0'
-//    api 'com.github.ytai.ioio:IOIOLibAndroid:5.07'
-//    api 'com.github.ytai.ioio:IOIOLibAndroidBluetooth:5.07'
-//    api 'com.github.ytai.ioio:IOIOLibAndroidAccessory:5.07'
-//    api 'com.github.ytai.ioio:IOIOLibAndroidDevice:5.07'
     implementation 'com.opencsv:opencsv:4.6'
     api project(path: ':openCV411')
 //    implementation project(':IOIOLibAndroid')
