@@ -78,6 +78,7 @@ public class BitmapUtils {
      */
     @RequiresApi(VERSION_CODES.KITKAT)
     @Nullable
+    @androidx.camera.core.ExperimentalGetImage
     public static Bitmap getBitmap(ImageProxy image) {
         FrameMetadata frameMetadata = new FrameMetadata.Builder()
                 .setWidth(image.getWidth())
