@@ -1,7 +1,0 @@
-Executable : /home/christopher/Android/Sdk/cmake/3.10.2.4988404/bin/ninja
-arguments : 
--C
-/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cmake/debug/x86_64
-opencv_jni_shared
-jvmArgs : 
-

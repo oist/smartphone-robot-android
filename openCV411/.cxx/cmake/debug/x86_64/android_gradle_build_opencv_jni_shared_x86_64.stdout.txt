@@ -1,2 +1,0 @@
-ninja: Entering directory `/home/christopher/git/smartphone-robot/abcvlibApp/openCV411/.cxx/cmake/debug/x86_64'
-ninja: no work to do.
