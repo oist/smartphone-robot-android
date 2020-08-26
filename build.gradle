@@ -20,8 +20,14 @@ allprojects {
         google()
         jcenter()
     }
-
+    configurations {
+        all {
+            exclude module: 'commons-logging'
+        }
+    }
 }
+
+
 
 subprojects {
     afterEvaluate {
