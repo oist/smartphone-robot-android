@@ -5,7 +5,7 @@ import android.os.Bundle;
 import org.json.JSONException;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.outputs.AbcvlibController;
+import jp.oist.abcvlib.core.outputs.AbcvlibController;
 
 /**
  * Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors

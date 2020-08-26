@@ -5,7 +5,7 @@ import android.util.Log;
 import android.widget.TextView;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.learning.ActionDistribution;
+import jp.oist.abcvlib.core.learning.ActionDistribution;
 
 /**
  * Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors

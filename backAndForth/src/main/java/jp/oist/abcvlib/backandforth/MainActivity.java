@@ -5,7 +5,7 @@ import android.renderscript.ScriptGroup;
 import android.util.Log;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.inputs.Inputs;
+import jp.oist.abcvlib.core.inputs.Inputs;
 
 /**
  * Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors
