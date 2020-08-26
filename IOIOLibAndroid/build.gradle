@@ -13,8 +13,8 @@ buildscript {
 }
 
 android {
-  buildToolsVersion "23.0.3"
-  compileSdkVersion 23
+  buildToolsVersion = '30.0.2'
+  compileSdkVersion 28
 }
 
 //uploadArchives {
