@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
 
-    <application>
+    <application android:theme="@style/AppTheme">
         <activity android:name="jp.oist.abcvlib.claplearn.ClapLearn">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
