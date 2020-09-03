@@ -1,6 +1,7 @@
 dependencies {
-    api project(path: ':IOIOLibAndroid')
-    api project(path: ':IOIOLibCore')
+    api project(path: ':IOIOLibAndroidAccessory')
+    api project(path: ':IOIOLibAndroidDevice')
+    api project(path: ':IOIOLibAndroidBluetooth')
     implementation 'com.opencsv:opencsv:4.6'
     api project(path: ':openCV411')
 }
