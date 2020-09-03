@@ -1,6 +1,49 @@
-include ':IOIOLibAndroid', ':IOIOLibCore', ':IOIOLibAndroidAccessory', ':IOIOLibAndroidBluetooth', ':IOIOLibAndroidDevice'
-include ':abcvlib', ':openCV411'
-include ':basic'
-include 'camera'
-// include ':backAndForth', ':pidBalancer', ':colorBlobFollower', ':setPath', ':clapLearn',
-//        ':compoundController', ':allAccess', ':physicstest', ':camera'
+def androidLibs = [
+        'abcvlib',
+        'openCV411',
+        'IOIOLibAndroid',
+        'IOIOLibAndroidAccessory',
+        'IOIOLibAndroidBluetooth',
+        'IOIOLibAndroidDevice'
+]
+
+gradle.ext.androidLibs = androidLibs
+
+def apps = [
+        'basic',
+        'camera',
+        'backAndForth',
+        'pidBalancer',
+        'colorBlobFollower',
+        'setPath',
+        'clapLearn',
+        'compoundController',
+        'allAccess',
+        'physicstest',
+]
+
+gradle.ext.apps = apps
+
+def IOIOlibs = [
+        'IOIOLibCore'
+]
+
+gradle.ext.IOIOlibs = IOIOlibs
+
+androidLibs.each {
+    lib ->
+        include lib
+        project(":${lib}").projectDir = file("libs/${lib}")
+}
+
+apps.each {
+    app ->
+        include app
+        project(":${app}").projectDir = file("apps/${app}")
+}
+
+IOIOlibs.each {
+    lib ->
+        include lib
+        project(":${lib}").projectDir = file("libs/${lib}")
+}

@@ -1,0 +1,6 @@
+dependencies {
+    api project(path: ':IOIOLibAndroid')
+    api project(path: ':IOIOLibCore')
+    implementation 'com.opencsv:opencsv:4.6'
+    api project(path: ':openCV411')
+}
