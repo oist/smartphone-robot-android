@@ -32,6 +32,7 @@ import com.google.mlkit.vision.objects.ObjectDetectorOptionsBase;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Queue;
 
 /**
  * A processor to run object detector.
@@ -41,6 +42,14 @@ public class ObjectDetectorProcessor extends VisionProcessorBase<List<DetectedOb
     private static final String TAG = "ObjectDetectorProcessor";
 
     private final ObjectDetector detector;
+
+    private Queue<List<DetectedObject>> objectDetectQueue_;
+
+    public ObjectDetectorProcessor(Context context, ObjectDetectorOptionsBase options, Queue<List<DetectedObject>> objectDetectQueue) {
+        super(context);
+        detector = ObjectDetection.getClient(options);
+        objectDetectQueue_ = objectDetectQueue;
+    }
 
     public ObjectDetectorProcessor(Context context, ObjectDetectorOptionsBase options) {
         super(context);
@@ -67,6 +76,11 @@ public class ObjectDetectorProcessor extends VisionProcessorBase<List<DetectedOb
             @NonNull List<DetectedObject> results, @NonNull GraphicOverlay graphicOverlay) {
         for (DetectedObject object : results) {
             graphicOverlay.add(new ObjectGraphic(graphicOverlay, object));
+        }
+        if (objectDetectQueue_ != null && results.size() > 0){
+            objectDetectQueue_.offer(results);
+            Log.i("rect234", results.get(0).getBoundingBox().flattenToString());
+            Log.i("rect234", "image width: " + graphicOverlay.getImageWidth());
         }
     }
 

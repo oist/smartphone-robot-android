@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Rect;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
@@ -34,9 +35,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.util.Log;
 import android.util.Size;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
@@ -65,6 +68,7 @@ import jp.oist.abcvlib.camera.barcodescanner.BarcodeScannerProcessor;
 import jp.oist.abcvlib.camera.facedetector.FaceDetectorProcessor;
 import jp.oist.abcvlib.camera.labeldetector.LabelDetectorProcessor;
 import jp.oist.abcvlib.camera.objectdetector.ObjectDetectorProcessor;
+import jp.oist.abcvlib.camera.objectdetector.ObjectGraphic;
 import jp.oist.abcvlib.camera.preference.PreferenceUtils;
 import jp.oist.abcvlib.camera.preference.SettingsActivity;
 import jp.oist.abcvlib.camera.preference.SettingsActivity.LaunchSource;
@@ -72,11 +76,18 @@ import jp.oist.abcvlib.camera.textdetector.TextRecognitionProcessor;
 import com.google.mlkit.vision.face.FaceDetectorOptions;
 import com.google.mlkit.vision.label.custom.CustomImageLabelerOptions;
 import com.google.mlkit.vision.label.defaults.ImageLabelerOptions;
+import com.google.mlkit.vision.objects.DetectedObject;
 import com.google.mlkit.vision.objects.custom.CustomObjectDetectorOptions;
 import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions;
 
+import java.nio.Buffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 import jp.oist.abcvlib.core.AbcvlibActivity;
 
 /**
@@ -117,8 +128,10 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
     private boolean needUpdateGraphicOverlayImageSourceInfo;
 
     private String selectedModel = OBJECT_DETECTION;
-    private int lensFacing = CameraSelector.LENS_FACING_BACK;
+    private int lensFacing = CameraSelector.LENS_FACING_FRONT;
     private CameraSelector cameraSelector;
+    private Queue<List<DetectedObject>> objectDetectQueue;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -141,7 +154,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
 
         if (savedInstanceState != null) {
             selectedModel = savedInstanceState.getString(STATE_SELECTED_MODEL, OBJECT_DETECTION);
-            lensFacing = savedInstanceState.getInt(STATE_LENS_FACING, CameraSelector.LENS_FACING_BACK);
+            lensFacing = savedInstanceState.getInt(STATE_LENS_FACING, CameraSelector.LENS_FACING_FRONT);
         }
         cameraSelector = new CameraSelector.Builder().requireLensFacing(lensFacing).build();
 
@@ -176,6 +189,8 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
         ToggleButton facingSwitch = findViewById(R.id.facing_switch);
         facingSwitch.setOnCheckedChangeListener(this);
 
+        objectDetectQueue = new ConcurrentLinkedQueue<List<DetectedObject>>();
+
         new ViewModelProvider(this, AndroidViewModelFactory.getInstance(getApplication()))
                 .get(CameraXViewModel.class)
                 .getProcessCameraProvider()
@@ -201,6 +216,13 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
         if (!allPermissionsGranted()) {
             getRuntimePermissions();
         }
+
+        Display disp = ((WindowManager)this.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+
+//         Linear Back and Forth every 10 mm
+        BackAndForth backAndForthThread = new BackAndForth();
+        new Thread(backAndForthThread).start();
+
     }
 
     @Override
@@ -332,7 +354,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
                     Log.i(TAG, "Using Object Detector Processor");
                     ObjectDetectorOptions objectDetectorOptions =
                             PreferenceUtils.getObjectDetectorOptionsForLivePreview(this);
-                    imageProcessor = new ObjectDetectorProcessor(this, objectDetectorOptions);
+                    imageProcessor = new ObjectDetectorProcessor(this, objectDetectorOptions, objectDetectQueue);
                     break;
                 case OBJECT_DETECTION_CUSTOM:
                     Log.i(TAG, "Using Custom Object Detector (Bird) Processor");
@@ -482,6 +504,52 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
         }
         Log.i(TAG, "Permission NOT granted: " + permission);
         return false;
+    }
+
+    public class BackAndForth implements Runnable{
+
+        int speed = 100; // Duty cycle from 0 to 100.
+        int sleeptime = 1000;
+        // Track
+        ArrayBlockingQueue trackingIDHistory = new ArrayBlockingQueue(20);
+
+        public void run(){
+
+            // Set Initial Speed
+            outputs.motion.setWheelOutput(speed, speed);
+            Log.i(TAG, "wheelspeed=" + speed);
+
+            // Spin wheels for 1 s just to show successful connection.
+            try {
+                Thread.sleep(sleeptime);
+                outputs.motion.setWheelOutput(0, 0);
+            } catch (InterruptedException e){
+                e.printStackTrace();
+            }
+
+            while( appRunning && objectDetectQueue != null ) {
+
+                if (!objectDetectQueue.isEmpty()){
+                    List<DetectedObject> detectedObjects = objectDetectQueue.poll();
+                    // Take first object only...just for testing
+                    DetectedObject obj = detectedObjects.get(0);
+//                for (DetectedObject object : detectedObjects) {
+//                }
+                    Rect boundingBox = obj.getBoundingBox();
+                    centerObject(boundingBox);
+                }
+            }
+        }
+
+        private void centerObject(Rect boundingBox){
+            float objectCenter = boundingBox.exactCenterX();
+            float screenCenter = (float)graphicOverlay.getImageWidth() / 2;
+            // Scale to imageWidth / 2 rather than an absolute value so as to maintain the same phi for different resolutions
+            float phi = (objectCenter - screenCenter) / screenCenter ;
+            speed = (int)(100 * phi);
+            Log.i("rect234", "Speed: " + speed);
+            outputs.motion.setWheelOutput(-speed, speed);
+        }
     }
 
 }
