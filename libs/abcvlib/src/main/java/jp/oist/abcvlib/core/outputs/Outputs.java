@@ -43,7 +43,7 @@ public class Outputs implements OutputsInterface {
                     controls, abcvlibActivity);
             socketClientThread = new Thread(socketClient);
             socketClientThread.start();
-            Log.v("abcvlib", "socketClient Started");
+            Log.i("abcvlib", "socketClient Started");
         }
 
         if (abcvlibActivity.switches.balanceApp){
@@ -51,7 +51,7 @@ public class Outputs implements OutputsInterface {
             pidControllerThread = new Thread(balancePIDController);
             pidControllerThread.start();
             controllers.add(balancePIDController);
-            Log.v("abcvlib", "BalanceApp Started");
+            Log.i("abcvlib", "BalanceApp Started");
 
         }
 

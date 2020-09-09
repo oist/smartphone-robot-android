@@ -44,14 +44,20 @@ public class BalancePIDController extends AbcvlibController{
     long lastUpdateTime;
     long updateTimeStep;
 
+    boolean socketLock = false;
+
     private AbcvlibActivity abcvlibActivity;
 
     private int avgCount = 1000;
 
+    private int bounceLoopCount = 0;
+    // loop steps between turning on and off wheels.
+    private int bouncePulseWidth = 100000;
+
     public BalancePIDController(AbcvlibActivity abcvlibActivity){
 
         this.abcvlibActivity = abcvlibActivity;
-        Log.d("abcvlib", "BalanceApp Created");
+        Log.i("abcvlib", "BalanceApp Created");
 
 
     }
@@ -69,7 +75,7 @@ public class BalancePIDController extends AbcvlibController{
 
         while(abcvlibActivity.switches.balanceApp && abcvlibActivity.appRunning) {
 
-//            Log.v("abcvlib", "In balanceApp.run");
+            Log.v("abcvlib", "In balanceApp.run");
 
             PIDTimer[0] = System.nanoTime();
 
@@ -96,11 +102,17 @@ public class BalancePIDController extends AbcvlibController{
 
             PIDTimer[1] = System.nanoTime();
 
-            try {
-                linearController();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            // Bounce Up
+            if (minTiltAngle > thetaDeg | maxTiltAngle < thetaDeg){
+                bounce();
+            }else{
+                try {
+                    linearController();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
+
 
             PIDTimer[2] = System.nanoTime();
 
@@ -127,7 +139,14 @@ public class BalancePIDController extends AbcvlibController{
         }
     }
 
-    private void linearController() throws InterruptedException {
+    synchronized public void setPID(double p_tilt_,
+                                    double i_tilt_,
+                                    double d_tilt_,
+                                    double setPoint_,
+                                    double p_wheel_,
+                                    double expWeight_,
+                                    double maxAbsTilt_)
+            throws InterruptedException {
 
         try {
             if (abcvlibActivity.outputs.socketClient.socketMsgIn != null){
@@ -139,17 +158,47 @@ public class BalancePIDController extends AbcvlibController{
                     d_tilt = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("d_tilt").toString());
                     p_wheel = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("p_wheel").toString());
                     expWeight = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("expWeight").toString());
+                    maxAbsTilt = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("maxAbsTilt").toString());
 
-//                Log.v("abcvlib", "linearConroller updated values from socketClient");
+                Log.v("abcvlib", "linearConroller updated values from socketClient");
 
                 } catch (JSONException e){
                     e.printStackTrace();
                 }
+            } else {
+                setPoint = setPoint_;
+                p_tilt = p_tilt_;
+                i_tilt = i_tilt_;
+                d_tilt = d_tilt_;
+                p_wheel = p_wheel_;
+                expWeight = expWeight_;
+                maxAbsTilt = maxAbsTilt_;
+                Log.v("abcvlib", "linearConroller updated values from local");
+
             }
         } catch (NullPointerException e){
             e.printStackTrace();
             Thread.sleep(1000);
         }
+
+    }
+
+    private void bounce() {
+        if (bounceLoopCount < bouncePulseWidth){
+            setOutput(100,100);
+        }else if (bounceLoopCount < bouncePulseWidth * 1.5){
+            setOutput(0,0);
+        }else if (bounceLoopCount < bouncePulseWidth * 2.5) {
+            setOutput(-100,-100);
+        }else {
+            bounceLoopCount = 0;
+        }
+        bounceLoopCount++;
+    }
+
+    private void linearController() throws InterruptedException {
+
+        setPID(p_tilt, i_tilt, d_tilt, setPoint, p_wheel, expWeight, maxAbsTilt);
 
         abcvlibActivity.inputs.quadEncoders.setExpWeight(expWeight);
 
