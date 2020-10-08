@@ -90,11 +90,29 @@ public class ObjectGraphic extends Graphic {
         float lineHeight = TEXT_SIZE + STROKE_WIDTH;
         float yLabelOffset = -lineHeight;
 
-        // Calculate width and height of label box
+        // Determine which has largest confidence and use only that label
+        float confidence = 0;
+        int labelNum = 0;
+        Label highestConfidenceLabel = null;
         for (Label label : object.getLabels()) {
-            textWidth = Math.max(textWidth, textPaints[colorID].measureText(label.getText()));
+            if(label.getConfidence() > confidence){
+                confidence = label.getConfidence();
+                highestConfidenceLabel = object.getLabels().get(labelNum);
+                labelNum++;
+            }
+        }
+
+        // Calculate width and height of label box
+//        for (Label label : object.getLabels()) {
+//            textWidth = Math.max(textWidth, textPaints[colorID].measureText(label.getText()));
+//            textWidth = Math.max(textWidth, textPaints[colorID].measureText(
+//                    String.format(Locale.US, LABEL_FORMAT, label.getConfidence() * 100, label.getIndex())));
+//            yLabelOffset -= 2 * lineHeight;
+//        }
+        if (!object.getLabels().isEmpty() && highestConfidenceLabel != null){
+            textWidth = Math.max(textWidth, textPaints[colorID].measureText(highestConfidenceLabel.getText()));
             textWidth = Math.max(textWidth, textPaints[colorID].measureText(
-                    String.format(Locale.US, LABEL_FORMAT, label.getConfidence() * 100, label.getIndex())));
+                    String.format(Locale.US, LABEL_FORMAT, highestConfidenceLabel.getConfidence() * 100, highestConfidenceLabel.getIndex())));
             yLabelOffset -= 2 * lineHeight;
         }
 
@@ -122,15 +140,15 @@ public class ObjectGraphic extends Graphic {
                 textPaints[colorID]);
         yLabelOffset += lineHeight;
 
-        for (Label label : object.getLabels()) {
+        if (!object.getLabels().isEmpty() && highestConfidenceLabel != null){
             canvas.drawText(
-                    label.getText(),
+                    object.getLabels().get(0).getText(),
                     left,
                     rect.top + yLabelOffset,
                     textPaints[colorID]);
             yLabelOffset += lineHeight;
             canvas.drawText(
-                    String.format(Locale.US, LABEL_FORMAT, label.getConfidence() * 100, label.getIndex()),
+                    String.format(Locale.US, LABEL_FORMAT, highestConfidenceLabel.getConfidence() * 100, highestConfidenceLabel.getIndex()),
                     left,
                     rect.top + yLabelOffset,
                     textPaints[colorID]);

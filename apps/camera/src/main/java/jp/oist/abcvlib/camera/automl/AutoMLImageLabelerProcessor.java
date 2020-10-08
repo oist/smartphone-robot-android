@@ -17,6 +17,7 @@
 package jp.oist.abcvlib.camera.automl;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -72,7 +73,7 @@ public class AutoMLImageLabelerProcessor extends VisionProcessorBase<List<ImageL
 
     @Override
     protected void onSuccess(
-            @NonNull List<ImageLabel> labels, @NonNull GraphicOverlay graphicOverlay) {
+            @NonNull List<ImageLabel> labels, @NonNull GraphicOverlay graphicOverlay, Bitmap originalCameraImage) {
         graphicOverlay.add(new LabelGraphic(graphicOverlay, labels));
     }
 

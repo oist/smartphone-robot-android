@@ -16,6 +16,8 @@
 
 package jp.oist.abcvlib.camera;
 
+import androidx.camera.core.ImageCapture;
+import androidx.camera.core.ImageCaptureException;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory;
 
@@ -33,6 +35,8 @@ import androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback;
 import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.os.Environment;
+import android.os.SystemClock;
 import android.util.Log;
 import android.util.Size;
 import android.view.Display;
@@ -80,13 +84,21 @@ import com.google.mlkit.vision.objects.DetectedObject;
 import com.google.mlkit.vision.objects.custom.CustomObjectDetectorOptions;
 import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions;
 
+import org.jetbrains.annotations.NotNull;
+
+import java.io.File;
 import java.nio.Buffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 
@@ -103,12 +115,12 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
     private static final int PERMISSION_REQUESTS = 1;
 
     private static final String OBJECT_DETECTION = "Object Detection";
-    private static final String OBJECT_DETECTION_CUSTOM = "Custom Object Detection (Bird)";
+    private static final String OBJECT_DETECTION_CUSTOM = "Custom Object Detection";
     private static final String FACE_DETECTION = "Face Detection";
     private static final String TEXT_RECOGNITION = "Text Recognition";
     private static final String BARCODE_SCANNING = "Barcode Scanning";
     private static final String IMAGE_LABELING = "Image Labeling";
-    private static final String IMAGE_LABELING_CUSTOM = "Custom Image Labeling (Bird)";
+    private static final String IMAGE_LABELING_CUSTOM = "Custom Image Labeling";
     private static final String AUTOML_LABELING = "AutoML Image Labeling";
 
     private static final String STATE_SELECTED_MODEL = "selected_model";
@@ -122,12 +134,14 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
     @Nullable
     private Preview previewUseCase;
     @Nullable
+    private ImageCapture captureUseCase;
+    @Nullable
     private ImageAnalysis analysisUseCase;
     @Nullable
     private VisionImageProcessor imageProcessor;
     private boolean needUpdateGraphicOverlayImageSourceInfo;
 
-    private String selectedModel = OBJECT_DETECTION;
+    private String selectedModel = OBJECT_DETECTION_CUSTOM;
     private int lensFacing = CameraSelector.LENS_FACING_FRONT;
     private CameraSelector cameraSelector;
     private Queue<List<DetectedObject>> objectDetectQueue;
@@ -136,8 +150,10 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        // Initalizes various objects in parent class.
-        initialzer(this);
+        switches.pythonControlApp = true;
+
+        // Note the previously optional parameters that handle the connection to the python server
+        initialzer(this,"192.168.28.102", 3000);
 
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate");
@@ -153,7 +169,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
         }
 
         if (savedInstanceState != null) {
-            selectedModel = savedInstanceState.getString(STATE_SELECTED_MODEL, OBJECT_DETECTION);
+            selectedModel = savedInstanceState.getString(STATE_SELECTED_MODEL, OBJECT_DETECTION_CUSTOM);
             lensFacing = savedInstanceState.getInt(STATE_LENS_FACING, CameraSelector.LENS_FACING_FRONT);
         }
         cameraSelector = new CameraSelector.Builder().requireLensFacing(lensFacing).build();
@@ -170,8 +186,8 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
 
         Spinner spinner = findViewById(R.id.spinner);
         List<String> options = new ArrayList<>();
-        options.add(OBJECT_DETECTION);
         options.add(OBJECT_DETECTION_CUSTOM);
+        options.add(OBJECT_DETECTION);
         options.add(FACE_DETECTION);
         options.add(TEXT_RECOGNITION);
         options.add(BARCODE_SCANNING);
@@ -219,9 +235,9 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
 
         Display disp = ((WindowManager)this.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
 
-//         Linear Back and Forth every 10 mm
-        BackAndForth backAndForthThread = new BackAndForth();
-        new Thread(backAndForthThread).start();
+        // Motion Controller
+        MotionController motionController = new MotionController();
+        new Thread(motionController).start();
 
     }
 
@@ -319,6 +335,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
     private void bindAllCameraUseCases() {
         bindPreviewUseCase();
         bindAnalysisUseCase();
+//        bindCaptureUseCase();
     }
 
     private void bindPreviewUseCase() {
@@ -357,10 +374,10 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
                     imageProcessor = new ObjectDetectorProcessor(this, objectDetectorOptions, objectDetectQueue);
                     break;
                 case OBJECT_DETECTION_CUSTOM:
-                    Log.i(TAG, "Using Custom Object Detector (Bird) Processor");
+                    Log.i(TAG, "Using Custom Object Detector  Processor");
                     LocalModel localModel =
                             new LocalModel.Builder()
-                                    .setAssetFilePath("custom_models/bird_classifier.tflite")
+                                    .setAssetFilePath("custom_models/efficientnet_lite3_int8_2.tflite")
                                     .build();
                     CustomObjectDetectorOptions customObjectDetectorOptions =
                             PreferenceUtils.getCustomObjectDetectorOptionsForLivePreview(this, localModel);
@@ -385,10 +402,10 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
                     imageProcessor = new LabelDetectorProcessor(this, ImageLabelerOptions.DEFAULT_OPTIONS);
                     break;
                 case IMAGE_LABELING_CUSTOM:
-                    Log.i(TAG, "Using Custom Image Label (Bird) Detector Processor");
+                    Log.i(TAG, "Using Custom Image Label Detector Processor");
                     LocalModel localClassifier =
                             new LocalModel.Builder()
-                                    .setAssetFilePath("custom_models/bird_classifier.tflite")
+                                    .setAssetFilePath("custom_models/efficientnet_lite3_int8_2.tflite")
                                     .build();
                     CustomImageLabelerOptions customImageLabelerOptions =
                             new CustomImageLabelerOptions.Builder(localClassifier).build();
@@ -445,6 +462,28 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
                 });
 
         cameraProvider.bindToLifecycle(/* lifecycleOwner= */ this, cameraSelector, analysisUseCase);
+    }
+
+    private void bindCaptureUseCase() {
+
+//        if (!PreferenceUtils.isCameraLiveViewportEnabled(this)) {
+//            return;
+//        }
+        if (cameraProvider == null) {
+            return;
+        }
+        if (captureUseCase != null) {
+            cameraProvider.unbind(captureUseCase);
+        }
+
+        captureUseCase =
+                new ImageCapture.Builder()
+                        .build();
+        Log.i(TAG, "captureUseCase Initialized");
+
+        cameraProvider.bindToLifecycle(/* lifecycleOwner= */ this, cameraSelector, captureUseCase);
+        Log.i(TAG, "captureUseCase bound");
+
     }
 
     private String[] getRequiredPermissions() {
@@ -506,49 +545,96 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
         return false;
     }
 
-    public class BackAndForth implements Runnable{
+    public class MotionController implements Runnable{
 
-        int speed = 100; // Duty cycle from 0 to 100.
-        int sleeptime = 1000;
-        // Track
-        ArrayBlockingQueue trackingIDHistory = new ArrayBlockingQueue(20);
+        int speedL = 0; // Duty cycle from 0 to 100.
+        int speedR = 0; // Duty cycle from 0 to 100.
+        int maxAccelleration = 35;
+        int minWheelCnt = 20;
+        int maxSpeed = 80;
+        int minSpeed = 40;
+        int sleeptime = 2000;
+        int cnt = 0;
+        ExecutorService cameraExecutor = Executors.newCachedThreadPool();
+
+        public boolean isExternalStorageWritable() {
+            String state = Environment.getExternalStorageState();
+            if (Environment.MEDIA_MOUNTED.equals(state)) {
+                return true;
+            }
+            return false;
+        }
 
         public void run(){
 
+            Log.i("myLog", "entered RUN");
+
             // Set Initial Speed
-            outputs.motion.setWheelOutput(speed, speed);
-            Log.i(TAG, "wheelspeed=" + speed);
+            outputs.motion.setWheelOutput(speedL, speedR);
+            Log.i(TAG, "speedL= " + speedL + " speedR= " + speedR);
 
-            // Spin wheels for 1 s just to show successful connection.
-            try {
-                Thread.sleep(sleeptime);
-                outputs.motion.setWheelOutput(0, 0);
-            } catch (InterruptedException e){
-                e.printStackTrace();
-            }
+            while( appRunning ) {
+                try {
+                    // If current on some pin (current sense) is above X, assume stuck and reverse previous speeds for 1 s
+                    double countL = inputs.quadEncoders.getWheelCountL();
+                    double countR = inputs.quadEncoders.getWheelCountR();
 
-            while( appRunning && objectDetectQueue != null ) {
+//                    int minL = Math.max((speedL - maxAccelleration), -100);
+//                    int maxL = Math.min((speedL + maxAccelleration), 100);
+                    // Set a speed between min and max speed, then randomize the sign
+                    speedL = ThreadLocalRandom.current().nextInt(minSpeed, maxSpeed + 1);
+                    speedL = speedL * (ThreadLocalRandom.current().nextBoolean() ? 1 : -1);
+//                    int minR = Math.max((speedR - maxAccelleration), -100);
+//                    int maxR = Math.min((speedR + maxAccelleration), 100);
+                    // Set a speed between min and max speed, then randomize the sign
+                    speedR = ThreadLocalRandom.current().nextInt(minSpeed, maxSpeed + 1);
+                    speedR = speedR * (ThreadLocalRandom.current().nextBoolean() ? 1 : -1);
 
-                if (!objectDetectQueue.isEmpty()){
-                    List<DetectedObject> detectedObjects = objectDetectQueue.poll();
-                    // Take first object only...just for testing
-                    DetectedObject obj = detectedObjects.get(0);
-//                for (DetectedObject object : detectedObjects) {
-//                }
-                    Rect boundingBox = obj.getBoundingBox();
-                    centerObject(boundingBox);
+                    outputs.motion.setWheelOutput(speedL, speedR);
+
+                    Thread.sleep(sleeptime);
+
+                    // if wheels haven't moved, assume stuck and reverse speed to unstick.
+                    if ((Math.abs(inputs.quadEncoders.getWheelCountL() - countL) <= minWheelCnt) | (Math.abs(inputs.quadEncoders.getWheelCountL() - countL) <= 10)){
+                        outputs.motion.setWheelOutput(-speedL, -speedR);
+                        Thread.sleep(sleeptime);
+                    }
+                } catch (InterruptedException e){
+                    e.printStackTrace();
                 }
+                captureImage();
             }
         }
 
-        private void centerObject(Rect boundingBox){
-            float objectCenter = boundingBox.exactCenterX();
-            float screenCenter = (float)graphicOverlay.getImageWidth() / 2;
-            // Scale to imageWidth / 2 rather than an absolute value so as to maintain the same phi for different resolutions
-            float phi = (objectCenter - screenCenter) / screenCenter ;
-            speed = (int)(100 * phi);
-            Log.i("rect234", "Speed: " + speed);
-            outputs.motion.setWheelOutput(-speed, speed);
+        private void captureImage(){
+            File directory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/dataCollection/");
+            boolean success = true;
+            if (!directory.exists()){
+                success = directory.mkdirs();
+            }
+            if (success){
+                String photoName = Calendar.getInstance().getTime().toString() + "_" + cnt;
+                ImageCapture.OutputFileOptions outputFileOptions =
+                        new ImageCapture.OutputFileOptions.Builder(new File(directory, photoName)).build();
+                if (captureUseCase != null) {
+                    captureUseCase.takePicture(outputFileOptions, cameraExecutor,
+                            new ImageCapture.OnImageSavedCallback() {
+                                @Override
+                                public void onImageSaved(@NotNull ImageCapture.OutputFileResults outputFileResults) {
+                                    Log.i("imageCapture", "Image saved:" + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString() + photoName);
+                                }
+                                @Override
+                                public void onError(@NotNull ImageCaptureException error) {
+                                    Log.i("imageCapture", "Image save failed:" + error);
+                                }
+                            });
+                    cnt++;
+                } else {
+                    Log.i(TAG, "captureUseCase is null");
+                }
+            }
+
+
         }
     }
 

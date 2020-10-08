@@ -17,6 +17,7 @@
 package jp.oist.abcvlib.camera.labeldetector;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -64,7 +65,7 @@ public class LabelDetectorProcessor extends VisionProcessorBase<List<ImageLabel>
 
     @Override
     protected void onSuccess(
-            @NonNull List<ImageLabel> labels, @NonNull GraphicOverlay graphicOverlay) {
+            @NonNull List<ImageLabel> labels, @NonNull GraphicOverlay graphicOverlay, Bitmap originalCameraImage) {
         graphicOverlay.add(new LabelGraphic(graphicOverlay, labels));
         logExtrasForTesting(labels);
     }

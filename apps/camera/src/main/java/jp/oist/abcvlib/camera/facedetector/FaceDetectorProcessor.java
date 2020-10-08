@@ -17,6 +17,7 @@
 package jp.oist.abcvlib.camera.facedetector;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.util.Log;
 
@@ -71,7 +72,7 @@ public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
     }
 
     @Override
-    protected void onSuccess(@NonNull List<Face> faces, @NonNull GraphicOverlay graphicOverlay) {
+    protected void onSuccess(@NonNull List<Face> faces, @NonNull GraphicOverlay graphicOverlay, Bitmap originalCameraImage) {
         for (Face face : faces) {
             graphicOverlay.add(new FaceGraphic(graphicOverlay, face));
             logExtrasForTesting(face);
