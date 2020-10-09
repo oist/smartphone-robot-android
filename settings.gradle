@@ -20,6 +20,7 @@ def apps = [
         'compoundController',
         'allAccess',
         'physicstest',
+        "tfapp",
 ]
 
 gradle.ext.apps = apps
