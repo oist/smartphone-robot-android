@@ -17,6 +17,7 @@
 package org.tensorflow.lite.examples.detection;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -36,9 +37,11 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Trace;
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
 
 import android.util.Log;
 import android.util.Size;
@@ -75,6 +78,7 @@ public abstract class CameraActivity extends AbcvlibActivity
   private static final int PERMISSIONS_REQUEST = 1;
 
   private static final String PERMISSION_CAMERA = Manifest.permission.CAMERA;
+  private static final String WRITE_EXTERNAL_STORAGE = Manifest.permission.WRITE_EXTERNAL_STORAGE;
   protected int previewWidth = 0;
   protected int previewHeight = 0;
   private boolean debug = false;
@@ -114,6 +118,8 @@ public abstract class CameraActivity extends AbcvlibActivity
     Toolbar toolbar = findViewById(R.id.toolbar);
     setSupportActionBar(toolbar);
     getSupportActionBar().setDisplayShowTitleEnabled(false);
+
+    isStoragePermissionGranted();
 
     if (hasPermission()) {
       setFragment();
@@ -406,6 +412,25 @@ public abstract class CameraActivity extends AbcvlibActivity
     }
   }
 
+  public  boolean isStoragePermissionGranted() {
+    if (Build.VERSION.SDK_INT >= 23) {
+      if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+              == PackageManager.PERMISSION_GRANTED) {
+        Log.v(TAG,"Permission is granted");
+        return true;
+      } else {
+
+        Log.v(TAG,"Permission is revoked");
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+        return false;
+      }
+    }
+    else { //permission is automatically granted on sdk<23 upon installation
+      Log.v(TAG,"Permission is granted");
+      return true;
+    }
+  }
+
   // Returns true if the device supports the required hardware level, or better.
   private boolean isHardwareLevelSupported(
       CameraCharacteristics characteristics, int requiredLevel) {
@@ -425,7 +450,7 @@ public abstract class CameraActivity extends AbcvlibActivity
 
         // We don't use a front facing camera in this sample.
         final Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
-        if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
+        if (facing != null && facing == CameraCharacteristics.LENS_FACING_BACK) {
           continue;
         }
 

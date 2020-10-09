@@ -23,13 +23,19 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.media.ImageReader.OnImageAvailableListener;
+import android.os.Environment;
 import android.os.SystemClock;
+import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
 import android.widget.Toast;
+
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -81,6 +87,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private MultiBoxTracker tracker;
 
   private BorderedText borderedText;
+
+  private long timer = 0;
 
   @Override
   public void onPreviewSizeChosen(final Size size, final int rotation) {
@@ -207,6 +215,22 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                 result.setLocation(location);
                 mappedRecognitions.add(result);
+
+                if (System.nanoTime() > timer){
+                  long frameRate = (long)(0.5 * 1000000000); // 0.5 second in nanoseconds
+                  timer = System.nanoTime() + frameRate;
+                  String label = result.getTitle();
+                  RectF bb = result.getLocation();
+                  Log.i(TAG, "id:" + result.getId() + ", tag:" + label);
+                  Log.i("imageOrientation", "rgbFrameBitmap.width: " + rgbFrameBitmap.getWidth() + "rgbFrameBitmap.height: " + rgbFrameBitmap.getHeight());
+                  Log.i("imageOrientation", "croppedBitmap.width: " + croppedBitmap.getWidth() + "croppedBitmap.height: " + croppedBitmap.getHeight());
+                  Log.i("imageOrientation", "result.left: " + bb.left + "result.top: " + bb.top + "result.right: " + bb.right + "result.bottom: " + bb.bottom);
+                  Bitmap croppedImage = cropBitmap(rgbFrameBitmap, bb);
+                  if (croppedImage != null){
+                    croppedImage = rotateBitmap(croppedImage, -90);
+                    saveBitmap(croppedImage, label);
+                  }
+                }
               }
             }
 
@@ -252,5 +276,42 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   @Override
   protected void setNumThreads(final int numThreads) {
     runInBackground(() -> detector.setNumThreads(numThreads));
+  }
+
+  private void saveBitmap(Bitmap bitmap, String label) {
+    File directory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/dataCollectionTF/");
+    String photoName = label + "_" + Long.toString(System.nanoTime());
+    boolean success = true;
+    if (!directory.exists()) {
+      Log.i("imagesave", "dir doesn't exist");
+      success = directory.mkdirs();
+    }
+    Log.i("imagesave", "image log");
+    if (success) {
+      try (FileOutputStream out = new FileOutputStream(directory + "/" + photoName)) {
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
+        // PNG is a lossless format, the compression factor (100) is ignored
+        Log.i("imagesave", "image saved");
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+  private Bitmap cropBitmap(Bitmap bitmap, RectF bb){
+    Bitmap croppedBitmap = null;
+    try {
+      croppedBitmap = Bitmap.createBitmap(bitmap, (bb.left < 0 ? 0 : (int)bb.left),
+              (bb.top < 0 ? 0 : (int)bb.top), (int)bb.width(), (int)bb.height());
+    } catch (IllegalArgumentException e){
+      e.printStackTrace();
+    }
+    return croppedBitmap;
+  }
+
+  public static Bitmap rotateBitmap(Bitmap source, float angle) {
+    Matrix matrix = new Matrix();
+    matrix.postRotate(angle);
+    return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
   }
 }
