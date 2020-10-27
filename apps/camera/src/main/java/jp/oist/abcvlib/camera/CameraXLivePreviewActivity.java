@@ -604,7 +604,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
                 } catch (InterruptedException e){
                     e.printStackTrace();
                 }
-                captureImage();
+//                captureImage();
             }
         }
 
