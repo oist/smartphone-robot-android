@@ -582,7 +582,9 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
 //                    int minL = Math.max((speedL - maxAccelleration), -100);
 //                    int maxL = Math.min((speedL + maxAccelleration), 100);
                     // Set a speed between min and max speed, then randomize the sign
+                    // Generating random integer between max and minSpeed
                     speedL = ThreadLocalRandom.current().nextInt(minSpeed, maxSpeed + 1);
+                    // Randomly assign positive or negative sign
                     speedL = speedL * (ThreadLocalRandom.current().nextBoolean() ? 1 : -1);
 //                    int minR = Math.max((speedR - maxAccelleration), -100);
 //                    int maxR = Math.min((speedR + maxAccelleration), 100);
