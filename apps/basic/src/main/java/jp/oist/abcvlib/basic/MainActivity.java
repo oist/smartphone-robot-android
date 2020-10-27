@@ -27,7 +27,7 @@ public class MainActivity extends AbcvlibActivity {
         // ID within the R class
         setContentView(R.layout.activity_main);
 
-        determineReward();
+//        determineReward();
 
         // Create "runnable" object (similar to a thread, but recommended over overriding thread class)
         SimpleTest simpleTest = new SimpleTest();
