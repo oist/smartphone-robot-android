@@ -597,7 +597,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
                     Thread.sleep(sleeptime);
 
                     // if wheels haven't moved, assume stuck and reverse speed to unstick.
-                    if ((Math.abs(inputs.quadEncoders.getWheelCountL() - countL) <= minWheelCnt) | (Math.abs(inputs.quadEncoders.getWheelCountL() - countL) <= 10)){
+                    if ((Math.abs(inputs.quadEncoders.getWheelCountL() - countL) <= minWheelCnt) | (Math.abs(inputs.quadEncoders.getWheelCountR() - countR) <= minWheelCnt)){
                         outputs.motion.setWheelOutput(-speedL, -speedR);
                         Thread.sleep(sleeptime);
                     }
