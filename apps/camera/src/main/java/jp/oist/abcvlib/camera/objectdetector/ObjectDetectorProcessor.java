@@ -19,16 +19,18 @@ package jp.oist.abcvlib.camera.objectdetector;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
+import android.media.AudioAttributes;
 import android.os.Environment;
 import android.os.SystemClock;
 import android.util.Log;
-import android.media.MediaActionSound;
+import android.media.SoundPool ;
 
 import androidx.annotation.NonNull;
 
 import com.google.android.gms.tasks.Task;
 import com.google.mlkit.vision.common.InputImage;
 import jp.oist.abcvlib.camera.GraphicOverlay;
+import jp.oist.abcvlib.camera.R;
 import jp.oist.abcvlib.camera.VisionProcessorBase;
 import com.google.mlkit.vision.objects.DetectedObject;
 import com.google.mlkit.vision.objects.ObjectDetection;
@@ -55,6 +57,9 @@ public class ObjectDetectorProcessor extends VisionProcessorBase<List<DetectedOb
 
     private long timer = 0;
     private int cnt = 0;
+    private double framerate = 1;
+    SoundPool soundPool;
+    int shutterSound;
     private String[] categoriesRobot = {"barber chair", "binoculars", "bobsled", "chain saw",
             "combination lock", "corkscrew", "forklift", "go-kart", "golfcart", "half track", "lawn mower",
             "limousine", "mousetrap", "plunger", "Polaroid camera", "racer",
@@ -65,11 +70,23 @@ public class ObjectDetectorProcessor extends VisionProcessorBase<List<DetectedOb
         super(context);
         detector = ObjectDetection.getClient(options);
         objectDetectQueue_ = objectDetectQueue;
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build();
+        soundPool = new SoundPool.Builder().setAudioAttributes(audioAttributes).build();
+        shutterSound = soundPool.load(context, R.raw.shutter, 1);
     }
 
     public ObjectDetectorProcessor(Context context, ObjectDetectorOptionsBase options) {
         super(context);
         detector = ObjectDetection.getClient(options);
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build();
+        soundPool = new SoundPool.Builder().setAudioAttributes(audioAttributes).build();
+        shutterSound = soundPool.load(context, R.raw.shutter, 1);
     }
 
     @Override
@@ -96,7 +113,7 @@ public class ObjectDetectorProcessor extends VisionProcessorBase<List<DetectedOb
             // Just take the first in the list as it will have the highest confidence
             if (!object.getLabels().isEmpty()){
                 if (System.nanoTime() > timer){
-                    long frameRate = (long)(0.5 * 1000000000); // 0.5 second in nanoseconds
+                    long frameRate = (long)(framerate * 1000000000); // 1 second in nanoseconds
                     timer = System.nanoTime() + frameRate;
                     String label = object.getLabels().get(0).getText();
                     Rect bb = object.getBoundingBox();
@@ -120,8 +137,9 @@ public class ObjectDetectorProcessor extends VisionProcessorBase<List<DetectedOb
     }
 
     private void playsound(){
-        MediaActionSound mediaActionSound = new MediaActionSound();
-        mediaActionSound.play(MediaActionSound.SHUTTER_CLICK);
+        if (soundPool != null){
+            soundPool.play(shutterSound,1,1,1,0,1);
+        }
     };
 
     private void saveBitmap(Bitmap bitmap, String label) {
