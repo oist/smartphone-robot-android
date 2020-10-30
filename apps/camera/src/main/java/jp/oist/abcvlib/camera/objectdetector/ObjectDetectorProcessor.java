@@ -22,6 +22,7 @@ import android.graphics.Rect;
 import android.os.Environment;
 import android.os.SystemClock;
 import android.util.Log;
+import android.media.MediaActionSound;
 
 import androidx.annotation.NonNull;
 
@@ -102,6 +103,7 @@ public class ObjectDetectorProcessor extends VisionProcessorBase<List<DetectedOb
                     Log.i(TAG, "id:" + object.getTrackingId() + ", tag:" + label);
                     Bitmap croppedImage = cropBitmap(originalCameraImage, bb);
                     saveBitmap(croppedImage, label);
+                    playsound();
                 }
             }
         }
@@ -116,6 +118,11 @@ public class ObjectDetectorProcessor extends VisionProcessorBase<List<DetectedOb
     protected void onFailure(@NonNull Exception e) {
         Log.e(TAG, "Object detection failed!", e);
     }
+
+    private void playsound(){
+        MediaActionSound mediaActionSound = new MediaActionSound();
+        mediaActionSound.play(MediaActionSound.SHUTTER_CLICK);
+    };
 
     private void saveBitmap(Bitmap bitmap, String label) {
         File directory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/dataCollection/");
