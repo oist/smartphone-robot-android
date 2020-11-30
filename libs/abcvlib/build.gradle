@@ -1,7 +1,8 @@
 dependencies {
-    api project(path: ':IOIOLibAndroidAccessory')
-    api project(path: ':IOIOLibAndroidDevice')
-    api project(path: ':IOIOLibAndroidBluetooth')
+    api 'com.github.ytai.ioio:IOIOLibAndroid:6.0.0-beta4'
+    api 'com.github.ytai.ioio:IOIOLibAndroidAccessory:6.0.0-beta4'
+    api 'com.github.ytai.ioio:IOIOLibAndroidBluetooth:6.0.0-beta4'
+    api 'com.github.ytai.ioio:IOIOLibAndroidDevice:6.0.0-beta4'
     implementation 'com.opencsv:opencsv:4.6'
     api project(path: ':openCV411')
 }

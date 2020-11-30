@@ -1,10 +1,6 @@
 def androidLibs = [
         'abcvlib',
         'openCV411',
-        'IOIOLibAndroid',
-        'IOIOLibAndroidAccessory',
-        'IOIOLibAndroidBluetooth',
-        'IOIOLibAndroidDevice'
 ]
 
 gradle.ext.androidLibs = androidLibs
