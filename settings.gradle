@@ -21,12 +21,6 @@ def apps = [
 
 gradle.ext.apps = apps
 
-def IOIOlibs = [
-        'IOIOLibCore'
-]
-
-gradle.ext.IOIOlibs = IOIOlibs
-
 androidLibs.each {
     lib ->
         include lib
@@ -37,10 +31,4 @@ apps.each {
     app ->
         include app
         project(":${app}").projectDir = file("apps/${app}")
-}
-
-IOIOlibs.each {
-    lib ->
-        include lib
-        project(":${lib}").projectDir = file("libs/${lib}")
 }

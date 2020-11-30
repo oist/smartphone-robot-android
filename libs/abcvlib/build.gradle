@@ -1,8 +1,8 @@
 dependencies {
-    api 'com.github.ytai.ioio:IOIOLibAndroid:6.0.0-beta4'
-    api 'com.github.ytai.ioio:IOIOLibAndroidAccessory:6.0.0-beta4'
-    api 'com.github.ytai.ioio:IOIOLibAndroidBluetooth:6.0.0-beta4'
-    api 'com.github.ytai.ioio:IOIOLibAndroidDevice:6.0.0-beta4'
+    api 'com.github.topherbuckley.ioio:IOIOLibAndroid:dd80a066a29b304d4c70c6648abf30053a599c49'
+    api 'com.github.topherbuckley.ioio:IOIOLibAndroidAccessory:dd80a066a29b304d4c70c6648abf30053a599c49'
+    api 'com.github.topherbuckley.ioio:IOIOLibAndroidBluetooth:dd80a066a29b304d4c70c6648abf30053a599c49'
+    api 'com.github.topherbuckley.ioio:IOIOLibAndroidDevice:dd80a066a29b304d4c70c6648abf30053a599c49'
     implementation 'com.opencsv:opencsv:4.6'
     api project(path: ':openCV411')
 }
