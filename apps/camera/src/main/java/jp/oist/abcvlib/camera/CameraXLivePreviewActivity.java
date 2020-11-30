@@ -377,7 +377,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
                     Log.i(TAG, "Using Custom Object Detector  Processor");
                     LocalModel localModel =
                             new LocalModel.Builder()
-                                    .setAssetFilePath("custom_models/efficientnet_lite3_int8_2.tflite")
+                                    .setAssetFilePath("custom_models/model_MLKit_Hiroki_v1.tflite")
                                     .build();
                     CustomObjectDetectorOptions customObjectDetectorOptions =
                             PreferenceUtils.getCustomObjectDetectorOptionsForLivePreview(this, localModel);
@@ -405,7 +405,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
                     Log.i(TAG, "Using Custom Image Label Detector Processor");
                     LocalModel localClassifier =
                             new LocalModel.Builder()
-                                    .setAssetFilePath("custom_models/efficientnet_lite3_int8_2.tflite")
+                                    .setAssetFilePath("custom_models/model_MLKit_Hiroki_v1.tflite")
                                     .build();
                     CustomImageLabelerOptions customImageLabelerOptions =
                             new CustomImageLabelerOptions.Builder(localClassifier).build();
