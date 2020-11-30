@@ -207,6 +207,10 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      * battery until the onboard battery dies)
      */
     private AnalogInput batteryVoltageMonitor;
+    /**
+     * Monitors external charger (usb or wirelss coil) voltage. Use this to detect on charge puck or not. (H/L)
+     */
+    private AnalogInput chargerVoltageMonitor;
 
     //     --------------Pulse Width Modulation (PWM)----------------
     /**
@@ -352,8 +356,9 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         final int PWM_LEFT_WHEEL_PIN = 13;
         final int ENCODER_A_LEFT_WHEEL_PIN=15;
         final int ENCODER_B_LEFT_WHEEL_PIN=16;
-
-        final int BATTERY_VOLTAGE=33;
+        
+        final int CHARGER_VOLTAGE=33;
+        final int BATTERY_VOLTAGE=34;
 
         /* Initializing all wheel controller values to low would result in both wheels being in
          the "Stop-NoBrake" mode according to the Hubee control table. Not sure if this state
@@ -364,6 +369,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         input2LeftWheelController = ioio_.openDigitalOutput(INPUT2_LEFT_WHEEL_PIN,false);
 
         batteryVoltageMonitor = ioio_.openAnalogInput(BATTERY_VOLTAGE);
+        chargerVoltageMonitor = ioio_.openAnalogInput(CHARGER_VOLTAGE);
 
         // This try-catch statement should likely be refined to handle common errors/exceptions
         try{
@@ -421,6 +427,8 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             updateQuadEncoders();
 
             updateBatteryVoltage();
+
+            updateChargerVoltage();
 
             indexUpdate();
 
@@ -628,6 +636,22 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
     }
 
+    private void updateChargerVoltage(){
+
+        double chargerVoltage = 0;
+
+        try {
+            chargerVoltage = chargerVoltageMonitor.getVoltage();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ConnectionLostException e) {
+            e.printStackTrace();
+        }
+
+        abcvlibActivity.inputs.battery.setChargerVoltage(chargerVoltage, timeStamp[indexCurrent]);
+
+    }
+
     private void updateBatteryVoltage(){
 
         double batteryVoltage = 0;
@@ -640,7 +664,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             e.printStackTrace();
         }
 
-        abcvlibActivity.inputs.battery.setVoltage(batteryVoltage, timeStamp[indexCurrent]);
+        abcvlibActivity.inputs.battery.setBatteryVoltage(batteryVoltage, timeStamp[indexCurrent]);
 
     }
 

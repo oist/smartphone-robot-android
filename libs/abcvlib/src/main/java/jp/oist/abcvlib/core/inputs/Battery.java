@@ -2,16 +2,26 @@ package jp.oist.abcvlib.core.inputs;
 
 public class Battery {
 
-    private double voltage;
+    private double voltageBatt;
+    private double voltageCharger;
     private double timestamp;
 
-    public double getVoltage() {
-        return this.voltage;
+    public double getVoltageBatt() {
+        return this.voltageBatt;
     }
 
-    public void setVoltage(double voltage, double timestamp) {
+    public double getVoltageCharger() {
+        return this.voltageCharger;
+    }
+
+    public void setBatteryVoltage(double voltage, double timestamp) {
         this.timestamp = timestamp;
-        this.voltage = voltage;
+        this.voltageBatt = voltage;
+    }
+
+    public void setChargerVoltage(double voltage, double timestamp) {
+        this.timestamp = timestamp;
+        this.voltageCharger = voltage;
     }
 
 }
