@@ -98,8 +98,9 @@ public class CenterBlobController extends AbcvlibController{
 
                 Log.v("centerblob", "No blobs. Prior to timing logic");
 
-                // If no blob in frame for 3 seconds...
-                if (System.nanoTime() - noBlobInFrameStartTime > (3e9)){
+                // If no blob in frame for 3.5 seconds...
+                double approachTime = 3.5e9;
+                if (System.nanoTime() - noBlobInFrameStartTime > (approachTime)){
                     // If just starting to backup
                     if (backingUpFrameCounter == 0){
                         backingUpStartTime = System.nanoTime();
@@ -107,13 +108,13 @@ public class CenterBlobController extends AbcvlibController{
                         backingUpFrameCounter++;
                     }
                     // If backing up for more than 3 seconds.
-                    else if (System.nanoTime() - backingUpStartTime > 3e9) {
+                    else if (System.nanoTime() - backingUpStartTime > approachTime) {
                         if (searchingFrameCounter == 0) {
                             searchingStartTime = System.nanoTime();
                             searchingFrameCounter++;
                         }
                         // Searching for less than 3 sec? Continue to search (turn).
-                        else if (System.nanoTime() - searchingStartTime < 3e9) {
+                        else if (System.nanoTime() - searchingStartTime < approachTime) {
                             setOutput(35, 0);
                             searchingFrameCounter++;
                         }
