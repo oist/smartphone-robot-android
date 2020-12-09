@@ -199,6 +199,11 @@ public class Vision implements View.OnTouchListener, CameraBridgeViewBase.CvCame
         mBlobColorHsv = new Scalar(255);
         SPECTRUM_SIZE = new Size(100, 32);
         CONTOUR_COLOR = new Scalar(255,0,0,255);
+
+        Scalar mBlobColorHsv = new Scalar(7.4, 235.7, 222.6, 0.0);
+        mDetector.setHsvColor(mBlobColorHsv);
+        Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE, 0, 0, Imgproc.INTER_LINEAR_EXACT);
+        mIsColorSelected = true;
     }
 
     public void onCameraViewStopped() {
@@ -256,6 +261,11 @@ public class Vision implements View.OnTouchListener, CameraBridgeViewBase.CvCame
 
         Log.i(TAG, "Touched rgba color: (" + mBlobColorRgba.val[0] + ", " + mBlobColorRgba.val[1] +
                 ", " + mBlobColorRgba.val[2] + ", " + mBlobColorRgba.val[3] + ")");
+
+        Log.i(TAG, "Touched HSV color: (" + mBlobColorHsv.val[0] + ", " + mBlobColorHsv.val[1] +
+                ", " + mBlobColorHsv.val[2] + ", " + mBlobColorHsv.val[3] + ")");
+
+//        Scalar mBlobColorHsv = new Scalar(0.0, 100, 100, 0.0);
 
         mDetector.setHsvColor(mBlobColorHsv);
 
