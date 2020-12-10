@@ -103,10 +103,13 @@ public class BalancePIDController extends AbcvlibController{
             PIDTimer[1] = System.nanoTime();
 
             // Bounce Up
-            if (minTiltAngle > thetaDeg | maxTiltAngle < thetaDeg){
-                bounce();
+            if (minTiltAngle > thetaDeg){
+                bounce(false);
+            }else if(maxTiltAngle < thetaDeg){
+                bounce(true);
             }else{
                 try {
+                    bounceLoopCount = 0;
                     linearController();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -183,13 +186,24 @@ public class BalancePIDController extends AbcvlibController{
 
     }
 
-    private void bounce() {
-        if (bounceLoopCount < bouncePulseWidth){
-            setOutput(100,100);
-        }else if (bounceLoopCount < bouncePulseWidth * 1.5){
+    private void bounce(boolean forward) {
+        int speed = 100;
+        if (bounceLoopCount < bouncePulseWidth * 0.1){
             setOutput(0,0);
-        }else if (bounceLoopCount < bouncePulseWidth * 2.5) {
-            setOutput(-100,-100);
+        }else if (bounceLoopCount < bouncePulseWidth * 1.1){
+            if (forward){
+                setOutput(speed,speed);
+            }else{
+                setOutput(-speed,-speed);
+            }
+        }else if (bounceLoopCount < bouncePulseWidth * 1.2){
+            setOutput(0,0);
+        }else if (bounceLoopCount < bouncePulseWidth * 2.2) {
+            if (forward){
+                setOutput(-speed,-speed);
+            }else{
+                setOutput(speed,speed);
+            }
         }else {
             bounceLoopCount = 0;
         }
