@@ -7,6 +7,7 @@ import org.json.JSONException;
 import org.opencv.core.Point;
 
 import java.util.List;
+import java.util.Random;
 
 import jp.oist.abcvlib.AbcvlibActivity;
 
@@ -24,8 +25,15 @@ public class CenterBlobController extends AbcvlibController{
     int backingUpFrameCounter = 0;
     long noBlobInFrameStartTime;
     long backingUpStartTime;
-    long searchingFrameCounter;
+    long searchingFrameCounter = 0;
     long searchingStartTime;
+    boolean ignoreBlobs = false;
+    double staticApproachSpeed = 50;
+    double variableApproachSpeed = 0;
+    int searchSpeed = 35;
+    Random rand = new Random();
+    // Random choice between -1 and 1.
+    int randomSign = rand.nextBoolean() ? 1 : -1;
 
     public CenterBlobController(AbcvlibActivity abcvlibActivity){
 
@@ -50,8 +58,6 @@ public class CenterBlobController extends AbcvlibController{
 
             centroids = abcvlibActivity.inputs.vision.getCentroids();
             double[] blobSizes = abcvlibActivity.inputs.vision.getBlobSizes();
-            double staticApproachSpeed = 50;
-            double variableApproachSpeed = 0;
 
             if (abcvlibActivity.outputs.socketClient.socketMsgIn != null){
                 try {
@@ -66,11 +72,12 @@ public class CenterBlobController extends AbcvlibController{
             }
 
             // Todo eliminate hard dependence on python connection. Should be able to run alone with hard set values;
-            // If there are blobs with centroids...
-            if (centroids != null && blobSizes != null && blobSizes.length != 0){
+            // If there are blobs with centroids and you are not ignoring the one you just mounted...
+            if (centroids != null && blobSizes != null && blobSizes.length != 0 && !ignoreBlobs){
 
                 noBlobInFrameCounter = 0;
                 backingUpFrameCounter = 0;
+                searchingFrameCounter = 0;
                 blobInFrameCounter++;
 
                 phi = getPhi(centroids);
@@ -89,6 +96,7 @@ public class CenterBlobController extends AbcvlibController{
 
                 Log.v("centerblob", "No blobs in sight");
 
+                // Start time stanp when no blob state starts
                 if (noBlobInFrameCounter == 0) {
                     noBlobInFrameStartTime = System.nanoTime();
                 }
@@ -98,37 +106,50 @@ public class CenterBlobController extends AbcvlibController{
 
                 Log.v("centerblob", "No blobs. Prior to timing logic");
 
-                // If no blob in frame for 3.5 seconds...
                 double approachTime = 3.5e9;
                 // How long to backup after landing on puck in nanoseconds.
-                double backupTime = 2e9;
+                double backupTime = 1e9;
                 // How long to search after backing up in nanoseconds.
                 double searchTime = 5e9;
+                // How long to turn while ignoring blobs
+                double ignoreTurnTime = searchTime * 0.25;
+
+                // If no blob in frame for longer than approachTime...
                 if (System.nanoTime() - noBlobInFrameStartTime > (approachTime)){
                     // If just starting to backup
                     if (backingUpFrameCounter == 0){
                         backingUpStartTime = System.nanoTime();
                         Log.v("centerblob", "No blobs. Setting backingupStartTime = 0");
                         backingUpFrameCounter++;
+                        // Random choice between -1 and 1.
+                        randomSign = rand.nextBoolean() ? 1 : -1;
                     }
-                    // If backing up for more than 3 seconds.
+                    // If backing up for more than backupTime.
                     else if (System.nanoTime() - backingUpStartTime > backupTime) {
+                        // Just starting to search
                         if (searchingFrameCounter == 0) {
                             searchingStartTime = System.nanoTime();
                             searchingFrameCounter++;
                         }
-                        // Searching for less than 3 sec? Continue to search (turn).
-                        else if (System.nanoTime() - searchingStartTime < searchTime) {
-                            setOutput(35, 0);
+                        // Searching for less than ignoreTurnTime? Continue to turn.
+                        else if (System.nanoTime() - searchingStartTime < ignoreTurnTime) {
+                            setOutput(searchSpeed * randomSign, -searchSpeed * randomSign);
                             searchingFrameCounter++;
                         }
-                        // Searching for more than 3 sec? Try backing up again.
+                        // Searching for more than ignoreTurnTime but less than searchTime? Continue to search (turn).
+                        else if (System.nanoTime() - searchingStartTime < searchTime) {
+                            setOutput(searchSpeed * randomSign, -searchSpeed * randomSign);
+                            searchingFrameCounter++;
+                            ignoreBlobs = false;
+                        }
+                        // Searching for more than searchTime? Try backing up again.
                         else{
                             backingUpFrameCounter = 0;
                             searchingFrameCounter = 0;
+                            ignoreBlobs = false;
                         }
                     }
-                    // Continue backing up
+                    // If backing up less than backupTime
                     else{
                         double outputLeft = -2.0 * staticApproachSpeed;
                         double outputRight = outputLeft;
@@ -141,6 +162,7 @@ public class CenterBlobController extends AbcvlibController{
                     double outputLeft = staticApproachSpeed;
                     double outputRight = staticApproachSpeed;
                     setOutput(outputLeft, outputRight);
+                    ignoreBlobs = true;
                 }
             }
             Thread.yield();
