@@ -11,12 +11,12 @@ import jp.oist.abcvlib.core.AbcvlibActivity;
 public class BalancePIDController extends AbcvlibController{
 
     // Initialize all sensor reading variables
-    double p_tilt = 0;
+    double p_tilt = -24;
     double i_tilt = 0;
-    double d_tilt = 0;
-    double setPoint = 0;
-    double p_wheel = 0;
-    double expWeight = 0;
+    double d_tilt = 1.0;
+    double setPoint = 2.8;
+    double p_wheel = 0.4;
+    double expWeight = 0.25;
 
     // BalancePIDController Setup
     double thetaDeg; // tilt of phone with vertical being 0.
@@ -33,7 +33,7 @@ public class BalancePIDController extends AbcvlibController{
 
     double int_e_t; // integral of e(t) from wikipedia. Discrete, so just a sum here.
 
-    double maxAbsTilt = 30; // in Degrees
+    double maxAbsTilt = 6.5; // in Degrees
     double maxTiltAngle = setPoint + maxAbsTilt; // in Degrees
     double minTiltAngle = setPoint - maxAbsTilt; // in Degrees
 
