@@ -113,6 +113,8 @@ public class CenterBlobController extends AbcvlibController{
                 double searchTime = 5e9;
                 // How long to turn while ignoring blobs
                 double ignoreTurnTime = searchTime * 0.25;
+                // An attempt to stop the robot from flipping to the tail before searching
+                double slowDownTime = searchTime * 0.1;
 
                 // If no blob in frame for longer than approachTime...
                 if (System.nanoTime() - noBlobInFrameStartTime > (approachTime)){
@@ -131,23 +133,28 @@ public class CenterBlobController extends AbcvlibController{
                             searchingStartTime = System.nanoTime();
                             searchingFrameCounter++;
                         }
+                        // Slow down to prevent flipping to tail
+                        else if (System.nanoTime() - searchingStartTime < slowDownTime) {
+                            setOutput(-staticApproachSpeed * 0.9, -staticApproachSpeed * 0.9);
+                            searchingFrameCounter++;
+                        }
                         // Searching for less than ignoreTurnTime? Continue to turn.
                         else if (System.nanoTime() - searchingStartTime < ignoreTurnTime) {
                             setOutput(searchSpeed * randomSign, -searchSpeed * randomSign);
                             searchingFrameCounter++;
                         }
                         // Searching for more than ignoreTurnTime but less than searchTime? Continue to search (turn).
-                        else if (System.nanoTime() - searchingStartTime < searchTime) {
+                        else {
                             setOutput(searchSpeed * randomSign, -searchSpeed * randomSign);
                             searchingFrameCounter++;
                             ignoreBlobs = false;
                         }
-                        // Searching for more than searchTime? Try backing up again.
-                        else{
-                            backingUpFrameCounter = 0;
-                            searchingFrameCounter = 0;
-                            ignoreBlobs = false;
-                        }
+//                        // Searching for more than searchTime? Try backing up again.
+//                        else{
+//                            backingUpFrameCounter = 0;
+//                            searchingFrameCounter = 0;
+//                            ignoreBlobs = false;
+//                        }
                     }
                     // If backing up less than backupTime
                     else{
@@ -159,10 +166,10 @@ public class CenterBlobController extends AbcvlibController{
                 }
                 // blob has not been in frame for less than 3 seconds. Continue Forward.
                 else{
+                    ignoreBlobs = true;
                     double outputLeft = staticApproachSpeed;
                     double outputRight = staticApproachSpeed;
                     setOutput(outputLeft, outputRight);
-                    ignoreBlobs = true;
                 }
             }
             Thread.yield();
