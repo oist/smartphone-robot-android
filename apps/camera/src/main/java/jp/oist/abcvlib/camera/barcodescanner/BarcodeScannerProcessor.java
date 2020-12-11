@@ -68,11 +68,13 @@ public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>> 
             @NonNull List<Barcode> barcodes, @NonNull GraphicOverlay graphicOverlay, Bitmap originalCameraImage) {
         if (barcodes.isEmpty()) {
             Log.v(MANUAL_TESTING_LOG, "No barcode has been detected");
-        }
-        for (int i = 0; i < barcodes.size(); ++i) {
-            Barcode barcode = barcodes.get(i);
-            graphicOverlay.add(new BarcodeGraphic(graphicOverlay, barcode));
-            logExtrasForTesting(barcode);
+        }else{
+            for (int i = 0; i < barcodes.size(); ++i) {
+                Barcode barcode = barcodes.get(i);
+                graphicOverlay.add(new BarcodeGraphic(graphicOverlay, barcode));
+                logExtrasForTesting(barcode);
+            }
+            // Play success/fireworks sound/animation
         }
     }
 
@@ -116,5 +118,9 @@ public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>> 
     @Override
     protected void onFailure(@NonNull Exception e) {
         Log.e(TAG, "Barcode detection failed " + e);
+    }
+
+    private void mateAnimation(){
+
     }
 }

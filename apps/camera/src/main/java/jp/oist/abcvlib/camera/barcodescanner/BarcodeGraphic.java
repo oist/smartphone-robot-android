@@ -16,14 +16,20 @@
 
 package jp.oist.abcvlib.camera.barcodescanner;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 
 import com.google.mlkit.vision.barcode.Barcode;
 import jp.oist.abcvlib.camera.GraphicOverlay;
 import jp.oist.abcvlib.camera.GraphicOverlay.Graphic;
+import jp.oist.abcvlib.camera.R;
 
 /**
  * Graphic instance for rendering Barcode position and content information in an overlay view.
@@ -32,13 +38,14 @@ public class BarcodeGraphic extends Graphic {
 
     private static final int TEXT_COLOR = Color.BLACK;
     private static final int MARKER_COLOR = Color.WHITE;
-    private static final float TEXT_SIZE = 54.0f;
+    private static final float TEXT_SIZE = 54.0f * 2;
     private static final float STROKE_WIDTH = 4.0f;
 
     private final Paint rectPaint;
     private final Paint barcodePaint;
     private final Barcode barcode;
     private final Paint labelPaint;
+    private Drawable drawableHeart;
 
     BarcodeGraphic(GraphicOverlay overlay, Barcode barcode) {
         super(overlay);
@@ -56,8 +63,7 @@ public class BarcodeGraphic extends Graphic {
 
         labelPaint = new Paint();
         labelPaint.setColor(MARKER_COLOR);
-        labelPaint.setStyle(Paint.Style.FILL);
-    }
+        labelPaint.setStyle(Paint.Style.FILL); }
 
     /**
      * Draws the barcode block annotations for position, size, and raw value on the supplied canvas.
@@ -75,6 +81,16 @@ public class BarcodeGraphic extends Graphic {
         rect.right = translateX(rect.right);
         rect.bottom = translateY(rect.bottom);
         canvas.drawRect(rect, rectPaint);
+
+        // Draw heart around BarcodeBlock
+        // Designed by iconsgate (Image #33899728 at VectorStock.com)
+        // https://www.vectorstock.com/royalty-free-vector/pixel-heart-vector-33899728
+        Rect rectRound = new Rect();
+        rect.round(rectRound);
+        Bitmap heart = BitmapFactory.decodeResource(getApplicationContext().getResources(), R.drawable.heart);
+        Drawable drawableHeart = new BitmapDrawable(heart);
+        drawableHeart.setBounds(rectRound);
+        drawableHeart.draw(canvas);
 
         // Draws other object info.
         float lineHeight = TEXT_SIZE + (2 * STROKE_WIDTH);
