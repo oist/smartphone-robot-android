@@ -584,9 +584,8 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
         int speedR = 0; // Duty cycle from 0 to 100.
         int maxAccelleration = 35;
         int minWheelCnt = 20;
-        int maxSpeed = 80;
-        int minSpeed = 40;
-        int sleeptime = 2000;
+        int maxSpeed = 30;
+        int minSpeed = 30;
         int cnt = 0;
 
         ExecutorService cameraExecutor = Executors.newCachedThreadPool();
