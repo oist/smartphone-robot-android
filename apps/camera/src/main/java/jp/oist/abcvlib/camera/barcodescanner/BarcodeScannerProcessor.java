@@ -22,6 +22,8 @@ import android.graphics.Point;
 import android.media.AudioAttributes;
 import android.media.SoundPool;
 import android.util.Log;
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
 
 import androidx.annotation.NonNull;
 
@@ -35,11 +37,12 @@ import jp.oist.abcvlib.camera.R;
 import jp.oist.abcvlib.camera.VisionProcessorBase;
 
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Barcode Detector Demo.
  */
-public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>> {
+public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>>{
 
     private static final String TAG = "BarcodeProcessor";
 
@@ -48,6 +51,9 @@ public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>> 
     SoundPool soundPool;
     int mateSound;
     private long timer;
+    private TextToSpeech tts;
+    private boolean speechReady = false;
+    private TTSListener ttsListener = new TTSListener();
 
     public BarcodeScannerProcessor(Context context) {
         super(context);
@@ -64,6 +70,9 @@ public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>> 
         soundPool = new SoundPool.Builder().setAudioAttributes(audioAttributes).build();
         mateSound = soundPool.load(context, R.raw.matesound, 1);
         timer = 0;
+        tts = new TextToSpeech(context, ttsListener);
+        tts.setOnUtteranceProgressListener(ttsListener);
+        tts.setLanguage(Locale.JAPANESE);
     }
 
     @Override
@@ -83,13 +92,16 @@ public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>> 
         if (barcodes.isEmpty()) {
             Log.v(MANUAL_TESTING_LOG, "No barcode has been detected");
         }else{
+            String barcodeText = "";
+
             for (int i = 0; i < barcodes.size(); ++i) {
                 Barcode barcode = barcodes.get(i);
                 graphicOverlay.add(new BarcodeGraphic(graphicOverlay, barcode));
                 logExtrasForTesting(barcode);
+                barcodeText = barcode.getRawValue();
             }
             // Play success/fireworks sound/animation
-            mateAnimation();
+            mateAnimation(barcodeText);
         }
     }
 
@@ -135,18 +147,47 @@ public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>> 
         Log.e(TAG, "Barcode detection failed " + e);
     }
 
-    private void mateAnimation(){
-        if (System.nanoTime() > timer){
-            // 3 seconds in nanoseconds
-            long mateRate = (long) (5.0 * 1000000000);
-            timer = System.nanoTime() + mateRate;
-            playsound();
+    private void mateAnimation(String barcodeText){
+//        if (System.nanoTime() > timer){
+//            // 3 seconds in nanoseconds
+//            long mateRate = (long) (5.0 * 1000000000);
+//            timer = System.nanoTime() + mateRate;
+//            playsound(barcodeText);
+//        }
+        if(speechReady){
+            playsound(barcodeText);
         }
     }
 
-    private void playsound(){
-        if (soundPool != null){
-            soundPool.play(mateSound,1,1,1,0,1);
-        }
+    private void playsound(String barcodeText){
+//        if (soundPool != null){
+//            soundPool.play(mateSound,1,1,1,0,1);
+//        }
+        tts.speak(barcodeText, TextToSpeech.QUEUE_ADD, null, "myText");
     };
+
+    class TTSListener extends UtteranceProgressListener implements TextToSpeech.OnInitListener {
+
+        @Override
+        public void onInit(int status) {
+            speechReady = true;
+            Log.i("tts", tts.getAvailableLanguages().toString());
+        }
+
+        @Override
+        public void onStart(String utteranceId) {
+            speechReady = false;
+        }
+
+        @Override
+        public void onDone(String utteranceId) {
+            speechReady = true;
+        }
+
+        @Override
+        public void onError(String utteranceId) {
+            speechReady = false;
+        }
+    }
+
 }

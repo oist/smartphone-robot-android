@@ -45,7 +45,8 @@ public class BarcodeGraphic extends Graphic {
     private final Paint barcodePaint;
     private final Barcode barcode;
     private final Paint labelPaint;
-    private Drawable drawableHeart;
+    private Bitmap heart = BitmapFactory.decodeResource(getApplicationContext().getResources(), R.drawable.heart);
+    private Drawable drawableHeart = new BitmapDrawable(heart);
 
     BarcodeGraphic(GraphicOverlay overlay, Barcode barcode) {
         super(overlay);
@@ -87,8 +88,6 @@ public class BarcodeGraphic extends Graphic {
         // https://www.vectorstock.com/royalty-free-vector/pixel-heart-vector-33899728
         Rect rectRound = new Rect();
         rect.round(rectRound);
-        Bitmap heart = BitmapFactory.decodeResource(getApplicationContext().getResources(), R.drawable.heart);
-        Drawable drawableHeart = new BitmapDrawable(heart);
         drawableHeart.setBounds(rectRound);
         drawableHeart.draw(canvas);
 
