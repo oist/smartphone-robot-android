@@ -52,8 +52,10 @@ public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>>{
     int mateSound;
     private long timer;
     private TextToSpeech tts;
-    private boolean speechReady = false;
+    public boolean speechReady = false;
     private TTSListener ttsListener = new TTSListener();
+
+    public boolean qrCodeVisible = false;
 
     public BarcodeScannerProcessor(Context context) {
         super(context);
@@ -73,6 +75,8 @@ public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>>{
         tts = new TextToSpeech(context, ttsListener);
         tts.setOnUtteranceProgressListener(ttsListener);
         tts.setLanguage(Locale.JAPANESE);
+
+        qrCodeVisible = false;
     }
 
     @Override
@@ -91,7 +95,10 @@ public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>>{
             @NonNull List<Barcode> barcodes, @NonNull GraphicOverlay graphicOverlay, Bitmap originalCameraImage) {
         if (barcodes.isEmpty()) {
             Log.v(MANUAL_TESTING_LOG, "No barcode has been detected");
+            qrCodeVisible = false;
         }else{
+            qrCodeVisible = true;
+
             String barcodeText = "";
 
             for (int i = 0; i < barcodes.size(); ++i) {
