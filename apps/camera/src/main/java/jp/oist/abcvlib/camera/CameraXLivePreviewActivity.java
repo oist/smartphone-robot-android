@@ -97,10 +97,14 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.outputs.Motion;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Live preview demo app for ML Kit APIs using CameraX.
@@ -234,10 +238,6 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
         }
 
         Display disp = ((WindowManager)this.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
-
-        // Motion Controller
-        MotionController motionController = new MotionController();
-        new Thread(motionController).start();
 
     }
 
@@ -396,6 +396,13 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
                 case BARCODE_SCANNING:
                     Log.i(TAG, "Using Barcode Detector Processor");
                     imageProcessor = new BarcodeScannerProcessor(this);
+                    // Motion Controller
+                    MotionController motionController = new MotionController();
+                    StopMotionController stopMotionController = new StopMotionController();
+                    stopMotionController.setBarcodeScannerProcessor((BarcodeScannerProcessor) imageProcessor);
+                    ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(2);
+                    scheduledThreadPoolExecutor.execute(stopMotionController);
+                    scheduledThreadPoolExecutor.scheduleAtFixedRate(motionController, 0, 2, SECONDS);
                     break;
                 case IMAGE_LABELING:
                     Log.i(TAG, "Using Image Label Detector Processor");
@@ -545,6 +552,32 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
         return false;
     }
 
+    public class StopMotionController implements Runnable{
+
+        BarcodeScannerProcessor barcodeScannerProcessor;
+
+        @Override
+        public void run() {
+            while (appRunning) {
+                // Wait for barcodeScannerProcessor to finish initalizing else qrCodeVisible may be null.
+                if (barcodeScannerProcessor == null) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (barcodeScannerProcessor.qrCodeVisible) {
+                    outputs.motion.setWheelOutput(0, 0);
+                }
+            }
+        }
+
+        public void setBarcodeScannerProcessor(BarcodeScannerProcessor barcodeScannerProcessor){
+            this.barcodeScannerProcessor = barcodeScannerProcessor;
+        }
+    }
+
     public class MotionController implements Runnable{
 
         int speedL = 0; // Duty cycle from 0 to 100.
@@ -555,6 +588,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
         int minSpeed = 40;
         int sleeptime = 2000;
         int cnt = 0;
+
         ExecutorService cameraExecutor = Executors.newCachedThreadPool();
 
         public boolean isExternalStorageWritable() {
@@ -568,44 +602,24 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
         public void run(){
 
             Log.i("myLog", "entered RUN");
+            randomWalk();
+        }
 
-            // Set Initial Speed
+        public void randomWalk(){
+            // If current on some pin (current sense) is above X, assume stuck and reverse previous speeds for 1 s
+            double countL = inputs.quadEncoders.getWheelCountL();
+            double countR = inputs.quadEncoders.getWheelCountR();
+
+            // Set a speed between min and max speed, then randomize the sign
+            // Generating random integer between max and minSpeed
+            speedL = ThreadLocalRandom.current().nextInt(minSpeed, maxSpeed + 1);
+            // Randomly multiple by {-1, 0 , 1}
+            speedL = speedL * (ThreadLocalRandom.current().nextInt(3) - 1);
+            // Set a speed between min and max speed, then randomize the sign
+            speedR = ThreadLocalRandom.current().nextInt(minSpeed, maxSpeed + 1);
+            speedR = speedR * (ThreadLocalRandom.current().nextInt(3) - 1);
+
             outputs.motion.setWheelOutput(speedL, speedR);
-            Log.i(TAG, "speedL= " + speedL + " speedR= " + speedR);
-
-            while( appRunning ) {
-                try {
-                    // If current on some pin (current sense) is above X, assume stuck and reverse previous speeds for 1 s
-                    double countL = inputs.quadEncoders.getWheelCountL();
-                    double countR = inputs.quadEncoders.getWheelCountR();
-
-//                    int minL = Math.max((speedL - maxAccelleration), -100);
-//                    int maxL = Math.min((speedL + maxAccelleration), 100);
-                    // Set a speed between min and max speed, then randomize the sign
-                    // Generating random integer between max and minSpeed
-                    speedL = ThreadLocalRandom.current().nextInt(minSpeed, maxSpeed + 1);
-                    // Randomly assign positive or negative sign
-                    speedL = speedL * (ThreadLocalRandom.current().nextBoolean() ? 1 : -1);
-//                    int minR = Math.max((speedR - maxAccelleration), -100);
-//                    int maxR = Math.min((speedR + maxAccelleration), 100);
-                    // Set a speed between min and max speed, then randomize the sign
-                    speedR = ThreadLocalRandom.current().nextInt(minSpeed, maxSpeed + 1);
-                    speedR = speedR * (ThreadLocalRandom.current().nextBoolean() ? 1 : -1);
-
-                    outputs.motion.setWheelOutput(speedL, speedR);
-
-                    Thread.sleep(sleeptime);
-
-                    // if wheels haven't moved, assume stuck and reverse speed to unstick.
-                    if ((Math.abs(inputs.quadEncoders.getWheelCountL() - countL) <= minWheelCnt) | (Math.abs(inputs.quadEncoders.getWheelCountR() - countR) <= minWheelCnt)){
-                        outputs.motion.setWheelOutput(-speedL, -speedR);
-                        Thread.sleep(sleeptime);
-                    }
-                } catch (InterruptedException e){
-                    e.printStackTrace();
-                }
-//                captureImage();
-            }
         }
 
         private void captureImage(){
@@ -638,6 +652,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
 
 
         }
+
     }
 
 }
