@@ -57,7 +57,6 @@ public class ObjectDetectorProcessor extends VisionProcessorBase<List<DetectedOb
 
     private long timer = 0;
     private int cnt = 0;
-    private double framerate = 1;
     SoundPool soundPool;
     int shutterSound;
     private String[] categoriesRobot = {"barber chair", "binoculars", "bobsled", "chain saw",
@@ -113,6 +112,7 @@ public class ObjectDetectorProcessor extends VisionProcessorBase<List<DetectedOb
             // Just take the first in the list as it will have the highest confidence
             if (!object.getLabels().isEmpty()){
                 if (System.nanoTime() > timer){
+                    double framerate = 1;
                     long frameRate = (long)(framerate * 1000000000); // 1 second in nanoseconds
                     timer = System.nanoTime() + frameRate;
                     String label = object.getLabels().get(0).getText();

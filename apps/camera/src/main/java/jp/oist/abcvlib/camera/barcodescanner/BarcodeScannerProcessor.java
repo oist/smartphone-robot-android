@@ -19,6 +19,8 @@ package jp.oist.abcvlib.camera.barcodescanner;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Point;
+import android.media.AudioAttributes;
+import android.media.SoundPool;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -29,6 +31,7 @@ import com.google.mlkit.vision.barcode.BarcodeScanner;
 import com.google.mlkit.vision.barcode.BarcodeScanning;
 import com.google.mlkit.vision.common.InputImage;
 import jp.oist.abcvlib.camera.GraphicOverlay;
+import jp.oist.abcvlib.camera.R;
 import jp.oist.abcvlib.camera.VisionProcessorBase;
 
 import java.util.List;
@@ -42,6 +45,10 @@ public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>> 
 
     private final BarcodeScanner barcodeScanner;
 
+    SoundPool soundPool;
+    int mateSound;
+    private long timer;
+
     public BarcodeScannerProcessor(Context context) {
         super(context);
         // Note that if you know which format of barcode your app is dealing with, detection will be
@@ -50,6 +57,13 @@ public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>> 
         //     .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
         //     .build();
         barcodeScanner = BarcodeScanning.getClient();
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build();
+        soundPool = new SoundPool.Builder().setAudioAttributes(audioAttributes).build();
+        mateSound = soundPool.load(context, R.raw.matesound, 1);
+        timer = 0;
     }
 
     @Override
@@ -75,6 +89,7 @@ public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>> 
                 logExtrasForTesting(barcode);
             }
             // Play success/fireworks sound/animation
+            mateAnimation();
         }
     }
 
@@ -121,6 +136,17 @@ public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>> 
     }
 
     private void mateAnimation(){
-
+        if (System.nanoTime() > timer){
+            // 3 seconds in nanoseconds
+            long mateRate = (long) (5.0 * 1000000000);
+            timer = System.nanoTime() + mateRate;
+            playsound();
+        }
     }
+
+    private void playsound(){
+        if (soundPool != null){
+            soundPool.play(mateSound,1,1,1,0,1);
+        }
+    };
 }
