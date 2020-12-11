@@ -38,7 +38,7 @@ public class BarcodeGraphic extends Graphic {
 
     private static final int TEXT_COLOR = Color.BLACK;
     private static final int MARKER_COLOR = Color.WHITE;
-    private static final float TEXT_SIZE = 54.0f * 2;
+    private static final float TEXT_SIZE = 54.0f * 3;
     private static final float STROKE_WIDTH = 4.0f;
 
     private final Paint rectPaint;
