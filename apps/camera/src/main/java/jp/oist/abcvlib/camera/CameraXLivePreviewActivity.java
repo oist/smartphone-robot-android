@@ -141,7 +141,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
     private VisionImageProcessor imageProcessor;
     private boolean needUpdateGraphicOverlayImageSourceInfo;
 
-    private String selectedModel = OBJECT_DETECTION_CUSTOM;
+    private String selectedModel = BARCODE_SCANNING;
     private int lensFacing = CameraSelector.LENS_FACING_FRONT;
     private CameraSelector cameraSelector;
     private Queue<List<DetectedObject>> objectDetectQueue;
@@ -169,7 +169,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
         }
 
         if (savedInstanceState != null) {
-            selectedModel = savedInstanceState.getString(STATE_SELECTED_MODEL, OBJECT_DETECTION_CUSTOM);
+            selectedModel = savedInstanceState.getString(STATE_SELECTED_MODEL, BARCODE_SCANNING);
             lensFacing = savedInstanceState.getInt(STATE_LENS_FACING, CameraSelector.LENS_FACING_FRONT);
         }
         cameraSelector = new CameraSelector.Builder().requireLensFacing(lensFacing).build();
@@ -186,11 +186,11 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
 
         Spinner spinner = findViewById(R.id.spinner);
         List<String> options = new ArrayList<>();
+        options.add(BARCODE_SCANNING);
         options.add(OBJECT_DETECTION_CUSTOM);
         options.add(OBJECT_DETECTION);
         options.add(FACE_DETECTION);
         options.add(TEXT_RECOGNITION);
-        options.add(BARCODE_SCANNING);
         options.add(IMAGE_LABELING);
         options.add(IMAGE_LABELING_CUSTOM);
         options.add(AUTOML_LABELING);
