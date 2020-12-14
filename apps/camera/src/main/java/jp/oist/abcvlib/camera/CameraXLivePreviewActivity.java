@@ -400,9 +400,9 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
                     // Motion Controller
                     MotionController motionController = new MotionController();
                     StopMotionController stopMotionController = new StopMotionController();
+                    motionController.setBarcodeScannerProcessor((BarcodeScannerProcessor) imageProcessor);
                     stopMotionController.setBarcodeScannerProcessor((BarcodeScannerProcessor) imageProcessor);
-                    ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(2);
-//                    scheduledThreadPoolExecutor.execute(stopMotionController);
+                    ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1);
                     scheduledThreadPoolExecutor.scheduleAtFixedRate(stopMotionController, 0, 100, MILLISECONDS);
                     scheduledThreadPoolExecutor.scheduleAtFixedRate(motionController, 0, 2, SECONDS);
                     break;
@@ -592,6 +592,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
         int cnt = 0;
 
         ExecutorService cameraExecutor = Executors.newCachedThreadPool();
+        BarcodeScannerProcessor barcodeScannerProcessor;
 
         public boolean isExternalStorageWritable() {
             String state = Environment.getExternalStorageState();
@@ -604,7 +605,20 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
         public void run(){
 
             Log.i("myLog", "entered RUN");
-            randomWalk();
+            if (appRunning){
+                if (barcodeScannerProcessor == null) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (barcodeScannerProcessor.qrCodeVisible) {
+                    outputs.motion.setWheelOutput(0, 0);
+                }else{
+                    randomWalk();
+                }
+            }
         }
 
         public void randomWalk(){
@@ -651,8 +665,10 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
                     Log.i(TAG, "captureUseCase is null");
                 }
             }
+        }
 
-
+        public void setBarcodeScannerProcessor(BarcodeScannerProcessor barcodeScannerProcessor){
+            this.barcodeScannerProcessor = barcodeScannerProcessor;
         }
 
     }
