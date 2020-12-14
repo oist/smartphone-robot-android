@@ -112,7 +112,7 @@ public class CenterBlobController extends AbcvlibController{
                 // How long to search after backing up in nanoseconds.
                 double searchTime = 5e9;
                 // How long to turn while ignoring blobs
-                double ignoreTurnTime = searchTime * 0.25;
+                double ignoreTurnTime = 2e9;
                 // An attempt to stop the robot from flipping to the tail before searching
                 double slowDownTime = searchTime * 0.1;
 
