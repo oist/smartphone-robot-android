@@ -437,7 +437,8 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
         ImageAnalysis.Builder builder = new ImageAnalysis.Builder();
         Size targetAnalysisSize = PreferenceUtils.getCameraXTargetAnalysisSize(this);
         if (targetAnalysisSize != null) {
-            builder.setTargetResolution(targetAnalysisSize);
+            builder.setTargetResolution(targetAnalysisSize)
+                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST);
         }
         analysisUseCase = builder.build();
 
