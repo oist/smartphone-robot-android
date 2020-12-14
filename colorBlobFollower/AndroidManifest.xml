@@ -5,7 +5,7 @@
 
     <application
         android:label="@string/app_name"
-        android:icon="@drawable/icon"
+        android:icon="@drawable/puck"
         android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
 
         <activity android:name="ColorBlobDetectionActivity"
