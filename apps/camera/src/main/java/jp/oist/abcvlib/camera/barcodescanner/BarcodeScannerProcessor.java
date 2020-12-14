@@ -55,6 +55,7 @@ public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>>{
     private TextToSpeech tts;
     public boolean speechReady = false;
     private TTSListener ttsListener = new TTSListener();
+    private String barcodeText = "";
 
     public boolean qrCodeVisible = false;
 
@@ -99,19 +100,21 @@ public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>>{
         if (barcodes.isEmpty()) {
             Log.v(MANUAL_TESTING_LOG, "No barcode has been detected");
             qrCodeVisible = false;
+            // Reset barcode text to allow new barcodes to be parsed
+            barcodeText = "";
         }else{
             qrCodeVisible = true;
-
-            String barcodeText = "";
 
             for (int i = 0; i < barcodes.size(); ++i) {
                 Barcode barcode = barcodes.get(i);
                 graphicOverlay.add(new BarcodeGraphic(graphicOverlay, barcode));
                 logExtrasForTesting(barcode);
-                barcodeText = barcode.getRawValue();
+                if (!barcodeText.equals(barcode.getRawValue())){
+                    barcodeText = barcode.getRawValue();
+                    // Play success/fireworks sound/animation only if new barcode text present
+                    mateAnimation(barcodeText);
+                }
             }
-            // Play success/fireworks sound/animation
-            mateAnimation(barcodeText);
         }
     }
 
