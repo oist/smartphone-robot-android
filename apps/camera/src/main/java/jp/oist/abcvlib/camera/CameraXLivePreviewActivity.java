@@ -104,6 +104,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.outputs.Motion;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
@@ -401,7 +402,8 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
                     StopMotionController stopMotionController = new StopMotionController();
                     stopMotionController.setBarcodeScannerProcessor((BarcodeScannerProcessor) imageProcessor);
                     ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(2);
-                    scheduledThreadPoolExecutor.execute(stopMotionController);
+//                    scheduledThreadPoolExecutor.execute(stopMotionController);
+                    scheduledThreadPoolExecutor.scheduleAtFixedRate(stopMotionController, 0, 100, MILLISECONDS);
                     scheduledThreadPoolExecutor.scheduleAtFixedRate(motionController, 0, 2, SECONDS);
                     break;
                 case IMAGE_LABELING:
@@ -559,7 +561,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
 
         @Override
         public void run() {
-            while (appRunning) {
+            if (appRunning) {
                 // Wait for barcodeScannerProcessor to finish initalizing else qrCodeVisible may be null.
                 if (barcodeScannerProcessor == null) {
                     try {
