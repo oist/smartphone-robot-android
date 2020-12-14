@@ -2,7 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="jp.oist.abcvlib.localpid">
 
-    <application android:theme="@style/Theme.MaterialComponents">
+    <application android:theme="@style/Theme.MaterialComponents"
+        android:icon="@mipmap/balance"
+        android:label="@string/app_name">
         <activity android:name="jp.oist.abcvlib.localpid.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
