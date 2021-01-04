@@ -22,8 +22,6 @@ import android.graphics.Point;
 import android.media.AudioAttributes;
 import android.media.SoundPool;
 import android.util.Log;
-import android.speech.tts.TextToSpeech;
-import android.speech.tts.UtteranceProgressListener;
 
 import androidx.annotation.NonNull;
 
@@ -52,9 +50,7 @@ public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>>{
     SoundPool soundPool;
     int mateSound;
     private long timer;
-    private TextToSpeech tts;
     public boolean speechReady = false;
-    private TTSListener ttsListener = new TTSListener();
     private String barcodeText = "";
 
     public boolean qrCodeVisible = false;
@@ -76,10 +72,6 @@ public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>>{
         soundPool = new SoundPool.Builder().setAudioAttributes(audioAttributes).build();
         mateSound = soundPool.load(context, R.raw.matesound, 1);
         timer = 0;
-        tts = new TextToSpeech(context, ttsListener);
-        tts.setOnUtteranceProgressListener(ttsListener);
-        tts.setLanguage(Locale.JAPANESE);
-
         qrCodeVisible = false;
     }
 
@@ -173,34 +165,9 @@ public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>>{
     }
 
     private void playsound(String barcodeText){
-//        if (soundPool != null){
-//            soundPool.play(mateSound,1,1,1,0,1);
-//        }
-        tts.speak(barcodeText, TextToSpeech.QUEUE_ADD, null, "myText");
+        if (soundPool != null){
+            soundPool.play(mateSound,1,1,1,0,1);
+        }
     };
-
-    class TTSListener extends UtteranceProgressListener implements TextToSpeech.OnInitListener {
-
-        @Override
-        public void onInit(int status) {
-            speechReady = true;
-            Log.i("tts", tts.getAvailableLanguages().toString());
-        }
-
-        @Override
-        public void onStart(String utteranceId) {
-            speechReady = false;
-        }
-
-        @Override
-        public void onDone(String utteranceId) {
-            speechReady = true;
-        }
-
-        @Override
-        public void onError(String utteranceId) {
-            speechReady = false;
-        }
-    }
 
 }
