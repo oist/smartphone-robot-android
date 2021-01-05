@@ -9,7 +9,7 @@ def apps = [
         'basic',
         'camera',
         'backAndForth',
-        'pidBalancer',
+        'pidbalancer',
         'colorBlobFollower',
         'setPath',
         'clapLearn',

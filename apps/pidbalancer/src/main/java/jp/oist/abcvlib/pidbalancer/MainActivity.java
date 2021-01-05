@@ -1,17 +1,13 @@
-package jp.oist.abcvlib.localpid;
+package jp.oist.abcvlib.pidbalancer;
 
 import android.os.Bundle;
-import android.util.Log;
-import android.widget.SeekBar;
 
 import androidx.annotation.NonNull;
 
 import com.google.android.material.slider.LabelFormatter;
 import com.google.android.material.slider.Slider;
 
-import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.List;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 
