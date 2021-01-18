@@ -16,27 +16,13 @@
 
 package jp.oist.abcvlib.pidtransfer_receiver;
 
-import androidx.camera.core.ImageCapture;
-import androidx.camera.core.ImageCaptureException;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Rect;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
-
-import androidx.core.app.ActivityCompat;
-import androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback;
-import androidx.core.content.ContextCompat;
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.os.Environment;
-import android.os.SystemClock;
 import android.util.Log;
 import android.util.Size;
 import android.view.Display;
@@ -59,24 +45,19 @@ import androidx.annotation.RequiresApi;
 import androidx.camera.core.CameraInfoUnavailableException;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
+import androidx.camera.core.ImageCapture;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
-import androidx.lifecycle.ViewModelStore;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback;
+import androidx.core.content.ContextCompat;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory;
 
 import com.google.android.gms.common.annotation.KeepName;
 import com.google.mlkit.common.MlKitException;
 import com.google.mlkit.common.model.LocalModel;
-import jp.oist.abcvlib.pidtransfer_receiver.automl.AutoMLImageLabelerProcessor;
-import jp.oist.abcvlib.pidtransfer_receiver.barcodescanner.BarcodeScannerProcessor;
-import jp.oist.abcvlib.pidtransfer_receiver.facedetector.FaceDetectorProcessor;
-import jp.oist.abcvlib.pidtransfer_receiver.labeldetector.LabelDetectorProcessor;
-import jp.oist.abcvlib.pidtransfer_receiver.objectdetector.ObjectDetectorProcessor;
-import jp.oist.abcvlib.pidtransfer_receiver.objectdetector.ObjectGraphic;
-import jp.oist.abcvlib.pidtransfer_receiver.preference.PreferenceUtils;
-import jp.oist.abcvlib.pidtransfer_receiver.preference.SettingsActivity;
-import jp.oist.abcvlib.pidtransfer_receiver.preference.SettingsActivity.LaunchSource;
-import jp.oist.abcvlib.pidtransfer_receiver.textdetector.TextRecognitionProcessor;
 import com.google.mlkit.vision.face.FaceDetectorOptions;
 import com.google.mlkit.vision.label.custom.CustomImageLabelerOptions;
 import com.google.mlkit.vision.label.defaults.ImageLabelerOptions;
@@ -84,28 +65,21 @@ import com.google.mlkit.vision.objects.DetectedObject;
 import com.google.mlkit.vision.objects.custom.CustomObjectDetectorOptions;
 import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions;
 
-import org.jetbrains.annotations.NotNull;
-
-import java.io.File;
-import java.nio.Buffer;
-import java.nio.IntBuffer;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.core.outputs.Motion;
-
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import jp.oist.abcvlib.pidtransfer_receiver.automl.AutoMLImageLabelerProcessor;
+import jp.oist.abcvlib.pidtransfer_receiver.barcodescanner.BarcodeScannerProcessor;
+import jp.oist.abcvlib.pidtransfer_receiver.facedetector.FaceDetectorProcessor;
+import jp.oist.abcvlib.pidtransfer_receiver.labeldetector.LabelDetectorProcessor;
+import jp.oist.abcvlib.pidtransfer_receiver.objectdetector.ObjectDetectorProcessor;
+import jp.oist.abcvlib.pidtransfer_receiver.preference.PreferenceUtils;
+import jp.oist.abcvlib.pidtransfer_receiver.preference.SettingsActivity;
+import jp.oist.abcvlib.pidtransfer_receiver.preference.SettingsActivity.LaunchSource;
+import jp.oist.abcvlib.pidtransfer_receiver.textdetector.TextRecognitionProcessor;
 
 /**
  * Live preview demo app for ML Kit APIs using CameraX.
