@@ -33,7 +33,7 @@ public class Outputs implements OutputsInterface {
         threadCount += (abcvlibActivity.switches.pythonControlApp) ? 1 : 0;
         threadCount += (abcvlibActivity.switches.balanceApp) ? 1 : 0;
         threadCount += (abcvlibActivity.switches.centerBlobApp) ? 1 : 0;
-        processPriorityThreadFactory = new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY, "Outputs");
+        processPriorityThreadFactory = new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "Outputs");
         threadPoolExecutor = new ScheduledThreadPoolExecutor(threadCount, processPriorityThreadFactory);
 
         if (controller != null){
@@ -60,7 +60,7 @@ public class Outputs implements OutputsInterface {
 
         if (abcvlibActivity.switches.balanceApp){
             balancePIDController = new BalancePIDController(abcvlibActivity);
-            threadPoolExecutor.scheduleAtFixedRate(balancePIDController, 0, 5, TimeUnit.MILLISECONDS);
+            threadPoolExecutor.scheduleAtFixedRate(balancePIDController, 0, 1, TimeUnit.MILLISECONDS);
             controllers.add(balancePIDController);
             Log.i("abcvlib", "BalanceApp Started");
         }
@@ -70,13 +70,13 @@ public class Outputs implements OutputsInterface {
         //  output from balancePIDController along with the output from e.g. centerBlobApp() and path().
         if (abcvlibActivity.switches.centerBlobApp){
             centerBlobController = new CenterBlobController(abcvlibActivity);
-            threadPoolExecutor.scheduleAtFixedRate(centerBlobController, 0, 5, TimeUnit.MILLISECONDS);
+            threadPoolExecutor.scheduleAtFixedRate(centerBlobController, 0, 1, TimeUnit.MILLISECONDS);
             controllers.add(centerBlobController);
         }
 
         if (!controllers.isEmpty()){
             grandController = new GrandController(abcvlibActivity, controllers);
-            threadPoolExecutor.scheduleAtFixedRate(grandController, 0, 5, TimeUnit.MILLISECONDS);
+            threadPoolExecutor.scheduleAtFixedRate(grandController, 0, 1, TimeUnit.MILLISECONDS);
         }
     }
 

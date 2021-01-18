@@ -70,7 +70,7 @@ public class BalancePIDController extends AbcvlibController{
         }
 
         if (abcvlibActivity.switches.balanceApp) {
-            
+
 //            Log.v("abcvlib", "In balanceApp.run");
 
             PIDTimer[0] = System.nanoTime();
