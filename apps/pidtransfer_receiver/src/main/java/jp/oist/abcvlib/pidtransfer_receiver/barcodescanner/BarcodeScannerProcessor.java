@@ -31,12 +31,19 @@ import com.google.mlkit.vision.barcode.BarcodeScanner;
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions;
 import com.google.mlkit.vision.barcode.BarcodeScanning;
 import com.google.mlkit.vision.common.InputImage;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import jp.oist.abcvlib.core.outputs.Outputs;
 import jp.oist.abcvlib.pidtransfer_receiver.GraphicOverlay;
 import jp.oist.abcvlib.pidtransfer_receiver.R;
 import jp.oist.abcvlib.pidtransfer_receiver.VisionProcessorBase;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * Barcode Detector Demo.
@@ -55,8 +62,11 @@ public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>>{
 
     public boolean qrCodeVisible = false;
 
-    public BarcodeScannerProcessor(Context context) {
+    private Outputs outputs;
+
+    public BarcodeScannerProcessor(Context context, Outputs outputs) {
         super(context);
+        this.outputs = outputs;
         // Note that if you know which format of barcode your app is dealing with, detection will be
         // faster to specify the supported barcode formats one by one, e.g.
         BarcodeScannerOptions options =
@@ -105,8 +115,34 @@ public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>>{
                     barcodeText = barcode.getRawValue();
                     // Play success/fireworks sound/animation only if new barcode text present
                     mateAnimation(barcodeText);
+                    updatePID(barcodeText);
                 }
             }
+        }
+    }
+
+    private void updatePID(String barcodeText){
+//        Map<String, Double> myMap = new HashMap<String, Double>();
+//        String[] pairs = barcodeText.split(",");
+//        for (int i = 0; i<pairs.length; i++) {
+//            String pair = pairs[i];
+//            String[] keyValue = pair.split(":");
+//            myMap.put(keyValue[0], Double.parseDouble(keyValue[1]));
+//        }
+//        try {
+//            outputs.balancePIDController.setPID(myMap.get("pt"), 0, myMap.get("dt"),
+//                    myMap.get("sp"), myMap.get("pw"), myMap.get("ew"), myMap.get("mt"));
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+        try {
+            JSONObject jsonObject = new JSONObject(barcodeText);
+            outputs.balancePIDController.setPID(jsonObject.getDouble("pt"), 0,
+                    jsonObject.getDouble("dt"), jsonObject.getDouble("sp"),
+                    jsonObject.getDouble("pw"), jsonObject.getDouble("ew"),
+                    jsonObject.getDouble("mt"));
+        } catch (JSONException | InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
