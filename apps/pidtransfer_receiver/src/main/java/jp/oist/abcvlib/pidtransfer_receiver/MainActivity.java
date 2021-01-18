@@ -48,8 +48,12 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 
 /**
  * @author Christopher Buckley https://github.com/topherbuckley
@@ -58,7 +62,9 @@ public class MainActivity extends AbcvlibActivity{
 
     private static final int PERMISSION_REQUESTS = 1;
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
-    private ExecutorService executor;
+    private ProcessPriorityThreadFactory processPriorityThreadFactory;
+    private ScheduledThreadPoolExecutor threadPoolExecutor;
+
     private static String TAG = "abcvlibCameraX";
 
     @Override
@@ -77,7 +83,8 @@ public class MainActivity extends AbcvlibActivity{
 
         setContentView(R.layout.activity_main);
 
-        executor = Executors.newSingleThreadExecutor();
+        processPriorityThreadFactory = new ProcessPriorityThreadFactory(Thread.MIN_PRIORITY, "ImageAnalyzer");
+        threadPoolExecutor = new ScheduledThreadPoolExecutor(1, processPriorityThreadFactory);
 
         cameraProviderFuture = ProcessCameraProvider.getInstance(this);
 
@@ -192,7 +199,7 @@ public class MainActivity extends AbcvlibActivity{
                 // Pass image to an ML Kit Vision API
                 Task<List<Barcode>> result = scanner.process(image);
 
-                result.addOnSuccessListener(executor, new OnSuccessListener<List<Barcode>>() {
+                result.addOnSuccessListener(threadPoolExecutor, new OnSuccessListener<List<Barcode>>() {
                     @Override
                     public void onSuccess(List<Barcode> barcodes) {
                         // Task completed successfully
