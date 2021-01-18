@@ -7,6 +7,8 @@ import android.widget.Button;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import java.util.Objects;
+
 import jp.oist.abcvlib.core.AbcvlibActivity;
 
 /**
@@ -41,6 +43,8 @@ public class MainActivity extends AbcvlibActivity {
         // Setup Android GUI. Point this method to your main activity xml file or corresponding int
         // ID within the R class
         setContentView(R.layout.activity_main);
+
+        Objects.requireNonNull(getSupportActionBar()).hide();
 
         showQRCode = findViewById(R.id.show_qr_button);
         showQRCode.setOnClickListener(qrCodeButtonClickListener);
