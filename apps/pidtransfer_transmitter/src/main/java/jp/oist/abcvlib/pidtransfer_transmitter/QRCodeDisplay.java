@@ -1,6 +1,9 @@
 package jp.oist.abcvlib.pidtransfer_transmitter;
 
+import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Point;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -8,9 +11,11 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 
@@ -25,6 +30,7 @@ import org.json.JSONObject;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Objects;
 
 import jp.oist.abcvlib.core.outputs.AbcvlibController;
 import jp.oist.abcvlib.core.outputs.Outputs;
@@ -73,6 +79,13 @@ public class QRCodeDisplay extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_q_r_code_display, container, false);
         qrCode = rootView.findViewById(R.id.qrView);
 
+        WindowManager wm = requireActivity().getWindowManager();
+        Display display = wm.getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        int width = size.x;
+        int height = size.y;
+
         String barcode_data = pid_gui.getControls();
 //        barcode_data = "123";
 
@@ -81,7 +94,7 @@ public class QRCodeDisplay extends Fragment {
 
         try {
             //Todo get actual screen size to enlarge this
-            bitmap = encodeAsBitmap(barcode_data, BarcodeFormat.QR_CODE, 1500, 1500);
+            bitmap = encodeAsBitmap(barcode_data, BarcodeFormat.QR_CODE, width, width);
             qrCode.setImageBitmap(bitmap);
 
         } catch (WriterException e) {
