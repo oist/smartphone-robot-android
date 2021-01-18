@@ -156,6 +156,8 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
     protected void onCreate(Bundle savedInstanceState) {
 
         switches.pythonControlApp = true;
+        switches.balanceApp = true;
+        switches.wheelPolaritySwap = true;
 
         // Note the previously optional parameters that handle the connection to the python server
         initialzer(this,"192.168.28.102", 3000);
@@ -397,14 +399,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
                 case BARCODE_SCANNING:
                     Log.i(TAG, "Using Barcode Detector Processor");
                     imageProcessor = new BarcodeScannerProcessor(this);
-                    // Motion Controller
-                    MotionController motionController = new MotionController();
-                    StopMotionController stopMotionController = new StopMotionController();
-                    motionController.setBarcodeScannerProcessor((BarcodeScannerProcessor) imageProcessor);
-                    stopMotionController.setBarcodeScannerProcessor((BarcodeScannerProcessor) imageProcessor);
                     ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1);
-                    scheduledThreadPoolExecutor.scheduleAtFixedRate(stopMotionController, 0, 100, MILLISECONDS);
-                    scheduledThreadPoolExecutor.scheduleAtFixedRate(motionController, 0, 2, SECONDS);
                     break;
                 case IMAGE_LABELING:
                     Log.i(TAG, "Using Image Label Detector Processor");
@@ -553,124 +548,6 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
         }
         Log.i(TAG, "Permission NOT granted: " + permission);
         return false;
-    }
-
-    public class StopMotionController implements Runnable{
-
-        BarcodeScannerProcessor barcodeScannerProcessor;
-
-        @Override
-        public void run() {
-            if (appRunning) {
-                // Wait for barcodeScannerProcessor to finish initalizing else qrCodeVisible may be null.
-                if (barcodeScannerProcessor == null) {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                if (barcodeScannerProcessor.qrCodeVisible) {
-                    outputs.motion.setWheelOutput(0, 0);
-                }
-            }
-        }
-
-        public void setBarcodeScannerProcessor(BarcodeScannerProcessor barcodeScannerProcessor){
-            this.barcodeScannerProcessor = barcodeScannerProcessor;
-        }
-    }
-
-    public class MotionController implements Runnable{
-
-        int speedL = 0; // Duty cycle from 0 to 100.
-        int speedR = 0; // Duty cycle from 0 to 100.
-        int maxAccelleration = 35;
-        int minWheelCnt = 20;
-        int maxSpeed = 30;
-        int minSpeed = 30;
-        int cnt = 0;
-
-        ExecutorService cameraExecutor = Executors.newCachedThreadPool();
-        BarcodeScannerProcessor barcodeScannerProcessor;
-
-        public boolean isExternalStorageWritable() {
-            String state = Environment.getExternalStorageState();
-            if (Environment.MEDIA_MOUNTED.equals(state)) {
-                return true;
-            }
-            return false;
-        }
-
-        public void run(){
-
-            Log.i("myLog", "entered RUN");
-            if (appRunning){
-                if (barcodeScannerProcessor == null) {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                if (barcodeScannerProcessor.qrCodeVisible) {
-                    outputs.motion.setWheelOutput(0, 0);
-                }else{
-                    randomWalk();
-                }
-            }
-        }
-
-        public void randomWalk(){
-            // If current on some pin (current sense) is above X, assume stuck and reverse previous speeds for 1 s
-            double countL = inputs.quadEncoders.getWheelCountL();
-            double countR = inputs.quadEncoders.getWheelCountR();
-
-            // Set a speed between min and max speed, then randomize the sign
-            // Generating random integer between max and minSpeed
-            speedL = ThreadLocalRandom.current().nextInt(minSpeed, maxSpeed + 1);
-            // Randomly multiple by {-1, 0 , 1}
-            speedL = speedL * (ThreadLocalRandom.current().nextInt(3) - 1);
-            // Set a speed between min and max speed, then randomize the sign
-            speedR = ThreadLocalRandom.current().nextInt(minSpeed, maxSpeed + 1);
-            speedR = speedR * (ThreadLocalRandom.current().nextInt(3) - 1);
-
-            outputs.motion.setWheelOutput(speedL, speedR);
-        }
-
-        private void captureImage(){
-            File directory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/dataCollection/");
-            boolean success = true;
-            if (!directory.exists()){
-                success = directory.mkdirs();
-            }
-            if (success){
-                String photoName = Calendar.getInstance().getTime().toString() + "_" + cnt;
-                ImageCapture.OutputFileOptions outputFileOptions =
-                        new ImageCapture.OutputFileOptions.Builder(new File(directory, photoName)).build();
-                if (captureUseCase != null) {
-                    captureUseCase.takePicture(outputFileOptions, cameraExecutor,
-                            new ImageCapture.OnImageSavedCallback() {
-                                @Override
-                                public void onImageSaved(@NotNull ImageCapture.OutputFileResults outputFileResults) {
-                                    Log.i("imageCapture", "Image saved:" + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString() + photoName);
-                                }
-                                @Override
-                                public void onError(@NotNull ImageCaptureException error) {
-                                    Log.i("imageCapture", "Image save failed:" + error);
-                                }
-                            });
-                    cnt++;
-                } else {
-                    Log.i(TAG, "captureUseCase is null");
-                }
-            }
-        }
-
-        public void setBarcodeScannerProcessor(BarcodeScannerProcessor barcodeScannerProcessor){
-            this.barcodeScannerProcessor = barcodeScannerProcessor;
-        }
-
     }
 
 }
