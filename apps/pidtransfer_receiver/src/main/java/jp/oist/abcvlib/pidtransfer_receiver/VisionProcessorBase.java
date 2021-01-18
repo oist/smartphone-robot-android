@@ -36,10 +36,12 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskExecutors;
 import com.google.mlkit.vision.common.InputImage;
 import jp.oist.abcvlib.pidtransfer_receiver.preference.PreferenceUtils;
+import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 
 import java.nio.ByteBuffer;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * Abstract base class for vision frame processors. Subclasses need to implement {@link
@@ -83,7 +85,9 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
 
     protected VisionProcessorBase(Context context) {
         activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        executor = new ScopedExecutor(TaskExecutors.MAIN_THREAD);
+        ProcessPriorityThreadFactory processPriorityThreadFactory = new ProcessPriorityThreadFactory(Thread.MIN_PRIORITY, "VisionProcessor");
+        ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(1, processPriorityThreadFactory);
+        executor = new ScopedExecutor(threadPoolExecutor);
         fpsTimer.scheduleAtFixedRate(
                 new TimerTask() {
                     @Override
