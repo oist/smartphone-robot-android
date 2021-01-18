@@ -5,6 +5,7 @@ import android.util.Log;
 import org.json.JSONException;
 
 import java.util.Arrays;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 
@@ -52,30 +53,25 @@ public class BalancePIDController extends AbcvlibController{
 
     private int bounceLoopCount = 0;
     // loop steps between turning on and off wheels.
-    private int bouncePulseWidth = 100000;
+    private int bouncePulseWidth = 100;
 
     public BalancePIDController(AbcvlibActivity abcvlibActivity){
 
         this.abcvlibActivity = abcvlibActivity;
         Log.i("abcvlib", "BalanceApp Created");
 
-
     }
 
     public void run(){
 
         while (!abcvlibActivity.appRunning){
-            try {
-                Log.i("abcvlib", this.toString() + "Waiting for appRunning to be true");
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            Log.i("abcvlib", this.toString() + "Waiting for appRunning to be true");
+            Thread.yield();
         }
 
-        while(abcvlibActivity.switches.balanceApp && abcvlibActivity.appRunning) {
+        if (abcvlibActivity.switches.balanceApp) {
 
-            Log.v("abcvlib", "In balanceApp.run");
+//            Log.v("abcvlib", "In balanceApp.run");
 
             PIDTimer[0] = System.nanoTime();
 
@@ -115,7 +111,6 @@ public class BalancePIDController extends AbcvlibController{
                     e.printStackTrace();
                 }
             }
-
 
             PIDTimer[2] = System.nanoTime();
 

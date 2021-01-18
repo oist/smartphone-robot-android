@@ -5,8 +5,11 @@ import android.util.Log;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 
 public class Outputs implements OutputsInterface {
 
@@ -20,8 +23,18 @@ public class Outputs implements OutputsInterface {
     private GrandController grandController;
     private Thread grandControllerThread;
     private ArrayList<AbcvlibController> controllers = new ArrayList<>();
+    private ProcessPriorityThreadFactory processPriorityThreadFactory;
+    private ScheduledThreadPoolExecutor threadPoolExecutor;
 
     public Outputs(AbcvlibActivity abcvlibActivity, String hostIP, int port, AbcvlibController controller){
+
+        // Determine number of necessary threads.
+        int threadCount = 1; // At least one for the GrandController
+        threadCount += (abcvlibActivity.switches.pythonControlApp) ? 1 : 0;
+        threadCount += (abcvlibActivity.switches.balanceApp) ? 1 : 0;
+        threadCount += (abcvlibActivity.switches.centerBlobApp) ? 1 : 0;
+        processPriorityThreadFactory = new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY, "Outputs");
+        threadPoolExecutor = new ScheduledThreadPoolExecutor(threadCount, processPriorityThreadFactory);
 
         if (controller != null){
             controllers.add(controller);
@@ -41,18 +54,16 @@ public class Outputs implements OutputsInterface {
             Log.i("abcvlib", "Prior to Creating socketClient. IP:" + hostIP + ", Port:" + port);
             socketClient = new SocketClient(hostIP, port, abcvlibActivity.inputs.stateVariables,
                     controls, abcvlibActivity);
-            socketClientThread = new Thread(socketClient);
-            socketClientThread.start();
+            threadPoolExecutor.execute(socketClient);
             Log.i("abcvlib", "socketClient Started");
         }
 
         if (abcvlibActivity.switches.balanceApp){
             balancePIDController = new BalancePIDController(abcvlibActivity);
-            pidControllerThread = new Thread(balancePIDController);
-            pidControllerThread.start();
+            threadPoolExecutor.scheduleAtFixedRate(balancePIDController, 0, 5, TimeUnit.MILLISECONDS);
+//            threadPoolExecutor.execute(balancePIDController);
             controllers.add(balancePIDController);
             Log.i("abcvlib", "BalanceApp Started");
-
         }
 
         // Todo need some method to handle combining balancePIDController output with another controller
@@ -60,15 +71,13 @@ public class Outputs implements OutputsInterface {
         //  output from balancePIDController along with the output from e.g. centerBlobApp() and path().
         if (abcvlibActivity.switches.centerBlobApp){
             centerBlobController = new CenterBlobController(abcvlibActivity);
-            centerBlobControllerThread = new Thread(centerBlobController);
-            centerBlobControllerThread.start();
+            threadPoolExecutor.scheduleAtFixedRate(centerBlobController, 0, 5, TimeUnit.MILLISECONDS);
             controllers.add(centerBlobController);
         }
-//
+
         if (!controllers.isEmpty()){
             grandController = new GrandController(abcvlibActivity, controllers);
-            grandControllerThread = new Thread(grandController);
-            grandControllerThread.start();
+            threadPoolExecutor.scheduleAtFixedRate(grandController, 0, 5, TimeUnit.MILLISECONDS);
         }
     }
 

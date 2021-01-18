@@ -158,7 +158,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
         switches.pythonControlApp = true;
         switches.balanceApp = true;
         switches.wheelPolaritySwap = true;
-//        switches.loggerOn = true;
+        switches.loggerOn = true;
 
         // Note the previously optional parameters that handle the connection to the python server
         initialzer(this,"192.168.28.102", 3000);

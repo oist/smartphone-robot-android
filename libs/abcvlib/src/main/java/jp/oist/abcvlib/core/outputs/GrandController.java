@@ -28,11 +28,10 @@ public class GrandController extends AbcvlibController{
             }
         }
 
-        while (abcvlibActivity.appRunning){
-            setOutput(0, 0);
-            for (AbcvlibController controller : controllers){
+        setOutput(0, 0);
+        for (AbcvlibController controller : controllers){
 
-                Output controllerOutput = controller.getOutput();
+            Output controllerOutput = controller.getOutput();
 
                 if (abcvlibActivity.switches.loggerOn){
                     Log.v("grandcontroller", controller.toString() + "output:" + controllerOutput.left);
@@ -40,18 +39,13 @@ public class GrandController extends AbcvlibController{
 
                 setOutput((output.left + controllerOutput.left), (output.right + controllerOutput.right));
             }
-            if (abcvlibActivity.switches.loggerOn){
-                Log.v("abcvlib", "grandController output:" + output.left);
-            }
-            abcvlibActivity.outputs.motion.setWheelOutput((int) output.left, (int) output.right);
-            try {
-                Thread.sleep(3);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
 
+        if (abcvlibActivity.switches.loggerOn){
+            Log.v("abcvlib", "grandController output:" + output.left);
+        }
+        abcvlibActivity.outputs.motion.setWheelOutput((int) output.left, (int) output.right);
     }
+
 
     public void addController(AbcvlibController controller){
         this.controllers.add(controller);
