@@ -35,7 +35,7 @@ public class GrandController extends AbcvlibController{
                 Output controllerOutput = controller.getOutput();
 
                 if (abcvlibActivity.switches.loggerOn){
-                    Log.v("abcvlib", controller.toString() + "output:" + controllerOutput.left);
+                    Log.v("grandcontroller", controller.toString() + "output:" + controllerOutput.left);
                 }
 
                 setOutput((output.left + controllerOutput.left), (output.right + controllerOutput.right));
