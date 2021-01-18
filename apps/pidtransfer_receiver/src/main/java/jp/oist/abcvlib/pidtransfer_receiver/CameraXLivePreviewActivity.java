@@ -158,6 +158,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
         switches.pythonControlApp = true;
         switches.balanceApp = true;
         switches.wheelPolaritySwap = true;
+//        switches.loggerOn = true;
 
         // Note the previously optional parameters that handle the connection to the python server
         initialzer(this,"192.168.28.102", 3000);
@@ -399,9 +400,8 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
                 case BARCODE_SCANNING:
                     Log.i(TAG, "Using Barcode Detector Processor");
                     // Set poor initial pid parameters
-                    outputs.balancePIDController.setPID(0,0,0,0,0,0,90);
+//                    outputs.balancePIDController.setPID(0,0,0,0,0,0,90);
                     imageProcessor = new BarcodeScannerProcessor(this, outputs);
-                    ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1);
                     break;
                 case IMAGE_LABELING:
                     Log.i(TAG, "Using Image Label Detector Processor");
