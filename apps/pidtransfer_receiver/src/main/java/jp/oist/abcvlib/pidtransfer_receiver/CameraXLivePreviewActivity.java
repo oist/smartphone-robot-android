@@ -69,6 +69,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.pidtransfer_receiver.automl.AutoMLImageLabelerProcessor;
@@ -80,6 +81,7 @@ import jp.oist.abcvlib.pidtransfer_receiver.preference.PreferenceUtils;
 import jp.oist.abcvlib.pidtransfer_receiver.preference.SettingsActivity;
 import jp.oist.abcvlib.pidtransfer_receiver.preference.SettingsActivity.LaunchSource;
 import jp.oist.abcvlib.pidtransfer_receiver.textdetector.TextRecognitionProcessor;
+import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 
 /**
  * Live preview demo app for ML Kit APIs using CameraX.
@@ -125,6 +127,9 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
     private CameraSelector cameraSelector;
     private Queue<List<DetectedObject>> objectDetectQueue;
 
+    private ProcessPriorityThreadFactory processPriorityThreadFactory;
+    private ScheduledThreadPoolExecutor threadPoolExecutor;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -139,6 +144,9 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
 
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate");
+
+        processPriorityThreadFactory = new ProcessPriorityThreadFactory(Thread.MIN_PRIORITY, "PreviewActivity");
+        threadPoolExecutor = new ScheduledThreadPoolExecutor(1, processPriorityThreadFactory);
 
         if (VERSION.SDK_INT < VERSION_CODES.LOLLIPOP) {
             Toast.makeText(
@@ -419,7 +427,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
         analysisUseCase.setAnalyzer(
                 // imageProcessor.processImageProxy will use another thread to run the detection underneath,
                 // thus we can just runs the analyzer itself on main thread.
-                ContextCompat.getMainExecutor(this),
+                threadPoolExecutor,
                 imageProxy -> {
                     if (needUpdateGraphicOverlayImageSourceInfo) {
                         boolean isImageFlipped = lensFacing == CameraSelector.LENS_FACING_FRONT;
