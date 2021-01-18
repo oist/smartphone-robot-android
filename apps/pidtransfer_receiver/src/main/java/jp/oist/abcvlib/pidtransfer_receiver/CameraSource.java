@@ -172,6 +172,7 @@ public class CameraSource {
         camera.startPreview();
 
         processingThread = new Thread(processingRunnable);
+        processingThread.setPriority(Thread.MIN_PRIORITY);
         processingRunnable.setActive(true);
         processingThread.start();
         return this;
@@ -195,6 +196,7 @@ public class CameraSource {
         camera.startPreview();
 
         processingThread = new Thread(processingRunnable);
+        processingThread.setPriority(Thread.MIN_PRIORITY);
         processingRunnable.setActive(true);
         processingThread.start();
 
