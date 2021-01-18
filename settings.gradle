@@ -18,6 +18,7 @@ def apps = [
         'physicstest',
         "tfapp",
         "pidtransfer_transmitter",
+        "pidtransfer_receiver",
 ]
 
 gradle.ext.apps = apps
