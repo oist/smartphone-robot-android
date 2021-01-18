@@ -1,31 +1,13 @@
 package jp.oist.abcvlib.pidtransfer_transmitter;
 
-import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
+import android.view.View;
+import android.widget.Button;
 
-import androidx.annotation.NonNull;
-
-import com.google.android.material.slider.LabelFormatter;
-import com.google.android.material.slider.Slider;
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.EncodeHintType;
-import com.google.zxing.MultiFormatWriter;
-import com.google.zxing.WriterException;
-import com.google.zxing.common.BitMatrix;
-
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.Map;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.pidtransfer_transmitter.R;
-
-import static android.graphics.Color.BLACK;
-import static android.graphics.Color.WHITE;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 
 /**
  * Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors
@@ -35,12 +17,10 @@ import static java.lang.Math.min;
  */
 public class MainActivity extends AbcvlibActivity {
 
-    Slider setPoint_;
-    Slider p_tilt_;
-    Slider d_tilt_;
-    Slider p_wheel_;
-    Slider expWeight_;
-    Slider maxAbsTilt_;
+    private Button showQRCode;
+    private boolean isQRDisplayed = false;
+    private PID_GUI pid_view;
+    private QRCodeDisplay qrCodeDisplay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +29,8 @@ public class MainActivity extends AbcvlibActivity {
         switches.balanceApp = true;
         switches.pythonControlApp = true;
         switches.wheelPolaritySwap = true;
+
+        //Todo pass outputs to PID fragment somehow
 
         // Note the previously optional parameters that handle the connection to the python server
         initialzer(this,"192.168.20.195", 3000);
@@ -60,90 +42,33 @@ public class MainActivity extends AbcvlibActivity {
         // ID within the R class
         setContentView(R.layout.activity_main);
 
-        ArrayList<Slider> controls = new ArrayList<Slider>();
+        showQRCode = findViewById(R.id.show_qr_button);
+        showQRCode.setOnClickListener(qrCodeButtonClickListener);
 
-        controls.add(setPoint_ = findViewById(R.id.seekBarSetPoint));
-        controls.add(p_tilt_ = findViewById(R.id.seekBarTiltP));
-        controls.add(d_tilt_ = findViewById(R.id.seekBarTiltD));
-        controls.add(p_wheel_ = findViewById(R.id.seekBarWheelSpeedP));
-        controls.add(expWeight_ = findViewById(R.id.seekBarExponentialWeight));
-        controls.add(maxAbsTilt_ = findViewById(R.id.seekBarMaxAbsTilt));
-
-        for (Slider slider: controls) {
-            slider.addOnChangeListener(sliderChangeListener);
-            slider.setLabelFormatter(new LabelFormatter(){
-                @NonNull
-                @Override
-                public String getFormattedValue(float value) {
-                    return String.format("%.3f", value);
-                }
-            });
-        }
-
-        // barcode data
-        String barcode_data = "123456";
-
-        // barcode image
-        Bitmap bitmap = null;
-        ImageView iv = new ImageView(this);
-
-        try {
-
-            bitmap = encodeAsBitmap(barcode_data, BarcodeFormat.CODE_128, 600, 300);
-            iv.setImageBitmap(bitmap);
-
-        } catch (WriterException e) {
-            e.printStackTrace();
-        }
+        displayPID_GUI();
     }
 
-    Bitmap encodeAsBitmap(String contents, BarcodeFormat format, int img_width, int img_height) throws WriterException {
-        String contentsToEncode = contents;
-        if (contentsToEncode == null) {
-            return null;
-        }
-        Map<EncodeHintType, Object> hints = null;
-        String encoding = "UTF-8";
-        hints = new EnumMap<EncodeHintType, Object>(EncodeHintType.class);
-        hints.put(EncodeHintType.CHARACTER_SET, encoding);
-        MultiFormatWriter writer = new MultiFormatWriter();
-        BitMatrix result;
-        try {
-            result = writer.encode(contentsToEncode, format, img_width, img_height, hints);
-        } catch (IllegalArgumentException iae) {
-            // Unsupported format
-            return null;
-        }
-        int width = result.getWidth();
-        int height = result.getHeight();
-        int[] pixels = new int[width * height];
-        for (int y = 0; y < height; y++) {
-            int offset = y * width;
-            for (int x = 0; x < width; x++) {
-                pixels[offset + x] = result.get(x, y) ? BLACK : WHITE;
-            }
+    private final View.OnClickListener qrCodeButtonClickListener = v -> {
+        if (!isQRDisplayed) {
+            qrCodeDisplay = QRCodeDisplay.newInstance(pid_view);
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.replace(R.id.main_fragment, qrCodeDisplay).commit();
+            showQRCode.setText(R.string.back_button);
+            isQRDisplayed = true;
+        } else {
+            displayPID_GUI();
         }
 
-        Bitmap bitmap = Bitmap.createBitmap(width, height,
-                Bitmap.Config.ARGB_8888);
-        bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
-        return bitmap;
-    }
-
-    private Slider.OnChangeListener sliderChangeListener = new Slider.OnChangeListener() {
-        @Override
-        public void onValueChange(@NonNull Slider slider, float value, boolean fromUser) {
-            try {
-                outputs.balancePIDController.setPID(p_tilt_.getValue(),
-                        0,
-                        d_tilt_.getValue(),
-                        setPoint_.getValue(),
-                        p_wheel_.getValue(),
-                        expWeight_.getValue(),
-                        maxAbsTilt_.getValue());
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
     };
+
+    public void displayPID_GUI(){
+        pid_view = PID_GUI.newInstance(outputs);
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.main_fragment, pid_view).commit();
+        showQRCode.setText(R.string.qr_button_show);
+        isQRDisplayed = false;
+    }
+
 }
