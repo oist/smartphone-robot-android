@@ -127,7 +127,6 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
     private CameraSelector cameraSelector;
     private Queue<List<DetectedObject>> objectDetectQueue;
 
-    private ProcessPriorityThreadFactory processPriorityThreadFactory;
     private ScheduledThreadPoolExecutor threadPoolExecutor;
 
 
@@ -145,7 +144,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate");
 
-        processPriorityThreadFactory = new ProcessPriorityThreadFactory(Thread.MIN_PRIORITY, "PreviewActivity");
+        ProcessPriorityThreadFactory processPriorityThreadFactory = new ProcessPriorityThreadFactory(Thread.MIN_PRIORITY, "PreviewActivity");
         threadPoolExecutor = new ScheduledThreadPoolExecutor(1, processPriorityThreadFactory);
 
         if (VERSION.SDK_INT < VERSION_CODES.LOLLIPOP) {
