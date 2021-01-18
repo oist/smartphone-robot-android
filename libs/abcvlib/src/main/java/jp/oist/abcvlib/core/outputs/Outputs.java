@@ -61,7 +61,6 @@ public class Outputs implements OutputsInterface {
         if (abcvlibActivity.switches.balanceApp){
             balancePIDController = new BalancePIDController(abcvlibActivity);
             threadPoolExecutor.scheduleAtFixedRate(balancePIDController, 0, 5, TimeUnit.MILLISECONDS);
-//            threadPoolExecutor.execute(balancePIDController);
             controllers.add(balancePIDController);
             Log.i("abcvlib", "BalanceApp Started");
         }

@@ -35,15 +35,11 @@ public class CenterBlobController extends AbcvlibController{
     public void run(){
 
         while (!abcvlibActivity.appRunning){
-            try {
-                Log.i("abcvlib", this.toString() + "Waiting for appRunning to be true");
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            Log.i("abcvlib", this.toString() + "Waiting for appRunning to be true");
+            Thread.yield();
         }
 
-        while(abcvlibActivity.appRunning && abcvlibActivity.switches.centerBlobApp) {
+        if(abcvlibActivity.switches.centerBlobApp) {
 
 //            Log.d("abcvlib", "in CenterBlobController 1");
 

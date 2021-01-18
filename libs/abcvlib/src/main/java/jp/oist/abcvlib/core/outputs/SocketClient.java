@@ -199,12 +199,12 @@ public class SocketClient implements Runnable{
 
         try {
             while (bufferedReader == null){
-                Log.d("abcvlib", "bufferedReader == null");
+                Log.v("abcvlib", "bufferedReader == null");
                 Thread.sleep(100);
             }
             while (!bufferedReader.ready()){
                 if (timeoutCounter >= timeout){
-                    Log.d("abcvlib", "timeout counter exceeded. Assuming socket server closed. Retrying connection");
+                    Log.v("abcvlib", "timeout counter exceeded. Assuming socket server closed. Retrying connection");
                     closeAll();
                     connect();
                 }
@@ -213,7 +213,7 @@ public class SocketClient implements Runnable{
                 timeoutCounter++;
             }
             while ((line = bufferedReader.readLine()) == null){
-                Log.d("abcvlib", "bufferedReader line is null");
+                Log.v("abcvlib", "bufferedReader line is null");
             }
             socketMsgIn = new JSONObject(line);
 //            Log.v("abcvlib", "wrote to socketMsgIn");
