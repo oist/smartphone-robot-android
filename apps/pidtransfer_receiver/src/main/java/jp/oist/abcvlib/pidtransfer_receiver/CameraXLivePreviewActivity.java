@@ -381,7 +381,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
                 case BARCODE_SCANNING:
                     Log.i(TAG, "Using Barcode Detector Processor");
                     // Set poor initial pid parameters
-//                    outputs.balancePIDController.setPID(0,0,0,0,0,0,90);
+                    outputs.balancePIDController.setPID(0,0,0,0,0,0,90);
                     imageProcessor = new BarcodeScannerProcessor(this, outputs);
                     break;
                 case IMAGE_LABELING:
