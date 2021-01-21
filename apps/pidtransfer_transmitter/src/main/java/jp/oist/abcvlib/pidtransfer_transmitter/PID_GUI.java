@@ -112,11 +112,20 @@ public class PID_GUI extends Fragment {
     public String getControls(){
 
         JSONObject controlValues = new JSONObject();
+        Map<String, Double> controls = new HashMap<String, Double>();
+
+        controls.put("sp", 2.8);
+        controls.put("pt", -24.0);
+        controls.put("dt", 1.0);
+        controls.put("pw", 0.4);
+        controls.put("ew", 0.25);
+        controls.put("mt", 6.5);
+
         // Take the value from each slider and store it in a new HashMap
-        for (Map.Entry<String, Slider> entry : controls.entrySet()) {
+        for (Map.Entry<String, Double> entry : controls.entrySet()) {
             DecimalFormat df = new DecimalFormat("#.##");
             df.setRoundingMode(RoundingMode.CEILING);
-            String value = df.format(entry.getValue().getValue());
+            String value = df.format(entry.getValue());
             try {
                 controlValues.put(entry.getKey(), value);
             } catch (JSONException e) {
