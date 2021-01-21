@@ -30,7 +30,7 @@ public class MainActivity extends AbcvlibActivity {
         // Various switches are available to turn on/off core functionality.
         switches.balanceApp = true;
         switches.pythonControlApp = true;
-        switches.wheelPolaritySwap = true;
+        switches.wheelPolaritySwap = false;
 
         //Todo pass outputs to PID fragment somehow
 
