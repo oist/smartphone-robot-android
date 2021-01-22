@@ -81,20 +81,20 @@ public class CenterBlobController extends AbcvlibController{
                 blobInFrameCounter++;
 
                 phi = getPhi(centroids);
-                Log.d("centerblob", "phi:" + phi);
-                Log.d("centerblob", "Blob size:" + blobSizes[0]);
+//                Log.d("centerblob", "phi:" + phi);
+//                Log.d("centerblob", "Blob size:" + blobSizes[0]);
 
                 // Todo check polarity on these turns. Could be opposite
                 double outputLeft = -(phi * p_phi) + (staticApproachSpeed + (variableApproachSpeed / blobSizes[0]));
                 double outputRight = (phi * p_phi) + (staticApproachSpeed + (variableApproachSpeed / blobSizes[0]));
                 setOutput(outputLeft, outputRight);
 
-                Log.d("centerblob", "CenterBlobController left:" + output.left + " right:" + output.right);
+//                Log.d("centerblob", "CenterBlobController left:" + output.left + " right:" + output.right);
 
             }
             else{
 
-                Log.v("centerblob", "No blobs in sight");
+//                Log.v("centerblob", "No blobs in sight");
 
                 // Start time stanp when no blob state starts
                 if (noBlobInFrameCounter == 0) {
@@ -104,7 +104,7 @@ public class CenterBlobController extends AbcvlibController{
                 noBlobInFrameCounter++;
                 blobInFrameCounter = 0;
 
-                Log.v("centerblob", "No blobs. Prior to timing logic");
+//                Log.v("centerblob", "No blobs. Prior to timing logic");
 
                 double approachTime = 3.5e9;
                 // How long to backup after landing on puck in nanoseconds.
@@ -121,7 +121,7 @@ public class CenterBlobController extends AbcvlibController{
                     // If just starting to backup
                     if (backingUpFrameCounter == 0){
                         backingUpStartTime = System.nanoTime();
-                        Log.v("centerblob", "No blobs. Setting backingupStartTime = 0");
+//                        Log.v("centerblob", "No blobs. Setting backingupStartTime = 0");
                         backingUpFrameCounter++;
                         // Random choice between -1 and 1.
                         randomSign = rand.nextBoolean() ? 1 : -1;
