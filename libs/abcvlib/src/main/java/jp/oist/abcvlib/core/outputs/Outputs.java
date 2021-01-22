@@ -26,7 +26,7 @@ public class Outputs implements OutputsInterface {
     private ProcessPriorityThreadFactory processPriorityThreadFactory;
     private ScheduledThreadPoolExecutor threadPoolExecutor;
 
-    public Outputs(AbcvlibActivity abcvlibActivity, String hostIP, int port, AbcvlibController controller){
+    public Outputs(AbcvlibActivity abcvlibActivity, String hostIP, int port, AbcvlibController customController){
 
         // Determine number of necessary threads.
         int threadCount = 1; // At least one for the GrandController
@@ -36,8 +36,10 @@ public class Outputs implements OutputsInterface {
         processPriorityThreadFactory = new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "Outputs");
         threadPoolExecutor = new ScheduledThreadPoolExecutor(threadCount, processPriorityThreadFactory);
 
-        if (controller != null){
-            controllers.add(controller);
+        // Add custom controller if specified
+        if (customController != null){
+            threadPoolExecutor.scheduleAtFixedRate(customController, 0, 1, TimeUnit.MILLISECONDS);
+            controllers.add(customController);
         }
 
         //BalancePIDController Controller

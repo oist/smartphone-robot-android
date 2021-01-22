@@ -10,6 +10,7 @@ import androidx.fragment.app.FragmentTransaction;
 import java.util.Objects;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.outputs.AbcvlibController;
 
 /**
  * Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors
@@ -23,6 +24,7 @@ public class MainActivity extends AbcvlibActivity {
     private boolean isQRDisplayed = false;
     private PID_GUI pid_view;
     private QRCodeDisplay qrCodeDisplay;
+    private CustomController customController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,10 +34,12 @@ public class MainActivity extends AbcvlibActivity {
         switches.pythonControlApp = true;
         switches.wheelPolaritySwap = false;
 
+        customController = new CustomController(this);
+
         //Todo pass outputs to PID fragment somehow
 
         // Note the previously optional parameters that handle the connection to the python server
-        initialzer(this,"192.168.20.195", 3000);
+        initialzer(this,"192.168.20.195", 3000, customController);
 
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
