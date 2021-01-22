@@ -24,7 +24,7 @@ public class CustomController extends AbcvlibController {
         }
 
         // Turn right slowly
-        setOutput(20, 0);
+        setOutput(-15, 15);
 
         }
     }
