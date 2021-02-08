@@ -1,8 +1,6 @@
 package jp.oist.abcvlib.basic;
 
 import android.os.Bundle;
-import android.util.Log;
-import android.widget.TextView;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -32,34 +30,9 @@ public class MainActivity extends AbcvlibActivity {
 
         // Executors preferred over runnables or threads for built in memory/cleanup/error handling.
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-        SimpleTest simpleTest = new SimpleTest();
+        SimpleTest simpleTest = new SimpleTest(this);
         // Run the simpleTest every 1 second
         executor.scheduleAtFixedRate(simpleTest, 0, 1, TimeUnit.SECONDS);
-
-    }
-
-    public class SimpleTest implements Runnable{
-
-        TextView voltageBattDisplay = findViewById(R.id.voltageBatt);
-        TextView voltageChargerDisplay = findViewById(R.id.voltageCharger);
-
-        // Every runnable needs a public run method
-        public void run(){
-
-            // Prints theta and angular velocity to android logcat
-            Log.i(TAG, "theta:" + inputs.motionSensors.getThetaDeg() + " thetaDot:" +
-                    inputs.motionSensors.getThetaDegDot() + " Battery Voltage:" + inputs.battery.getVoltageBatt() + " Charger Voltage:" + inputs.battery.getVoltageCharger());
-
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    // Stuff that updates the UI
-                    voltageBattDisplay.setText("Battery: " + inputs.battery.getVoltageBatt() + "V");
-                    voltageChargerDisplay.setText("Charger: " + inputs.battery.getVoltageCharger() + "V");
-
-                }
-            });
-        }
     }
 
 }
