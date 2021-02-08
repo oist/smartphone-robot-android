@@ -80,8 +80,8 @@ public class CenterBlobController extends AbcvlibController{
 //                Log.d("centerblob", "Blob size:" + blobSizes[0]);
 
                 // Todo check polarity on these turns. Could be opposite
-                double outputLeft = -(phi * p_phi) + (staticApproachSpeed + (variableApproachSpeed / blobSizes[0]));
-                double outputRight = (phi * p_phi) + (staticApproachSpeed + (variableApproachSpeed / blobSizes[0]));
+                double outputLeft = (phi * p_phi) + (staticApproachSpeed + (variableApproachSpeed / blobSizes[0]));
+                double outputRight =-(phi * p_phi) + (staticApproachSpeed + (variableApproachSpeed / blobSizes[0]));
                 setOutput(outputLeft, outputRight);
 
 //                Log.d("centerblob", "CenterBlobController left:" + output.left + " right:" + output.right);

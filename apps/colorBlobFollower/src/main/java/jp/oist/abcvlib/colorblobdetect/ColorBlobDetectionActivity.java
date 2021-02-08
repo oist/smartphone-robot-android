@@ -17,6 +17,7 @@ public class ColorBlobDetectionActivity extends AbcvlibActivity {
         switches.pythonControlApp = true;
         switches.cameraApp = true;
         switches.centerBlobApp = true;
+        switches.wheelPolaritySwap = false;
 
         initialzer(this, "192.168.20.195", 3000);
 
