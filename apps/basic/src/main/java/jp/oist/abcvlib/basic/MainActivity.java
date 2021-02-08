@@ -45,18 +45,10 @@ public class MainActivity extends AbcvlibActivity {
 
         // Every runnable needs a public run method
         public void run(){
-            // Test to make sure all app init is finished else wait 1 second
-            if(!appRunning){
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
 
             // Prints theta and angular velocity to android logcat
             Log.i(TAG, "theta:" + inputs.motionSensors.getThetaDeg() + " thetaDot:" +
-                    inputs.motionSensors.getThetaDegDot() + "Battery Voltage:" + inputs.battery.getVoltageBatt());
+                    inputs.motionSensors.getThetaDegDot() + " Battery Voltage:" + inputs.battery.getVoltageBatt() + " Charger Voltage:" + inputs.battery.getVoltageCharger());
 
             runOnUiThread(new Runnable() {
                 @Override
