@@ -38,7 +38,7 @@ public class MainActivity extends AbcvlibActivity {
     public class BackAndForth implements Runnable{
 
         int speed = 100; // Duty cycle from 0 to 100.
-        int sleeptime = 10000;
+        int sleeptime = 1000;
 
         public void run(){
 
