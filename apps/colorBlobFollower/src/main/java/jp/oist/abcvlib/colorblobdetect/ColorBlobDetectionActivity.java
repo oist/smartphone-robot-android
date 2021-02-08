@@ -14,7 +14,6 @@ public class ColorBlobDetectionActivity extends AbcvlibActivity {
     public void onCreate(Bundle savedInstanceState) {
 
         switches.loggerOn = false;
-        switches.balanceApp = true;
         switches.pythonControlApp = true;
         switches.cameraApp = true;
         switches.centerBlobApp = true;
