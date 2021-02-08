@@ -4,6 +4,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import jp.oist.abcvlib.core.AbcvlibActivity;
 
 /**
@@ -26,10 +30,11 @@ public class MainActivity extends AbcvlibActivity {
         // Setup Android GUI. Point this method to your main activity xml file or corresponding int
         setContentView(R.layout.activity_main);
 
-        // Create "runnable" object (similar to a thread, but recommended over overriding thread class)
+        // Executors preferred over runnables or threads for built in memory/cleanup/error handling.
+        ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         SimpleTest simpleTest = new SimpleTest();
-        // Start the runnable thread
-        new Thread(simpleTest).start();
+        // Run the simpleTest every 1 second
+        executor.scheduleAtFixedRate(simpleTest, 0, 1, TimeUnit.SECONDS);
 
     }
 
@@ -40,21 +45,28 @@ public class MainActivity extends AbcvlibActivity {
 
         // Every runnable needs a public run method
         public void run(){
-            while(appRunning){
-                // Prints theta and angular velocity to android logcat
-                Log.i(TAG, "theta:" + inputs.motionSensors.getThetaDeg() + " thetaDot:" +
-                        inputs.motionSensors.getThetaDegDot() + "Battery Voltage:" + inputs.battery.getVoltageBatt());
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        // Stuff that updates the UI
-                        voltageBattDisplay.setText("Battery: " + inputs.battery.getVoltageBatt() + "V");
-                        voltageChargerDisplay.setText("Charger: " + inputs.battery.getVoltageCharger() + "V");
-
-                    }
-                });
+            // Test to make sure all app init is finished else wait 1 second
+            if(!appRunning){
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
+
+            // Prints theta and angular velocity to android logcat
+            Log.i(TAG, "theta:" + inputs.motionSensors.getThetaDeg() + " thetaDot:" +
+                    inputs.motionSensors.getThetaDegDot() + "Battery Voltage:" + inputs.battery.getVoltageBatt());
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    // Stuff that updates the UI
+                    voltageBattDisplay.setText("Battery: " + inputs.battery.getVoltageBatt() + "V");
+                    voltageChargerDisplay.setText("Charger: " + inputs.battery.getVoltageCharger() + "V");
+
+                }
+            });
         }
     }
 
