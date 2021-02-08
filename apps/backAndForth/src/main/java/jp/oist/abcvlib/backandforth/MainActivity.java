@@ -1,11 +1,13 @@
 package jp.oist.abcvlib.backandforth;
 
 import android.os.Bundle;
-import android.renderscript.ScriptGroup;
 import android.util.Log;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.core.inputs.Inputs;
 
 /**
  * Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors
@@ -29,44 +31,51 @@ public class MainActivity extends AbcvlibActivity {
 
         Log.i(TAG, "Step 0");
 
-        // Linear Back and Forth every 10 mm
-        BackAndForth backAndForthThread = new BackAndForth();
-        new Thread(backAndForthThread).start();
+        int[][] speedProfile = {{50, 0, -50, 0}, {50, 0, -50, 0}, {2000, 1000, 2000, 1000}};
+        BackAndForth backAndForth = new BackAndForth(speedProfile);
 
     }
 
-    public class BackAndForth implements Runnable{
+    class BackAndForth {
 
-        int speed = 100; // Duty cycle from 0 to 100.
-        int sleeptime = 1000;
+        /**
+         * 3xn matrix with column c, row 1 representing speed of left wheel
+         * row 2 representing speed of right wheel, and row 3 the time window for
+         * for speed c. Speed specified as -100 to 100 representing PWM pulse width. Time window
+         * specified in milliseconds
+          */
+        int[][] speedProfile;
+        ScheduledExecutorService executor;
+        SpeedSetter speedSetter;
 
-        public void run(){
-
-            // Set Initial Speed
-            outputs.motion.setWheelOutput(speed, speed);
-
-            Log.i(TAG, "wheelspeed=" + speed);
-
-            while(appRunning) {
-
-                try {
-                    Thread.sleep(sleeptime);
-                    outputs.motion.setWheelOutput(0, 0);
-                    Log.i(TAG, "wheelspeed=0");
-                    Thread.sleep(1000);
-                    outputs.motion.setWheelOutput(-speed, -speed);
-                    Log.i(TAG, "wheelspeed=" + -speed);
-                    Thread.sleep(sleeptime);
-                    outputs.motion.setWheelOutput(0, 0);
-                    Log.i(TAG, "wheelspeed=" + "0");
-                    Thread.sleep(1000);
-                    outputs.motion.setWheelOutput(speed, speed);
-                    Log.i(TAG, "wheelspeed=" + speed);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
+        public BackAndForth(int[][] speedProfile){
+            this.speedProfile = speedProfile;
+            executor = Executors.newScheduledThreadPool(1);
+            int endOfCurrentTimeSlot = 0;
+            for (int i = 0 ; i < speedProfile[0].length; i++){
+                speedSetter = new SpeedSetter(speedProfile[0][i], speedProfile[1][i]);
+                executor.schedule(speedSetter, endOfCurrentTimeSlot, TimeUnit.MILLISECONDS);
+                endOfCurrentTimeSlot+=speedProfile[2][i];
             }
+        }
+
+
+    }
+
+    class SpeedSetter implements Runnable{
+
+        private int left;
+        private int right;
+
+        public SpeedSetter(int left, int right){
+            this.left = left;
+            this.right = right;
+        }
+
+        @Override
+        public void run() {
+            outputs.motion.setWheelOutput(left, right);
+            Log.i(TAG, "LeftWheel = " + left + " RightWheel = " + right);
         }
     }
 
