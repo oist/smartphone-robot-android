@@ -2,7 +2,6 @@ package org.opencv.android;
 
 import java.util.List;
 
-import org.opencv.BuildConfig;
 import org.opencv.R;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -438,9 +437,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
                 float scale = (float) canvas.getWidth() / (float) mCacheBitmap.getHeight();
                 matrix.postScale(-scale, scale, canvas.getWidth()/2 , canvas.getHeight()/2 );
                 canvas.drawBitmap(mCacheBitmap, matrix, null);
-
-                if (BuildConfig.DEBUG)
-                    Log.d(TAG, "mStretch value: " + mScale);
+                
 
 //                if (mScale != 0) {
 //                    canvas.drawBitmap(mCacheBitmap, new Rect(0,0,mCacheBitmap.getWidth(), mCacheBitmap.getHeight()),
