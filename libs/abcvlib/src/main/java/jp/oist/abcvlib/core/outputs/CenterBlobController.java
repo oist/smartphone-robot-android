@@ -29,7 +29,7 @@ public class CenterBlobController extends AbcvlibController{
     boolean ignoreBlobs = false;
     double staticApproachSpeed = 50;
     double variableApproachSpeed = 0;
-    int searchSpeed = 35;
+    int searchSpeed = 50;
     Random rand = new Random();
     // Random choice between -1 and 1.
     int randomSign = rand.nextBoolean() ? 1 : -1;
