@@ -179,14 +179,14 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
                         Log.d("abcvlib_camera", "Exposure Compensation:" + params.getExposureCompensation() );
                         Log.d("abcvlib_camera", "Exposure Min:" + params.getMinExposureCompensation() );
                         Log.d("abcvlib_camera", "Exposure Max:" + params.getMaxExposureCompensation() );
-                        params.setExposureCompensation(-12);
+//                        params.setExposureCompensation(-12);
                         params.setAutoExposureLock(true);
                     }
 
                     Log.d("abcvlib_camera", "White Balance Lock supported?:" + params.isAutoWhiteBalanceLockSupported() );
 
                     if (params.isAutoWhiteBalanceLockSupported()){
-//                        params.setWhiteBalance("WHITE_BALANCE_FLUORESCENT");
+                        params.setWhiteBalance(Camera.Parameters.WHITE_BALANCE_FLUORESCENT);
                         params.setAutoWhiteBalanceLock(true);
                     }
 
