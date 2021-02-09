@@ -38,7 +38,7 @@ public class MainActivity extends AbcvlibActivity {
         switches.wheelPolaritySwap = false;
 
         // Note the previously optional parameters that handle the connection to the python server
-        initialzer(this,"192.168.20.195", 3000);
+        initialzer(this,"192.168.28.233", 3000);
 
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
