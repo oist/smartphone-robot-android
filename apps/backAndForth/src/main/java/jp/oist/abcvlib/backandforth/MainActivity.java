@@ -1,10 +1,15 @@
 package jp.oist.abcvlib.backandforth;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 
+import androidx.annotation.RequiresApi;
+
+import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
@@ -16,6 +21,7 @@ import jp.oist.abcvlib.core.AbcvlibActivity;
  */
 public class MainActivity extends AbcvlibActivity {
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -31,7 +37,7 @@ public class MainActivity extends AbcvlibActivity {
 
         Log.i(TAG, "Step 0");
 
-        int[][] speedProfile = {{50, 0, -50, 0}, {50, 0, -50, 0}, {2000, 1000, 2000, 1000}};
+        int[][] speedProfile = {{100, 0, -100, 0}, {100, 0, -100, 0}, {2000, 1000, 2000, 1000}};
         BackAndForth backAndForth = new BackAndForth(speedProfile);
 
     }
@@ -47,19 +53,24 @@ public class MainActivity extends AbcvlibActivity {
         int[][] speedProfile;
         ScheduledExecutorService executor;
         SpeedSetter speedSetter;
+        ScheduledFuture<?> speedHandle;
 
+        @RequiresApi(api = Build.VERSION_CODES.N)
         public BackAndForth(int[][] speedProfile){
             this.speedProfile = speedProfile;
             executor = Executors.newScheduledThreadPool(1);
-            int endOfCurrentTimeSlot = 0;
-            for (int i = 0 ; i < speedProfile[0].length; i++){
-                speedSetter = new SpeedSetter(speedProfile[0][i], speedProfile[1][i]);
-                executor.schedule(speedSetter, endOfCurrentTimeSlot, TimeUnit.MILLISECONDS);
-                endOfCurrentTimeSlot+=speedProfile[2][i];
-            }
+            executor.scheduleAtFixedRate(new Runnable() {
+                @Override
+                public void run() {
+                    int endOfCurrentTimeSlot = 0;
+                    for (int i = 0 ; i < speedProfile[0].length; i++){
+                        speedSetter = new SpeedSetter(speedProfile[0][i], speedProfile[1][i]);
+                        executor.schedule(speedSetter, endOfCurrentTimeSlot, TimeUnit.MILLISECONDS);
+                        endOfCurrentTimeSlot+=speedProfile[2][i];
+                    }
+                }
+            }, 0, Arrays.stream(speedProfile[2]).sum(), TimeUnit.MILLISECONDS);
         }
-
-
     }
 
     class SpeedSetter implements Runnable{
