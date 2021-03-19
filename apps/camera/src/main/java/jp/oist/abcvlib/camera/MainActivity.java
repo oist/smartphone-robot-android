@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity implements LifecycleOwner {
                 .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
                 .build();
         Camera camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview);
-        preview.setSurfaceProvider(mPreviewView.createSurfaceProvider(camera.getCameraInfo()));
+        preview.setSurfaceProvider(mPreviewView.getSurfaceProvider());
     }
 
     private void startCamera() {
