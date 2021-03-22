@@ -30,7 +30,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-public class MainActivity extends AppCompatActivity implements LifecycleOwner {
+import jp.oist.abcvlib.core.AbcvlibActivity;
+
+public class MainActivity extends AbcvlibActivity implements LifecycleOwner {
 
     private static final int REQUEST_CODE_PERMISSIONS = 10;
     private static final String[] REQUIRED_PERMISSIONS = { Manifest.permission.CAMERA };
@@ -43,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements LifecycleOwner {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        initialzer(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mPreviewView = findViewById(R.id.preview_view);
