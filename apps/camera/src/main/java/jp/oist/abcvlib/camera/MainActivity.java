@@ -2,6 +2,7 @@ package jp.oist.abcvlib.camera;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.media.Image;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Size;
@@ -22,6 +23,9 @@ import androidx.lifecycle.LifecycleOwner;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.nio.ByteBuffer;
+import java.nio.DoubleBuffer;
+import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -51,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements LifecycleOwner {
                     this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
         }
 
-        int threadPoolSize = 4;
+        int threadPoolSize = 8;
         analysisExecutor = new ScheduledThreadPoolExecutor(threadPoolSize);
     }
 
@@ -63,17 +67,33 @@ public class MainActivity extends AppCompatActivity implements LifecycleOwner {
 
         ImageAnalysis imageAnalysis =
                 new ImageAnalysis.Builder()
-                        .setTargetResolution(new Size(1280, 720))
+                        .setTargetResolution(new Size(10, 10))
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .build();
 
         imageAnalysis.setAnalyzer(analysisExecutor, new ImageAnalysis.Analyzer() {
             @Override
-            public void analyze(@NonNull ImageProxy image) {
-                int rotationDegrees = image.getImageInfo().getRotationDegrees();
-                // insert your code here.
-                Log.i("analyzer", "Image roatation: " + rotationDegrees);
-                image.close();
+            @androidx.camera.core.ExperimentalGetImage
+            public void analyze(@NonNull ImageProxy imageProxy) {
+                Image image = imageProxy.getImage();
+                if (image != null) {
+                    int width = image.getWidth();
+                    int height = image.getHeight();
+                    byte[] frame = new byte[width * height];
+                    Image.Plane[] planes = image.getPlanes();
+                    int idx = 0;
+                    for (Image.Plane plane : planes){
+                        ByteBuffer frameBuffer = plane.getBuffer();
+                        int n = frameBuffer.limit();
+                        Log.i("analyzer", "Plane: " + idx + " width: " + width + " height: " + height + " WxH: " + width*height + " limit: " + n);
+//                        frameBuffer.flip();
+                        frame = new byte[n];
+                        frameBuffer.get(frame);
+                        frameBuffer.clear();
+                        idx++;
+                    }
+                }
+                imageProxy.close();
             }
         });
 
