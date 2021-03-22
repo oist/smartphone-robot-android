@@ -56,6 +56,7 @@ public class Outputs implements OutputsInterface {
             Log.i("abcvlib", "Prior to Creating socketClient. IP:" + hostIP + ", Port:" + port);
             socketClient = new SocketClient(hostIP, port, abcvlibActivity.inputs.stateVariables,
                     controls, abcvlibActivity);
+            // This will run the default PID param exchange. This should be toggleable.
             threadPoolExecutor.execute(socketClient);
             Log.i("abcvlib", "socketClient Started");
         }

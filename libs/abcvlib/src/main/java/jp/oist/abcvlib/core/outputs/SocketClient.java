@@ -128,6 +128,9 @@ public class SocketClient implements Runnable{
 
     }
 
+    /**
+     * Default PID parameter exchange helper function. Core read method @getControlsFromServer
+     */
     private void readControlData(){
         abcvlibActivity.outputs.setControls(getControlsFromServer());
         if (abcvlibActivity.switches.timersOn){
@@ -142,6 +145,9 @@ public class SocketClient implements Runnable{
         }
     }
 
+    /**
+     * Default PID parameter exchange helper function. Core write method @writeInputsToServer
+     */
     private void writeAndroidData(){
 
         try {
