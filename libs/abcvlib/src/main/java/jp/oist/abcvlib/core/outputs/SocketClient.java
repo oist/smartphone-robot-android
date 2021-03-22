@@ -2,6 +2,8 @@ package jp.oist.abcvlib.core.outputs;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -43,14 +45,16 @@ public class SocketClient implements Runnable{
     JSONArray qvalueArray = new JSONArray();
     JSONArray weightArray = new JSONArray();
     int arrayIndex = 0;
+    SocketListener socketListener;
 
     public SocketClient(String host, int port, JSONObject inputs, JSONObject socketMsg,
-                        AbcvlibActivity abcvlibActivity){
+                        AbcvlibActivity abcvlibActivity, SocketListener socketListener){
         this.serverIp = host;
         this.serverPort = port;
         this.inputs_S = inputs;
         this.controls_S = socketMsg;
         this.abcvlibActivity = abcvlibActivity;
+        this.socketListener = socketListener;
     }
 
     @Override
@@ -246,7 +250,10 @@ public class SocketClient implements Runnable{
         writePermission = true;
         readPermission = false;
 
-//        Log.v("abcvlib", "Read data from server");
+        if (socketListener != null){
+            socketListener.onServerReadSuccess(socketMsgIn);
+        }
+
         return socketMsgIn;
     }
 

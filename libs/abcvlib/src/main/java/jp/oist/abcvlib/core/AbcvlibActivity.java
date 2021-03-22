@@ -9,6 +9,8 @@ import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import org.json.JSONObject;
+
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
 import jp.oist.abcvlib.core.inputs.Inputs;
@@ -197,4 +199,5 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     public double determineReward(){
         return 0;
     }
+
 }

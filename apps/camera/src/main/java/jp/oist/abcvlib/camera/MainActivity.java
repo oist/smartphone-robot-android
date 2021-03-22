@@ -23,6 +23,8 @@ import androidx.lifecycle.LifecycleOwner;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.json.JSONObject;
+
 import java.nio.ByteBuffer;
 import java.nio.DoubleBuffer;
 import java.util.Arrays;
@@ -31,8 +33,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.outputs.SocketListener;
 
-public class MainActivity extends AbcvlibActivity implements LifecycleOwner {
+public class MainActivity extends AbcvlibActivity implements LifecycleOwner, SocketListener {
 
     private static final int REQUEST_CODE_PERMISSIONS = 10;
     private static final String[] REQUIRED_PERMISSIONS = { Manifest.permission.CAMERA };
@@ -60,6 +63,7 @@ public class MainActivity extends AbcvlibActivity implements LifecycleOwner {
 
         int threadPoolSize = 8;
         analysisExecutor = new ScheduledThreadPoolExecutor(threadPoolSize);
+        this.outputs.socketClient.writeInputsToServer();
     }
 
     private void bindAll(@NonNull ProcessCameraProvider cameraProvider) {
@@ -148,5 +152,14 @@ public class MainActivity extends AbcvlibActivity implements LifecycleOwner {
             }
         }
         return true;
+    }
+
+    @Override
+    public void onServerReadSuccess(JSONObject serverMsg) {
+        // Parse Message from Server
+        // ..
+
+        // Send return message
+        // ...
     }
 }
