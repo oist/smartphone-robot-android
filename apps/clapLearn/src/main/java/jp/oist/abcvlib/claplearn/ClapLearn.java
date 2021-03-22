@@ -2,7 +2,6 @@ package jp.oist.abcvlib.claplearn;
 
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.TextView;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.learning.ActionDistribution;
@@ -24,7 +23,7 @@ public class ClapLearn extends AbcvlibActivity {
         double temperature = 5.0;
         aD = new ActionDistribution(weights, qValues, learningRate, temperature);
 
-        switches.pythonControlApp = true;
+        switches.pythonControlledPIDBalancer = true;
         switches.micApp = true;
         switches.actionSelectorApp = true;
 

@@ -133,7 +133,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        switches.pythonControlApp = true;
+        switches.pythonControlledPIDBalancer = true;
         switches.balanceApp = true;
         switches.wheelPolaritySwap = true;
         switches.loggerOn = true;

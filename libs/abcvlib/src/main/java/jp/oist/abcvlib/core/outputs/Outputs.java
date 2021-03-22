@@ -30,7 +30,7 @@ public class Outputs implements OutputsInterface {
 
         // Determine number of necessary threads.
         int threadCount = 1; // At least one for the GrandController
-        threadCount += (abcvlibActivity.switches.pythonControlApp) ? 1 : 0;
+        threadCount += (abcvlibActivity.switches.pythonControlledPIDBalancer) ? 1 : 0;
         threadCount += (abcvlibActivity.switches.balanceApp) ? 1 : 0;
         threadCount += (abcvlibActivity.switches.centerBlobApp) ? 1 : 0;
         processPriorityThreadFactory = new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "Outputs");
@@ -52,7 +52,7 @@ public class Outputs implements OutputsInterface {
         // Todo: automatically detect host server or set this to static IP:Port. Tried UDP Broadcast,
         //  but seems to be blocked by router. Could set up DNS and static hostname, but would
         //  require intervention with IT
-        if (abcvlibActivity.switches.pythonControlApp){
+        if (abcvlibActivity.switches.pythonControlledPIDBalancer){
             Log.i("abcvlib", "Prior to Creating socketClient. IP:" + hostIP + ", Port:" + port);
             socketClient = new SocketClient(hostIP, port, abcvlibActivity.inputs.stateVariables,
                     controls, abcvlibActivity, null);

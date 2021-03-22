@@ -17,7 +17,6 @@
 package org.tensorflow.lite.examples.detection;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -37,8 +36,6 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Trace;
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
@@ -56,9 +53,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
-import java.io.File;
 import java.nio.ByteBuffer;
-import java.util.Calendar;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
@@ -105,7 +100,7 @@ public abstract class CameraActivity extends AbcvlibActivity
   @Override
   protected void onCreate(final Bundle savedInstanceState) {
 
-    switches.pythonControlApp = true;
+    switches.pythonControlledPIDBalancer = true;
 
     // Note the previously optional parameters that handle the connection to the python server
     initialzer(this,"192.168.28.102", 3000);

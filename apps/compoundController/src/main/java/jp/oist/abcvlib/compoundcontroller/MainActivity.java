@@ -21,7 +21,7 @@ public class MainActivity extends AbcvlibActivity {
 
         // Various switches are available to turn on/off core functionality.
         switches.balanceApp = true;
-        switches.pythonControlApp = true;
+        switches.pythonControlledPIDBalancer = true;
 
         // Initializer your custom controller before the general initializer such that it can be
         // passed upward.

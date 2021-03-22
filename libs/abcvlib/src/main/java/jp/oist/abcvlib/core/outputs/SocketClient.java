@@ -2,8 +2,6 @@ package jp.oist.abcvlib.core.outputs;
 
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -65,7 +63,7 @@ public class SocketClient implements Runnable{
             Thread.yield();
         }
 
-        while (abcvlibActivity.switches.pythonControlApp){
+        while (abcvlibActivity.switches.pythonControlledPIDBalancer){
 
             if (abcvlibActivity.switches.timersOn){
                 pythonControlTimer[0] = System.nanoTime();

@@ -33,7 +33,7 @@ public class Switches {
     /**
      * Control various things from a remote python server interface
      */
-    public boolean pythonControlApp = false;
+    public boolean pythonControlledPIDBalancer = false;
     /**
      * Enable default PID controlled balancer. Custom controllers can be added to the output of
      * this controller to enable balanced movements.

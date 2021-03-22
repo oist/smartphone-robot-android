@@ -10,7 +10,6 @@ import androidx.fragment.app.FragmentTransaction;
 import java.util.Objects;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.core.outputs.AbcvlibController;
 
 /**
  * Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors
@@ -31,7 +30,7 @@ public class MainActivity extends AbcvlibActivity {
 
         // Various switches are available to turn on/off core functionality.
         switches.balanceApp = true;
-        switches.pythonControlApp = true;
+        switches.pythonControlledPIDBalancer = true;
         switches.wheelPolaritySwap = false;
 
         customController = new CustomController(this);

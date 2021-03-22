@@ -2,8 +2,6 @@ package jp.oist.abcvlib.colorblobdetect;
 
 import android.os.Bundle;
 
-import org.opencv.android.OpenCVLoader;
-
 import jp.oist.abcvlib.core.AbcvlibActivity;
 
 
@@ -14,7 +12,7 @@ public class ColorBlobDetectionActivity extends AbcvlibActivity {
     public void onCreate(Bundle savedInstanceState) {
 
         switches.loggerOn = false;
-        switches.pythonControlApp = true;
+        switches.pythonControlledPIDBalancer = true;
         switches.cameraApp = true;
         switches.centerBlobApp = true;
         switches.wheelPolaritySwap = false;
