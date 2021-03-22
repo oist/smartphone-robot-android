@@ -78,7 +78,7 @@ public class SocketClient implements Runnable{
                 pythonControlTimer[1] = System.nanoTime();
             }
 
-            writeAndroidData();
+//            writeAndroidData();
 
             if (abcvlibActivity.switches.loggerOn){
                 System.out.println(abcvlibActivity.inputs.stateVariables);

@@ -23,6 +23,7 @@ import androidx.lifecycle.LifecycleOwner;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.nio.ByteBuffer;
@@ -48,7 +49,9 @@ public class MainActivity extends AbcvlibActivity implements LifecycleOwner, Soc
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        initialzer(this);
+        switches.pythonControlledPIDBalancer = true;
+        initialzer(this, "192.168.28.233", 3000, null, this);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mPreviewView = findViewById(R.id.preview_view);
@@ -63,7 +66,6 @@ public class MainActivity extends AbcvlibActivity implements LifecycleOwner, Soc
 
         int threadPoolSize = 8;
         analysisExecutor = new ScheduledThreadPoolExecutor(threadPoolSize);
-        this.outputs.socketClient.writeInputsToServer();
     }
 
     private void bindAll(@NonNull ProcessCameraProvider cameraProvider) {
@@ -155,11 +157,26 @@ public class MainActivity extends AbcvlibActivity implements LifecycleOwner, Soc
     }
 
     @Override
-    public void onServerReadSuccess(JSONObject serverMsg) {
+    public void onServerReadSuccess(JSONObject msgFromServer) {
         // Parse Message from Server
         // ..
+        Log.i("server", msgFromServer.toString());
 
         // Send return message
-        // ...
+        sendToServer();
+    }
+
+    private void sendToServer(){
+        JSONObject msgToServer = new JSONObject();
+
+        try{
+            msgToServer.put("Name1", "Value1");
+            msgToServer.put("Name2", "Value2");
+            // Add as many JSON subobjects as you need here.
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        this.outputs.socketClient.writeInputsToServer(msgToServer);
     }
 }

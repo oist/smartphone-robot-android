@@ -20,6 +20,7 @@ import jp.oist.abcvlib.core.learning.ActionSelector;
 import jp.oist.abcvlib.core.learning.RewardGenerator;
 import jp.oist.abcvlib.core.outputs.AbcvlibController;
 import jp.oist.abcvlib.core.outputs.Outputs;
+import jp.oist.abcvlib.core.outputs.SocketListener;
 
 /**
  * AbcvlibActivity is where all of the other classes are initialized into objects. The objects
@@ -117,7 +118,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
         Log.i(TAG, "End of AbcvlibActivity.onResume");
     }
 
-    protected void initialzer(AbcvlibActivity abcvlibActivity, String hostIP, int hostPort, AbcvlibController controller){
+    protected void initialzer(AbcvlibActivity abcvlibActivity, String hostIP, int hostPort, AbcvlibController controller, SocketListener socketListener){
 
         //Todo some logic here to test for boolean combinations that would lead to errors.
         // e.g. balanceApp without pythonControlApp
@@ -126,7 +127,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
 
         inputs = new Inputs(abcvlibActivity);
         Log.i(TAG, "Prior to Creating outputs. IP:" + hostIP + ", Port:" + hostPort);
-        outputs = new Outputs(abcvlibActivity, hostIP, hostPort, controller);
+        outputs = new Outputs(abcvlibActivity, hostIP, hostPort, controller, socketListener);
 
         if (switches.actionSelectorApp){
             if (aD == null){
@@ -148,7 +149,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
      */
     protected void initialzer(AbcvlibActivity abcvlibActivity, String hostIP, int hostPort){
 
-        initialzer(abcvlibActivity, hostIP, hostPort, null);
+        initialzer(abcvlibActivity, hostIP, hostPort, null, null);
 
     }
 
@@ -157,7 +158,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
      */
     protected void initialzer(AbcvlibActivity abcvlibActivity){
 
-        initialzer(abcvlibActivity, null, 0, null);
+        initialzer(abcvlibActivity, null, 0, null, null);
 
     }
 
