@@ -7,12 +7,17 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.outputs.SocketListener;
 
 
-public class MainActivity extends AbcvlibActivity {
+public class MainActivity extends AbcvlibActivity implements SocketListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        // Setup a live preview of camera feed to the display. Remove if unwanted. 
+        setContentView(jp.oist.abcvlib.core.R.layout.camera_x_preview);
+
         switches.pythonControlledPIDBalancer = true;
         switches.cameraXApp = true;
         initialzer(this, "192.168.28.233", 3000, null, this);

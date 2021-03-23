@@ -40,7 +40,7 @@ import jp.oist.abcvlib.core.outputs.SocketListener;
  * @author Christopher Buckley https://github.com/topherbuckley
  *
  */
-public abstract class AbcvlibActivity extends IOIOActivity implements RewardGenerator, SocketListener{
+public abstract class AbcvlibActivity extends IOIOActivity implements RewardGenerator{
 
     // Publically accessible objects that encapsulate a lot other core functionality
     public Inputs inputs;
