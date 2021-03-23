@@ -335,7 +335,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
         }
 
         previewUseCase = new Preview.Builder().build();
-        previewUseCase.setSurfaceProvider(previewView.createSurfaceProvider());
+        previewUseCase.setSurfaceProvider(previewView.getSurfaceProvider());
         cameraProvider.bindToLifecycle(/* lifecycleOwner= */ this, cameraSelector, previewUseCase);
     }
 
