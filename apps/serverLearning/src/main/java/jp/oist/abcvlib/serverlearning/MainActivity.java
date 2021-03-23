@@ -46,7 +46,7 @@ public class MainActivity extends AbcvlibActivity implements SocketListener, Ima
                         .build();
 
         // Link the Analysis to the CustomImageAnalyzer class (same dir as this class)
-        imageAnalysis.setAnalyzer(inputs.camerax.analysisExecutor, new CustomImageAnalyzer());
+        imageAnalysis.setAnalyzer(inputs.camerax.analysisExecutor, new Analyzer());
     }
 
     @Override
