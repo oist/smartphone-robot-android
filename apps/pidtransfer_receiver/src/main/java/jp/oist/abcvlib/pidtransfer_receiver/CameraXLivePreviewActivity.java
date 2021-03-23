@@ -490,7 +490,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
         }
     }
 
-    private boolean allPermissionsGranted() {
+    public boolean allPermissionsGranted() {
         for (String permission : getRequiredPermissions()) {
             if (!isPermissionGranted(this, permission)) {
                 return false;

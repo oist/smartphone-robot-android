@@ -115,7 +115,7 @@ public class MainActivity extends AbcvlibActivity{
         return false;
     }
 
-    private boolean allPermissionsGranted() {
+    public boolean allPermissionsGranted() {
         for (String permission : getRequiredPermissions()) {
             if (!isPermissionGranted(this, permission)) {
                 return false;
@@ -154,11 +154,11 @@ public class MainActivity extends AbcvlibActivity{
                         .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
                         .build();
 
-                PreviewView previewView = findViewById(R.id.previewView);
+                PreviewView previewView = findViewById(R.id.camera_x_preview);
 
                 // Connect the preview use case to the previewView
                 preview.setSurfaceProvider(
-                        previewView.createSurfaceProvider());
+                        previewView.getSurfaceProvider());
 
                 // Set up the capture use case to allow users to take photos
                 ImageCapture imageCapture = new ImageCapture.Builder()

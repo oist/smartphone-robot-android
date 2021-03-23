@@ -9,7 +9,14 @@ import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
+
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
@@ -33,7 +40,7 @@ import jp.oist.abcvlib.core.outputs.SocketListener;
  * @author Christopher Buckley https://github.com/topherbuckley
  *
  */
-public abstract class AbcvlibActivity extends IOIOActivity implements RewardGenerator {
+public abstract class AbcvlibActivity extends IOIOActivity implements RewardGenerator, SocketListener{
 
     // Publically accessible objects that encapsulate a lot other core functionality
     public Inputs inputs;
@@ -53,6 +60,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     protected static final String TAG = "abcvlib";
 
     public int avgCount = 1000;
+    private static String[] REQUIRED_PERMISSIONS = new String[0];
 
     protected void onCreate(Bundle savedInstanceState) {
         if(!appRunning){
@@ -162,14 +170,47 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
 
     }
 
+    public void setRequiredPermissions(String[] permissions){
+        for (String permission : permissions){
+            REQUIRED_PERMISSIONS = Arrays.copyOf(REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS.length + 1);
+            REQUIRED_PERMISSIONS[REQUIRED_PERMISSIONS.length - 1] = permission;
+        }
+    }
+
+    /**
+     * Process result from permission request dialog box, has the request
+     * been granted? If yes, start Camera. Otherwise display a toast
+     */
     @Override
-    @TargetApi(Build.VERSION_CODES.M)
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        // super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 10) {
+            if (allPermissionsGranted()) {
+                inputs.camerax.startCamera();
+            } else {
+                Toast.makeText(this,
+                        "Permissions not granted by the user.",
+                        Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        }
         if (requestCode == Vision.CAMERA_PERMISSION_REQUEST_CODE && grantResults.length > 0
                 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             inputs.vision.onCameraPermissionGranted();
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    /**
+     * Check if all permission specified in the manifest have been granted
+     */
+    public boolean allPermissionsGranted() {
+        for (String permission : REQUIRED_PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(getBaseContext(), permission) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

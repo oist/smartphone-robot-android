@@ -5,14 +5,11 @@ import org.json.JSONObject;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.core.Mat;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.audio.MicrophoneInput;
+import jp.oist.abcvlib.core.inputs.vision.CameraX;
 import jp.oist.abcvlib.core.inputs.vision.Vision;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 
@@ -23,6 +20,7 @@ public class Inputs implements CameraBridgeViewBase.CvCameraViewListener2 {
     public QuadEncoders quadEncoders; // Doesnt need thread since AbcvlibLooper is handling this already
     public JSONObject stateVariables;
     public MicrophoneInput micInput;
+    public CameraX camerax;
     public Battery battery;
     private final ProcessPriorityThreadFactory processPriorityThreadFactory = new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY, "Inputs");
     private ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(1, processPriorityThreadFactory);
@@ -39,6 +37,10 @@ public class Inputs implements CameraBridgeViewBase.CvCameraViewListener2 {
 
         if (abcvlibActivity.switches.cameraApp) {
             vision = new Vision(abcvlibActivity, 400, 240);
+        }
+
+        if (abcvlibActivity.switches.cameraXApp){
+            camerax = new CameraX(abcvlibActivity);
         }
 
         if (abcvlibActivity.switches.micApp){

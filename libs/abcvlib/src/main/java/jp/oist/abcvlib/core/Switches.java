@@ -44,6 +44,10 @@ public class Switches {
      */
     public boolean cameraApp = false;
     /**
+     * Enables the use of camera inputs via cameraX.
+     */
+    public boolean cameraXApp = false;
+    /**
      * Determines center of color blob and moves wheels in order to keep blob centered on screen
      */
     public boolean centerBlobApp = false;
