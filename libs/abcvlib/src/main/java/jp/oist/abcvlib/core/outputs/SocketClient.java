@@ -69,7 +69,7 @@ public class SocketClient implements Runnable{
                 pythonControlTimer[0] = System.nanoTime();
             }
 
-            readControlData();
+            getControlsFromServer();
 
             if (abcvlibActivity.switches.loggerOn){
                 System.out.println(abcvlibActivity.outputs.controls);
