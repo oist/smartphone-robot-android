@@ -10,6 +10,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.audio.MicrophoneInput;
 import jp.oist.abcvlib.core.inputs.vision.CameraX;
+import jp.oist.abcvlib.core.inputs.vision.ImageAnalyzerActivity;
 import jp.oist.abcvlib.core.inputs.vision.Vision;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 
@@ -25,7 +26,7 @@ public class Inputs implements CameraBridgeViewBase.CvCameraViewListener2 {
     private final ProcessPriorityThreadFactory processPriorityThreadFactory = new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY, "Inputs");
     private ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(1, processPriorityThreadFactory);
 
-    public Inputs(AbcvlibActivity abcvlibActivity){
+    public Inputs(AbcvlibActivity abcvlibActivity, ImageAnalyzerActivity imageAnalyzerActivity){
 
         if (abcvlibActivity.switches.motionSensorApp){
             motionSensors = new MotionSensors(abcvlibActivity);
@@ -40,7 +41,7 @@ public class Inputs implements CameraBridgeViewBase.CvCameraViewListener2 {
         }
 
         if (abcvlibActivity.switches.cameraXApp){
-            camerax = new CameraX(abcvlibActivity);
+            camerax = new CameraX(abcvlibActivity, imageAnalyzerActivity);
         }
 
         if (abcvlibActivity.switches.micApp){

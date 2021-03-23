@@ -35,13 +35,37 @@ public class CameraX {
 
     private ListenableFuture<ProcessCameraProvider> mCameraProviderFuture;
 
-    private ExecutorService analysisExecutor;
+    public ExecutorService analysisExecutor;
     private AbcvlibActivity abcvlibActivity;
+    private ImageAnalyzerActivity imageAnalyzerActivity;
 
     private PreviewView mPreviewView;
 
-    public CameraX(AbcvlibActivity abcvlibActivity){
+    public CameraSelector cameraSelector;
+    public Preview preview;
+    public Camera camera;
+    public ProcessCameraProvider cameraProvider;
 
+    public CameraX(AbcvlibActivity abcvlibActivity, ImageAnalyzerActivity imageAnalyzerActivity){
+
+        this.abcvlibActivity = abcvlibActivity;
+        this.imageAnalyzerActivity = imageAnalyzerActivity;
+
+        mPreviewView = abcvlibActivity.findViewById(R.id.camera_x_preview);
+
+        // Request camera permissions
+        if (abcvlibActivity.allPermissionsGranted()) {
+            startCamera();
+        } else {
+            ActivityCompat.requestPermissions(
+                    abcvlibActivity, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
+        }
+
+        int threadPoolSize = 8;
+        analysisExecutor = new ScheduledThreadPoolExecutor(threadPoolSize);
+    }
+
+    public CameraX(AbcvlibActivity abcvlibActivity){
         this.abcvlibActivity = abcvlibActivity;
 
         mPreviewView = abcvlibActivity.findViewById(R.id.camera_x_preview);
@@ -58,55 +82,13 @@ public class CameraX {
         analysisExecutor = new ScheduledThreadPoolExecutor(threadPoolSize);
     }
 
-    private void bindAll(@NonNull ProcessCameraProvider cameraProvider) {
-        Preview preview = new Preview.Builder().build();
-        CameraSelector cameraSelector = new CameraSelector.Builder()
-                .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
-                .build();
-
-        ImageAnalysis imageAnalysis =
-                new ImageAnalysis.Builder()
-                        .setTargetResolution(new Size(10, 10))
-                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        .build();
-
-        imageAnalysis.setAnalyzer(analysisExecutor, new ImageAnalysis.Analyzer() {
-            @Override
-            @androidx.camera.core.ExperimentalGetImage
-            public void analyze(@NonNull ImageProxy imageProxy) {
-                Image image = imageProxy.getImage();
-                if (image != null) {
-                    int width = image.getWidth();
-                    int height = image.getHeight();
-                    byte[] frame = new byte[width * height];
-                    Image.Plane[] planes = image.getPlanes();
-                    int idx = 0;
-                    for (Image.Plane plane : planes){
-                        ByteBuffer frameBuffer = plane.getBuffer();
-                        int n = frameBuffer.limit();
-                        Log.i("analyzer", "Plane: " + idx + " width: " + width + " height: " + height + " WxH: " + width*height + " limit: " + n);
-//                        frameBuffer.flip();
-                        frame = new byte[n];
-                        frameBuffer.get(frame);
-                        frameBuffer.clear();
-                        idx++;
-                    }
-                }
-                imageProxy.close();
-            }
-        });
-
-        Camera camera = cameraProvider.bindToLifecycle(abcvlibActivity, cameraSelector, preview, imageAnalysis);
-        preview.setSurfaceProvider(mPreviewView.getSurfaceProvider());
-    }
-
     public void startCamera() {
         if (mPreviewView != null){
             mPreviewView.post(() -> {
                 mCameraProviderFuture = ProcessCameraProvider.getInstance(abcvlibActivity);
                 mCameraProviderFuture.addListener(() -> {
                     try {
-                        ProcessCameraProvider cameraProvider = mCameraProviderFuture.get();
+                        cameraProvider = mCameraProviderFuture.get();
                         bindAll(cameraProvider);
                     } catch (ExecutionException | InterruptedException e) {
                         // No errors need to be handled for this Future.
@@ -117,8 +99,18 @@ public class CameraX {
         }
     }
 
+    private void bindAll(@NonNull ProcessCameraProvider cameraProvider) {
+        preview = new Preview.Builder().build();
+        cameraSelector = new CameraSelector.Builder()
+                .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
+                .build();
 
-
-
-
+        if (imageAnalyzerActivity != null){
+            ImageAnalysis imageAnalysis =  imageAnalyzerActivity.getAnalyzer();
+            camera = cameraProvider.bindToLifecycle(abcvlibActivity, cameraSelector, preview, imageAnalysis);
+        }else{
+            camera = cameraProvider.bindToLifecycle(abcvlibActivity, cameraSelector, preview);
+        }
+        preview.setSurfaceProvider(mPreviewView.getSurfaceProvider());
+    }
 }

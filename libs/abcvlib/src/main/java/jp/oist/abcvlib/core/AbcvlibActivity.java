@@ -21,6 +21,7 @@ import java.util.List;
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
 import jp.oist.abcvlib.core.inputs.Inputs;
+import jp.oist.abcvlib.core.inputs.vision.ImageAnalyzerActivity;
 import jp.oist.abcvlib.core.inputs.vision.Vision;
 import jp.oist.abcvlib.core.learning.ActionDistribution;
 import jp.oist.abcvlib.core.learning.ActionSelector;
@@ -126,14 +127,16 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
         Log.i(TAG, "End of AbcvlibActivity.onResume");
     }
 
-    protected void initialzer(AbcvlibActivity abcvlibActivity, String hostIP, int hostPort, AbcvlibController controller, SocketListener socketListener){
+    protected void initialzer(AbcvlibActivity abcvlibActivity, String hostIP, int hostPort,
+                              AbcvlibController controller, SocketListener socketListener,
+                              ImageAnalyzerActivity imageAnalyzerActivity){
 
         //Todo some logic here to test for boolean combinations that would lead to errors.
         // e.g. balanceApp without pythonControlApp
 
         Log.i(TAG, "Start of AbcvlibActivity.initializer");
 
-        inputs = new Inputs(abcvlibActivity);
+        inputs = new Inputs(abcvlibActivity, imageAnalyzerActivity);
         Log.i(TAG, "Prior to Creating outputs. IP:" + hostIP + ", Port:" + hostPort);
         outputs = new Outputs(abcvlibActivity, hostIP, hostPort, controller, socketListener);
 
@@ -157,7 +160,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
      */
     protected void initialzer(AbcvlibActivity abcvlibActivity, String hostIP, int hostPort){
 
-        initialzer(abcvlibActivity, hostIP, hostPort, null, null);
+        initialzer(abcvlibActivity, hostIP, hostPort, null, null, null);
 
     }
 
@@ -166,7 +169,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
      */
     protected void initialzer(AbcvlibActivity abcvlibActivity){
 
-        initialzer(abcvlibActivity, null, 0, null, null);
+        initialzer(abcvlibActivity, null, 0, null, null, null);
 
     }
 
