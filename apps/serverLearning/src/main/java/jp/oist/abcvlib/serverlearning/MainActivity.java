@@ -20,33 +20,24 @@ import jp.oist.abcvlib.core.inputs.vision.ImageAnalyzerActivity;
 import jp.oist.abcvlib.core.outputs.SocketListener;
 
 
-public class MainActivity extends AbcvlibActivity implements SocketListener, ImageAnalyzerActivity {
+public class MainActivity extends AbcvlibActivity implements SocketListener {
 
-    public ImageAnalysis imageAnalysis;
+    private DataGatherer dataGatherer;
+    private MsgToServer msgToServer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         // Setup a live preview of camera feed to the display. Remove if unwanted. 
         setContentView(jp.oist.abcvlib.core.R.layout.camera_x_preview);
 
         switches.pythonControlledPIDBalancer = true;
         switches.cameraXApp = true;
-        initialzer(this, "192.168.28.233", 3000, null, this, this);
+
+        msgToServer = new MsgToServer();
+        dataGatherer = new DataGatherer(this, msgToServer);
+
+        initialzer(this, "192.168.28.233", 3000, null, this, dataGatherer);
         super.onCreate(savedInstanceState);
-
-        /*
-         * Setup CameraX ImageAnalysis Use Case
-         * ref: https://developer.android.com/reference/androidx/camera/core/ImageAnalysis.Builder
-          */
-        imageAnalysis =
-                new ImageAnalysis.Builder()
-                        .setTargetResolution(new Size(10, 10))
-                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        .build();
-
-        // Link the Analysis to the CustomImageAnalyzer class (same dir as this class)
-        imageAnalysis.setAnalyzer(inputs.camerax.analysisExecutor, new Analyzer());
     }
 
     @Override
@@ -74,11 +65,5 @@ public class MainActivity extends AbcvlibActivity implements SocketListener, Ima
         }
 
         this.outputs.socketClient.writeInputsToServer(msgToServer);
-    }
-
-    // Passes custom ImageAnalysis object to core CameraX lib to bind to lifecycle, and other admin functions
-    @Override
-    public ImageAnalysis getAnalyzer() {
-        return imageAnalysis;
     }
 }
