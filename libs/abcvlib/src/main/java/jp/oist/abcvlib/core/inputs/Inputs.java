@@ -46,7 +46,6 @@ public class Inputs implements CameraBridgeViewBase.CvCameraViewListener2 {
 
         if (abcvlibActivity.switches.micApp){
             micInput = new MicrophoneInput(abcvlibActivity);
-            micInput.start();
         }
 
         battery = new Battery();

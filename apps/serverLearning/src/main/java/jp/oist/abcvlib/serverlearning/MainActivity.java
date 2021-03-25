@@ -16,11 +16,12 @@ import org.json.JSONObject;
 import java.nio.ByteBuffer;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.AbcvlibApp;
 import jp.oist.abcvlib.core.inputs.vision.ImageAnalyzerActivity;
 import jp.oist.abcvlib.core.outputs.SocketListener;
 
 
-public class MainActivity extends AbcvlibActivity implements SocketListener {
+public class MainActivity extends AbcvlibActivity implements SocketListener, AbcvlibApp {
 
     private DataGatherer dataGatherer;
     private MsgToServer msgToServer;
@@ -38,6 +39,8 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
 
         initialzer(this, "192.168.28.233", 3000, null, this, dataGatherer);
         super.onCreate(savedInstanceState);
+
+        dataGatherer.start();
     }
 
     @Override
@@ -65,5 +68,10 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
         }
 
         this.outputs.socketClient.writeInputsToServer(msgToServer);
+    }
+
+    @Override
+    public void initFinished() {
+
     }
 }

@@ -1,10 +1,14 @@
 package jp.oist.abcvlib.core.inputs.audio;
 
+import android.Manifest;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.util.Log;
+
+import androidx.core.app.ActivityCompat;
 
 import java.util.ArrayList;
 
@@ -37,74 +41,64 @@ public class MicrophoneInput implements Runnable{
 
     //todo add some Leq values for longer term averages
     private int mTotalSamples = 0;
+    int mAudioSource;
+    int mChannelConfig;
+    int mAudioFormat;
+    int buffer1000msSize;
+    public short[] buffer;
+    public AudioRecord recorder;
 
     public MicrophoneInput(AbcvlibActivity abcvlibActivity){
         this.abcvlibActivity = abcvlibActivity;
-    }
 
-    public void start() {
-        mThread = new Thread(this);
-        mThread.start();
-    }
+        checkRecordPermission();
 
-    public void stop() {
-        try {
-            mThread.join(10);
-        } catch (InterruptedException e) {
-            Log.v(TAG, "InterruptedException.", e);
-        }
-    }
-
-    @Override
-    public void run() {
         startTime = System.nanoTime();
         // Buffer for 20 milliseconds of data, e.g. 320 samples at 16kHz.
         Log.i("abcvlib", "In MicInput run method");
-        short[] buffer = new short[(int) bufferSampleCount];
+        buffer = new short[(int) bufferSampleCount];
         // Buffer size of AudioRecord buffer, which will be at least 1 second.
-        int mChannelConfig = AudioFormat.CHANNEL_IN_MONO;
-        int mAudioFormat = AudioFormat.ENCODING_PCM_16BIT;
-        int buffer1000msSize = bufferSize(mSampleRate, mChannelConfig,
+        mChannelConfig = AudioFormat.CHANNEL_IN_MONO;
+        mAudioFormat = AudioFormat.ENCODING_PCM_16BIT;
+        buffer1000msSize = bufferSize(mSampleRate, mChannelConfig,
                 mAudioFormat);
 
         SharedPreferences preferences = abcvlibActivity.getSharedPreferences("LevelMeter", MODE_PRIVATE);
         int mSampleRate = preferences.getInt("SampleRate", 16000);
-        int mAudioSource = preferences.getInt("AudioSource",
+        mAudioSource = preferences.getInt("AudioSource",
                 MediaRecorder.AudioSource.VOICE_RECOGNITION);
         setSampleRate(mSampleRate);
         setAudioSource(mAudioSource);
 
+        recorder = new AudioRecord(
+                mAudioSource,
+                mSampleRate,
+                mChannelConfig,
+                mAudioFormat,
+                buffer1000msSize);
+        recorder.startRecording();
+    }
+
+    @Override
+    public void run() {
+
         try {
-            Log.i("abcvlib", "In MicInput try");
-
-            AudioRecord recorder = new AudioRecord(
-                    mAudioSource,
-                    mSampleRate,
-                    mChannelConfig,
-                    mAudioFormat,
-                    buffer1000msSize);
-            recorder.startRecording();
-
-            while (!abcvlibActivity.appRunning){
-                try {
-                    Log.i("abcvlib", this.toString() + "Waiting for appRunning to be true");
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            while (abcvlibActivity.appRunning) {
-                int numSamples = recorder.read(buffer, 0, buffer.length);
-                mTotalSamples += numSamples;
-                processAudioFrame(buffer);
-            }
-
-            recorder.stop();
-            stop();
+            int numSamples = recorder.read(buffer, 0, buffer.length);
+            mTotalSamples += numSamples;
+            processAudioFrame(buffer);
         } catch(Throwable x) {
             Log.v(TAG, "Error reading audio", x);
         } finally {
+        }
+    }
+
+    private void checkRecordPermission() {
+
+        if (ActivityCompat.checkSelfPermission(abcvlibActivity, Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(abcvlibActivity, new String[]{Manifest.permission.RECORD_AUDIO},
+                    123);
         }
     }
 
@@ -140,7 +134,6 @@ public class MicrophoneInput implements Runnable{
         double mAlpha = 0.9;
         mRmsSmoothed = (mRmsSmoothed * mAlpha) + (1 - mAlpha) * rms;
         rmsdB = 20 + (20.0 * Math.log10(mGain * mRmsSmoothed));
-
 
     }
 

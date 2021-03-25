@@ -150,6 +150,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
 
         // Tell all child classes it is ok to proceed.
         this.appRunning = true;
+
         Log.i(TAG, "End of AbcvlibActivity.initializer");
     }
 
