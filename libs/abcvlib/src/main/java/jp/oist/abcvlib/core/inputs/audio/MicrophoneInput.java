@@ -5,9 +5,12 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
+import android.media.AudioTimestamp;
 import android.media.MediaRecorder;
+import android.os.Build;
 import android.util.Log;
 
+import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 
 import java.util.ArrayList;
@@ -36,24 +39,24 @@ public class MicrophoneInput implements Runnable{
     // Leq Calcs
     private double leqLength = 5; // seconds
     private double leqArrayLength = (mSampleRate / bufferSampleCount) * leqLength;
-    private long startTime; // nanoseconds
     private double[] leqBuffer = new double[(int) leqArrayLength];
 
     //todo add some Leq values for longer term averages
-    private int mTotalSamples = 0;
+    public int mTotalSamples = 0;
     int mAudioSource;
     int mChannelConfig;
     int mAudioFormat;
     int buffer1000msSize;
     public short[] buffer;
     public AudioRecord recorder;
+    public AudioTimestamp startTime = new AudioTimestamp();
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public MicrophoneInput(AbcvlibActivity abcvlibActivity){
         this.abcvlibActivity = abcvlibActivity;
 
         checkRecordPermission();
 
-        startTime = System.nanoTime();
         // Buffer for 20 milliseconds of data, e.g. 320 samples at 16kHz.
         Log.i("abcvlib", "In MicInput run method");
         buffer = new short[(int) bufferSampleCount];
@@ -77,6 +80,12 @@ public class MicrophoneInput implements Runnable{
                 mAudioFormat,
                 buffer1000msSize);
         recorder.startRecording();
+
+        while (recorder.getTimestamp(startTime, AudioTimestamp.TIMEBASE_MONOTONIC) != 0){
+            Log.i("microphone", "waiting for start timestamp");
+        }
+        Log.i("microphone", "StartFrame:" + startTime.framePosition + " NanoTime: " + startTime.nanoTime);
+
     }
 
     @Override

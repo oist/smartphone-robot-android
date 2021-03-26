@@ -1,5 +1,6 @@
 package jp.oist.abcvlib.serverlearning;
 
+import android.media.AudioTimestamp;
 import android.media.Image;
 import android.os.Build;
 import android.os.Environment;
@@ -65,6 +66,7 @@ public class DataGatherer implements ImageAnalyzerActivity {
         imageAnalysis.setAnalyzer(executor, new ImageDataGatherer());
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     void start(){
         microphoneInput = new MicrophoneInput(abcvlibActivity);
 
@@ -72,45 +74,28 @@ public class DataGatherer implements ImageAnalyzerActivity {
         chargerDataGatherer = executor.scheduleAtFixedRate(new ChargerDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
         batteryDataGatherer = executor.scheduleAtFixedRate(new BatteryDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
         soundDataGatherer = executor.scheduleAtFixedRate(new SoundDataGather(), 0, 100, TimeUnit.MILLISECONDS);
-        logger = executor.schedule(new Logger(), 1000, TimeUnit.MILLISECONDS);
+        logger = executor.schedule(new Logger(), 50000, TimeUnit.MILLISECONDS);
     }
 
     class WheelDataGatherer implements Runnable{
-
         @Override
         public void run() {
-            try {
-                JSONArray wheelCount = new JSONArray();
-                wheelCount.put(abcvlibActivity.inputs.quadEncoders.getWheelCountL());
-                wheelCount.put(abcvlibActivity.inputs.quadEncoders.getWheelCountR());
-                msgToServer.wheelCounts.put(String.valueOf(System.nanoTime()), wheelCount);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            msgToServer.wheelCounts.put(abcvlibActivity.inputs.quadEncoders.getWheelCountL(),
+                    abcvlibActivity.inputs.quadEncoders.getWheelCountR());
         }
     }
 
     class ChargerDataGatherer implements Runnable{
-
         @Override
         public void run() {
-            try {
-                msgToServer.chargerData.put(String.valueOf(System.nanoTime()), abcvlibActivity.inputs.battery.getVoltageCharger());
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            msgToServer.chargerData.put(abcvlibActivity.inputs.battery.getVoltageCharger());
         }
     }
 
     class BatteryDataGatherer implements Runnable{
-
         @Override
         public void run() {
-            try {
-                msgToServer.batteryData.put(String.valueOf(System.nanoTime()), abcvlibActivity.inputs.battery.getVoltageBatt());
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            msgToServer.chargerData.put(abcvlibActivity.inputs.battery.getVoltageBatt());
         }
     }
 
@@ -159,12 +144,16 @@ public class DataGatherer implements ImageAnalyzerActivity {
     class SoundDataGather implements Runnable{
 
         JSONArray audio = new JSONArray();
+        int totalSamples = 0;
+        AudioTimestamp timestamp = new AudioTimestamp();
 
         @RequiresApi(api = Build.VERSION_CODES.N)
         @Override
         public void run() {
-            microphoneInput.recorder.read(microphoneInput.buffer, 0,
+            int numSamples = microphoneInput.recorder.read(microphoneInput.buffer, 0,
                     microphoneInput.buffer.length);
+            totalSamples += numSamples;
+            microphoneInput.recorder.getTimestamp(timestamp, AudioTimestamp.TIMEBASE_MONOTONIC);
             msgToServer.soundData.put(microphoneInput.buffer);
         }
     }
