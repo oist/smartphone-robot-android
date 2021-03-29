@@ -17,7 +17,7 @@ public class MsgToServer extends JSONObject{
     ChargerData chargerData = new ChargerData();
     BatteryData batteryData = new BatteryData();
     JSONObject imageData = new JSONObject();
-    JSONArray soundData = new JSONArray();
+    SoundData soundData = new SoundData();
 
     public MsgToServer(){
 
@@ -69,18 +69,18 @@ public class MsgToServer extends JSONObject{
         long startTime;
         public long endTime;
         int sampleRate;
+        int totalSamples;
         ArrayList<Long> frame = new ArrayList<Long>();
-        ArrayList<Short> level = new ArrayList<Short>();
+        ArrayList<Float> level = new ArrayList<Float>();
 
-        public SoundData(long _startTime, int _sampleRate){
-            startTime = _startTime;
-            sampleRate = _sampleRate;
+        public SoundData(){
         }
 
-        public void put(short _levels){
-            ArrayList<Short> list = new ArrayList<Short>(Arrays.asList(_levels));
-            level.addAll(list);
+        public void add(float[] _levels, int _numSamples){
+            for (float _level : _levels){
+                level.add(_level);
+            }
+            totalSamples += _numSamples;
         }
     }
-
 }

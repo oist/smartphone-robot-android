@@ -1,5 +1,6 @@
 package jp.oist.abcvlib.serverlearning;
 
+import android.media.AudioRecord;
 import android.media.AudioTimestamp;
 import android.media.Image;
 import android.os.Build;
@@ -73,7 +74,6 @@ public class DataGatherer implements ImageAnalyzerActivity {
         wheelDataGatherer = executor.scheduleAtFixedRate(new WheelDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
         chargerDataGatherer = executor.scheduleAtFixedRate(new ChargerDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
         batteryDataGatherer = executor.scheduleAtFixedRate(new BatteryDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
-        soundDataGatherer = executor.scheduleAtFixedRate(new SoundDataGather(), 0, 100, TimeUnit.MILLISECONDS);
         logger = executor.schedule(new Logger(), 50000, TimeUnit.MILLISECONDS);
     }
 
@@ -138,23 +138,6 @@ public class DataGatherer implements ImageAnalyzerActivity {
 
             }
             imageProxy.close();
-        }
-    }
-
-    class SoundDataGather implements Runnable{
-
-        JSONArray audio = new JSONArray();
-        int totalSamples = 0;
-        AudioTimestamp timestamp = new AudioTimestamp();
-
-        @RequiresApi(api = Build.VERSION_CODES.N)
-        @Override
-        public void run() {
-            int numSamples = microphoneInput.recorder.read(microphoneInput.buffer, 0,
-                    microphoneInput.buffer.length);
-            totalSamples += numSamples;
-            microphoneInput.recorder.getTimestamp(timestamp, AudioTimestamp.TIMEBASE_MONOTONIC);
-            msgToServer.soundData.put(microphoneInput.buffer);
         }
     }
 

@@ -3,6 +3,9 @@ package jp.oist.abcvlib.core;
 import android.annotation.TargetApi;
 
 import android.content.pm.PackageManager;
+import android.media.AudioRecord;
+import android.media.AudioRecord.OnRecordPositionUpdateListener;
+import android.media.AudioTimestamp;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -10,6 +13,7 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 
 import org.json.JSONObject;
@@ -17,6 +21,8 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
@@ -41,7 +47,7 @@ import jp.oist.abcvlib.core.outputs.SocketListener;
  * @author Christopher Buckley https://github.com/topherbuckley
  *
  */
-public abstract class AbcvlibActivity extends IOIOActivity implements RewardGenerator{
+public abstract class AbcvlibActivity extends IOIOActivity implements RewardGenerator, OnRecordPositionUpdateListener{
 
     // Publically accessible objects that encapsulate a lot other core functionality
     public Inputs inputs;
@@ -50,6 +56,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     public ActionSelector aS;
     private Thread actionSelectorThread;
     public Switches switches = new Switches();
+    protected ExecutorService audioExecutor = Executors.newSingleThreadExecutor();
 
     /**
      * Lets various loops know its time to wrap things up when false, and prevents other loops from
@@ -244,6 +251,16 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
 
     public double determineReward(){
         return 0;
+    }
+
+    @Override
+    public void onMarkerReached(AudioRecord audioRecord) {
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    @Override
+    public void onPeriodicNotification(AudioRecord audioRecord) {
     }
 
 }

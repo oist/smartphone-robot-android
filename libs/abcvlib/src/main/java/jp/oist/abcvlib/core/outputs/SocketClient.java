@@ -189,8 +189,8 @@ public class SocketClient implements Runnable{
                 abcvlibActivity.inputs.stateVariables.put("reward", abcvlibActivity.aD.getReward());
             }
             if (abcvlibActivity.inputs.micInput != null){
-                abcvlibActivity.inputs.stateVariables.put("rms", abcvlibActivity.inputs.micInput.getRms());
-                abcvlibActivity.inputs.stateVariables.put("rmsdB", abcvlibActivity.inputs.micInput.getRmsdB());
+//                abcvlibActivity.inputs.stateVariables.put("rms", abcvlibActivity.inputs.micInput.getRms());
+//                abcvlibActivity.inputs.stateVariables.put("rmsdB", abcvlibActivity.inputs.micInput.getRmsdB());
             }
 
         } catch (JSONException e) {
@@ -207,7 +207,7 @@ public class SocketClient implements Runnable{
 
         try {
             while (bufferedReader == null){
-                Log.v("abcvlib", "bufferedReader == null");
+//                Log.v("abcvlib", "bufferedReader == null");
                 Thread.sleep(100);
             }
             while (!bufferedReader.ready()){
