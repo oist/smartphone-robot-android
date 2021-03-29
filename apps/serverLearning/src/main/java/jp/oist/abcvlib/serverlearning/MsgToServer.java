@@ -8,7 +8,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class MsgToServer extends JSONObject{
+public class MsgToServer{
 
     WheelCounts wheelCounts = new WheelCounts();
     ChargerData chargerData = new ChargerData();
@@ -21,16 +21,16 @@ public class MsgToServer extends JSONObject{
     }
 
     public void assembleEpisode(){
-        try {
-            this.put("WheelCounts", wheelCounts);
-            this.put("ChargerData", chargerData);
-            this.put("BatteryData", batteryData);
-            this.put("SoundData", soundData);
-            this.put("ImageData", imageData);
-        } catch (JSONException e) {
-            Log.e("datagatherer", "assembling went wrong");
-            e.printStackTrace();
-        }
+//        try {
+//            this.put("WheelCounts", wheelCounts);
+//            this.put("ChargerData", chargerData);
+//            this.put("BatteryData", batteryData);
+//            this.put("SoundData", soundData);
+//            this.put("ImageData", imageData);
+//        } catch (JSONException e) {
+//            Log.e("datagatherer", "assembling went wrong");
+//            e.printStackTrace();
+//        }
     }
 
     static class WheelCounts{

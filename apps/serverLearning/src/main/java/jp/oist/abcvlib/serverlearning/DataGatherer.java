@@ -48,7 +48,7 @@ public class DataGatherer implements ImageAnalyzerActivity {
         this.abcvlibActivity = abcvlibActivity;
         this.msgToServer = msgToServer;
 
-        int threadCount = 2;
+        int threadCount = 4;
         executor = new ScheduledThreadPoolExecutor(threadCount);
 
         /*
@@ -67,9 +67,9 @@ public class DataGatherer implements ImageAnalyzerActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     void start(){
-//        wheelDataGatherer = executor.scheduleAtFixedRate(new WheelDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
-//        chargerDataGatherer = executor.scheduleAtFixedRate(new ChargerDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
-//        batteryDataGatherer = executor.scheduleAtFixedRate(new BatteryDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
+        wheelDataGatherer = executor.scheduleAtFixedRate(new WheelDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
+        chargerDataGatherer = executor.scheduleAtFixedRate(new ChargerDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
+        batteryDataGatherer = executor.scheduleAtFixedRate(new BatteryDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
         logger = executor.schedule(new Logger(), 1000, TimeUnit.MILLISECONDS);
     }
 
@@ -91,7 +91,7 @@ public class DataGatherer implements ImageAnalyzerActivity {
     class BatteryDataGatherer implements Runnable{
         @Override
         public void run() {
-            msgToServer.chargerData.put(abcvlibActivity.inputs.battery.getVoltageBatt());
+            msgToServer.batteryData.put(abcvlibActivity.inputs.battery.getVoltageBatt());
         }
     }
 
@@ -162,10 +162,9 @@ public class DataGatherer implements ImageAnalyzerActivity {
         @Override
         public void run() {
             Log.i("datagatherer", "start of logger run");
-//            wheelDataGatherer.cancel(true);
-//            chargerDataGatherer.cancel(true);
-//            batteryDataGatherer.cancel(true);
-//            soundDataGatherer.cancel(true);
+            wheelDataGatherer.cancel(true);
+            chargerDataGatherer.cancel(true);
+            batteryDataGatherer.cancel(true);
             imageAnalysis.clearAnalyzer();
             microphoneInput.stop();
             msgToServer.soundData.setMetaData(
@@ -195,7 +194,7 @@ public class DataGatherer implements ImageAnalyzerActivity {
                     Log.i("datagatherer", "4");
                     Gson gson = new GsonBuilder().setPrettyPrinting().create();
                     Log.i("datagatherer", "4.1");
-                    String string = gson.toJson(msgToServer, JSONObject.class);
+                    String string = gson.toJson(msgToServer);
                     Log.i("datagatherer", "4.2");
                     output.write(string);
                     Log.i("datagatherer", "5");
