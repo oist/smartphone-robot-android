@@ -19,6 +19,9 @@ public class MicrophoneInput {
     private final AbcvlibActivity abcvlibActivity;
 
     private AudioTimestamp startTime = new AudioTimestamp();
+    private AudioTimestamp endTime = new AudioTimestamp();
+
+    private AudioRecord recorder;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public MicrophoneInput(AbcvlibActivity abcvlibActivity){
@@ -36,7 +39,7 @@ public class MicrophoneInput {
         int bufferSize = 3 * AudioRecord.getMinBufferSize(mSampleRate, mChannelConfig, // needed to be 3 or more times or would internally increase it within Native lib.
                 mAudioFormat);
 
-        AudioRecord recorder = new AudioRecord(
+        recorder = new AudioRecord(
                 mAudioSource,
                 mSampleRate,
                 mChannelConfig,
@@ -52,14 +55,19 @@ public class MicrophoneInput {
 
         recorder.startRecording();
 
-        while (recorder.getTimestamp(startTime, AudioTimestamp.TIMEBASE_MONOTONIC) != 0){
+        while (startTime.nanoTime == 0){
             Log.i("microphone_start", "waiting for start timestamp");
+            recorder.getTimestamp(startTime, AudioTimestamp.TIMEBASE_MONOTONIC);
         }
         Log.i("microphone_start", "StartFrame:" + startTime.framePosition + " NanoTime: " + startTime.nanoTime);
 
     }
     
     public AudioTimestamp getStartTime(){return startTime;}
+
+    public AudioTimestamp getEndTime(){return endTime;}
+
+    public int getSampleRate(){return recorder.getSampleRate();}
 
     private void checkRecordPermission() {
 
@@ -69,6 +77,18 @@ public class MicrophoneInput {
             ActivityCompat.requestPermissions(abcvlibActivity, new String[]{Manifest.permission.RECORD_AUDIO},
                     123);
         }
+    }
+
+    public void stop(){
+        recorder.getTimestamp(endTime, AudioTimestamp.TIMEBASE_MONOTONIC);
+        recorder.stop();
+        recorder.setRecordPositionUpdateListener(null);
+    }
+
+    public void close(){
+        abcvlibActivity.audioExecutor.shutdownNow();
+        recorder.release();
+        recorder = null;
     }
 //
 //    public void processAudioFrame(short[] audioFrame) {

@@ -6,6 +6,7 @@ import android.media.AudioTimestamp;
 import android.media.Image;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.util.Size;
 
@@ -15,12 +16,23 @@ import androidx.appcompat.widget.WithHint;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageProxy;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.AbcvlibApp;
@@ -50,26 +62,13 @@ public class MainActivity extends AbcvlibActivity implements SocketListener, Abc
         initialzer(this, "192.168.28.233", 3000, null, this, dataGatherer);
         super.onCreate(savedInstanceState);
 
-//        dataGatherer.start();
-        microphoneInput = new MicrophoneInput(this);
+        dataGatherer.start();
+
     }
 
     @Override
-    public void onPeriodicNotification(AudioRecord audioRecord) {
-
-        audioExecutor.execute(new Runnable() {
-            @Override
-            public void run() {
-                int writeBufferSizeFrames = audioRecord.getBufferSizeInFrames();
-                int notificationPeriod = audioRecord.getPositionNotificationPeriod(); // Should be half of writeBufferSizeFrames;
-                int readBufferSize = notificationPeriod;
-                float[] audioData = new float[readBufferSize];
-                int numSamples = audioRecord.read(audioData, 0,
-                        readBufferSize, AudioRecord.READ_NON_BLOCKING);
-                msgToServer.soundData.add(audioData, numSamples);
-                Log.i("microphone", String.valueOf(numSamples + " / " + writeBufferSizeFrames));
-            }
-        });
+    protected void newAudioData(float[] audioData, int numSamples){
+        msgToServer.soundData.add(audioData, numSamples);
     }
 
     @Override
@@ -103,4 +102,5 @@ public class MainActivity extends AbcvlibActivity implements SocketListener, Abc
     public void initFinished() {
 
     }
+
 }

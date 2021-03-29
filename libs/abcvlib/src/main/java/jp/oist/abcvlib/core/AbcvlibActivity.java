@@ -56,7 +56,8 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     public ActionSelector aS;
     private Thread actionSelectorThread;
     public Switches switches = new Switches();
-    protected ExecutorService audioExecutor = Executors.newSingleThreadExecutor();
+    public ExecutorService audioExecutor = Executors.newSingleThreadExecutor();
+    private AbcvlibActivity mainActivity;
 
     /**
      * Lets various loops know its time to wrap things up when false, and prevents other loops from
@@ -100,7 +101,6 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
         Toast.makeText(this, "In onStop", Toast.LENGTH_LONG).show();
         Log.i(TAG, "onStop Log");
         Log.i(TAG, "End of AbcvlibActivity.onStop");
-
     }
 
     @Override
@@ -141,6 +141,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
         //Todo some logic here to test for boolean combinations that would lead to errors.
         // e.g. balanceApp without pythonControlApp
 
+        mainActivity = abcvlibActivity;
         Log.i(TAG, "Start of AbcvlibActivity.initializer");
 
         inputs = new Inputs(abcvlibActivity, imageAnalyzerActivity);
@@ -258,9 +259,43 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
 
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
+    /**
+     * This method fires 2 times during each loop of the audio record buffer.
+     * audioRecord.read(audioData) writes the buffer values (stored in the audioRecord) to a local
+     * float array called audioData. It is set to read in non_blocking mode
+     * (https://developer.android.com/reference/android/media/AudioRecord?hl=ja#READ_NON_BLOCKING)
+     * You can verify it is not blocking by checking the log for "Missed some audio samples"
+     * You can verify if the buffer writer is overflowing by checking the log for:
+     * "W/AudioFlinger: RecordThread: buffer overflow"
+     * @param audioRecord
+     */
     @Override
     public void onPeriodicNotification(AudioRecord audioRecord) {
+
+        audioExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                int writeBufferSizeFrames = audioRecord.getBufferSizeInFrames();
+                int readBufferSize = audioRecord.getPositionNotificationPeriod();
+                float[] audioData = new float[readBufferSize];
+                int numSamples = audioRecord.read(audioData, 0,
+                        readBufferSize, AudioRecord.READ_NON_BLOCKING);
+                if (numSamples < readBufferSize){
+                    Log.w("microphone", "Missed some audio samples");
+                }
+//                Log.v("microphone", numSamples + " / " + writeBufferSizeFrames + " samples read");
+                mainActivity.newAudioData(audioData, numSamples);
+            }
+        });
+    }
+
+    /**
+     * Interface type method used by onPeriodicNotification to send audioData to the main activity
+     * object for custom processing. This allows the buffer size checking and threading to be
+     * abstracted to this AbcvlibAcvitiy.
+     * @param audioData
+     */
+    protected void newAudioData(float[] audioData, int numSamples){
     }
 
 }

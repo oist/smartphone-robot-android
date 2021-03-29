@@ -4,7 +4,7 @@ android {
     compileSdkVersion 30
 
     defaultConfig {
-        applicationId "jp.oist.abcvlib.camera"
+        applicationId "jp.oist.abcvlib.serverLearning"
         minSdkVersion 24
         targetSdkVersion 30
         versionCode 1

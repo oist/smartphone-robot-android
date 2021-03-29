@@ -65,16 +65,17 @@ public class DataGatherer implements ImageAnalyzerActivity {
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .build();
         imageAnalysis.setAnalyzer(executor, new ImageDataGatherer());
+
+        microphoneInput = new MicrophoneInput(abcvlibActivity);
+
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     void start(){
-        microphoneInput = new MicrophoneInput(abcvlibActivity);
-
-        wheelDataGatherer = executor.scheduleAtFixedRate(new WheelDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
-        chargerDataGatherer = executor.scheduleAtFixedRate(new ChargerDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
-        batteryDataGatherer = executor.scheduleAtFixedRate(new BatteryDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
-        logger = executor.schedule(new Logger(), 50000, TimeUnit.MILLISECONDS);
+//        wheelDataGatherer = executor.scheduleAtFixedRate(new WheelDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
+//        chargerDataGatherer = executor.scheduleAtFixedRate(new ChargerDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
+//        batteryDataGatherer = executor.scheduleAtFixedRate(new BatteryDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
+        logger = executor.schedule(new Logger(), 1000, TimeUnit.MILLISECONDS);
     }
 
     class WheelDataGatherer implements Runnable{
@@ -146,11 +147,16 @@ public class DataGatherer implements ImageAnalyzerActivity {
         @Override
         public void run() {
             Log.i("datagatherer", "start of logger run");
-            wheelDataGatherer.cancel(true);
-            chargerDataGatherer.cancel(true);
-            batteryDataGatherer.cancel(true);
-            soundDataGatherer.cancel(true);
+//            wheelDataGatherer.cancel(true);
+//            chargerDataGatherer.cancel(true);
+//            batteryDataGatherer.cancel(true);
+//            soundDataGatherer.cancel(true);
             imageAnalysis.clearAnalyzer();
+            microphoneInput.stop();
+            msgToServer.soundData.setMetaData(
+                    microphoneInput.getSampleRate(), microphoneInput.getStartTime(),
+                    microphoneInput.getEndTime());
+            microphoneInput.close();
             Log.i("datagatherer", "after logger cancellations");
             Log.i("datagatherer", "logger enter try");
             msgToServer.assembleEpisode();

@@ -1,15 +1,12 @@
 package jp.oist.abcvlib.serverlearning;
 
+import android.media.AudioTimestamp;
 import android.util.Log;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.nio.DoubleBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class MsgToServer extends JSONObject{
 
@@ -66,11 +63,11 @@ public class MsgToServer extends JSONObject{
     }
 
     static class SoundData{
-        long startTime;
-        public long endTime;
-        int sampleRate;
-        int totalSamples;
-        ArrayList<Long> frame = new ArrayList<Long>();
+        AudioTimestamp StartTime;
+        AudioTimestamp EndTime;
+        double TotalTime;
+        int SampleRate;
+        int TotalSamples;
         ArrayList<Float> level = new ArrayList<Float>();
 
         public SoundData(){
@@ -80,7 +77,15 @@ public class MsgToServer extends JSONObject{
             for (float _level : _levels){
                 level.add(_level);
             }
-            totalSamples += _numSamples;
+            TotalSamples += _numSamples;
+        }
+
+        public void setMetaData(int sampleRate, AudioTimestamp startTime, AudioTimestamp endTime){
+            this.StartTime = startTime;
+            this.EndTime = endTime;
+            double totalTime = (endTime.nanoTime - startTime.nanoTime) * 10e-10;
+            this.TotalTime = totalTime;
+            this.SampleRate = sampleRate;
         }
     }
 }
