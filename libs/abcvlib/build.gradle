@@ -13,4 +13,10 @@ dependencies {
     implementation "androidx.camera:camera-view:1.0.0-alpha22"
     // If you want to additionally use the CameraX Extensions library
     implementation "androidx.camera:camera-extensions:1.0.0-alpha22"
+    implementation "androidx.core:core-ktx:+"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+}
+apply plugin: 'kotlin-android'
+repositories {
+    mavenCentral()
 }

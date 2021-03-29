@@ -13,7 +13,7 @@ public class MsgToServer extends JSONObject{
     WheelCounts wheelCounts = new WheelCounts();
     ChargerData chargerData = new ChargerData();
     BatteryData batteryData = new BatteryData();
-    JSONObject imageData = new JSONObject();
+    ImageData imageData = new ImageData();
     SoundData soundData = new SoundData();
 
     public MsgToServer(){
@@ -86,6 +86,41 @@ public class MsgToServer extends JSONObject{
             double totalTime = (endTime.nanoTime - startTime.nanoTime) * 10e-10;
             this.TotalTime = totalTime;
             this.SampleRate = sampleRate;
+        }
+    }
+
+    static class ImageData{
+        ArrayList<SingleImage> images = new ArrayList<SingleImage>();
+
+        public void add(long timestamp, int width, int height, int[][] pixels){
+            SingleImage singleImage = new SingleImage(timestamp, width, height, pixels);
+            images.add(singleImage);
+        }
+
+        static class SingleImage{
+            long timestamp;
+            Pixels pixels;
+            int width;
+            int height;
+
+            public SingleImage(long timestamp, int width, int height, int[][] pixels){
+                this.timestamp = timestamp;
+                this.width = width;
+                this.height = height;
+                this.pixels = new Pixels(pixels);
+            }
+
+            static class Pixels{
+                int[] r;
+                int[] g;
+                int[] b;
+
+                public Pixels(int[][] pixels){
+                    r = pixels[0];
+                    g = pixels[1];
+                    b = pixels[2];
+                }
+            }
         }
     }
 }

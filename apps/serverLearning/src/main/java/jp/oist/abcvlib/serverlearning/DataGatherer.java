@@ -1,13 +1,12 @@
 package jp.oist.abcvlib.serverlearning;
 
-import android.media.AudioRecord;
-import android.media.AudioTimestamp;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.media.Image;
 import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
 import android.util.Size;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -17,8 +16,6 @@ import androidx.camera.core.ImageProxy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedWriter;
@@ -26,7 +23,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.nio.ByteBuffer;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -34,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.audio.MicrophoneInput;
 import jp.oist.abcvlib.core.inputs.vision.ImageAnalyzerActivity;
+import jp.oist.abcvlib.core.inputs.vision.YuvToRgbConverter;
 
 public class DataGatherer implements ImageAnalyzerActivity {
 
@@ -45,14 +42,13 @@ public class DataGatherer implements ImageAnalyzerActivity {
     ScheduledFuture<?> wheelDataGatherer;
     ScheduledFuture<?> chargerDataGatherer;
     ScheduledFuture<?> batteryDataGatherer;
-    ScheduledFuture<?> soundDataGatherer;
     ScheduledFuture<?> logger;
 
     public DataGatherer(AbcvlibActivity abcvlibActivity, MsgToServer msgToServer){
         this.abcvlibActivity = abcvlibActivity;
         this.msgToServer = msgToServer;
 
-        int threadCount = 6;
+        int threadCount = 2;
         executor = new ScheduledThreadPoolExecutor(threadCount);
 
         /*
@@ -67,7 +63,6 @@ public class DataGatherer implements ImageAnalyzerActivity {
         imageAnalysis.setAnalyzer(executor, new ImageDataGatherer());
 
         microphoneInput = new MicrophoneInput(abcvlibActivity);
-
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -102,7 +97,7 @@ public class DataGatherer implements ImageAnalyzerActivity {
 
     class ImageDataGatherer implements ImageAnalysis.Analyzer{
 
-        JSONObject planesJSON = new JSONObject();
+        YuvToRgbConverter yuvToRgbConverter = new YuvToRgbConverter(abcvlibActivity);
 
         @androidx.camera.core.ExperimentalGetImage
         public void analyze(@NonNull ImageProxy imageProxy) {
@@ -110,35 +105,55 @@ public class DataGatherer implements ImageAnalyzerActivity {
             if (image != null) {
                 int width = image.getWidth();
                 int height = image.getHeight();
-                byte[] frame = new byte[width * height];
-                Image.Plane[] planes = image.getPlanes();
-                int idx = 0;
-                for (Image.Plane plane : planes){
-                    ByteBuffer frameBuffer = plane.getBuffer();
-                    int n = frameBuffer.limit();
-//                    Log.i("analyzer", "Plane: " + idx + " width: " + width + " height: " + height + " WxH: " + width*height + " limit: " + n);
-//                        frameBuffer.flip();
-                    frame = new byte[n];
-                    frameBuffer.get(frame);
+                long timestamp = image.getTimestamp();
 
-                    try {
-                        planesJSON.put("Plane" + idx, new JSONArray(frame));
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
+                Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                yuvToRgbConverter.yuvToRgb(image, bitmap);
 
-                    frameBuffer.clear();
-                    idx++;
-                }
+                int[] intFrame = new int[width * height];
+                bitmap.getPixels(intFrame, 0, width, 0, 0, width, height);
 
-                try {
-                    msgToServer.imageData.put(String.valueOf(image.getTimestamp()), planesJSON);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                // convert bitmap to three byte[] with rgb.
+                Bitmap2RGAVectors bitmap2RGAVectors = new Bitmap2RGAVectors(bitmap);
+                int[][] rgbVectors = bitmap2RGAVectors.getRGBVectors();
 
+                msgToServer.imageData.add(timestamp, width, height, rgbVectors);
             }
             imageProxy.close();
+        }
+    }
+
+    static class Bitmap2RGAVectors {
+
+        int[][] rgbVectors;
+
+        public Bitmap2RGAVectors(Bitmap bitmap){
+
+            int width = bitmap.getWidth();
+            int height = bitmap.getHeight();
+            int size = width * height;
+
+            int[] r = new int[size];
+            int[] g = new int[size];
+            int[] b = new int[size];
+
+            for(int x = 1 ; x < width + 1; x++){
+                for(int y = 1; y < height + 1; y++){
+                    int pixel = bitmap.getPixel(x - 1,y - 1);
+                    r[(x*y) - 1] = Color.red(pixel);
+                    g[(x*y) - 1] = Color.green(pixel);
+                    b[(x*y) - 1] = Color.blue(pixel);
+                }
+            }
+            rgbVectors = new int[3][size];
+
+            rgbVectors[0] = r;
+            rgbVectors[1] = g;
+            rgbVectors[2] = b;
+        }
+
+        public int[][] getRGBVectors(){
+            return rgbVectors;
         }
     }
 
