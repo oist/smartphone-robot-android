@@ -16,8 +16,6 @@ import androidx.camera.core.ImageProxy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import org.json.JSONObject;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -114,8 +112,8 @@ public class DataGatherer implements ImageAnalyzerActivity {
                 bitmap.getPixels(intFrame, 0, width, 0, 0, width, height);
 
                 // convert bitmap to three byte[] with rgb.
-                Bitmap2RGAVectors bitmap2RGAVectors = new Bitmap2RGAVectors(bitmap);
-                int[][] rgbVectors = bitmap2RGAVectors.getRGBVectors();
+                Bitmap2RGBVectors bitmap2RGBVectors = new Bitmap2RGBVectors(bitmap);
+                int[][] rgbVectors = bitmap2RGBVectors.getRGBVectors();
 
                 msgToServer.imageData.add(timestamp, width, height, rgbVectors);
             }
@@ -123,11 +121,11 @@ public class DataGatherer implements ImageAnalyzerActivity {
         }
     }
 
-    static class Bitmap2RGAVectors {
+    static class Bitmap2RGBVectors {
 
         int[][] rgbVectors;
 
-        public Bitmap2RGAVectors(Bitmap bitmap){
+        public Bitmap2RGBVectors(Bitmap bitmap){
 
             int width = bitmap.getWidth();
             int height = bitmap.getHeight();
@@ -137,12 +135,12 @@ public class DataGatherer implements ImageAnalyzerActivity {
             int[] g = new int[size];
             int[] b = new int[size];
 
-            for(int x = 1 ; x < width + 1; x++){
-                for(int y = 1; y < height + 1; y++){
-                    int pixel = bitmap.getPixel(x - 1,y - 1);
-                    r[(x*y) - 1] = Color.red(pixel);
-                    g[(x*y) - 1] = Color.green(pixel);
-                    b[(x*y) - 1] = Color.blue(pixel);
+            for(int y = 0; y < height; y++){
+                for(int x = 0 ; x < width ; x++){
+                    int pixel = bitmap.getPixel(x,y);
+                    r[(x + (y * width))] = Color.red(pixel);
+                    g[(x + (y * width))] = Color.green(pixel);
+                    b[(x + (y * width))] = Color.blue(pixel);
                 }
             }
             rgbVectors = new int[3][size];
