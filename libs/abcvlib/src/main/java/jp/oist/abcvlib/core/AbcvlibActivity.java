@@ -159,6 +159,8 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
         // Tell all child classes it is ok to proceed.
         this.appRunning = true;
 
+        abcvlibActivity.onSetupFinished();
+
         Log.i(TAG, "End of AbcvlibActivity.initializer");
     }
 
@@ -179,6 +181,10 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     protected void initialzer(AbcvlibActivity abcvlibActivity){
 
         initialzer(abcvlibActivity, null, 0, null, null, null);
+
+    }
+
+    protected void onSetupFinished(){
 
     }
 

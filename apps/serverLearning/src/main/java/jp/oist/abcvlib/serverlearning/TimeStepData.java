@@ -11,16 +11,20 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class TimeStepData {
 
-    WheelCounts wheelCounts = new WheelCounts();
-    ChargerData chargerData = new ChargerData();
-    BatteryData batteryData = new BatteryData();
-    ImageData imageData = new ImageData();
-    SoundData soundData = new SoundData();
+    WheelCounts wheelCounts;
+    ChargerData chargerData;
+    BatteryData batteryData;
+    ImageData imageData;
+    SoundData soundData;
 
-    private ReentrantLock lock = new ReentrantLock();
+    private final ReentrantLock lock = new ReentrantLock(true);
 
     public TimeStepData(){
-
+        wheelCounts = new WheelCounts();
+        chargerData = new ChargerData();
+        batteryData = new BatteryData();
+        imageData = new ImageData();
+        soundData = new SoundData();
     }
 
     public void lock(){
@@ -33,6 +37,14 @@ public class TimeStepData {
 
     public synchronized boolean isLocked(){
         return lock.isLocked();
+    }
+
+    public void clear(){
+        wheelCounts = new WheelCounts();
+        chargerData = new ChargerData();
+        batteryData = new BatteryData();
+        imageData = new ImageData();
+        soundData = new SoundData();
     }
 
     static class WheelCounts{

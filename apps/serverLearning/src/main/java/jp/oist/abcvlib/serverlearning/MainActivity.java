@@ -8,7 +8,6 @@ import android.os.Environment;
 import android.util.JsonReader;
 import android.util.JsonWriter;
 import android.util.Log;
-import android.util.Size;
 
 import androidx.annotation.NonNull;
 import androidx.camera.core.ImageAnalysis;
@@ -16,19 +15,16 @@ import androidx.camera.core.ImageProxy;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -45,7 +41,6 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
     private TimeStepData timeStepData;
     private MicrophoneInput microphoneInput;
 
-    AbcvlibActivity abcvlibActivity;
     ScheduledThreadPoolExecutor executor;
     ImageAnalysis imageAnalysis;
     ScheduledFuture<?> wheelDataGatherer;
@@ -80,37 +75,52 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
         initialzer(this, "192.168.28.233", 3000, null, this, this);
         super.onCreate(savedInstanceState);
 
-        start();
     }
 
-    void start(){
-//        wheelDataGatherer = executor.scheduleAtFixedRate(new WheelDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
-//        chargerDataGatherer = executor.scheduleAtFixedRate(new ChargerDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
-//        batteryDataGatherer = executor.scheduleAtFixedRate(new BatteryDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
+    @Override
+    protected void onSetupFinished(){
+        wheelDataGatherer = executor.scheduleAtFixedRate(new WheelDataGatherer(), 0, 50, TimeUnit.MILLISECONDS);
+        chargerDataGatherer = executor.scheduleAtFixedRate(new ChargerDataGatherer(), 0, 50, TimeUnit.MILLISECONDS);
+        batteryDataGatherer = executor.scheduleAtFixedRate(new BatteryDataGatherer(), 0, 50, TimeUnit.MILLISECONDS);
         TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler();
-        timeStepDataAssemblerExecutor = executor.scheduleAtFixedRate(timeStepDataAssembler, 1000,100, TimeUnit.MILLISECONDS);
+        timeStepDataAssemblerExecutor = executor.scheduleAtFixedRate(timeStepDataAssembler, 0,100, TimeUnit.MILLISECONDS);
 //        microphoneInput.start();
     }
 
     class WheelDataGatherer implements Runnable{
         @Override
         public void run() {
-            timeStepData.wheelCounts.put(abcvlibActivity.inputs.quadEncoders.getWheelCountL(),
-                    abcvlibActivity.inputs.quadEncoders.getWheelCountR());
+            try {
+//                timeStepData.lock();
+                timeStepData.wheelCounts.put(inputs.quadEncoders.getWheelCountL(),
+                        inputs.quadEncoders.getWheelCountR());
+            }finally {
+//                timeStepData.unlock();
+            }
         }
     }
 
     class ChargerDataGatherer implements Runnable{
         @Override
         public void run() {
-            timeStepData.chargerData.put(abcvlibActivity.inputs.battery.getVoltageCharger());
+            try {
+//                timeStepData.lock();
+                timeStepData.chargerData.put(inputs.battery.getVoltageCharger());
+            }finally {
+//                timeStepData.unlock();
+            }
         }
     }
 
     class BatteryDataGatherer implements Runnable{
         @Override
         public void run() {
-            timeStepData.batteryData.put(abcvlibActivity.inputs.battery.getVoltageBatt());
+            try {
+//                timeStepData.lock();
+                timeStepData.batteryData.put(inputs.battery.getVoltageBatt());
+            }finally {
+//                timeStepData.unlock();
+            }
         }
     }
 
@@ -205,73 +215,70 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
 
             //todo add for loop that takes number of timesteps and finally closes gson object
 
-            while (timeStep <= maxTimeStep) {
-                Log.i("datagatherer", "start of logger run");
+            Log.i("datagatherer", "start of logger run");
 //            wheelDataGatherer.cancel(true);
 //            chargerDataGatherer.cancel(true);
 //            batteryDataGatherer.cancel(true);
 //            imageAnalysis.clearAnalyzer();
-                timeStepData.lock();
+            timeStepData.lock();
 //            microphoneInput.stop();
 //            msgToServer.soundData.setMetaData(
 //                    microphoneInput.getSampleRate(), microphoneInput.getStartTime(),
 //                    microphoneInput.getEndTime());
 //            microphoneInput.close();
 
-                Log.i("datagatherer", "1");
-                if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-                    Log.i("datagatherer", "2");
-                    File file = new File(getExternalFilesDir(null), "test.json");
-                    Log.i("datagatherer", "3");
-                    try {
-                        if (file.exists() && timeStep == 0) {
-                            Log.i("datagatherer", "4");
-                            file.delete();
-                            file.createNewFile();
-                            Log.i("datagatherer", "4.1");
+            Log.i("datagatherer", "1");
+            if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+                Log.i("datagatherer", "2");
+                File file = new File(getExternalFilesDir(null), "test.json");
+                Log.i("datagatherer", "3");
+                try {
+                    if (file.exists() && timeStep == 0) {
+                        Log.i("datagatherer", "4");
+                        file.delete();
+                        file.createNewFile();
+                        Log.i("datagatherer", "4.1");
 //                        gson = new GsonBuilder().create();
-                            Log.i("datagatherer", "4.2");
+                        Log.i("datagatherer", "4.2");
 //                        String string = gson.toJson(msgToServer);
 
 //                        output = new BufferedWriter(new FileWriter(file));
 //                        output.write(string);
 //                        output.close();
-                            fileOutputStream = new FileOutputStream(file, true);
-                            outputStreamWriter = new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8);
-                            writer = new JsonWriter(outputStreamWriter);
-                            writer.beginArray();
+                        fileOutputStream = new FileOutputStream(file, true);
+                        outputStreamWriter = new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8);
+                        writer = new JsonWriter(outputStreamWriter);
+                        writer.beginArray();
 
-                        } else if (file.exists() && file.canRead()) {
-                            Log.i("datagatherer", "5");
-
-                            gson.toJson(timeStepData, outputStreamWriter);
-                            Log.i("datagatherer", "6");
-                            if (timeStep != maxTimeStep){
-                                outputStreamWriter.append(",");
-                            }
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
                     }
+                    if (file.exists() && file.canRead()) {
+                        Log.i("datagatherer", "5");
+
+                        gson.toJson(timeStepData, outputStreamWriter);
+                        Log.i("datagatherer", "6");
+                        if (timeStep != maxTimeStep) {
+                            outputStreamWriter.append(",");
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
+            }
+            if (timeStep == maxTimeStep){
+                try {
+                    writer.endArray();
+                    writer.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                timeStepDataAssemblerExecutor.cancel(true);
+            }
 
-//            timeStepData.unlock();
+            timeStepData.clear();
+            timeStepData.unlock();
 //            microphoneInput.start();
-                timeStepData = new TimeStepData();
-                timeStep++;
-            }
-
-            try {
-                writer.endArray();
-                writer.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            timeStepDataAssemblerExecutor.cancel(true);
-
-
+            timeStep++;
         }
-
     }
 
     void jsonStreamAdd(File file) throws IOException {
