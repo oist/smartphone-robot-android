@@ -52,7 +52,9 @@ public class MicrophoneInput {
         int framePeriod = framePerBuffer / 2; // Read from buffer two times per full buffer.
         recorder.setPositionNotificationPeriod(framePeriod);
         recorder.setRecordPositionUpdateListener(abcvlibActivity);
+    }
 
+    public void start(){
         recorder.startRecording();
 
         while (startTime.nanoTime == 0){

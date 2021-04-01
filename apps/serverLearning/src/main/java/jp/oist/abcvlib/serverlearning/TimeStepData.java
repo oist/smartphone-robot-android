@@ -7,8 +7,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.concurrent.locks.ReentrantLock;
 
-public class MsgToServer{
+public class TimeStepData {
 
     WheelCounts wheelCounts = new WheelCounts();
     ChargerData chargerData = new ChargerData();
@@ -16,21 +17,22 @@ public class MsgToServer{
     ImageData imageData = new ImageData();
     SoundData soundData = new SoundData();
 
-    public MsgToServer(){
+    private ReentrantLock lock = new ReentrantLock();
+
+    public TimeStepData(){
 
     }
 
-    public void assembleEpisode(){
-//        try {
-//            this.put("WheelCounts", wheelCounts);
-//            this.put("ChargerData", chargerData);
-//            this.put("BatteryData", batteryData);
-//            this.put("SoundData", soundData);
-//            this.put("ImageData", imageData);
-//        } catch (JSONException e) {
-//            Log.e("datagatherer", "assembling went wrong");
-//            e.printStackTrace();
-//        }
+    public void lock(){
+        lock.lock();
+    }
+
+    public void unlock(){
+        lock.unlock();
+    }
+
+    public synchronized boolean isLocked(){
+        return lock.isLocked();
     }
 
     static class WheelCounts{

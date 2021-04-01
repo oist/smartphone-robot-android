@@ -107,7 +107,9 @@ public class CameraX {
 
         if (imageAnalyzerActivity != null){
             ImageAnalysis imageAnalysis =  imageAnalyzerActivity.getAnalyzer();
-            camera = cameraProvider.bindToLifecycle(abcvlibActivity, cameraSelector, preview, imageAnalysis);
+            if (imageAnalysis != null){
+                camera = cameraProvider.bindToLifecycle(abcvlibActivity, cameraSelector, preview, imageAnalysis);
+            }
         }else{
             camera = cameraProvider.bindToLifecycle(abcvlibActivity, cameraSelector, preview);
         }
