@@ -38,7 +38,7 @@ import jp.oist.abcvlib.core.outputs.SocketListener;
 
 public class MainActivity extends AbcvlibActivity implements SocketListener {
 
-    private TimeStepData timeStepData;
+    private static TimeStepDataBuffer timeStepDataBuffer;
     private MicrophoneInput microphoneInput;
 
     ScheduledThreadPoolExecutor executor;
@@ -57,12 +57,12 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
         switches.pythonControlledPIDBalancer = true;
         switches.cameraXApp = true;
 
-        timeStepData = new TimeStepData();
+        timeStepDataBuffer = new TimeStepDataBuffer(3);
 
         int threadCount = 4;
         executor = new ScheduledThreadPoolExecutor(threadCount);
 
-//        microphoneInput = new MicrophoneInput(this);
+        microphoneInput = new MicrophoneInput(this);
 
 //        imageAnalysis =
 //                new ImageAnalysis.Builder()
@@ -79,48 +79,32 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
 
     @Override
     protected void onSetupFinished(){
-        wheelDataGatherer = executor.scheduleAtFixedRate(new WheelDataGatherer(), 0, 50, TimeUnit.MILLISECONDS);
-        chargerDataGatherer = executor.scheduleAtFixedRate(new ChargerDataGatherer(), 0, 50, TimeUnit.MILLISECONDS);
-        batteryDataGatherer = executor.scheduleAtFixedRate(new BatteryDataGatherer(), 0, 50, TimeUnit.MILLISECONDS);
-        TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler();
-        timeStepDataAssemblerExecutor = executor.scheduleAtFixedRate(timeStepDataAssembler, 0,100, TimeUnit.MILLISECONDS);
-//        microphoneInput.start();
+        wheelDataGatherer = executor.scheduleAtFixedRate(new WheelDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
+        chargerDataGatherer = executor.scheduleAtFixedRate(new ChargerDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
+        batteryDataGatherer = executor.scheduleAtFixedRate(new BatteryDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
+        timeStepDataAssemblerExecutor = executor.scheduleAtFixedRate(new TimeStepDataAssembler(), 1000,1000, TimeUnit.MILLISECONDS);
+        microphoneInput.start();
     }
 
     class WheelDataGatherer implements Runnable{
         @Override
         public void run() {
-            try {
-//                timeStepData.lock();
-                timeStepData.wheelCounts.put(inputs.quadEncoders.getWheelCountL(),
-                        inputs.quadEncoders.getWheelCountR());
-            }finally {
-//                timeStepData.unlock();
-            }
+            timeStepDataBuffer.writeData.wheelCounts.put(inputs.quadEncoders.getWheelCountL(),
+                    inputs.quadEncoders.getWheelCountR());
         }
     }
 
     class ChargerDataGatherer implements Runnable{
         @Override
         public void run() {
-            try {
-//                timeStepData.lock();
-                timeStepData.chargerData.put(inputs.battery.getVoltageCharger());
-            }finally {
-//                timeStepData.unlock();
-            }
+            timeStepDataBuffer.writeData.chargerData.put(inputs.battery.getVoltageCharger());
         }
     }
 
     class BatteryDataGatherer implements Runnable{
         @Override
         public void run() {
-            try {
-//                timeStepData.lock();
-                timeStepData.batteryData.put(inputs.battery.getVoltageBatt());
-            }finally {
-//                timeStepData.unlock();
-            }
+            timeStepDataBuffer.writeData.batteryData.put(inputs.battery.getVoltageBatt());
         }
     }
 
@@ -146,13 +130,8 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
                 Bitmap2RGBVectors bitmap2RGBVectors = new Bitmap2RGBVectors(bitmap);
                 int[][] rgbVectors = bitmap2RGBVectors.getRGBVectors();
 
-                // Prevents image analysis from blocking TimeStepDataAssembler
-                try{
-                    timeStepData.lock();
-                    timeStepData.imageData.add(timestamp, width, height, rgbVectors);
-                }finally {
-                    timeStepData.unlock();
-                }
+                timeStepDataBuffer.writeData.imageData.add(timestamp, width, height, rgbVectors);
+
             }
             imageProxy.close();
         }
@@ -197,18 +176,11 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
     class TimeStepDataAssembler implements Runnable{
 
         private int timeStep = 0;
-        private OutputStream out;
-        private InputStream in;
         private JsonWriter writer;
-        private JsonReader reader;
         private Gson gson = new GsonBuilder().create();
         private FileOutputStream fileOutputStream;
         private OutputStreamWriter outputStreamWriter;
         private int maxTimeStep = 5;
-
-        public TimeStepDataAssembler(){
-
-        }
 
         @Override
         public void run() {
@@ -216,15 +188,20 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
             //todo add for loop that takes number of timesteps and finally closes gson object
 
             Log.i("datagatherer", "start of logger run");
+
+            timeStepDataBuffer.writeData.soundData.setMetaData(
+                    microphoneInput.getSampleRate(), microphoneInput.getStartTime(),
+                    microphoneInput.getEndTime());
+            microphoneInput.setStartTime();
+
+            timeStepDataBuffer.nextTimeStep();
 //            wheelDataGatherer.cancel(true);
 //            chargerDataGatherer.cancel(true);
 //            batteryDataGatherer.cancel(true);
 //            imageAnalysis.clearAnalyzer();
-            timeStepData.lock();
+//            timeStepData.lock();
 //            microphoneInput.stop();
-//            msgToServer.soundData.setMetaData(
-//                    microphoneInput.getSampleRate(), microphoneInput.getStartTime(),
-//                    microphoneInput.getEndTime());
+
 //            microphoneInput.close();
 
             Log.i("datagatherer", "1");
@@ -254,7 +231,7 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
                     if (file.exists() && file.canRead()) {
                         Log.i("datagatherer", "5");
 
-                        gson.toJson(timeStepData, outputStreamWriter);
+                        gson.toJson(timeStepDataBuffer.readData, outputStreamWriter);
                         Log.i("datagatherer", "6");
                         if (timeStep != maxTimeStep) {
                             outputStreamWriter.append(",");
@@ -274,8 +251,7 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
                 timeStepDataAssemblerExecutor.cancel(true);
             }
 
-            timeStepData.clear();
-            timeStepData.unlock();
+//            timeStepData.unlock();
 //            microphoneInput.start();
             timeStep++;
         }
@@ -295,7 +271,8 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
 
     @Override
     protected void newAudioData(float[] audioData, int numSamples){
-        timeStepData.soundData.add(audioData, numSamples);
+        timeStepDataBuffer.writeData.soundData.add(audioData, numSamples);
+
     }
 
     @Override

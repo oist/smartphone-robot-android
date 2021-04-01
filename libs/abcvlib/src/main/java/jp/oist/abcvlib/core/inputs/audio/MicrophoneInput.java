@@ -67,7 +67,14 @@ public class MicrophoneInput {
     
     public AudioTimestamp getStartTime(){return startTime;}
 
-    public AudioTimestamp getEndTime(){return endTime;}
+    public void setStartTime(){
+        recorder.getTimestamp(startTime, AudioTimestamp.TIMEBASE_MONOTONIC);
+    }
+
+    public AudioTimestamp getEndTime(){
+        recorder.getTimestamp(endTime, AudioTimestamp.TIMEBASE_MONOTONIC);
+        return endTime;
+    }
 
     public int getSampleRate(){return recorder.getSampleRate();}
 
@@ -82,7 +89,6 @@ public class MicrophoneInput {
     }
 
     public void stop(){
-        recorder.getTimestamp(endTime, AudioTimestamp.TIMEBASE_MONOTONIC);
         recorder.stop();
         recorder.setRecordPositionUpdateListener(null);
     }
