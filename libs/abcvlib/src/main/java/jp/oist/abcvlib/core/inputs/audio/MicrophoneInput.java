@@ -69,6 +69,7 @@ public class MicrophoneInput {
 
     public void setStartTime(){
         recorder.getTimestamp(startTime, AudioTimestamp.TIMEBASE_MONOTONIC);
+//        startTime = endTime;
     }
 
     public AudioTimestamp getEndTime(){

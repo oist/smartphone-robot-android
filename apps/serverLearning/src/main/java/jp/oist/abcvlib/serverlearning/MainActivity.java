@@ -2,6 +2,7 @@ package jp.oist.abcvlib.serverlearning;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.media.AudioTimestamp;
 import android.media.Image;
 import android.os.Bundle;
 import android.os.Environment;
@@ -38,7 +39,7 @@ import jp.oist.abcvlib.core.outputs.SocketListener;
 
 public class MainActivity extends AbcvlibActivity implements SocketListener {
 
-    private static TimeStepDataBuffer timeStepDataBuffer;
+    private TimeStepDataBuffer timeStepDataBuffer;
     private MicrophoneInput microphoneInput;
 
     ScheduledThreadPoolExecutor executor;
@@ -189,20 +190,15 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
 
             Log.i("datagatherer", "start of logger run");
 
-            timeStepDataBuffer.writeData.soundData.setMetaData(
-                    microphoneInput.getSampleRate(), microphoneInput.getStartTime(),
-                    microphoneInput.getEndTime());
+            // Don't put these inline, else you will pass by reference rather than value and references will continue to update
+            AudioTimestamp startTime = microphoneInput.getStartTime();
+            AudioTimestamp endTime = microphoneInput.getEndTime();
+            int sampleRate = microphoneInput.getSampleRate();
+            timeStepDataBuffer.writeData.soundData.setMetaData(sampleRate, startTime, endTime);
+
             microphoneInput.setStartTime();
 
             timeStepDataBuffer.nextTimeStep();
-//            wheelDataGatherer.cancel(true);
-//            chargerDataGatherer.cancel(true);
-//            batteryDataGatherer.cancel(true);
-//            imageAnalysis.clearAnalyzer();
-//            timeStepData.lock();
-//            microphoneInput.stop();
-
-//            microphoneInput.close();
 
             Log.i("datagatherer", "1");
             if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
@@ -215,22 +211,13 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
                         file.delete();
                         file.createNewFile();
                         Log.i("datagatherer", "4.1");
-//                        gson = new GsonBuilder().create();
-                        Log.i("datagatherer", "4.2");
-//                        String string = gson.toJson(msgToServer);
-
-//                        output = new BufferedWriter(new FileWriter(file));
-//                        output.write(string);
-//                        output.close();
                         fileOutputStream = new FileOutputStream(file, true);
                         outputStreamWriter = new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8);
                         writer = new JsonWriter(outputStreamWriter);
                         writer.beginArray();
-
                     }
                     if (file.exists() && file.canRead()) {
                         Log.i("datagatherer", "5");
-
                         gson.toJson(timeStepDataBuffer.readData, outputStreamWriter);
                         Log.i("datagatherer", "6");
                         if (timeStep != maxTimeStep) {
@@ -250,10 +237,16 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
                 }
                 timeStepDataAssemblerExecutor.cancel(true);
             }
-
-//            timeStepData.unlock();
-//            microphoneInput.start();
             timeStep++;
+        }
+
+        public void closeall(){
+            wheelDataGatherer.cancel(true);
+            chargerDataGatherer.cancel(true);
+            batteryDataGatherer.cancel(true);
+            imageAnalysis.clearAnalyzer();
+            microphoneInput.stop();
+            microphoneInput.close();
         }
     }
 

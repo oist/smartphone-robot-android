@@ -4,9 +4,11 @@ import android.media.AudioTimestamp;
 import android.util.Log;
 
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.HashMap;
 
 public class TimeStepDataBuffer {
 
@@ -14,8 +16,8 @@ public class TimeStepDataBuffer {
     private int writeIndex;
     private int readIndex;
     private TimeStepData[] buffer;
-    static TimeStepData writeData;
-    static TimeStepData readData;
+    TimeStepData writeData;
+    TimeStepData readData;
 
     public TimeStepDataBuffer(int bufferLength){
         if (bufferLength <= 1){
@@ -55,26 +57,12 @@ public class TimeStepDataBuffer {
         ImageData imageData;
         SoundData soundData;
 
-        private final ReentrantLock lock = new ReentrantLock(true);
-
         public TimeStepData(){
             wheelCounts = new WheelCounts();
             chargerData = new ChargerData();
             batteryData = new BatteryData();
             imageData = new ImageData();
             soundData = new SoundData();
-        }
-
-        public void lock(){
-            lock.lock();
-        }
-
-        public void unlock(){
-            lock.unlock();
-        }
-
-        public synchronized boolean isLocked(){
-            return lock.isLocked();
         }
 
         public void clear(){
@@ -115,8 +103,8 @@ public class TimeStepDataBuffer {
         }
 
         class SoundData{
-            AudioTimestamp StartTime;
-            AudioTimestamp EndTime;
+            HashMap<String, Long> StartTime = new HashMap<String, Long>();
+            HashMap<String, Long> EndTime = new HashMap<String, Long>();
             double TotalTime;
             int SampleRate;
             long TotalSamples;
@@ -133,8 +121,10 @@ public class TimeStepDataBuffer {
             }
 
             public void setMetaData(int sampleRate, AudioTimestamp startTime, AudioTimestamp endTime){
-                this.StartTime = startTime;
-                this.EndTime = endTime;
+                this.StartTime.put("framePosition", startTime.framePosition);
+                this.StartTime.put("nanotime", startTime.nanoTime);
+                this.EndTime.put("framePosition", endTime.framePosition);
+                this.EndTime.put("nanotime", endTime.nanoTime);
                 double totalTime = (endTime.nanoTime - startTime.nanoTime) * 10e-10;
                 this.TotalTime = totalTime;
                 this.SampleRate = sampleRate;
@@ -177,6 +167,5 @@ public class TimeStepDataBuffer {
             }
         }
     }
-
 
 }
