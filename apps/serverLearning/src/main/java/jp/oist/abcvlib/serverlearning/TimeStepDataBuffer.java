@@ -9,8 +9,11 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 
-public class TimeStepDataBuffer {
+public class TimeStepDataBuffer implements Lock {
 
     private int bufferLength;
     private int writeIndex;
@@ -48,6 +51,36 @@ public class TimeStepDataBuffer {
         // Move pointer for reading and writing objects one index forward;
         writeData = buffer[writeIndex];
         readData = buffer[readIndex];
+    }
+
+    @Override
+    public void lock() {
+        this.lock();
+    }
+
+    @Override
+    public void lockInterruptibly() throws InterruptedException {
+
+    }
+
+    @Override
+    public boolean tryLock() {
+        return false;
+    }
+
+    @Override
+    public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
+        return false;
+    }
+
+    @Override
+    public void unlock() {
+        this.unlock();
+    }
+
+    @Override
+    public Condition newCondition() {
+        return null;
     }
 
     class TimeStepData{

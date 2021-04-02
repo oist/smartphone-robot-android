@@ -9,6 +9,7 @@ import android.os.Environment;
 import android.util.JsonReader;
 import android.util.JsonWriter;
 import android.util.Log;
+import android.util.Size;
 
 import androidx.annotation.NonNull;
 import androidx.camera.core.ImageAnalysis;
@@ -27,6 +28,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -43,6 +45,7 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
     private MicrophoneInput microphoneInput;
 
     ScheduledThreadPoolExecutor executor;
+    ScheduledExecutorService imageAnalysisExecutor;
     ImageAnalysis imageAnalysis;
     ScheduledFuture<?> wheelDataGatherer;
     ScheduledFuture<?> chargerDataGatherer;
@@ -60,17 +63,21 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
 
         timeStepDataBuffer = new TimeStepDataBuffer(3);
 
-        int threadCount = 4;
+        int threadCount = 6;
         executor = new ScheduledThreadPoolExecutor(threadCount);
+
+        int threadCount2 = 1;
+        imageAnalysisExecutor = new ScheduledThreadPoolExecutor()
 
         microphoneInput = new MicrophoneInput(this);
 
-//        imageAnalysis =
-//                new ImageAnalysis.Builder()
-//                        .setTargetResolution(new Size(10, 10))
-//                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_BLOCK_PRODUCER)
-//                        .build();
-//        imageAnalysis.setAnalyzer(executor, new ImageDataGatherer());
+        imageAnalysis =
+                new ImageAnalysis.Builder()
+                        .setTargetResolution(new Size(10, 10))
+                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                        .setImageQueueDepth(2)
+                        .build();
+        imageAnalysis.setAnalyzer(imageAnalysisExecutor, new ImageDataGatherer());
 
         //todo I guess the imageAnalyzerActivity Interface is uncessary
         initialzer(this, "192.168.28.233", 3000, null, this, this);
@@ -80,10 +87,10 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
 
     @Override
     protected void onSetupFinished(){
-        wheelDataGatherer = executor.scheduleAtFixedRate(new WheelDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
-        chargerDataGatherer = executor.scheduleAtFixedRate(new ChargerDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
-        batteryDataGatherer = executor.scheduleAtFixedRate(new BatteryDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
-        timeStepDataAssemblerExecutor = executor.scheduleAtFixedRate(new TimeStepDataAssembler(), 1000,1000, TimeUnit.MILLISECONDS);
+        wheelDataGatherer = executor.scheduleAtFixedRate(new WheelDataGatherer(), 0, 10, TimeUnit.MILLISECONDS);
+        chargerDataGatherer = executor.scheduleAtFixedRate(new ChargerDataGatherer(), 0, 10, TimeUnit.MILLISECONDS);
+        batteryDataGatherer = executor.scheduleAtFixedRate(new BatteryDataGatherer(), 0, 10, TimeUnit.MILLISECONDS);
+        timeStepDataAssemblerExecutor = executor.scheduleAtFixedRate(new TimeStepDataAssembler(), 50,50, TimeUnit.MILLISECONDS);
         microphoneInput.start();
     }
 
@@ -181,7 +188,7 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
         private Gson gson = new GsonBuilder().create();
         private FileOutputStream fileOutputStream;
         private OutputStreamWriter outputStreamWriter;
-        private int maxTimeStep = 5;
+        private int maxTimeStep = 20;
 
         @Override
         public void run() {
@@ -232,6 +239,7 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
                 try {
                     writer.endArray();
                     writer.close();
+                    closeall();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
