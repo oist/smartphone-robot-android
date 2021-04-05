@@ -100,7 +100,8 @@ public class CameraX {
     }
 
     private void bindAll(@NonNull ProcessCameraProvider cameraProvider) {
-        preview = new Preview.Builder().build();
+        preview = new Preview.Builder()
+                .build();
         cameraSelector = new CameraSelector.Builder()
                 .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
                 .build();

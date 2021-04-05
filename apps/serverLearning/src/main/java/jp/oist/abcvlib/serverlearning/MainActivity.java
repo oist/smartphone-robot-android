@@ -28,6 +28,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -37,6 +40,9 @@ import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.audio.MicrophoneInput;
 import jp.oist.abcvlib.core.inputs.vision.YuvToRgbConverter;
 import jp.oist.abcvlib.core.outputs.SocketListener;
+import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
+
+import static android.os.Process.THREAD_PRIORITY_DEFAULT;
 
 
 public class MainActivity extends AbcvlibActivity implements SocketListener {
@@ -44,7 +50,8 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
     private TimeStepDataBuffer timeStepDataBuffer;
     private MicrophoneInput microphoneInput;
 
-    ScheduledThreadPoolExecutor executor;
+    ScheduledExecutorService executor;
+    ExecutorService imageExecutor;
     ScheduledExecutorService imageAnalysisExecutor;
     ImageAnalysis imageAnalysis;
     ScheduledFuture<?> wheelDataGatherer;
@@ -63,11 +70,9 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
 
         timeStepDataBuffer = new TimeStepDataBuffer(3);
 
-        int threadCount = 6;
-        executor = new ScheduledThreadPoolExecutor(threadCount);
-
-        int threadCount2 = 1;
-        imageAnalysisExecutor = new ScheduledThreadPoolExecutor()
+        int threads = 2;
+        executor = Executors.newScheduledThreadPool(threads, new ProcessPriorityThreadFactory(1, "dataGatherer"));
+        imageExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(10, "imageAnalysis"));
 
         microphoneInput = new MicrophoneInput(this);
 
@@ -77,7 +82,7 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .setImageQueueDepth(2)
                         .build();
-        imageAnalysis.setAnalyzer(imageAnalysisExecutor, new ImageDataGatherer());
+        imageAnalysis.setAnalyzer(imageExecutor, new ImageDataGatherer());
 
         //todo I guess the imageAnalyzerActivity Interface is uncessary
         initialzer(this, "192.168.28.233", 3000, null, this, this);
@@ -87,10 +92,10 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
 
     @Override
     protected void onSetupFinished(){
-        wheelDataGatherer = executor.scheduleAtFixedRate(new WheelDataGatherer(), 0, 10, TimeUnit.MILLISECONDS);
-        chargerDataGatherer = executor.scheduleAtFixedRate(new ChargerDataGatherer(), 0, 10, TimeUnit.MILLISECONDS);
-        batteryDataGatherer = executor.scheduleAtFixedRate(new BatteryDataGatherer(), 0, 10, TimeUnit.MILLISECONDS);
-        timeStepDataAssemblerExecutor = executor.scheduleAtFixedRate(new TimeStepDataAssembler(), 50,50, TimeUnit.MILLISECONDS);
+        wheelDataGatherer = executor.scheduleAtFixedRate(new WheelDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
+        chargerDataGatherer = executor.scheduleAtFixedRate(new ChargerDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
+        batteryDataGatherer = executor.scheduleAtFixedRate(new BatteryDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
+        timeStepDataAssemblerExecutor = executor.scheduleAtFixedRate(new TimeStepDataAssembler(), 0,500, TimeUnit.MILLISECONDS);
         microphoneInput.start();
     }
 
@@ -123,7 +128,7 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
         @androidx.camera.core.ExperimentalGetImage
         public void analyze(@NonNull ImageProxy imageProxy) {
             Image image = imageProxy.getImage();
-            if (image != null) {
+            if (image != null && timeStepDataBuffer.writeData.imageData.images.size() < 1) {
                 int width = image.getWidth();
                 int height = image.getHeight();
                 long timestamp = image.getTimestamp();
@@ -138,8 +143,8 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
                 Bitmap2RGBVectors bitmap2RGBVectors = new Bitmap2RGBVectors(bitmap);
                 int[][] rgbVectors = bitmap2RGBVectors.getRGBVectors();
 
+                // todo this is causing a memory leak and crashing.
                 timeStepDataBuffer.writeData.imageData.add(timestamp, width, height, rgbVectors);
-
             }
             imageProxy.close();
         }
@@ -185,10 +190,10 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
 
         private int timeStep = 0;
         private JsonWriter writer;
-        private Gson gson = new GsonBuilder().create();
+//        private Gson gson = new GsonBuilder().create();
         private FileOutputStream fileOutputStream;
         private OutputStreamWriter outputStreamWriter;
-        private int maxTimeStep = 20;
+        private int maxTimeStep = 5;
 
         @Override
         public void run() {
@@ -225,7 +230,10 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
                     }
                     if (file.exists() && file.canRead()) {
                         Log.i("datagatherer", "5");
-                        gson.toJson(timeStepDataBuffer.readData, outputStreamWriter);
+                        TimeStepDataBuffer.TimeStepData data = timeStepDataBuffer.readData;
+                        Gson gson = new Gson();
+                        gson.toJson(data, outputStreamWriter);
+                        gson = null;
                         Log.i("datagatherer", "6");
                         if (timeStep != maxTimeStep) {
                             outputStreamWriter.append(",");
@@ -256,11 +264,6 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
             microphoneInput.stop();
             microphoneInput.close();
         }
-    }
-
-    void jsonStreamAdd(File file) throws IOException {
-
-
     }
 
     // Passes custom ImageAnalysis object to core CameraX lib to bind to lifecycle, and other admin functions

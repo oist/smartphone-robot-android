@@ -12,8 +12,9 @@ import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class TimeStepDataBuffer implements Lock {
+public class TimeStepDataBuffer {
 
     private int bufferLength;
     private int writeIndex;
@@ -53,42 +54,13 @@ public class TimeStepDataBuffer implements Lock {
         readData = buffer[readIndex];
     }
 
-    @Override
-    public void lock() {
-        this.lock();
-    }
-
-    @Override
-    public void lockInterruptibly() throws InterruptedException {
-
-    }
-
-    @Override
-    public boolean tryLock() {
-        return false;
-    }
-
-    @Override
-    public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
-        return false;
-    }
-
-    @Override
-    public void unlock() {
-        this.unlock();
-    }
-
-    @Override
-    public Condition newCondition() {
-        return null;
-    }
-
     class TimeStepData{
         WheelCounts wheelCounts;
         ChargerData chargerData;
         BatteryData batteryData;
         ImageData imageData;
         SoundData soundData;
+        ReentrantReadWriteLock.WriteLock lock;
 
         public TimeStepData(){
             wheelCounts = new WheelCounts();
@@ -97,6 +69,15 @@ public class TimeStepDataBuffer implements Lock {
             imageData = new ImageData();
             soundData = new SoundData();
         }
+
+        public void lock(){
+            lock.lock();
+        }
+
+        public void unlock(){
+            lock.unlock();
+        }
+
 
         public void clear(){
             wheelCounts = new WheelCounts();
