@@ -196,6 +196,9 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
         @Override
         public void run() {
 
+            MyStepHandler myStepHandler = new MyStepHandler(timeStepDataBuffer.writeData);
+            myStepHandler.foward();
+
             //todo add for loop that takes number of timesteps and finally closes gson object
 
             Log.i("datagatherer", "start of logger run");
@@ -210,8 +213,6 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
 
             timeStepDataBuffer.nextTimeStep();
 
-            timeStepDataBuffer.readData.imageData.images.get(0);
-            executor.schedule(new MyStepHandler(timeStepDataBuffer.readData), 0,TimeUnit.MILLISECONDS);
 
             Log.i("datagatherer", "1");
             if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {

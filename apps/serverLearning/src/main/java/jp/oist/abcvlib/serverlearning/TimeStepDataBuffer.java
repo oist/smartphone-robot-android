@@ -3,16 +3,11 @@ package jp.oist.abcvlib.serverlearning;
 import android.media.AudioTimestamp;
 import android.util.Log;
 
-import org.jetbrains.annotations.NotNull;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import jp.oist.abcvlib.core.learning.ActionDistribution;
 
 public class TimeStepDataBuffer {
 
@@ -60,6 +55,7 @@ public class TimeStepDataBuffer {
         BatteryData batteryData;
         ImageData imageData;
         SoundData soundData;
+        RobotAction actions;
         ReentrantReadWriteLock.WriteLock lock;
 
         public TimeStepData(){
@@ -68,6 +64,7 @@ public class TimeStepDataBuffer {
             batteryData = new BatteryData();
             imageData = new ImageData();
             soundData = new SoundData();
+            actions = new RobotAction();
         }
 
         public void lock(){
@@ -85,6 +82,7 @@ public class TimeStepDataBuffer {
             batteryData = new BatteryData();
             imageData = new ImageData();
             soundData = new SoundData();
+            actions = new RobotAction();
         }
 
         class WheelCounts{
@@ -178,6 +176,15 @@ public class TimeStepDataBuffer {
                         b = pixels[2];
                     }
                 }
+            }
+        }
+
+        class RobotAction{
+            private int motionAction;
+            private int commAction;
+            public void add(int motionAction, int commAction){
+                this.motionAction = motionAction;
+                this.commAction = commAction;
             }
         }
     }

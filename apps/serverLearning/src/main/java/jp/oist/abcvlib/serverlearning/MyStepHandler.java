@@ -1,6 +1,6 @@
 package jp.oist.abcvlib.serverlearning;
 
-public class MyStepHandler implements Runnable{
+public class MyStepHandler{
 
     private TimeStepDataBuffer.TimeStepData timeStepData;
 
@@ -8,8 +8,15 @@ public class MyStepHandler implements Runnable{
         this.timeStepData = data;
     }
 
-    @Override
-    public void run() {
+    public void foward(){
 
+        int motionAction = 0;
+        int commAction = 0;
+
+        // Do something with timeStepData...
+
+        // set your action to some ints
+        timeStepData.actions.add(motionAction, commAction);
     }
+
 }
