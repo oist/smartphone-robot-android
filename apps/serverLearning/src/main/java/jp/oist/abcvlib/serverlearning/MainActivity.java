@@ -184,8 +184,6 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
         }
     }
 
-
-
     class TimeStepDataAssembler implements Runnable{
 
         private int timeStep = 0;
@@ -211,6 +209,9 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
             microphoneInput.setStartTime();
 
             timeStepDataBuffer.nextTimeStep();
+
+            timeStepDataBuffer.readData.imageData.images.get(0);
+            executor.schedule(new MyStepHandler(timeStepDataBuffer.readData), 0,TimeUnit.MILLISECONDS);
 
             Log.i("datagatherer", "1");
             if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
