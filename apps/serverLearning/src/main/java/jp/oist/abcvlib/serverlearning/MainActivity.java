@@ -10,6 +10,8 @@ import android.util.JsonReader;
 import android.util.JsonWriter;
 import android.util.Log;
 import android.util.Size;
+import jp.oist.abcvlib.core.learning.flatbuffers.*;
+import com.google.flatbuffers.FlatBufferBuilder;
 
 import androidx.annotation.NonNull;
 import androidx.camera.core.ImageAnalysis;
@@ -43,6 +45,7 @@ import jp.oist.abcvlib.core.outputs.SocketListener;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 
 import static android.os.Process.THREAD_PRIORITY_DEFAULT;
+import static jp.oist.abcvlib.core.learning.flatbuffers.Color.Red;
 
 
 public class MainActivity extends AbcvlibActivity implements SocketListener {
@@ -58,6 +61,9 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
     ScheduledFuture<?> chargerDataGatherer;
     ScheduledFuture<?> batteryDataGatherer;
     ScheduledFuture<?> timeStepDataAssemblerExecutor;
+
+    java.nio.ByteBuffer Fbuf;
+    byte[] byteBuff;
 
 
     @Override
@@ -92,11 +98,69 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
 
     @Override
     protected void onSetupFinished(){
+        testFlatBuffers();
         wheelDataGatherer = executor.scheduleAtFixedRate(new WheelDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
         chargerDataGatherer = executor.scheduleAtFixedRate(new ChargerDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
         batteryDataGatherer = executor.scheduleAtFixedRate(new BatteryDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
         timeStepDataAssemblerExecutor = executor.scheduleAtFixedRate(new TimeStepDataAssembler(), 0,500, TimeUnit.MILLISECONDS);
         microphoneInput.start();
+    }
+
+    private void testFlatBuffers(){
+        FlatBufferBuilder builder = new FlatBufferBuilder(1024);
+        int weaponOneName = builder.createString("Sword");
+        short weaponOneDamage = 3;
+        int weaponTwoName = builder.createString("Axe");
+        short weaponTwoDamage = 5;
+// Use the `createWeapon()` helper function to create the weapons, since we set every field.
+        int sword = Weapon.createWeapon(builder, weaponOneName, weaponOneDamage);
+        int axe = Weapon.createWeapon(builder, weaponTwoName, weaponTwoDamage);
+
+        // Serialize a name for our monster, called "Orc".
+        int name = builder.createString("Orc");
+// Create a `vector` representing the inventory of the Orc. Each number
+// could correspond to an item that can be claimed after he is slain.
+        byte[] treasure = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        int inv = Monster.createInventoryVector(builder, treasure);
+
+        // Place the two weapons into an array, and pass it to the `createWeaponsVector()` method to
+// create a FlatBuffer vector.
+        int[] weaps = new int[2];
+        weaps[0] = sword;
+        weaps[1] = axe;
+// Pass the `weaps` array into the `createWeaponsVector()` method to create a FlatBuffer vector.
+        int weapons = Monster.createWeaponsVector(builder, weaps);
+        Monster.startPathVector(builder, 2);
+        Vec3.createVec3(builder, 1.0f, 2.0f, 3.0f);
+        Vec3.createVec3(builder, 4.0f, 5.0f, 6.0f);
+        int path = builder.endVector();
+
+        // Create our monster using `startMonster()` and `endMonster()`.
+        Monster.startMonster(builder);
+        Monster.addPos(builder, Vec3.createVec3(builder, 1.0f, 2.0f, 3.0f));
+        Monster.addName(builder, name);
+        Monster.addColor(builder, Red);
+        Monster.addHp(builder, (short)300);
+        Monster.addInventory(builder, inv);
+        Monster.addWeapons(builder, weapons);
+        Monster.addEquippedType(builder, Equipment.Weapon);
+        Monster.addEquipped(builder, axe);
+        Monster.addPath(builder, path);
+        int orc = Monster.endMonster(builder);
+
+        Monster.addEquippedType(builder, Equipment.Weapon); // Union type
+        // Call `finish()` to instruct the builder that this monster is complete.
+        builder.finish(orc); // You could also call `Monster.finishMonsterBuffer(builder, orc);`.
+        // This must be called after `finish()`.
+        Fbuf = builder.dataBuffer();
+        // This was causing bufferunderflow errors.
+//        byte[] fbufBytes = new byte[Fbuf.capacity()];
+//        Fbuf.get(fbufBytes);
+// The data in this ByteBuffer does NOT start at 0, but at buf.position().
+// The number of bytes is buf.remaining().
+// Alternatively this copies the above data out of the ByteBuffer for you:
+        byteBuff = builder.sizedByteArray();
+        Log.i("alskdjasd", "I'm a breakpoint!");
     }
 
     class WheelDataGatherer implements Runnable{
@@ -295,16 +359,6 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
      * Assemble message to server and send.
      */
     private void sendToServer(){
-        JSONObject msgToServer = new JSONObject();
-
-        try{
-            msgToServer.put("Name1", "Value1");
-            msgToServer.put("Name2", "Value2");
-            // Add as many JSON subobjects as you need here.
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        this.outputs.socketClient.writeInputsToServer(msgToServer);
+        this.outputs.socketClient.writeFlatBufferToServer(byteBuff);
     }
 }
