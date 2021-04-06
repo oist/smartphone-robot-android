@@ -15,72 +15,26 @@ public final class TimeStep extends Table {
   public void __init(int _i, ByteBuffer _bb) { __reset(_i, _bb); }
   public TimeStep __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
-  public jp.oist.abcvlib.core.learning.flatbuffers.WheelCounts wheelCounts(int j) { return wheelCounts(new jp.oist.abcvlib.core.learning.flatbuffers.WheelCounts(), j); }
-  public jp.oist.abcvlib.core.learning.flatbuffers.WheelCounts wheelCounts(jp.oist.abcvlib.core.learning.flatbuffers.WheelCounts obj, int j) { int o = __offset(4); return o != 0 ? obj.__assign(__indirect(__vector(o) + j * 4), bb) : null; }
-  public int wheelCountsLength() { int o = __offset(4); return o != 0 ? __vector_len(o) : 0; }
-  public jp.oist.abcvlib.core.learning.flatbuffers.WheelCounts.Vector wheelCountsVector() { return wheelCountsVector(new jp.oist.abcvlib.core.learning.flatbuffers.WheelCounts.Vector()); }
-  public jp.oist.abcvlib.core.learning.flatbuffers.WheelCounts.Vector wheelCountsVector(jp.oist.abcvlib.core.learning.flatbuffers.WheelCounts.Vector obj) { int o = __offset(4); return o != 0 ? obj.__assign(__vector(o), 4, bb) : null; }
-  public jp.oist.abcvlib.core.learning.flatbuffers.ChargerData chargerData(int j) { return chargerData(new jp.oist.abcvlib.core.learning.flatbuffers.ChargerData(), j); }
-  public jp.oist.abcvlib.core.learning.flatbuffers.ChargerData chargerData(jp.oist.abcvlib.core.learning.flatbuffers.ChargerData obj, int j) { int o = __offset(6); return o != 0 ? obj.__assign(__indirect(__vector(o) + j * 4), bb) : null; }
-  public int chargerDataLength() { int o = __offset(6); return o != 0 ? __vector_len(o) : 0; }
-  public jp.oist.abcvlib.core.learning.flatbuffers.ChargerData.Vector chargerDataVector() { return chargerDataVector(new jp.oist.abcvlib.core.learning.flatbuffers.ChargerData.Vector()); }
-  public jp.oist.abcvlib.core.learning.flatbuffers.ChargerData.Vector chargerDataVector(jp.oist.abcvlib.core.learning.flatbuffers.ChargerData.Vector obj) { int o = __offset(6); return o != 0 ? obj.__assign(__vector(o), 4, bb) : null; }
-  public jp.oist.abcvlib.core.learning.flatbuffers.BatteryData batteryData(int j) { return batteryData(new jp.oist.abcvlib.core.learning.flatbuffers.BatteryData(), j); }
-  public jp.oist.abcvlib.core.learning.flatbuffers.BatteryData batteryData(jp.oist.abcvlib.core.learning.flatbuffers.BatteryData obj, int j) { int o = __offset(8); return o != 0 ? obj.__assign(__indirect(__vector(o) + j * 4), bb) : null; }
-  public int batteryDataLength() { int o = __offset(8); return o != 0 ? __vector_len(o) : 0; }
-  public jp.oist.abcvlib.core.learning.flatbuffers.BatteryData.Vector batteryDataVector() { return batteryDataVector(new jp.oist.abcvlib.core.learning.flatbuffers.BatteryData.Vector()); }
-  public jp.oist.abcvlib.core.learning.flatbuffers.BatteryData.Vector batteryDataVector(jp.oist.abcvlib.core.learning.flatbuffers.BatteryData.Vector obj) { int o = __offset(8); return o != 0 ? obj.__assign(__vector(o), 4, bb) : null; }
-  public jp.oist.abcvlib.core.learning.flatbuffers.ImageData imageData(int j) { return imageData(new jp.oist.abcvlib.core.learning.flatbuffers.ImageData(), j); }
-  public jp.oist.abcvlib.core.learning.flatbuffers.ImageData imageData(jp.oist.abcvlib.core.learning.flatbuffers.ImageData obj, int j) { int o = __offset(10); return o != 0 ? obj.__assign(__indirect(__vector(o) + j * 4), bb) : null; }
-  public int imageDataLength() { int o = __offset(10); return o != 0 ? __vector_len(o) : 0; }
-  public jp.oist.abcvlib.core.learning.flatbuffers.ImageData.Vector imageDataVector() { return imageDataVector(new jp.oist.abcvlib.core.learning.flatbuffers.ImageData.Vector()); }
-  public jp.oist.abcvlib.core.learning.flatbuffers.ImageData.Vector imageDataVector(jp.oist.abcvlib.core.learning.flatbuffers.ImageData.Vector obj) { int o = __offset(10); return o != 0 ? obj.__assign(__vector(o), 4, bb) : null; }
-  public jp.oist.abcvlib.core.learning.flatbuffers.SoundData soundData(int j) { return soundData(new jp.oist.abcvlib.core.learning.flatbuffers.SoundData(), j); }
-  public jp.oist.abcvlib.core.learning.flatbuffers.SoundData soundData(jp.oist.abcvlib.core.learning.flatbuffers.SoundData obj, int j) { int o = __offset(12); return o != 0 ? obj.__assign(__indirect(__vector(o) + j * 4), bb) : null; }
-  public int soundDataLength() { int o = __offset(12); return o != 0 ? __vector_len(o) : 0; }
-  public jp.oist.abcvlib.core.learning.flatbuffers.SoundData.Vector soundDataVector() { return soundDataVector(new jp.oist.abcvlib.core.learning.flatbuffers.SoundData.Vector()); }
-  public jp.oist.abcvlib.core.learning.flatbuffers.SoundData.Vector soundDataVector(jp.oist.abcvlib.core.learning.flatbuffers.SoundData.Vector obj) { int o = __offset(12); return o != 0 ? obj.__assign(__vector(o), 4, bb) : null; }
-  public jp.oist.abcvlib.core.learning.flatbuffers.RobotAction actions(int j) { return actions(new jp.oist.abcvlib.core.learning.flatbuffers.RobotAction(), j); }
-  public jp.oist.abcvlib.core.learning.flatbuffers.RobotAction actions(jp.oist.abcvlib.core.learning.flatbuffers.RobotAction obj, int j) { int o = __offset(14); return o != 0 ? obj.__assign(__vector(o) + j * 2, bb) : null; }
-  public int actionsLength() { int o = __offset(14); return o != 0 ? __vector_len(o) : 0; }
-  public jp.oist.abcvlib.core.learning.flatbuffers.RobotAction.Vector actionsVector() { return actionsVector(new jp.oist.abcvlib.core.learning.flatbuffers.RobotAction.Vector()); }
-  public jp.oist.abcvlib.core.learning.flatbuffers.RobotAction.Vector actionsVector(jp.oist.abcvlib.core.learning.flatbuffers.RobotAction.Vector obj) { int o = __offset(14); return o != 0 ? obj.__assign(__vector(o), 2, bb) : null; }
-
-  public static int createTimeStep(FlatBufferBuilder builder,
-      int wheel_countsOffset,
-      int charger_dataOffset,
-      int battery_dataOffset,
-      int image_dataOffset,
-      int sound_dataOffset,
-      int actionsOffset) {
-    builder.startTable(6);
-    TimeStep.addActions(builder, actionsOffset);
-    TimeStep.addSoundData(builder, sound_dataOffset);
-    TimeStep.addImageData(builder, image_dataOffset);
-    TimeStep.addBatteryData(builder, battery_dataOffset);
-    TimeStep.addChargerData(builder, charger_dataOffset);
-    TimeStep.addWheelCounts(builder, wheel_countsOffset);
-    return TimeStep.endTimeStep(builder);
-  }
+  public jp.oist.abcvlib.core.learning.flatbuffers.WheelCounts wheelCounts() { return wheelCounts(new jp.oist.abcvlib.core.learning.flatbuffers.WheelCounts()); }
+  public jp.oist.abcvlib.core.learning.flatbuffers.WheelCounts wheelCounts(jp.oist.abcvlib.core.learning.flatbuffers.WheelCounts obj) { int o = __offset(4); return o != 0 ? obj.__assign(__indirect(o + bb_pos), bb) : null; }
+  public jp.oist.abcvlib.core.learning.flatbuffers.ChargerData chargerData() { return chargerData(new jp.oist.abcvlib.core.learning.flatbuffers.ChargerData()); }
+  public jp.oist.abcvlib.core.learning.flatbuffers.ChargerData chargerData(jp.oist.abcvlib.core.learning.flatbuffers.ChargerData obj) { int o = __offset(6); return o != 0 ? obj.__assign(__indirect(o + bb_pos), bb) : null; }
+  public jp.oist.abcvlib.core.learning.flatbuffers.BatteryData batteryData() { return batteryData(new jp.oist.abcvlib.core.learning.flatbuffers.BatteryData()); }
+  public jp.oist.abcvlib.core.learning.flatbuffers.BatteryData batteryData(jp.oist.abcvlib.core.learning.flatbuffers.BatteryData obj) { int o = __offset(8); return o != 0 ? obj.__assign(__indirect(o + bb_pos), bb) : null; }
+  public jp.oist.abcvlib.core.learning.flatbuffers.ImageData imageData() { return imageData(new jp.oist.abcvlib.core.learning.flatbuffers.ImageData()); }
+  public jp.oist.abcvlib.core.learning.flatbuffers.ImageData imageData(jp.oist.abcvlib.core.learning.flatbuffers.ImageData obj) { int o = __offset(10); return o != 0 ? obj.__assign(__indirect(o + bb_pos), bb) : null; }
+  public jp.oist.abcvlib.core.learning.flatbuffers.SoundData soundData() { return soundData(new jp.oist.abcvlib.core.learning.flatbuffers.SoundData()); }
+  public jp.oist.abcvlib.core.learning.flatbuffers.SoundData soundData(jp.oist.abcvlib.core.learning.flatbuffers.SoundData obj) { int o = __offset(12); return o != 0 ? obj.__assign(__indirect(o + bb_pos), bb) : null; }
+  public jp.oist.abcvlib.core.learning.flatbuffers.RobotAction actions() { return actions(new jp.oist.abcvlib.core.learning.flatbuffers.RobotAction()); }
+  public jp.oist.abcvlib.core.learning.flatbuffers.RobotAction actions(jp.oist.abcvlib.core.learning.flatbuffers.RobotAction obj) { int o = __offset(14); return o != 0 ? obj.__assign(o + bb_pos, bb) : null; }
 
   public static void startTimeStep(FlatBufferBuilder builder) { builder.startTable(6); }
   public static void addWheelCounts(FlatBufferBuilder builder, int wheelCountsOffset) { builder.addOffset(0, wheelCountsOffset, 0); }
-  public static int createWheelCountsVector(FlatBufferBuilder builder, int[] data) { builder.startVector(4, data.length, 4); for (int i = data.length - 1; i >= 0; i--) builder.addOffset(data[i]); return builder.endVector(); }
-  public static void startWheelCountsVector(FlatBufferBuilder builder, int numElems) { builder.startVector(4, numElems, 4); }
   public static void addChargerData(FlatBufferBuilder builder, int chargerDataOffset) { builder.addOffset(1, chargerDataOffset, 0); }
-  public static int createChargerDataVector(FlatBufferBuilder builder, int[] data) { builder.startVector(4, data.length, 4); for (int i = data.length - 1; i >= 0; i--) builder.addOffset(data[i]); return builder.endVector(); }
-  public static void startChargerDataVector(FlatBufferBuilder builder, int numElems) { builder.startVector(4, numElems, 4); }
   public static void addBatteryData(FlatBufferBuilder builder, int batteryDataOffset) { builder.addOffset(2, batteryDataOffset, 0); }
-  public static int createBatteryDataVector(FlatBufferBuilder builder, int[] data) { builder.startVector(4, data.length, 4); for (int i = data.length - 1; i >= 0; i--) builder.addOffset(data[i]); return builder.endVector(); }
-  public static void startBatteryDataVector(FlatBufferBuilder builder, int numElems) { builder.startVector(4, numElems, 4); }
   public static void addImageData(FlatBufferBuilder builder, int imageDataOffset) { builder.addOffset(3, imageDataOffset, 0); }
-  public static int createImageDataVector(FlatBufferBuilder builder, int[] data) { builder.startVector(4, data.length, 4); for (int i = data.length - 1; i >= 0; i--) builder.addOffset(data[i]); return builder.endVector(); }
-  public static void startImageDataVector(FlatBufferBuilder builder, int numElems) { builder.startVector(4, numElems, 4); }
   public static void addSoundData(FlatBufferBuilder builder, int soundDataOffset) { builder.addOffset(4, soundDataOffset, 0); }
-  public static int createSoundDataVector(FlatBufferBuilder builder, int[] data) { builder.startVector(4, data.length, 4); for (int i = data.length - 1; i >= 0; i--) builder.addOffset(data[i]); return builder.endVector(); }
-  public static void startSoundDataVector(FlatBufferBuilder builder, int numElems) { builder.startVector(4, numElems, 4); }
-  public static void addActions(FlatBufferBuilder builder, int actionsOffset) { builder.addOffset(5, actionsOffset, 0); }
-  public static void startActionsVector(FlatBufferBuilder builder, int numElems) { builder.startVector(2, numElems, 1); }
+  public static void addActions(FlatBufferBuilder builder, int actionsOffset) { builder.addStruct(5, actionsOffset, 0); }
   public static int endTimeStep(FlatBufferBuilder builder) {
     int o = builder.endTable();
     return o;

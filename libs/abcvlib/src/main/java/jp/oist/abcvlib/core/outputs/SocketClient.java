@@ -28,8 +28,6 @@ public class SocketClient implements Runnable{
 
     private int serverPort = 0;
     private String serverIp = "";
-    public JSONObject inputs_S = null;
-    public JSONObject controls_S = null;
     BufferedWriter bufferedWriter = null;
     BufferedReader bufferedReader = null;
     public boolean ready = false;
@@ -48,59 +46,55 @@ public class SocketClient implements Runnable{
     int arrayIndex = 0;
     SocketListener socketListener;
 
-    public SocketClient(String host, int port, JSONObject inputs, JSONObject socketMsg,
-                        AbcvlibActivity abcvlibActivity, SocketListener socketListener){
+    public SocketClient(String host, int port, AbcvlibActivity abcvlibActivity){
         this.serverIp = host;
         this.serverPort = port;
-        this.inputs_S = inputs;
-        this.controls_S = socketMsg;
         this.abcvlibActivity = abcvlibActivity;
-        this.socketListener = socketListener;
     }
 
     @Override
     public void run() {
         Log.i("abcvlib", "SocketClient.run");
         connect();
-        while(!ready) {
-            Thread.yield();
-        }
+//        while(!ready) {
+//            Thread.yield();
+//        }
 
-        while (abcvlibActivity.switches.pythonControlledPIDBalancer){
-
-            if (abcvlibActivity.switches.timersOn){
-                pythonControlTimer[0] = System.nanoTime();
-            }
-
-            getControlsFromServer();
-
-            if (abcvlibActivity.switches.loggerOn){
-                System.out.println(abcvlibActivity.outputs.controls);
-            }
-            if (abcvlibActivity.switches.timersOn){
-                pythonControlTimer[1] = System.nanoTime();
-            }
-
-//            writeAndroidData();
-
-            if (abcvlibActivity.switches.loggerOn){
-                System.out.println(abcvlibActivity.inputs.stateVariables);
-            }
-            if (abcvlibActivity.switches.timersOn){
-                pythonControlTimeSteps[2] += System.nanoTime() - pythonControlTimer[1];
-                pythonControlTimeSteps[1] += pythonControlTimer[1] - pythonControlTimer[0];
-                pythonControlTimeSteps[0] = pythonControlTimer[0];
-
-                // Take basic stats of every 1000 time step lengths rather than pushing all.
-                if (timerCount % abcvlibActivity.avgCount == 0){
-                    for (int i=1; i < pythonControlTimeSteps.length; i++){
-                        pythonControlTimeSteps[i] = (pythonControlTimeSteps[i] / abcvlibActivity.avgCount) / 1000000;
-                    }
-                    Log.i("timers", "PythonControlTimer Averages = " + Arrays.toString(pythonControlTimeSteps) + "(ms)");
-                }
-                timerCount ++;
-            }
-        }
+//        while (abcvlibActivity.switches.pythonControlledPIDBalancer){
+//
+//            if (abcvlibActivity.switches.timersOn){
+//                pythonControlTimer[0] = System.nanoTime();
+//            }
+//
+//            getMessageFromServer();
+//
+//            if (abcvlibActivity.switches.loggerOn){
+//                System.out.println(abcvlibActivity.outputs.controls);
+//            }
+//            if (abcvlibActivity.switches.timersOn){
+//                pythonControlTimer[1] = System.nanoTime();
+//            }
+//
+////            writeAndroidData();
+//
+//            if (abcvlibActivity.switches.loggerOn){
+//                System.out.println(abcvlibActivity.inputs.stateVariables);
+//            }
+//            if (abcvlibActivity.switches.timersOn){
+//                pythonControlTimeSteps[2] += System.nanoTime() - pythonControlTimer[1];
+//                pythonControlTimeSteps[1] += pythonControlTimer[1] - pythonControlTimer[0];
+//                pythonControlTimeSteps[0] = pythonControlTimer[0];
+//
+//                // Take basic stats of every 1000 time step lengths rather than pushing all.
+//                if (timerCount % abcvlibActivity.avgCount == 0){
+//                    for (int i=1; i < pythonControlTimeSteps.length; i++){
+//                        pythonControlTimeSteps[i] = (pythonControlTimeSteps[i] / abcvlibActivity.avgCount) / 1000000;
+//                    }
+//                    Log.i("timers", "PythonControlTimer Averages = " + Arrays.toString(pythonControlTimeSteps) + "(ms)");
+//                }
+//                timerCount ++;
+//            }
+//        }
     }
 
     public void connect(){
@@ -137,7 +131,7 @@ public class SocketClient implements Runnable{
      * Default PID parameter exchange helper function. Core read method @getControlsFromServer
      */
     private void readControlData(){
-        abcvlibActivity.outputs.setControls(getControlsFromServer());
+        abcvlibActivity.outputs.setControls(getMessageFromServer());
         if (abcvlibActivity.switches.timersOn){
             try {
                 currentTime = Double.parseDouble(abcvlibActivity.outputs.controls.get("timeServer").toString());
@@ -203,14 +197,14 @@ public class SocketClient implements Runnable{
         writeInputsToServer(abcvlibActivity.inputs.stateVariables);
     }
 
-    public JSONObject getControlsFromServer(){
+    public JSONObject getMessageFromServer(){
 
         int timeout = 50;
         int timeoutCounter = 0;
 
         try {
             while (bufferedReader == null){
-//                Log.v("abcvlib", "bufferedReader == null");
+                Log.v("abcvlib", "bufferedReader == null");
                 Thread.sleep(100);
             }
             while (!bufferedReader.ready()){
@@ -219,7 +213,7 @@ public class SocketClient implements Runnable{
                     closeAll();
                     connect();
                 }
-//                Log.v("abcvlib", "bufferedReader not ready @getControlsFromServer");
+                Log.v("abcvlib", "bufferedReader not ready @getControlsFromServer");
                 Thread.sleep(100);
                 timeoutCounter++;
             }
@@ -227,7 +221,7 @@ public class SocketClient implements Runnable{
                 Log.v("abcvlib", "bufferedReader line is null");
             }
             socketMsgIn = new JSONObject(line);
-//            Log.v("abcvlib", "wrote to socketMsgIn");
+            Log.v("abcvlib", "wrote to socketMsgIn");
         }
 
         catch (NullPointerException e2){

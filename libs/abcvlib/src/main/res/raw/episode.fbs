@@ -1,16 +1,16 @@
 // Example IDL file for our monster's schema.
-namespace jp.oist.abcvlib.core.learning.flatbuffers;
+namespace jp.oist.abcvlib.core.learning.fbclasses;
 enum motionAction:byte { standstill = 0, forward, backward, turnfrontleft, turnfrontright, turnbackleft, turnbackright = 6 }
 table Episode {
     timesteps:[TimeStep];
 }
 table TimeStep {
-  wheel_counts:[WheelCounts];
-  charger_data:[ChargerData];
-  battery_data:[BatteryData];
-  image_data:[ImageData];
-  sound_data:[SoundData];
-  actions:[RobotAction];
+  wheel_counts:WheelCounts;
+  charger_data:ChargerData;
+  battery_data:BatteryData;
+  image_data:ImageData;
+  sound_data:SoundData;
+  actions:RobotAction;
 }
 table WheelCounts {
     timestamps:[long];

@@ -47,7 +47,8 @@ import jp.oist.abcvlib.core.outputs.SocketListener;
  * @author Christopher Buckley https://github.com/topherbuckley
  *
  */
-public abstract class AbcvlibActivity extends IOIOActivity implements RewardGenerator, OnRecordPositionUpdateListener, ImageAnalyzerActivity{
+public abstract class AbcvlibActivity extends IOIOActivity implements RewardGenerator,
+        OnRecordPositionUpdateListener, ImageAnalyzerActivity, SocketListener{
 
     // Publically accessible objects that encapsulate a lot other core functionality
     public Inputs inputs;
@@ -135,7 +136,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     }
 
     protected void initialzer(AbcvlibActivity abcvlibActivity, String hostIP, int hostPort,
-                              AbcvlibController controller, SocketListener socketListener,
+                              AbcvlibController controller,
                               ImageAnalyzerActivity imageAnalyzerActivity){
 
         //Todo some logic here to test for boolean combinations that would lead to errors.
@@ -146,7 +147,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
 
         inputs = new Inputs(abcvlibActivity, imageAnalyzerActivity);
         Log.i(TAG, "Prior to Creating outputs. IP:" + hostIP + ", Port:" + hostPort);
-        outputs = new Outputs(abcvlibActivity, hostIP, hostPort, controller, socketListener);
+        outputs = new Outputs(abcvlibActivity, hostIP, hostPort, controller);
 
         if (switches.actionSelectorApp){
             if (aD == null){
@@ -171,7 +172,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
      */
     protected void initialzer(AbcvlibActivity abcvlibActivity, String hostIP, int hostPort){
 
-        initialzer(abcvlibActivity, hostIP, hostPort, null, null, null);
+        initialzer(abcvlibActivity, hostIP, hostPort, null, null);
 
     }
 
@@ -180,7 +181,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
      */
     protected void initialzer(AbcvlibActivity abcvlibActivity){
 
-        initialzer(abcvlibActivity, null, 0, null, null, null);
+        initialzer(abcvlibActivity, null, 0, null, null);
 
     }
 
@@ -302,6 +303,12 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
      * @param audioData
      */
     protected void newAudioData(float[] audioData, int numSamples){
+    }
+
+    @Override
+    public void onServerReadSuccess(JSONObject msgFromServer) {
+        // Parse Message from Server
+        Log.i("server", msgFromServer.toString());
     }
 
 }

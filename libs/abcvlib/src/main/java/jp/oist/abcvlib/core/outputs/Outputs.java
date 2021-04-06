@@ -26,7 +26,8 @@ public class Outputs implements OutputsInterface {
     private ProcessPriorityThreadFactory processPriorityThreadFactory;
     private ScheduledThreadPoolExecutor threadPoolExecutor;
 
-    public Outputs(AbcvlibActivity abcvlibActivity, String hostIP, int port, AbcvlibController customController, SocketListener socketListener){
+    public Outputs(AbcvlibActivity abcvlibActivity, String hostIP, int port,
+                   AbcvlibController customController){
 
         // Determine number of necessary threads.
         int threadCount = 1; // At least one for the GrandController
@@ -54,8 +55,7 @@ public class Outputs implements OutputsInterface {
         //  require intervention with IT
         if (abcvlibActivity.switches.pythonControlledPIDBalancer){
             Log.i("abcvlib", "Prior to Creating socketClient. IP:" + hostIP + ", Port:" + port);
-            socketClient = new SocketClient(hostIP, port, abcvlibActivity.inputs.stateVariables,
-                    controls, abcvlibActivity, socketListener);
+            socketClient = new SocketClient(hostIP, port, abcvlibActivity);
             // This will run the default PID param exchange. This should be toggleable.
             threadPoolExecutor.execute(socketClient);
             Log.i("abcvlib", "socketClient Started");

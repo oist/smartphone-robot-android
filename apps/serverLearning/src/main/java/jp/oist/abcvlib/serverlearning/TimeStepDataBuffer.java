@@ -94,6 +94,30 @@ public class TimeStepDataBuffer {
                 left.add(_left);
                 right.add(_right);
             }
+            public long[] getTimeStamps(){
+                int size = timestamps.size();
+                long[] timestampslong = new long[size];
+                for (int i=0 ; i < size ; i++){
+                    timestampslong[i] = timestamps.get(i);
+                }
+                return timestampslong;
+            }
+            public double[] getLeft(){
+                int size = left.size();
+                double[] leftLong = new double[size];
+                for (int i=0 ; i < size ; i++){
+                    leftLong[i] = left.get(i);
+                }
+                return leftLong;
+            }
+            public double[] getRight(){
+                int size = right.size();
+                double[] rightLong = new double[size];
+                for (int i=0 ; i < size ; i++){
+                    rightLong[i] = right.get(i);
+                }
+                return rightLong;
+            }
         }
 
         class ChargerData{
@@ -103,6 +127,22 @@ public class TimeStepDataBuffer {
                 timestamps.add(System.nanoTime());
                 voltage.add(_voltage);
             }
+            public long[] getTimeStamps(){
+                int size = timestamps.size();
+                long[] timestampslong = new long[size];
+                for (int i=0 ; i < size ; i++){
+                    timestampslong[i] = timestamps.get(i);
+                }
+                return timestampslong;
+            }
+            public double[] getVoltage(){
+                int size = voltage.size();
+                double[] voltageLong = new double[size];
+                for (int i=0 ; i < size ; i++){
+                    voltageLong[i] = voltage.get(i);
+                }
+                return voltageLong;
+            }
         }
 
         class BatteryData{
@@ -111,6 +151,22 @@ public class TimeStepDataBuffer {
             public void put(double _voltage){
                 timestamps.add(System.nanoTime());
                 voltage.add(_voltage);
+            }
+            public long[] getTimeStamps(){
+                int size = timestamps.size();
+                long[] timestampslong = new long[size];
+                for (int i=0 ; i < size ; i++){
+                    timestampslong[i] = timestamps.get(i);
+                }
+                return timestampslong;
+            }
+            public double[] getVoltage(){
+                int size = voltage.size();
+                double[] voltageLong = new double[size];
+                for (int i=0 ; i < size ; i++){
+                    voltageLong[i] = voltage.get(i);
+                }
+                return voltageLong;
             }
         }
 

@@ -2,11 +2,8 @@ package jp.oist.abcvlib.serverlearning;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.media.AudioTimestamp;
 import android.media.Image;
 import android.os.Bundle;
-import android.os.Environment;
-import android.util.JsonReader;
 import android.util.JsonWriter;
 import android.util.Log;
 import android.util.Size;
@@ -17,31 +14,22 @@ import androidx.annotation.NonNull;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageProxy;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.audio.MicrophoneInput;
 import jp.oist.abcvlib.core.inputs.vision.YuvToRgbConverter;
+import jp.oist.abcvlib.core.outputs.SocketClient;
 import jp.oist.abcvlib.core.outputs.SocketListener;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 
@@ -61,7 +49,7 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
     WheelDataGatherer wheelDataGatherer;
     ChargerDataGatherer chargerDataGatherer;
     BatteryDataGatherer batteryDataGatherer;
-    TimeStepDataAssembler timeStepDataAssemblerExecutor;
+    TimeStepDataAssembler timeStepDataAssembler;
 
     java.nio.ByteBuffer Fbuf;
     byte[] byteBuff;
@@ -83,28 +71,38 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
 
         microphoneInput = new MicrophoneInput(this);
 
-        imageAnalysis =
-                new ImageAnalysis.Builder()
-                        .setTargetResolution(new Size(10, 10))
-                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        .setImageQueueDepth(2)
-                        .build();
-        imageAnalysis.setAnalyzer(imageExecutor, new ImageDataGatherer());
+//        imageAnalysis =
+//                new ImageAnalysis.Builder()
+//                        .setTargetResolution(new Size(10, 10))
+//                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+//                        .setImageQueueDepth(2)
+//                        .build();
+//        imageAnalysis.setAnalyzer(imageExecutor, new ImageDataGatherer());
 
         //todo I guess the imageAnalyzerActivity Interface is uncessary
-        initialzer(this, "192.168.28.233", 3000, null, this, this);
+        initialzer(this, "192.168.0.108", 3000, null, this);
         super.onCreate(savedInstanceState);
 
     }
 
     @Override
     protected void onSetupFinished(){
+        ExecutorService sequentialExecutor = Executors.newSingleThreadExecutor();
+        sequentialExecutor.submit(new Runnable() {
+            @Override
+            public void run() {
+                wheelDataGatherer = new WheelDataGatherer();
+                chargerDataGatherer = new ChargerDataGatherer();
+                batteryDataGatherer = new BatteryDataGatherer();
+                timeStepDataAssembler = new TimeStepDataAssembler();
 //        testFlatBuffers();
-        wheelDataGathererFuture = executor.scheduleAtFixedRate(new WheelDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
-        chargerDataGathererFuture = executor.scheduleAtFixedRate(new ChargerDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
-        batteryDataGathererFuture = executor.scheduleAtFixedRate(new BatteryDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
-        timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(new TimeStepDataAssembler(), 0,500, TimeUnit.MILLISECONDS);
-        microphoneInput.start();
+                wheelDataGathererFuture = executor.scheduleAtFixedRate(wheelDataGatherer, 0, 100, TimeUnit.MILLISECONDS);
+                chargerDataGathererFuture = executor.scheduleAtFixedRate(new ChargerDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
+                batteryDataGathererFuture = executor.scheduleAtFixedRate(new BatteryDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
+                timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(timeStepDataAssembler, 0,500, TimeUnit.MILLISECONDS);
+                microphoneInput.start();
+            }
+        });
     }
 
 //    private void testFlatBuffers(){
@@ -136,22 +134,11 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
 //    }
 
     class WheelDataGatherer implements Runnable{
-        ArrayList<Long> timestamps = new ArrayList<>();
-        ArrayList<Double> left = new ArrayList<>();
-        ArrayList<Double> right = new ArrayList<>();
-
         @Override
         public void run() {
-            timestamps.add(System.nanoTime());
-            left.add(inputs.quadEncoders.getWheelCountL());
-            right.add(inputs.quadEncoders.getWheelCountR());
-        }
-        public long[] getTimeStamps(){
-            long[] timestampslong = new long[timestamps.size()];
-            for (int i=0 ; i <= timestamps.size() ; i++){
-                timestampslong[i] = timestamps.get(i);
-            }
-            return timestampslong;
+            double left = inputs.quadEncoders.getWheelCountL();
+            double right = inputs.quadEncoders.getWheelCountR();
+            timeStepDataBuffer.writeData.wheelCounts.put(left, right);
         }
     }
 
@@ -234,84 +221,137 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
 
     class TimeStepDataAssembler implements Runnable{
 
-        private int timeStep = 0;
-        private JsonWriter writer;
-//        private Gson gson = new GsonBuilder().create();
-        private FileOutputStream fileOutputStream;
-        private OutputStreamWriter outputStreamWriter;
+        private int timeStepCount = 0;
         private int maxTimeStep = 5;
+        private FlatBufferBuilder builder;
+        private int[] timeStepVector = new int[maxTimeStep + 1];
+
+        public TimeStepDataAssembler(){
+            startEpisode();
+        }
+
+        public void startEpisode(){
+            builder = new FlatBufferBuilder(1024);
+        }
+
+        public void addTimeStep(){
+
+            int wc = addWheelCounts();
+            int cd = addChargerData();
+            int bd = addBatteryData();
+
+            TimeStep.startTimeStep(builder);
+            TimeStep.addWheelCounts(builder, wc);
+            TimeStep.addChargerData(builder, cd);
+            TimeStep.addBatteryData(builder, bd);
+            int ts = TimeStep.endTimeStep(builder);
+            timeStepVector[timeStepCount]  = ts;
+        }
+
+        private int addWheelCounts(){
+            Log.i("flatbuff", "STEP wheelCount TimeStamps Length: " +
+                    timeStepDataBuffer.readData.wheelCounts.getTimeStamps().length);
+            int ts = WheelCounts.createTimestampsVector(builder,
+                    timeStepDataBuffer.readData.wheelCounts.getTimeStamps());
+            int left = WheelCounts.createLeftVector(builder,
+                    timeStepDataBuffer.readData.wheelCounts.getLeft());
+            int right = WheelCounts.createLeftVector(builder,
+                    timeStepDataBuffer.readData.wheelCounts.getRight());
+            return WheelCounts.createWheelCounts(builder, ts, left, right);
+        }
+
+        private int addChargerData(){
+            Log.i("flatbuff", "STEP chargerData TimeStamps Length: " +
+                    timeStepDataBuffer.readData.chargerData.getTimeStamps().length);
+            int ts = WheelCounts.createTimestampsVector(builder,
+                    timeStepDataBuffer.readData.chargerData.getTimeStamps());
+            int voltage = WheelCounts.createLeftVector(builder,
+                    timeStepDataBuffer.readData.chargerData.getVoltage());
+            return ChargerData.createChargerData(builder, ts, voltage);
+        }
+
+        private int addBatteryData(){
+            Log.i("flatbuff", "STEP batteryData TimeStamps Length: " +
+                    timeStepDataBuffer.readData.batteryData.getTimeStamps().length);
+            int ts = WheelCounts.createTimestampsVector(builder,
+                    timeStepDataBuffer.readData.batteryData.getTimeStamps());
+            int voltage = WheelCounts.createLeftVector(builder,
+                    timeStepDataBuffer.readData.batteryData.getVoltage());
+            return ChargerData.createChargerData(builder, ts, voltage);
+        }
+
+//        private int addImageData(){}
+//        private int addSoundData(){}
+//        private int addActionData(){}
+
+        public void endEpisode(){
+            closeall();
+
+            int ts = Episode.createTimestepsVector(builder, timeStepVector);
+            Episode.startEpisode(builder);
+            Episode.addTimesteps(builder, ts);
+            int ep = Episode.endEpisode(builder);
+            builder.finish(ep);
+
+            byte[] buf = builder.sizedByteArray();
+            java.nio.ByteBuffer bb = java.nio.ByteBuffer.wrap(buf);
+            Episode episode = Episode.getRootAsEpisode(bb);
+            Log.i("flatbuff", "TimeSteps Length: "  + String.valueOf(episode.timestepsLength()));
+            Log.i("flatbuff", "WheelCounts TimeStep 0 Length: "  + String.valueOf(episode.timesteps(0).wheelCounts().timestampsLength()));
+            Log.i("flatbuff", "WheelCounts TimeStep 1 Length: "  + String.valueOf(episode.timesteps(1).wheelCounts().timestampsLength()));
+            Log.i("flatbuff", "WheelCounts TimeStep 2 Length: "  + String.valueOf(episode.timesteps(2).wheelCounts().timestampsLength()));
+            Log.i("flatbuff", "WheelCounts TimeStep 3 Length: "  + String.valueOf(episode.timesteps(3).wheelCounts().timestampsLength()));
+            Log.i("flatbuff", "WheelCounts TimeStep 4 Length: "  + String.valueOf(episode.timesteps(4).wheelCounts().timestampsLength()));
+            Log.i("flatbuff", "WheelCounts TimeStep 4 idx 0: "  + String.valueOf(episode.timesteps(4).wheelCounts().timestamps(0)));
+
+
+            sendToServer(buf);
+
+            Log.i("flatbuff", "prior to getting msg from server");
+            outputs.socketClient.getMessageFromServer();
+            Log.i("flatbuff", "after getting msg from server");
+        }
 
         @Override
         public void run() {
 
-            MyStepHandler myStepHandler = new MyStepHandler(timeStepDataBuffer.writeData);
-            myStepHandler.foward();
+            // Choose action based on current timestep data
+            MyStepHandler myStepHandler = new MyStepHandler(timeStepDataBuffer.writeData, maxTimeStep);
+            boolean lastEpisode = myStepHandler.foward(timeStepCount);
 
-            FlatBufferBuilder builder = new FlatBufferBuilder(1024);
-            WheelCounts.createTimestampsVector(builder, wheelDataGatherer.getTimeStamps());
+            assembleAudio();
 
-            Log.i("datagatherer", "start of logger run");
+            // Moves timeStepDataBuffer.writeData to readData and nulls out the writeData for new data
+            timeStepDataBuffer.nextTimeStep();
 
+            // Add timestep and return int representing offset in flatbuffer
+            Log.i("flatbuff", "prior addTimeStep");
+            addTimeStep();
+            Log.i("flatbuff", "after addTimeStep");
+
+            // If some criteria met, end episode.
+            if (lastEpisode){
+                endEpisode();
+            }
+
+            timeStepCount++;
+        }
+
+        public void assembleAudio(){
             // Don't put these inline, else you will pass by reference rather than value and references will continue to update
-            AudioTimestamp startTime = microphoneInput.getStartTime();
-            AudioTimestamp endTime = microphoneInput.getEndTime();
+            android.media.AudioTimestamp startTime = microphoneInput.getStartTime();
+            android.media.AudioTimestamp endTime = microphoneInput.getEndTime();
             int sampleRate = microphoneInput.getSampleRate();
             timeStepDataBuffer.writeData.soundData.setMetaData(sampleRate, startTime, endTime);
 
             microphoneInput.setStartTime();
-
-            timeStepDataBuffer.nextTimeStep();
-
-
-            Log.i("datagatherer", "1");
-            if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-                Log.i("datagatherer", "2");
-                File file = new File(getExternalFilesDir(null), "test.json");
-                Log.i("datagatherer", "3");
-                try {
-                    if (file.exists() && timeStep == 0) {
-                        Log.i("datagatherer", "4");
-                        file.delete();
-                        file.createNewFile();
-                        Log.i("datagatherer", "4.1");
-                        fileOutputStream = new FileOutputStream(file, true);
-                        outputStreamWriter = new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8);
-                        writer = new JsonWriter(outputStreamWriter);
-                        writer.beginArray();
-                    }
-                    if (file.exists() && file.canRead()) {
-                        Log.i("datagatherer", "5");
-                        TimeStepDataBuffer.TimeStepData data = timeStepDataBuffer.readData;
-                        Gson gson = new Gson();
-                        gson.toJson(data, outputStreamWriter);
-                        gson = null;
-                        Log.i("datagatherer", "6");
-                        if (timeStep != maxTimeStep) {
-                            outputStreamWriter.append(",");
-                        }
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (timeStep == maxTimeStep){
-                try {
-                    writer.endArray();
-                    writer.close();
-                    closeall();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                timeStepDataAssemblerFuture.cancel(true);
-            }
-            timeStep++;
         }
 
         public void closeall(){
             wheelDataGathererFuture.cancel(true);
             chargerDataGathererFuture.cancel(true);
             batteryDataGathererFuture.cancel(true);
-            imageAnalysis.clearAnalyzer();
+//            imageAnalysis.clearAnalyzer();
             microphoneInput.stop();
             microphoneInput.close();
         }
@@ -335,15 +375,12 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
         // Parse Message from Server
         // ..
         Log.i("server", msgFromServer.toString());
-
-        // Send return message
-        sendToServer();
     }
 
     /**
      * Assemble message to server and send.
      */
-    private void sendToServer(){
+    private void sendToServer(byte[] byteBuff){
         this.outputs.socketClient.writeFlatBufferToServer(byteBuff);
     }
 }
