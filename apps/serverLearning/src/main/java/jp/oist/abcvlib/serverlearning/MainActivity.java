@@ -94,7 +94,7 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
 
     @Override
     protected void onSetupFinished(){
-        testFlatBuffers();
+//        testFlatBuffers();
         wheelDataGatherer = executor.scheduleAtFixedRate(new WheelDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
         chargerDataGatherer = executor.scheduleAtFixedRate(new ChargerDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
         batteryDataGatherer = executor.scheduleAtFixedRate(new BatteryDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
@@ -102,25 +102,33 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
         microphoneInput.start();
     }
 
-    private void testFlatBuffers(){
-        FlatBufferBuilder builder = new FlatBufferBuilder(1024);
-
-        Episode.startEpisode(builder);
-        long[] timestamps = new long[]{1, 2, 3};
-        double[] left = new double[]{1,2,3};
-        double[] right = new double[]{1,2,3};
-
-        int ts = WheelCounts.createTimestampsVector(builder, timestamps);
-        int l = WheelCounts.createLeftVector(builder, left);
-        int r = WheelCounts.createRightVector(builder, right);
-        WheelCounts.createWheelCounts(builder, ts, l, r);
-        int episode = Episode.endEpisode(builder);
-
-        builder.finish(episode); // You could also call `Monster.finishMonsterBuffer(builder, orc);`.
-        // This must be called after `finish()`.
-        byteBuff = builder.sizedByteArray();
-        Log.i("alskdjasd", "I'm a breakpoint!");
-    }
+//    private void testFlatBuffers(){
+//        FlatBufferBuilder builder = new FlatBufferBuilder(1024);
+//
+//        int ra1 = RobotAction.createRobotAction(builder, (byte) 5, (byte) 16);
+//        int[] ra = {ra1};
+//        int aV = TimeStep.createActionsVector(builder, ra);
+//
+//        int ts1 = TimeStep.createTimeStep(builder, aV);
+//        int[] ts = {ts1};
+//        int tsV = Episode.createTimestepsVector(builder, ts);
+//
+//        Episode.startEpisode(builder);
+//        long[] timestamps = new long[]{1, 2, 3};
+//        double[] left = new double[]{1,2,3};
+//        double[] right = new double[]{1,2,3};
+//
+//        int ts = WheelCounts.createTimestampsVector(builder, timestamps);
+//        int l = WheelCounts.createLeftVector(builder, left);
+//        int r = WheelCounts.createRightVector(builder, right);
+//        WheelCounts.createWheelCounts(builder, ts, l, r);
+//        int episode = Episode.endEpisode(builder);
+//
+//        builder.finish(episode); // You could also call `Monster.finishMonsterBuffer(builder, orc);`.
+//        // This must be called after `finish()`.
+//        byteBuff = builder.sizedByteArray();
+//        Log.i("alskdjasd", "I'm a breakpoint!");
+//    }
 
     class WheelDataGatherer implements Runnable{
         @Override
