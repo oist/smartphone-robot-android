@@ -1,58 +1,58 @@
 // Example IDL file for our monster's schema.
 namespace jp.oist.abcvlib.core.learning.flatbuffers;
 enum motionAction:byte { standstill = 0, forward, backward, turnfrontleft, turnfrontright, turnbackleft, turnbackright = 6 }
-struct Episode {
-    timeSteps:[TimeStep];
+table Episode {
+    timesteps:[TimeStep];
 }
-struct TimeStep {
-  wheelCounts:[WheelCounts];
-  chargerData:[ChargerData];
-  batteryData:[BatteryData];
-  imageData:[ImageData];
-  soundData:[SoundData];
+table TimeStep {
+  wheel_counts:[WheelCounts];
+  charger_data:[ChargerData];
+  battery_data:[BatteryData];
+  image_data:[ImageData];
+  sound_data:[SoundData];
   actions:[RobotAction];
 }
-struct WheelCounts {
+table WheelCounts {
     timestamps:[long];
     left:[double];
     right:[double];
 }
-struct ChargerData {
+table ChargerData {
     timestamps:[long];
     voltage:[double];
 }
-struct BatteryData {
+table BatteryData {
     timestamps:[long];
     voltage:[double];
 }
-struct ImageData {
+table ImageData {
     images:[Image];
 }
-struct SoundData{
-    startTime:[AudioTimestamp];
-    endTime:[AudioTimestamp];
-    totalTime:double;
-    sampleRate:int;
-    totalSamples:long;
+table SoundData{
+    start_time:[AudioTimestamp];
+    end_time:[AudioTimestamp];
+    total_time:double;
+    sample_rate:int;
+    total_samples:long;
     levels:[float];
 }
 struct RobotAction{
-    motionAction:byte;
-    commAction:byte;
+    motion_action:byte;
+    comm_action:byte;
 }
-struct Image{
+table Image{
     timestamp:long;
     pixels:[Pixels];
     width:int;
     height:int;
 }
-struct Pixels {
+table Pixels {
     r:[int];
     g:[int];
     b:[int];
 }
 struct AudioTimestamp {
-    framePosition:long;
+    frame_position:long;
     nanotime:long;
 }
 root_type Episode;
