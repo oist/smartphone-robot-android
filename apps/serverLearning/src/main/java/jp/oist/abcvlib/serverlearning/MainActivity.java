@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -53,10 +54,14 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
     ExecutorService imageExecutor;
     ScheduledExecutorService imageAnalysisExecutor;
     ImageAnalysis imageAnalysis;
-    ScheduledFuture<?> wheelDataGatherer;
-    ScheduledFuture<?> chargerDataGatherer;
-    ScheduledFuture<?> batteryDataGatherer;
-    ScheduledFuture<?> timeStepDataAssemblerExecutor;
+    ScheduledFuture<?> wheelDataGathererFuture;
+    ScheduledFuture<?> chargerDataGathererFuture;
+    ScheduledFuture<?> batteryDataGathererFuture;
+    ScheduledFuture<?> timeStepDataAssemblerFuture;
+    WheelDataGatherer wheelDataGatherer;
+    ChargerDataGatherer chargerDataGatherer;
+    BatteryDataGatherer batteryDataGatherer;
+    TimeStepDataAssembler timeStepDataAssemblerExecutor;
 
     java.nio.ByteBuffer Fbuf;
     byte[] byteBuff;
@@ -95,10 +100,10 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
     @Override
     protected void onSetupFinished(){
 //        testFlatBuffers();
-        wheelDataGatherer = executor.scheduleAtFixedRate(new WheelDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
-        chargerDataGatherer = executor.scheduleAtFixedRate(new ChargerDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
-        batteryDataGatherer = executor.scheduleAtFixedRate(new BatteryDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
-        timeStepDataAssemblerExecutor = executor.scheduleAtFixedRate(new TimeStepDataAssembler(), 0,500, TimeUnit.MILLISECONDS);
+        wheelDataGathererFuture = executor.scheduleAtFixedRate(new WheelDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
+        chargerDataGathererFuture = executor.scheduleAtFixedRate(new ChargerDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
+        batteryDataGathererFuture = executor.scheduleAtFixedRate(new BatteryDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
+        timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(new TimeStepDataAssembler(), 0,500, TimeUnit.MILLISECONDS);
         microphoneInput.start();
     }
 
@@ -131,10 +136,22 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
 //    }
 
     class WheelDataGatherer implements Runnable{
+        ArrayList<Long> timestamps = new ArrayList<>();
+        ArrayList<Double> left = new ArrayList<>();
+        ArrayList<Double> right = new ArrayList<>();
+
         @Override
         public void run() {
-            timeStepDataBuffer.writeData.wheelCounts.put(inputs.quadEncoders.getWheelCountL(),
-                    inputs.quadEncoders.getWheelCountR());
+            timestamps.add(System.nanoTime());
+            left.add(inputs.quadEncoders.getWheelCountL());
+            right.add(inputs.quadEncoders.getWheelCountR());
+        }
+        public long[] getTimeStamps(){
+            long[] timestampslong = new long[timestamps.size()];
+            for (int i=0 ; i <= timestamps.size() ; i++){
+                timestampslong[i] = timestamps.get(i);
+            }
+            return timestampslong;
         }
     }
 
@@ -230,7 +247,8 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
             MyStepHandler myStepHandler = new MyStepHandler(timeStepDataBuffer.writeData);
             myStepHandler.foward();
 
-            //todo add for loop that takes number of timesteps and finally closes gson object
+            FlatBufferBuilder builder = new FlatBufferBuilder(1024);
+            WheelCounts.createTimestampsVector(builder, wheelDataGatherer.getTimeStamps());
 
             Log.i("datagatherer", "start of logger run");
 
@@ -284,15 +302,15 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                timeStepDataAssemblerExecutor.cancel(true);
+                timeStepDataAssemblerFuture.cancel(true);
             }
             timeStep++;
         }
 
         public void closeall(){
-            wheelDataGatherer.cancel(true);
-            chargerDataGatherer.cancel(true);
-            batteryDataGatherer.cancel(true);
+            wheelDataGathererFuture.cancel(true);
+            chargerDataGathererFuture.cancel(true);
+            batteryDataGathererFuture.cancel(true);
             imageAnalysis.clearAnalyzer();
             microphoneInput.stop();
             microphoneInput.close();
