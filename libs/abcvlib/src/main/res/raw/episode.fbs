@@ -1,26 +1,58 @@
 // Example IDL file for our monster's schema.
 namespace jp.oist.abcvlib.core.learning.flatbuffers;
-enum Color:byte { Red = 0, Green, Blue = 2 }
-union Equipment { Weapon } // Optionally add more tables.
-struct Vec3 {
-  x:float;
-  y:float;
-  z:float;
+enum motionAction:byte { standstill = 0, forward, backward, turnfrontleft, turnfrontright, turnbackleft, turnbackright = 6 }
+struct Episode {
+    timeSteps:[TimeStep];
 }
-table Monster {
-  pos:Vec3; // Struct.
-  mana:short = 150;
-  hp:short = 100;
-  name:string;
-  friendly:bool = false (deprecated);
-  inventory:[ubyte];  // Vector of scalars.
-  color:Color = Blue; // Enum.
-  weapons:[Weapon];   // Vector of tables.
-  equipped:Equipment; // Union.
-  path:[Vec3];        // Vector of structs.
+struct TimeStep {
+  wheelCounts:[WheelCounts];
+  chargerData:[ChargerData];
+  batteryData:[BatteryData];
+  imageData:[ImageData];
+  soundData:[SoundData];
+  actions:[RobotAction];
 }
-table Weapon {
-  name:string;
-  damage:short;
+struct WheelCounts {
+    timestamps:[long];
+    left:[double];
+    right:[double];
 }
-root_type Monster;
+struct ChargerData {
+    timestamps:[long];
+    voltage:[double];
+}
+struct BatteryData {
+    timestamps:[long];
+    voltage:[double];
+}
+struct ImageData {
+    images:[Image];
+}
+struct SoundData{
+    startTime:[AudioTimestamp];
+    endTime:[AudioTimestamp];
+    totalTime:double;
+    sampleRate:int;
+    totalSamples:long;
+    levels:[float];
+}
+struct RobotAction{
+    motionAction:byte;
+    commAction:byte;
+}
+struct Image{
+    timestamp:long;
+    pixels:[Pixels];
+    width:int;
+    height:int;
+}
+struct Pixels {
+    r:[int];
+    g:[int];
+    b:[int];
+}
+struct AudioTimestamp {
+    framePosition:long;
+    nanotime:long;
+}
+root_type Episode;
