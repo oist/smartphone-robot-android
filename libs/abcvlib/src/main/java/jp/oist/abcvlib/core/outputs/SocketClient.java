@@ -13,12 +13,13 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.ConnectException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
+import java.nio.channels.SocketChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.Arrays;
-
 import jp.oist.abcvlib.core.AbcvlibActivity;
 
 
@@ -276,29 +277,6 @@ public class SocketClient implements Runnable{
         writePermission = false;
         readPermission = true;
 
-    }
-
-    public void writeFlatBufferToServer(byte[] byteArray){
-
-        try {
-            WritableByteChannel out = Channels.newChannel(socket.getOutputStream());
-            String timeStamp =  Long.toString(System.nanoTime());
-
-            out.write(ByteBuffer.wrap(byteArray));
-        } catch (IOException e) {
-            e.printStackTrace();
-            try {
-                Thread.sleep(1000);
-                connect();
-            } catch (InterruptedException e1) {
-                e1.printStackTrace();
-            }
-        } catch (NullPointerException e1){
-            Log.i("abcvlib", "bufferedWriter still null. Trying to reconnect to socket");
-            e1.printStackTrace();
-        }
-        writePermission = false;
-        readPermission = true;
     }
 
     private void closeAll() throws IOException {
