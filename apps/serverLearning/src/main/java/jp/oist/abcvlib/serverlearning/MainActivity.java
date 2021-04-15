@@ -4,22 +4,16 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.media.Image;
 import android.os.Bundle;
-import android.util.JsonWriter;
 import android.util.Log;
-import android.util.Size;
-import jp.oist.abcvlib.core.learning.flatbuffers.*;
-import com.google.flatbuffers.FlatBufferBuilder;
 
 import androidx.annotation.NonNull;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageProxy;
 
+import com.google.flatbuffers.FlatBufferBuilder;
+
 import org.json.JSONObject;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -29,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.audio.MicrophoneInput;
 import jp.oist.abcvlib.core.inputs.vision.YuvToRgbConverter;
-import jp.oist.abcvlib.core.outputs.SocketClient;
+import jp.oist.abcvlib.core.learning.fbclasses.*;
 import jp.oist.abcvlib.core.outputs.SocketListener;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 
@@ -381,6 +375,6 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
      * Assemble message to server and send.
      */
     private void sendToServer(byte[] byteBuff){
-        this.outputs.socketClient.writeFlatBufferToServer(byteBuff);
+//        this.outputs.socketClient.writeFlatBufferToServer(byteBuff);
     }
 }

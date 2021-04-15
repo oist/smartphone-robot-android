@@ -18,7 +18,7 @@ public class SocketConnectionManager {
             selector = Selector.open();
             sc = SocketChannel.open();
             int events = SelectionKey.OP_READ | SelectionKey.OP_WRITE;
-            sc.register(selector, events, )
+//            sc.register(selector, events, )
             InetSocketAddress inetSocketAddress = new InetSocketAddress(serverIp, serverPort);
             sc.connect(inetSocketAddress);
 
