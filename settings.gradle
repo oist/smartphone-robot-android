@@ -20,6 +20,7 @@ def apps = [
         "pidtransfer_transmitter",
         "pidtransfer_receiver",
         "serverLearning",
+        "buffertest",
 ]
 
 gradle.ext.apps = apps
