@@ -1,26 +1,19 @@
 package jp.oist.abcvlib.core;
 
-import android.annotation.TargetApi;
-
 import android.content.pm.PackageManager;
 import android.media.AudioRecord;
 import android.media.AudioRecord.OnRecordPositionUpdateListener;
-import android.media.AudioTimestamp;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -34,7 +27,7 @@ import jp.oist.abcvlib.core.learning.ActionSelector;
 import jp.oist.abcvlib.core.learning.RewardGenerator;
 import jp.oist.abcvlib.core.outputs.AbcvlibController;
 import jp.oist.abcvlib.core.outputs.Outputs;
-import jp.oist.abcvlib.core.outputs.SocketListener;
+import jp.oist.abcvlib.util.SocketListener;
 
 /**
  * AbcvlibActivity is where all of the other classes are initialized into objects. The objects
@@ -306,9 +299,9 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     }
 
     @Override
-    public void onServerReadSuccess(JSONObject msgFromServer) {
+    public void onServerReadSuccess() {
         // Parse Message from Server
-        Log.i("server", msgFromServer.toString());
+        Log.i("server", "Reading from Server Completed");
     }
 
 }

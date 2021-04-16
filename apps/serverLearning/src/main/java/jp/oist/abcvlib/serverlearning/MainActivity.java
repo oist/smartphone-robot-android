@@ -24,10 +24,11 @@ import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.audio.MicrophoneInput;
 import jp.oist.abcvlib.core.inputs.vision.YuvToRgbConverter;
 import jp.oist.abcvlib.core.learning.fbclasses.*;
-import jp.oist.abcvlib.core.outputs.SocketListener;
+import jp.oist.abcvlib.util.SocketListener;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
+import jp.oist.abcvlib.util.SocketConnectionManager;
 
-public class MainActivity extends AbcvlibActivity implements SocketListener {
+public class MainActivity extends AbcvlibActivity {
 
     private TimeStepDataBuffer timeStepDataBuffer;
     private MicrophoneInput microphoneInput;
@@ -45,6 +46,8 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
     BatteryDataGatherer batteryDataGatherer;
     TimeStepDataAssembler timeStepDataAssembler;
 
+    SocketConnectionManager socketConnectionManager;
+
     java.nio.ByteBuffer Fbuf;
     byte[] byteBuff;
 
@@ -54,7 +57,7 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
         // Setup a live preview of camera feed to the display. Remove if unwanted.
         setContentView(jp.oist.abcvlib.core.R.layout.camera_x_preview);
 
-        switches.pythonControlledPIDBalancer = true;
+//        switches.pythonControlledPIDBalancer = true;
         switches.cameraXApp = true;
 
         timeStepDataBuffer = new TimeStepDataBuffer(3);
@@ -64,6 +67,8 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
         imageExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(10, "imageAnalysis"));
 
         microphoneInput = new MicrophoneInput(this);
+
+        executor.execute(socketConnectionManager = new SocketConnectionManager(this,"192.168.19.196", 3000));
 
 //        imageAnalysis =
 //                new ImageAnalysis.Builder()
@@ -216,7 +221,7 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
     class TimeStepDataAssembler implements Runnable{
 
         private int timeStepCount = 0;
-        private int maxTimeStep = 5;
+        private int maxTimeStep = 3;
         private FlatBufferBuilder builder;
         private int[] timeStepVector = new int[maxTimeStep + 1];
 
@@ -287,19 +292,18 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
             int ep = Episode.endEpisode(builder);
             builder.finish(ep);
 
-            byte[] buf = builder.sizedByteArray();
-            java.nio.ByteBuffer bb = java.nio.ByteBuffer.wrap(buf);
-            Episode episode = Episode.getRootAsEpisode(bb);
-            Log.i("flatbuff", "TimeSteps Length: "  + String.valueOf(episode.timestepsLength()));
-            Log.i("flatbuff", "WheelCounts TimeStep 0 Length: "  + String.valueOf(episode.timesteps(0).wheelCounts().timestampsLength()));
-            Log.i("flatbuff", "WheelCounts TimeStep 1 Length: "  + String.valueOf(episode.timesteps(1).wheelCounts().timestampsLength()));
-            Log.i("flatbuff", "WheelCounts TimeStep 2 Length: "  + String.valueOf(episode.timesteps(2).wheelCounts().timestampsLength()));
-            Log.i("flatbuff", "WheelCounts TimeStep 3 Length: "  + String.valueOf(episode.timesteps(3).wheelCounts().timestampsLength()));
-            Log.i("flatbuff", "WheelCounts TimeStep 4 Length: "  + String.valueOf(episode.timesteps(4).wheelCounts().timestampsLength()));
-            Log.i("flatbuff", "WheelCounts TimeStep 4 idx 0: "  + String.valueOf(episode.timesteps(4).wheelCounts().timestamps(0)));
+            byte[] episode = builder.sizedByteArray();
+            java.nio.ByteBuffer bb = java.nio.ByteBuffer.wrap(episode);
+            Episode episodeTest = Episode.getRootAsEpisode(bb);
+            Log.i("flatbuff", "TimeSteps Length: "  + String.valueOf(episodeTest.timestepsLength()));
+            Log.i("flatbuff", "WheelCounts TimeStep 0 Length: "  + String.valueOf(episodeTest.timesteps(0).wheelCounts().timestampsLength()));
+            Log.i("flatbuff", "WheelCounts TimeStep 1 Length: "  + String.valueOf(episodeTest.timesteps(1).wheelCounts().timestampsLength()));
+            Log.i("flatbuff", "WheelCounts TimeStep 2 Length: "  + String.valueOf(episodeTest.timesteps(2).wheelCounts().timestampsLength()));
+            Log.i("flatbuff", "WheelCounts TimeStep 3 Length: "  + String.valueOf(episodeTest.timesteps(3).wheelCounts().timestampsLength()));
+            Log.i("flatbuff", "WheelCounts TimeStep 3 idx 0: "  + String.valueOf(episodeTest.timesteps(3).wheelCounts().timestamps(0)));
 
 
-            sendToServer(buf);
+            sendToServer(episode);
 
             Log.i("flatbuff", "prior to getting msg from server");
             outputs.socketClient.getMessageFromServer();
@@ -365,16 +369,15 @@ public class MainActivity extends AbcvlibActivity implements SocketListener {
     }
 
     @Override
-    public void onServerReadSuccess(JSONObject msgFromServer) {
-        // Parse Message from Server
-        // ..
-        Log.i("server", msgFromServer.toString());
+    public void onServerReadSuccess() {
+        //loadMappedFile...
     }
 
     /**
      * Assemble message to server and send.
      */
-    private void sendToServer(byte[] byteBuff){
+    private void sendToServer(byte[] episode){
+        socketConnectionManager.sendMsgToServer(episode);
 //        this.outputs.socketClient.writeFlatBufferToServer(byteBuff);
     }
 }

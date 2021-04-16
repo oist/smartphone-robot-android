@@ -13,14 +13,10 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.ConnectException;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
-import java.nio.channels.SocketChannel;
-import java.nio.channels.WritableByteChannel;
-import java.util.Arrays;
+
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.util.SocketListener;
 
 
 public class SocketClient implements Runnable{
@@ -247,7 +243,7 @@ public class SocketClient implements Runnable{
         readPermission = false;
 
         if (socketListener != null){
-            socketListener.onServerReadSuccess(socketMsgIn);
+            socketListener.onServerReadSuccess();
         }
 
         return socketMsgIn;
