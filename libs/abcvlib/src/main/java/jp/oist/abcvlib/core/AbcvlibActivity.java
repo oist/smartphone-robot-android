@@ -9,10 +9,12 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.camera.core.ImageAnalysis;
 import androidx.core.content.ContextCompat;
 
 import org.json.JSONObject;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -255,6 +257,11 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     }
 
     @Override
+    public ImageAnalysis getAnalyzer() {
+        return null;
+    }
+
+    @Override
     public void onMarkerReached(AudioRecord audioRecord) {
 
     }
@@ -299,7 +306,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     }
 
     @Override
-    public void onServerReadSuccess() {
+    public void onServerReadSuccess(JSONObject jsonHeader, ByteBuffer msgFromServer) {
         // Parse Message from Server
         Log.i("server", "Reading from Server Completed");
     }

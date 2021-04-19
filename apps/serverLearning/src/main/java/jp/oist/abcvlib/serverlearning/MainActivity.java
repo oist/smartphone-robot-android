@@ -14,6 +14,7 @@ import com.google.flatbuffers.FlatBufferBuilder;
 
 import org.json.JSONObject;
 
+import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -295,19 +296,19 @@ public class MainActivity extends AbcvlibActivity {
             byte[] episode = builder.sizedByteArray();
             java.nio.ByteBuffer bb = java.nio.ByteBuffer.wrap(episode);
             Episode episodeTest = Episode.getRootAsEpisode(bb);
-            Log.i("flatbuff", "TimeSteps Length: "  + String.valueOf(episodeTest.timestepsLength()));
-            Log.i("flatbuff", "WheelCounts TimeStep 0 Length: "  + String.valueOf(episodeTest.timesteps(0).wheelCounts().timestampsLength()));
-            Log.i("flatbuff", "WheelCounts TimeStep 1 Length: "  + String.valueOf(episodeTest.timesteps(1).wheelCounts().timestampsLength()));
-            Log.i("flatbuff", "WheelCounts TimeStep 2 Length: "  + String.valueOf(episodeTest.timesteps(2).wheelCounts().timestampsLength()));
-            Log.i("flatbuff", "WheelCounts TimeStep 3 Length: "  + String.valueOf(episodeTest.timesteps(3).wheelCounts().timestampsLength()));
-            Log.i("flatbuff", "WheelCounts TimeStep 3 idx 0: "  + String.valueOf(episodeTest.timesteps(3).wheelCounts().timestamps(0)));
+            Log.d("flatbuff", "TimeSteps Length: "  + String.valueOf(episodeTest.timestepsLength()));
+            Log.d("flatbuff", "WheelCounts TimeStep 0 Length: "  + String.valueOf(episodeTest.timesteps(0).wheelCounts().timestampsLength()));
+            Log.d("flatbuff", "WheelCounts TimeStep 1 Length: "  + String.valueOf(episodeTest.timesteps(1).wheelCounts().timestampsLength()));
+            Log.d("flatbuff", "WheelCounts TimeStep 2 Length: "  + String.valueOf(episodeTest.timesteps(2).wheelCounts().timestampsLength()));
+            Log.d("flatbuff", "WheelCounts TimeStep 3 Length: "  + String.valueOf(episodeTest.timesteps(3).wheelCounts().timestampsLength()));
+            Log.d("flatbuff", "WheelCounts TimeStep 3 idx 0: "  + String.valueOf(episodeTest.timesteps(3).wheelCounts().timestamps(0)));
 
 
             sendToServer(episode);
 
-            Log.i("flatbuff", "prior to getting msg from server");
-            outputs.socketClient.getMessageFromServer();
-            Log.i("flatbuff", "after getting msg from server");
+//            Log.i("flatbuff", "prior to getting msg from server");
+//            outputs.socketClient.getMessageFromServer();
+//            Log.i("flatbuff", "after getting msg from server");
         }
 
         @Override
@@ -365,19 +366,15 @@ public class MainActivity extends AbcvlibActivity {
     @Override
     protected void newAudioData(float[] audioData, int numSamples){
         timeStepDataBuffer.writeData.soundData.add(audioData, numSamples);
-
     }
 
     @Override
-    public void onServerReadSuccess() {
+    public void onServerReadSuccess(JSONObject jsonHeader, ByteBuffer msgFromServer) {
+        // Parse whatever you sent from python here
         //loadMappedFile...
     }
 
-    /**
-     * Assemble message to server and send.
-     */
     private void sendToServer(byte[] episode){
         socketConnectionManager.sendMsgToServer(episode);
-//        this.outputs.socketClient.writeFlatBufferToServer(byteBuff);
     }
 }

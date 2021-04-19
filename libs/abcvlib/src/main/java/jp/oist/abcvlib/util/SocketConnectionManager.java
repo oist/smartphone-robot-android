@@ -4,23 +4,23 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
+import java.nio.channels.CancelledKeyException;
+import java.nio.channels.ClosedSelectorException;
+import java.nio.channels.IllegalBlockingModeException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Set;
-import java.util.Vector;
 
 public class SocketConnectionManager implements Runnable{
 
     private SocketChannel sc;
     private Selector selector;
-    private int events;
-    private final String TAG = "SocketConnectionManager";
     private SocketListener socketListener;
+    private final String TAG = "SocketConnectionManager";
     private SocketMessage socketMessage;
-    private String serverIp;
-    private int serverPort;
+    private final String serverIp;
+    private final int serverPort;
 
     public SocketConnectionManager(SocketListener socketListener, String serverIp, int serverPort){
         this.socketListener = socketListener;
@@ -34,10 +34,9 @@ public class SocketConnectionManager implements Runnable{
             selector = Selector.open();
             start_connection(serverIp, serverPort);
             do {
-//                Log.i(TAG, "selector.select");
-                events = selector.select(); // events is int representing how many keys are ready
-                if (events > 0){
-                    Log.i(TAG, "events > 0");
+                int eventCount = selector.select(0);
+                Set<SelectionKey> events = selector.selectedKeys(); // events is int representing how many keys have changed state
+                if (eventCount != 0){
                     Set<SelectionKey> selectedKeys = selector.selectedKeys();
                     for (SelectionKey selectedKey : selectedKeys){
                         try{
@@ -61,17 +60,24 @@ public class SocketConnectionManager implements Runnable{
             InetSocketAddress inetSocketAddress = new InetSocketAddress(serverIp, serverPort);
             sc = SocketChannel.open();
             sc.configureBlocking(false);
-            int ops = SelectionKey.OP_READ | SelectionKey.OP_WRITE;
-            socketMessage = new SocketMessage(selector, sc, inetSocketAddress);
+            socketMessage = new SocketMessage(socketListener, sc, selector);
+
+            Log.v(TAG, "registering with selector to connect");
+            int ops = SelectionKey.OP_CONNECT;
             sc.register(selector, ops, socketMessage);
-            sc.connect(inetSocketAddress);
-        } catch (IOException e) {
-            e.printStackTrace();
+
+            Log.d(TAG, "Initializing connection with " + inetSocketAddress);
+            boolean connected = sc.connect(inetSocketAddress);
+            Log.v(TAG, "Connection established?: " + connected);
+
+        } catch (IOException | ClosedSelectorException | IllegalBlockingModeException
+                | CancelledKeyException | IllegalArgumentException e) {
+            Log.e(TAG, "Initial socket connect and registration:", e);
         }
     }
 
     public void sendMsgToServer(byte[] episode){
-        socketMessage.addEpisodeToWriteBuffer(episode);
+        boolean writeSuccess = socketMessage.addEpisodeToWriteBuffer(episode);
     }
 
     /**

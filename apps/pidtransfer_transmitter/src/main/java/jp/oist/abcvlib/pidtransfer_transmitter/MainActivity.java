@@ -77,5 +77,4 @@ public class MainActivity extends AbcvlibActivity {
         showQRCode.setText(R.string.qr_button_show);
         isQRDisplayed = false;
     }
-
 }

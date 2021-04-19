@@ -11,6 +11,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.lang.annotation.Annotation;
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -19,7 +20,7 @@ import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.util.SocketListener;
 
 
-public class SocketClient implements Runnable{
+public class SocketClient implements Runnable, Deprecated{
 
     private Socket socket;
 
@@ -243,7 +244,7 @@ public class SocketClient implements Runnable{
         readPermission = false;
 
         if (socketListener != null){
-            socketListener.onServerReadSuccess();
+//            socketListener.onServerReadSuccess();
         }
 
         return socketMsgIn;
@@ -282,5 +283,9 @@ public class SocketClient implements Runnable{
         socket.close();
     }
 
+    @Override
+    public Class<? extends Annotation> annotationType() {
+        return null;
+    }
 }
 
