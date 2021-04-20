@@ -67,7 +67,7 @@ class StaticHelper {
         catch(UnsatisfiedLinkError e)
         {
             Log.d(TAG, "Cannot load library \"" + Name + "\"");
-            e.printStackTrace();
+            Log.e(TAG,"Error", e);
             result = false;
         }
 

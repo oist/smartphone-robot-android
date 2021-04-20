@@ -43,7 +43,7 @@ public class SocketConnectionManager implements Runnable{
                             SocketMessage socketMessage = (SocketMessage) selectedKey.attachment();
                             socketMessage.process_events(selectedKey);
                         }catch (ClassCastException e){
-                            e.printStackTrace();
+                            Log.e(TAG,"Error", e);
                             Log.e(TAG, "selectedKey attachment not a SocketMessage type");
                         }
                     }
@@ -51,7 +51,7 @@ public class SocketConnectionManager implements Runnable{
             } while (selector.isOpen()); //todo remember to close the selector somewhere
 
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG,"Error", e);
         }
     }
 
@@ -89,7 +89,7 @@ public class SocketConnectionManager implements Runnable{
             selector.close();
             sc.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG,"Error", e);
         }
     }
 

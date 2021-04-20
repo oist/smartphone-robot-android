@@ -80,7 +80,7 @@ public class MainActivity extends AbcvlibActivity {
                         expWeight_.getValue(),
                         maxAbsTilt_.getValue());
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Log.e(TAG,"Error", e);
             }
         }
     };

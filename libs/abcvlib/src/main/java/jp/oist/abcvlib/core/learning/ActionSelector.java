@@ -9,6 +9,7 @@ public class ActionSelector implements Runnable{
     private AbcvlibActivity abcvlibActivity;
     private double reward;
     private Thread mThread;
+    private final String TAG = this.getClass().getName();
 
     public ActionSelector(AbcvlibActivity abcvlibActivity){
         this.abcvlibActivity = abcvlibActivity;
@@ -34,7 +35,7 @@ public class ActionSelector implements Runnable{
                 Log.i("abcvlib", this.toString() + "Waiting for appRunning to be true");
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Log.e(TAG,"Error", e);
             }
         }
 

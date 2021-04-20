@@ -236,7 +236,7 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
                     result = false;
             } catch (Exception e) {
                 result = false;
-                e.printStackTrace();
+                Log.e(TAG,"Error", e);
             }
         }
 
@@ -303,7 +303,7 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
             if (mThread != null)
                 mThread.join();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            Log.e(TAG,"Error", e);
         } finally {
             mThread =  null;
         }
@@ -375,7 +375,7 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
                             JavaCameraView.this.wait();
                         }
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        Log.e(TAG,"Error", e);
                     }
                     if (mCameraFrameReady)
                     {

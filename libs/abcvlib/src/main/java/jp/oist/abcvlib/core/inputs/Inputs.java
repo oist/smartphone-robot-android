@@ -1,5 +1,7 @@
 package jp.oist.abcvlib.core.inputs;
 
+import android.util.Log;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.opencv.android.CameraBridgeViewBase;
@@ -25,6 +27,7 @@ public class Inputs implements CameraBridgeViewBase.CvCameraViewListener2 {
     public Battery battery;
     private final ProcessPriorityThreadFactory processPriorityThreadFactory = new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY, "Inputs");
     private ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(1, processPriorityThreadFactory);
+    private final String TAG = this.getClass().getName();
 
     public Inputs(AbcvlibActivity abcvlibActivity, ImageAnalyzerActivity imageAnalyzerActivity){
 
@@ -70,7 +73,7 @@ public class Inputs implements CameraBridgeViewBase.CvCameraViewListener2 {
             jsonObject.put("wheelSpeedR", 0.0);
 
         } catch (JSONException e) {
-            e.printStackTrace();
+            Log.e(TAG,"Error", e);
         }
 
         return jsonObject;

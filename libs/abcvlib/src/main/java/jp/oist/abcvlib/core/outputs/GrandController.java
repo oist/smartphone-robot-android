@@ -8,6 +8,8 @@ import jp.oist.abcvlib.core.AbcvlibActivity;
 
 public class GrandController extends AbcvlibController{
 
+    private final String TAG = this.getClass().getName();
+
     private AbcvlibActivity abcvlibActivity;
     private ArrayList<AbcvlibController> controllers = new ArrayList<>();
 
@@ -24,7 +26,7 @@ public class GrandController extends AbcvlibController{
                 Log.i("abcvlib", this.toString() + "Waiting for appRunning to be true");
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Log.e(TAG,"Error", e);
             }
         }
 

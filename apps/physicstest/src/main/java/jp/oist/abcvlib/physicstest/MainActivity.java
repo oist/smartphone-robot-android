@@ -80,7 +80,7 @@ public class MainActivity extends AbcvlibActivity {
                 writer.close();
                 writer = new PrintWriter( new BufferedWriter(new FileWriter(filename, true)));
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.e(TAG,"Error", e);
             }
 
             long startTime = System.nanoTime();

@@ -33,6 +33,7 @@ public class CenterBlobController extends AbcvlibController{
     Random rand = new Random();
     // Random choice between -1 and 1.
     int randomSign = rand.nextBoolean() ? 1 : -1;
+    private final String TAG = this.getClass().getName();
 
     public CenterBlobController(AbcvlibActivity abcvlibActivity){
 
@@ -62,7 +63,7 @@ public class CenterBlobController extends AbcvlibController{
                     Log.d("centerblob", "wheelSpeed:" + variableApproachSpeed);
                     staticApproachSpeed = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("staticApproachSpeed").toString());
                 } catch (JSONException e) {
-                    e.printStackTrace();
+                    Log.e(TAG,"Error", e);
                 }
             }
 
@@ -195,7 +196,7 @@ public class CenterBlobController extends AbcvlibController{
             Log.e("abcvlib", "Index out of bounds exception on centroid object.");
         } catch (NullPointerException e){
             Log.e("abcvlib", "centroid not availble for find phi yet");
-            e.printStackTrace();
+            Log.e(TAG,"Error", e);
         }
 
         return phi;

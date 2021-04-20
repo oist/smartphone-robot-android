@@ -98,7 +98,7 @@ public class QRCodeDisplay extends Fragment {
             qrCode.setImageBitmap(bitmap);
 
         } catch (WriterException e) {
-            e.printStackTrace();
+            Log.e(TAG,"Error", e);
         }
 
         return rootView;

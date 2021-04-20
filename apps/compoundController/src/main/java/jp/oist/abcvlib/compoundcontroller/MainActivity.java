@@ -67,7 +67,7 @@ public class MainActivity extends AbcvlibActivity {
                         setSpeed = Double.parseDouble(outputs.socketClient.socketMsgIn.get("wheelSpeedL").toString());
                         d_s = Double.parseDouble(outputs.socketClient.socketMsgIn.get("wheelSpeedControl").toString());
                     } catch (JSONException e) {
-                        e.printStackTrace();
+                        Log.e(TAG,"Error", e);
                     }
                 }
 

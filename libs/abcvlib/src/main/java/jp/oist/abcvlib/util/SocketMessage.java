@@ -60,7 +60,7 @@ public class SocketMessage {
             }
 
         } catch (ClassCastException | IOException | JSONException e){
-            e.printStackTrace();
+            Log.e(TAG,"Error", e);
         }
     }
 
@@ -269,7 +269,7 @@ public class SocketMessage {
             sc.register(selector, ops, this);
             // I want this to trigger the selector that this channel is writeReady.
         } catch (NullPointerException | ClosedChannelException e){
-            e.printStackTrace();
+            Log.e(TAG,"Error", e);
             Log.e(TAG, "SocketConnectionManager.data not initialized yet");
         }
         return success;

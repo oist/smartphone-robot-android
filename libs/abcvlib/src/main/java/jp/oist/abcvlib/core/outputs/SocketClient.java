@@ -43,6 +43,7 @@ public class SocketClient implements Runnable, Deprecated{
     JSONArray weightArray = new JSONArray();
     int arrayIndex = 0;
     SocketListener socketListener;
+    private final String TAG = this.getClass().getName();
 
     public SocketClient(String host, int port, AbcvlibActivity abcvlibActivity){
         this.serverIp = host;
@@ -113,7 +114,7 @@ public class SocketClient implements Runnable, Deprecated{
                 Thread.sleep(1000);
                 Log.i("abcvlib", "Waiting on Python server to initialize. Exception:" + e1);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Log.e(TAG,"Error", e);
             }
         } catch (IOException e2) {
             e2.printStackTrace();
@@ -137,7 +138,7 @@ public class SocketClient implements Runnable, Deprecated{
                 Log.i("abcvlib_timers", "dt=" + dt);
                 prevTime = currentTime;
             } catch (JSONException e) {
-                e.printStackTrace();
+                Log.e(TAG,"Error", e);
             }
         }
     }
@@ -189,7 +190,7 @@ public class SocketClient implements Runnable, Deprecated{
             }
 
         } catch (JSONException e) {
-            e.printStackTrace();
+            Log.e(TAG,"Error", e);
         }
 
         writeInputsToServer(abcvlibActivity.inputs.stateVariables);
@@ -231,7 +232,7 @@ public class SocketClient implements Runnable, Deprecated{
                 Thread.sleep(1000);
                 connect();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Log.e(TAG,"Error", e);
             }
             e3.printStackTrace();
         }
@@ -266,7 +267,7 @@ public class SocketClient implements Runnable, Deprecated{
                 Thread.sleep(1000);
                 connect();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Log.e(TAG,"Error", e);
             }
             e2.printStackTrace();
         }

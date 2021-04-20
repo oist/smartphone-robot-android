@@ -645,7 +645,7 @@ public abstract class CameraActivity extends AbcvlibActivity
             Thread.sleep(sleeptime);
           }
         } catch (InterruptedException e){
-          e.printStackTrace();
+          Log.e(TAG,"Error", e);
         }
       }
     }

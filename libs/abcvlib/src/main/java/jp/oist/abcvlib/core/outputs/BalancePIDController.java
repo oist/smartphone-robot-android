@@ -11,6 +11,8 @@ import jp.oist.abcvlib.core.AbcvlibActivity;
 
 public class BalancePIDController extends AbcvlibController{
 
+    private final String TAG = this.getClass().getName();
+
     // Initialize all sensor reading variables
     double p_tilt = -24;
     double i_tilt = 0;
@@ -108,7 +110,7 @@ public class BalancePIDController extends AbcvlibController{
                     bounceLoopCount = 0;
                     linearController();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    Log.e(TAG,"Error", e);
                 }
             }
 
@@ -161,7 +163,7 @@ public class BalancePIDController extends AbcvlibController{
                 Log.v("abcvlib", "linearConroller updated values from socketClient");
 
                 } catch (JSONException e){
-                    e.printStackTrace();
+                    Log.e(TAG,"Error", e);
                 }
             } else {
                 setPoint = setPoint_;
@@ -175,7 +177,7 @@ public class BalancePIDController extends AbcvlibController{
 
             }
         } catch (NullPointerException e){
-            e.printStackTrace();
+            Log.e(TAG,"Error", e);
             Thread.sleep(1000);
         }
 

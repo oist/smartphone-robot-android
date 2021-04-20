@@ -3,6 +3,7 @@ package jp.oist.abcvlib.core.outputs;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.util.Log;
 
 import java.io.IOException;
 
@@ -12,6 +13,8 @@ import jp.oist.abcvlib.core.R;
 import static android.content.Context.AUDIO_SERVICE;
 
 public class MediaPlayerRunnable implements Runnable{
+
+    private final String TAG = this.getClass().getName();
 
     private AbcvlibActivity abcvlibActivity;
     private AudioManager audioManager;
@@ -40,7 +43,7 @@ public class MediaPlayerRunnable implements Runnable{
             mediaPlayer.setLooping(true);
             mediaPlayer.prepare();
         } catch (IllegalArgumentException | SecurityException| IllegalStateException | IOException e) {
-            e.printStackTrace();
+            Log.e(TAG,"Error", e);
         }
         audioManager.requestAudioFocus(null, AudioManager.STREAM_ALARM,AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
         mediaPlayer.start();

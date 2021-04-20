@@ -2,6 +2,7 @@ package org.opencv.android;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.util.Log;
 
 import org.opencv.core.CvException;
 import org.opencv.core.CvType;
@@ -40,7 +41,7 @@ public class Utils {
 
             return resFile.getAbsolutePath();
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e("Utils","Error", e);
             throw new CvException("Failed to export resource " + resName
                     + ". Exception thrown: " + e);
         }

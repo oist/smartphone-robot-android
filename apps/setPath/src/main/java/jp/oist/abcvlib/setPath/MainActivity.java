@@ -50,7 +50,7 @@ public class MainActivity extends AbcvlibActivity {
                     outputs.motion.setWheelOutput(speed, speed / 3);
                     Thread.sleep(5000);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    Log.e(TAG,"Error", e);
                 }
             }
         }

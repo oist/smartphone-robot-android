@@ -133,7 +133,7 @@ public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>>{
 //            outputs.balancePIDController.setPID(myMap.get("pt"), 0, myMap.get("dt"),
 //                    myMap.get("sp"), myMap.get("pw"), myMap.get("ew"), myMap.get("mt"));
 //        } catch (InterruptedException e) {
-//            e.printStackTrace();
+//            Log.e(TAG,"Error", e);
 //        }
         try {
             JSONObject jsonObject = new JSONObject(barcodeText);
@@ -142,7 +142,7 @@ public class BarcodeScannerProcessor extends VisionProcessorBase<List<Barcode>>{
                     jsonObject.getDouble("pw"), jsonObject.getDouble("ew"),
                     jsonObject.getDouble("mt"));
         } catch (JSONException | InterruptedException e) {
-            e.printStackTrace();
+            Log.e(TAG,"Error", e);
         }
     }
 

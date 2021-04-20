@@ -84,7 +84,7 @@ public class PID_GUI extends Fragment {
                         expWeight_.getValue(),
                         maxAbsTilt_.getValue());
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Log.e(TAG,"Error", e);
             }
         }
     };
@@ -129,7 +129,7 @@ public class PID_GUI extends Fragment {
             try {
                 controlValues.put(entry.getKey(), value);
             } catch (JSONException e) {
-                e.printStackTrace();
+                Log.e(TAG,"Error", e);
             }
         }
         return controlValues.toString();

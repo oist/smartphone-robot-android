@@ -23,6 +23,7 @@ import java.util.List;
  * Not used anywhere else in the library at this time. Leaving for possible future use.
  */
 public class FileOps {
+    private final String TAG = this.getClass().getName();
 
     String saved="saved!";
 
@@ -51,7 +52,7 @@ public class FileOps {
 
             }
         }catch(Exception e){
-            e.printStackTrace();
+            Log.e(TAG,"Error", e);
         }
 
     }
@@ -76,7 +77,7 @@ public class FileOps {
             } catch (NullPointerException e){
 
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.e(TAG,"Error", e);
                 Log.e("abcvlib", "File read failed: " + e.toString());
 
             }
@@ -99,7 +100,7 @@ public class FileOps {
             try {
                 stream = new FileOutputStream(file);
             } catch (FileNotFoundException e) {
-                e.printStackTrace();
+                Log.e(TAG,"Error", e);
             }
 
             try {
@@ -111,7 +112,7 @@ public class FileOps {
                 try {
                     stream.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    Log.e(TAG,"Error", e);
                 }
             }
         }
@@ -143,7 +144,7 @@ public class FileOps {
         try {
             file.createNewFile();
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG,"Error", e);
         }
         return file;
     }

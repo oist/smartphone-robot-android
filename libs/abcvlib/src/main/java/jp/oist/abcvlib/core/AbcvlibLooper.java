@@ -26,6 +26,8 @@ import ioio.lib.util.IOIOConnectionManager;
  */
 public class AbcvlibLooper extends BaseIOIOLooper {
 
+    private final String TAG = this.getClass().getName();
+
     /**
      * Boolean to switch on and off logger functions. On by default but can be set to false via
      */
@@ -550,10 +552,10 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             // Intentional empty catch block?
         } catch (InterruptedException e) {
             Log.i("abcvlib", "AbcvlibLooper.loop threw an InteruptedException in getEncoderStates");
-            e.printStackTrace();
+            Log.e(TAG,"Error", e);
         } catch (ConnectionLostException e){
             Log.i("abcvlib", "AbcvlibLooper.loop threw an ConnectionLostException");
-            e.printStackTrace();
+            Log.e(TAG,"Error", e);
             throw e;
         }
     }
@@ -643,9 +645,9 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         try {
             chargerVoltage = chargerVoltageMonitor.getVoltage();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            Log.e(TAG,"Error", e);
         } catch (ConnectionLostException e) {
-            e.printStackTrace();
+            Log.e(TAG,"Error", e);
         }
 
         abcvlibActivity.inputs.battery.setChargerVoltage(chargerVoltage, timeStamp[indexCurrent]);
@@ -659,9 +661,9 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         try {
             batteryVoltage = batteryVoltageMonitor.getVoltage();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            Log.e(TAG,"Error", e);
         } catch (ConnectionLostException e) {
-            e.printStackTrace();
+            Log.e(TAG,"Error", e);
         }
 
         abcvlibActivity.inputs.battery.setBatteryVoltage(batteryVoltage, timeStamp[indexCurrent]);

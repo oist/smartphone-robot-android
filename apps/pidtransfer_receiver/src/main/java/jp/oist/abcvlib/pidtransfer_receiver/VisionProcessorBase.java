@@ -231,7 +231,7 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
                                     Toast.LENGTH_SHORT)
                                     .show();
                             Log.d(TAG, error);
-                            e.printStackTrace();
+                            Log.e(TAG,"Error", e);
                             VisionProcessorBase.this.onFailure(e);
                         });
     }

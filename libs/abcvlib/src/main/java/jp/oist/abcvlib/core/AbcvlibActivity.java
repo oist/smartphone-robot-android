@@ -245,7 +245,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
 //            try {
 //                Thread.sleep(100);
 //            } catch (InterruptedException e) {
-//                e.printStackTrace();
+//                Log.e(TAG,"Error", e);
 //            }
 //        }
         Log.d("abcvlib", "createIOIOLooper Finished");

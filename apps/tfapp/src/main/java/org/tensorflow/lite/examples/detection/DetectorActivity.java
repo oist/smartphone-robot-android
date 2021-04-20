@@ -112,7 +112,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
               TF_OD_API_IS_QUANTIZED);
       cropSize = TF_OD_API_INPUT_SIZE;
     } catch (final IOException e) {
-      e.printStackTrace();
+      Log.e(TAG,"Error", e);
       LOGGER.e(e, "Exception initializing classifier!");
       Toast toast =
           Toast.makeText(
@@ -293,7 +293,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         // PNG is a lossless format, the compression factor (100) is ignored
         Log.i("imagesave", "image saved");
       } catch (IOException e) {
-        e.printStackTrace();
+        Log.e(TAG,"Error", e);
       }
     }
   }
@@ -304,7 +304,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       croppedBitmap = Bitmap.createBitmap(bitmap, (bb.left < 0 ? 0 : (int)bb.left),
               (bb.top < 0 ? 0 : (int)bb.top), (int)bb.width(), (int)bb.height());
     } catch (IllegalArgumentException e){
-      e.printStackTrace();
+      Log.e(TAG,"Error", e);
     }
     return croppedBitmap;
   }
