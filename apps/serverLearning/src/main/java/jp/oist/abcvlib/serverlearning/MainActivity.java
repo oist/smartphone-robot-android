@@ -364,7 +364,7 @@ public class MainActivity extends AbcvlibActivity {
 
 
     @Override
-    protected void newAudioData(float[] audioData, int numSamples){
+    protected void onNewAudioData(float[] audioData, int numSamples){
         timeStepDataBuffer.writeData.soundData.add(audioData, numSamples);
     }
 

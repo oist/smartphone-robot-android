@@ -291,7 +291,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
                     Log.w("microphone", "Missed some audio samples");
                 }
 //                Log.v("microphone", numSamples + " / " + writeBufferSizeFrames + " samples read");
-                mainActivity.newAudioData(audioData, numSamples);
+                mainActivity.onNewAudioData(audioData, numSamples);
             }
         });
     }
@@ -302,7 +302,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
      * abstracted to this AbcvlibAcvitiy.
      * @param audioData
      */
-    protected void newAudioData(float[] audioData, int numSamples){
+    protected void onNewAudioData(float[] audioData, int numSamples){
     }
 
     @Override
