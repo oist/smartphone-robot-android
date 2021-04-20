@@ -4,10 +4,7 @@ import android.media.AudioTimestamp;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import jp.oist.abcvlib.core.learning.ActionDistribution;
 
 public class TimeStepDataBuffer {
 
@@ -171,32 +168,38 @@ public class TimeStepDataBuffer {
         }
 
         class SoundData{
-            HashMap<String, Long> StartTime = new HashMap<String, Long>();
-            HashMap<String, Long> EndTime = new HashMap<String, Long>();
-            double TotalTime;
-            int SampleRate;
-            long TotalSamples;
-            ArrayList<Float> level = new ArrayList<Float>();
+            AudioTimestamp startTime = new AudioTimestamp();
+            AudioTimestamp endTime = new AudioTimestamp();
+            double totalTime;
+            int sampleRate;
+            long totalSamples;
+            ArrayList<Float> levels = new ArrayList<Float>();
 
             public SoundData(){
             }
 
             public void add(float[] _levels, int _numSamples){
                 for (float _level : _levels){
-                    level.add(_level);
+                    levels.add(_level);
                 }
-                TotalSamples += _numSamples;
+                totalSamples += _numSamples;
             }
 
             public void setMetaData(int sampleRate, AudioTimestamp startTime, AudioTimestamp endTime){
-                this.StartTime.put("framePosition", startTime.framePosition);
-                this.StartTime.put("nanotime", startTime.nanoTime);
-                this.EndTime.put("framePosition", endTime.framePosition);
-                this.EndTime.put("nanotime", endTime.nanoTime);
-                double totalTime = (endTime.nanoTime - startTime.nanoTime) * 10e-10;
-                this.TotalTime = totalTime;
-                this.SampleRate = sampleRate;
-                this.TotalSamples = endTime.framePosition - startTime.framePosition;
+                this.startTime = startTime;
+                this.endTime = endTime;
+                this.totalTime = (endTime.nanoTime - startTime.nanoTime) * 10e-10;
+                this.sampleRate = sampleRate;
+                this.totalSamples = endTime.framePosition - startTime.framePosition;
+            }
+
+            public float[] getLevels(){
+                int size = levels.size();
+                float[] levelsFloat = new float[size];
+                for (int i=0 ; i < size ; i++){
+                    levelsFloat[i] = levels.get(i);
+                }
+                return levelsFloat;
             }
         }
 
