@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.media.Image;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Size;
 
 import androidx.annotation.NonNull;
 import androidx.camera.core.ImageAnalysis;
@@ -15,6 +16,7 @@ import com.google.flatbuffers.FlatBufferBuilder;
 import org.json.JSONObject;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -25,7 +27,6 @@ import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.audio.MicrophoneInput;
 import jp.oist.abcvlib.core.inputs.vision.YuvToRgbConverter;
 import jp.oist.abcvlib.core.learning.fbclasses.*;
-import jp.oist.abcvlib.util.SocketListener;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.SocketConnectionManager;
 
@@ -71,13 +72,13 @@ public class MainActivity extends AbcvlibActivity {
 
         executor.execute(socketConnectionManager = new SocketConnectionManager(this,"192.168.19.196", 3000));
 
-//        imageAnalysis =
-//                new ImageAnalysis.Builder()
-//                        .setTargetResolution(new Size(10, 10))
-//                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-//                        .setImageQueueDepth(2)
-//                        .build();
-//        imageAnalysis.setAnalyzer(imageExecutor, new ImageDataGatherer());
+        imageAnalysis =
+                new ImageAnalysis.Builder()
+                        .setTargetResolution(new Size(10, 10))
+                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                        .setImageQueueDepth(2)
+                        .build();
+        imageAnalysis.setAnalyzer(imageExecutor, new ImageDataGatherer());
 
         //todo I guess the imageAnalyzerActivity Interface is uncessary
         initialzer(this, "192.168.0.108", 3000, null, this);
@@ -236,14 +237,16 @@ public class MainActivity extends AbcvlibActivity {
 
         public void addTimeStep(){
 
-            int wc = addWheelCounts();
-            int cd = addChargerData();
-            int bd = addBatteryData();
+            int _wheelCounts = addWheelCounts();
+            int _chargerData = addChargerData();
+            int _batteryData = addBatteryData();
+            int _soundData = addSoundData();
 
             TimeStep.startTimeStep(builder);
-            TimeStep.addWheelCounts(builder, wc);
-            TimeStep.addChargerData(builder, cd);
-            TimeStep.addBatteryData(builder, bd);
+            TimeStep.addWheelCounts(builder, _wheelCounts);
+            TimeStep.addChargerData(builder, _chargerData);
+            TimeStep.addBatteryData(builder, _batteryData);
+            TimeStep.addSoundData(builder, _soundData);
             int ts = TimeStep.endTimeStep(builder);
             timeStepVector[timeStepCount]  = ts;
         }
@@ -280,9 +283,37 @@ public class MainActivity extends AbcvlibActivity {
             return ChargerData.createChargerData(builder, ts, voltage);
         }
 
-//        private int addImageData(){}
-//        private int addSoundData(){}
+        private int addSoundData(){
+
+            TimeStepDataBuffer.TimeStepData.SoundData soundData = timeStepDataBuffer.readData.soundData;
+
+            Log.i("flatbuff", "Sound Data TotalSamples: " +
+                    soundData.totalSamples);
+
+            int _startTime = AudioTimestamp.createAudioTimestamp(builder,
+                    soundData.startTime.framePosition,
+                    soundData.startTime.nanoTime);
+            int _endTime = AudioTimestamp.createAudioTimestamp(builder,
+                    soundData.startTime.framePosition,
+                    soundData.startTime.nanoTime);
+            int _levels = SoundData.createLevelsVector(builder,
+                    timeStepDataBuffer.readData.soundData.getLevels());
+
+            SoundData.startSoundData(builder);
+            SoundData.addStartTime(builder, _startTime);
+            SoundData.addEndTime(builder, _endTime);
+            SoundData.addTotalTime(builder, soundData.totalTime);
+            SoundData.addSampleRate(builder, soundData.sampleRate);
+            SoundData.addTotalSamples(builder, soundData.totalSamples);
+            SoundData.addLevels(builder, _levels);
+            int _soundData = SoundData.endSoundData(builder);
+
+            return _soundData;
+        }
+
 //        private int addActionData(){}
+        //        private int addImageData(){}
+
 
         public void endEpisode(){
             closeall();
