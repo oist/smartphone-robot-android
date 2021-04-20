@@ -29,14 +29,14 @@ table ImageData {
     images:[Image];
 }
 table SoundData{
-    start_time:[AudioTimestamp];
-    end_time:[AudioTimestamp];
+    start_time:AudioTimestamp;
+    end_time:AudioTimestamp;
     total_time:double;
     sample_rate:int;
     total_samples:long;
     levels:[float];
 }
-struct RobotAction{
+table RobotAction{
     motion_action:byte;
     comm_action:byte;
 }
@@ -51,7 +51,7 @@ table Pixels {
     g:[int];
     b:[int];
 }
-struct AudioTimestamp {
+table AudioTimestamp {
     frame_position:long;
     nanotime:long;
 }

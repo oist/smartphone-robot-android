@@ -15,16 +15,10 @@ public final class SoundData extends Table {
   public void __init(int _i, ByteBuffer _bb) { __reset(_i, _bb); }
   public SoundData __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
-  public jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp startTime(int j) { return startTime(new jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp(), j); }
-  public jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp startTime(jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp obj, int j) { int o = __offset(4); return o != 0 ? obj.__assign(__vector(o) + j * 16, bb) : null; }
-  public int startTimeLength() { int o = __offset(4); return o != 0 ? __vector_len(o) : 0; }
-  public jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp.Vector startTimeVector() { return startTimeVector(new jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp.Vector()); }
-  public jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp.Vector startTimeVector(jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp.Vector obj) { int o = __offset(4); return o != 0 ? obj.__assign(__vector(o), 16, bb) : null; }
-  public jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp endTime(int j) { return endTime(new jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp(), j); }
-  public jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp endTime(jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp obj, int j) { int o = __offset(6); return o != 0 ? obj.__assign(__vector(o) + j * 16, bb) : null; }
-  public int endTimeLength() { int o = __offset(6); return o != 0 ? __vector_len(o) : 0; }
-  public jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp.Vector endTimeVector() { return endTimeVector(new jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp.Vector()); }
-  public jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp.Vector endTimeVector(jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp.Vector obj) { int o = __offset(6); return o != 0 ? obj.__assign(__vector(o), 16, bb) : null; }
+  public jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp startTime() { return startTime(new jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp()); }
+  public jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp startTime(jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp obj) { int o = __offset(4); return o != 0 ? obj.__assign(__indirect(o + bb_pos), bb) : null; }
+  public jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp endTime() { return endTime(new jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp()); }
+  public jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp endTime(jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp obj) { int o = __offset(6); return o != 0 ? obj.__assign(__indirect(o + bb_pos), bb) : null; }
   public double totalTime() { int o = __offset(8); return o != 0 ? bb.getDouble(o + bb_pos) : 0.0; }
   public int sampleRate() { int o = __offset(10); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
   public long totalSamples() { int o = __offset(12); return o != 0 ? bb.getLong(o + bb_pos) : 0L; }
@@ -54,9 +48,7 @@ public final class SoundData extends Table {
 
   public static void startSoundData(FlatBufferBuilder builder) { builder.startTable(6); }
   public static void addStartTime(FlatBufferBuilder builder, int startTimeOffset) { builder.addOffset(0, startTimeOffset, 0); }
-  public static void startStartTimeVector(FlatBufferBuilder builder, int numElems) { builder.startVector(16, numElems, 8); }
   public static void addEndTime(FlatBufferBuilder builder, int endTimeOffset) { builder.addOffset(1, endTimeOffset, 0); }
-  public static void startEndTimeVector(FlatBufferBuilder builder, int numElems) { builder.startVector(16, numElems, 8); }
   public static void addTotalTime(FlatBufferBuilder builder, double totalTime) { builder.addDouble(2, totalTime, 0.0); }
   public static void addSampleRate(FlatBufferBuilder builder, int sampleRate) { builder.addInt(3, sampleRate, 0); }
   public static void addTotalSamples(FlatBufferBuilder builder, long totalSamples) { builder.addLong(4, totalSamples, 0L); }

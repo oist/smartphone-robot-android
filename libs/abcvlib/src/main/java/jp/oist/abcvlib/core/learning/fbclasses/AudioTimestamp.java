@@ -8,25 +8,38 @@ import java.util.*;
 import com.google.flatbuffers.*;
 
 @SuppressWarnings("unused")
-public final class AudioTimestamp extends Struct {
+public final class AudioTimestamp extends Table {
+  public static void ValidateVersion() { Constants.FLATBUFFERS_1_12_0(); }
+  public static AudioTimestamp getRootAsAudioTimestamp(ByteBuffer _bb) { return getRootAsAudioTimestamp(_bb, new AudioTimestamp()); }
+  public static AudioTimestamp getRootAsAudioTimestamp(ByteBuffer _bb, AudioTimestamp obj) { _bb.order(ByteOrder.LITTLE_ENDIAN); return (obj.__assign(_bb.getInt(_bb.position()) + _bb.position(), _bb)); }
   public void __init(int _i, ByteBuffer _bb) { __reset(_i, _bb); }
   public AudioTimestamp __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
-  public long framePosition() { return bb.getLong(bb_pos + 0); }
-  public long nanotime() { return bb.getLong(bb_pos + 8); }
+  public long framePosition() { int o = __offset(4); return o != 0 ? bb.getLong(o + bb_pos) : 0L; }
+  public long nanotime() { int o = __offset(6); return o != 0 ? bb.getLong(o + bb_pos) : 0L; }
 
-  public static int createAudioTimestamp(FlatBufferBuilder builder, long framePosition, long nanotime) {
-    builder.prep(8, 16);
-    builder.putLong(nanotime);
-    builder.putLong(framePosition);
-    return builder.offset();
+  public static int createAudioTimestamp(FlatBufferBuilder builder,
+      long frame_position,
+      long nanotime) {
+    builder.startTable(2);
+    AudioTimestamp.addNanotime(builder, nanotime);
+    AudioTimestamp.addFramePosition(builder, frame_position);
+    return AudioTimestamp.endAudioTimestamp(builder);
+  }
+
+  public static void startAudioTimestamp(FlatBufferBuilder builder) { builder.startTable(2); }
+  public static void addFramePosition(FlatBufferBuilder builder, long framePosition) { builder.addLong(0, framePosition, 0L); }
+  public static void addNanotime(FlatBufferBuilder builder, long nanotime) { builder.addLong(1, nanotime, 0L); }
+  public static int endAudioTimestamp(FlatBufferBuilder builder) {
+    int o = builder.endTable();
+    return o;
   }
 
   public static final class Vector extends BaseVector {
     public Vector __assign(int _vector, int _element_size, ByteBuffer _bb) { __reset(_vector, _element_size, _bb); return this; }
 
     public AudioTimestamp get(int j) { return get(new AudioTimestamp(), j); }
-    public AudioTimestamp get(AudioTimestamp obj, int j) {  return obj.__assign(__element(j), bb); }
+    public AudioTimestamp get(AudioTimestamp obj, int j) {  return obj.__assign(__indirect(__element(j), bb), bb); }
   }
 }
 

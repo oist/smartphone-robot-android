@@ -8,25 +8,38 @@ import java.util.*;
 import com.google.flatbuffers.*;
 
 @SuppressWarnings("unused")
-public final class RobotAction extends Struct {
+public final class RobotAction extends Table {
+  public static void ValidateVersion() { Constants.FLATBUFFERS_1_12_0(); }
+  public static RobotAction getRootAsRobotAction(ByteBuffer _bb) { return getRootAsRobotAction(_bb, new RobotAction()); }
+  public static RobotAction getRootAsRobotAction(ByteBuffer _bb, RobotAction obj) { _bb.order(ByteOrder.LITTLE_ENDIAN); return (obj.__assign(_bb.getInt(_bb.position()) + _bb.position(), _bb)); }
   public void __init(int _i, ByteBuffer _bb) { __reset(_i, _bb); }
   public RobotAction __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
-  public byte motionAction() { return bb.get(bb_pos + 0); }
-  public byte commAction() { return bb.get(bb_pos + 1); }
+  public byte motionAction() { int o = __offset(4); return o != 0 ? bb.get(o + bb_pos) : 0; }
+  public byte commAction() { int o = __offset(6); return o != 0 ? bb.get(o + bb_pos) : 0; }
 
-  public static int createRobotAction(FlatBufferBuilder builder, byte motionAction, byte commAction) {
-    builder.prep(1, 2);
-    builder.putByte(commAction);
-    builder.putByte(motionAction);
-    return builder.offset();
+  public static int createRobotAction(FlatBufferBuilder builder,
+      byte motion_action,
+      byte comm_action) {
+    builder.startTable(2);
+    RobotAction.addCommAction(builder, comm_action);
+    RobotAction.addMotionAction(builder, motion_action);
+    return RobotAction.endRobotAction(builder);
+  }
+
+  public static void startRobotAction(FlatBufferBuilder builder) { builder.startTable(2); }
+  public static void addMotionAction(FlatBufferBuilder builder, byte motionAction) { builder.addByte(0, motionAction, 0); }
+  public static void addCommAction(FlatBufferBuilder builder, byte commAction) { builder.addByte(1, commAction, 0); }
+  public static int endRobotAction(FlatBufferBuilder builder) {
+    int o = builder.endTable();
+    return o;
   }
 
   public static final class Vector extends BaseVector {
     public Vector __assign(int _vector, int _element_size, ByteBuffer _bb) { __reset(_vector, _element_size, _bb); return this; }
 
     public RobotAction get(int j) { return get(new RobotAction(), j); }
-    public RobotAction get(RobotAction obj, int j) {  return obj.__assign(__element(j), bb); }
+    public RobotAction get(RobotAction obj, int j) {  return obj.__assign(__indirect(__element(j), bb), bb); }
   }
 }
 

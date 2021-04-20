@@ -26,7 +26,24 @@ public final class TimeStep extends Table {
   public jp.oist.abcvlib.core.learning.fbclasses.SoundData soundData() { return soundData(new jp.oist.abcvlib.core.learning.fbclasses.SoundData()); }
   public jp.oist.abcvlib.core.learning.fbclasses.SoundData soundData(jp.oist.abcvlib.core.learning.fbclasses.SoundData obj) { int o = __offset(12); return o != 0 ? obj.__assign(__indirect(o + bb_pos), bb) : null; }
   public jp.oist.abcvlib.core.learning.fbclasses.RobotAction actions() { return actions(new jp.oist.abcvlib.core.learning.fbclasses.RobotAction()); }
-  public jp.oist.abcvlib.core.learning.fbclasses.RobotAction actions(jp.oist.abcvlib.core.learning.fbclasses.RobotAction obj) { int o = __offset(14); return o != 0 ? obj.__assign(o + bb_pos, bb) : null; }
+  public jp.oist.abcvlib.core.learning.fbclasses.RobotAction actions(jp.oist.abcvlib.core.learning.fbclasses.RobotAction obj) { int o = __offset(14); return o != 0 ? obj.__assign(__indirect(o + bb_pos), bb) : null; }
+
+  public static int createTimeStep(FlatBufferBuilder builder,
+      int wheel_countsOffset,
+      int charger_dataOffset,
+      int battery_dataOffset,
+      int image_dataOffset,
+      int sound_dataOffset,
+      int actionsOffset) {
+    builder.startTable(6);
+    TimeStep.addActions(builder, actionsOffset);
+    TimeStep.addSoundData(builder, sound_dataOffset);
+    TimeStep.addImageData(builder, image_dataOffset);
+    TimeStep.addBatteryData(builder, battery_dataOffset);
+    TimeStep.addChargerData(builder, charger_dataOffset);
+    TimeStep.addWheelCounts(builder, wheel_countsOffset);
+    return TimeStep.endTimeStep(builder);
+  }
 
   public static void startTimeStep(FlatBufferBuilder builder) { builder.startTable(6); }
   public static void addWheelCounts(FlatBufferBuilder builder, int wheelCountsOffset) { builder.addOffset(0, wheelCountsOffset, 0); }
@@ -34,7 +51,7 @@ public final class TimeStep extends Table {
   public static void addBatteryData(FlatBufferBuilder builder, int batteryDataOffset) { builder.addOffset(2, batteryDataOffset, 0); }
   public static void addImageData(FlatBufferBuilder builder, int imageDataOffset) { builder.addOffset(3, imageDataOffset, 0); }
   public static void addSoundData(FlatBufferBuilder builder, int soundDataOffset) { builder.addOffset(4, soundDataOffset, 0); }
-  public static void addActions(FlatBufferBuilder builder, int actionsOffset) { builder.addStruct(5, actionsOffset, 0); }
+  public static void addActions(FlatBufferBuilder builder, int actionsOffset) { builder.addOffset(5, actionsOffset, 0); }
   public static int endTimeStep(FlatBufferBuilder builder) {
     int o = builder.endTable();
     return o;
