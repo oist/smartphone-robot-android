@@ -97,10 +97,10 @@ public class MainActivity extends AbcvlibActivity {
                 batteryDataGatherer = new BatteryDataGatherer();
                 timeStepDataAssembler = new TimeStepDataAssembler();
 //        testFlatBuffers();
-                wheelDataGathererFuture = executor.scheduleAtFixedRate(wheelDataGatherer, 0, 100, TimeUnit.MILLISECONDS);
-                chargerDataGathererFuture = executor.scheduleAtFixedRate(new ChargerDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
-                batteryDataGathererFuture = executor.scheduleAtFixedRate(new BatteryDataGatherer(), 0, 100, TimeUnit.MILLISECONDS);
-                timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(timeStepDataAssembler, 0,500, TimeUnit.MILLISECONDS);
+                wheelDataGathererFuture = executor.scheduleAtFixedRate(wheelDataGatherer, 500, 100, TimeUnit.MILLISECONDS);
+                chargerDataGathererFuture = executor.scheduleAtFixedRate(new ChargerDataGatherer(), 500, 100, TimeUnit.MILLISECONDS);
+                batteryDataGathererFuture = executor.scheduleAtFixedRate(new BatteryDataGatherer(), 500, 100, TimeUnit.MILLISECONDS);
+                timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(timeStepDataAssembler, 500,500, TimeUnit.MILLISECONDS);
                 microphoneInput.start();
             }
         });
@@ -164,7 +164,7 @@ public class MainActivity extends AbcvlibActivity {
         @androidx.camera.core.ExperimentalGetImage
         public void analyze(@NonNull ImageProxy imageProxy) {
             Image image = imageProxy.getImage();
-            if (image != null && timeStepDataBuffer.writeData.imageData.images.size() < 1) {
+            if (image != null) {
                 int width = image.getWidth();
                 int height = image.getHeight();
                 long timestamp = image.getTimestamp();
@@ -223,7 +223,7 @@ public class MainActivity extends AbcvlibActivity {
     class TimeStepDataAssembler implements Runnable{
 
         private int timeStepCount = 0;
-        private int maxTimeStep = 3;
+        private int maxTimeStep = 5;
         private FlatBufferBuilder builder;
         private int[] timeStepVector = new int[maxTimeStep + 1];
 
@@ -241,12 +241,14 @@ public class MainActivity extends AbcvlibActivity {
             int _chargerData = addChargerData();
             int _batteryData = addBatteryData();
             int _soundData = addSoundData();
+            int _imageData = addImageData();
 
             TimeStep.startTimeStep(builder);
             TimeStep.addWheelCounts(builder, _wheelCounts);
             TimeStep.addChargerData(builder, _chargerData);
             TimeStep.addBatteryData(builder, _batteryData);
             TimeStep.addSoundData(builder, _soundData);
+            TimeStep.addImageData(builder, _imageData);
             int ts = TimeStep.endTimeStep(builder);
             timeStepVector[timeStepCount]  = ts;
         }
@@ -311,8 +313,47 @@ public class MainActivity extends AbcvlibActivity {
             return _soundData;
         }
 
+        private int addImageData(){
+            TimeStepDataBuffer.TimeStepData.ImageData imageData = timeStepDataBuffer.readData.imageData;
+
+            // Offset for all image data to be returned from this method
+            int _imageData = 0;
+
+            int numOfImages = imageData.images.size();
+
+            Log.i("flatbuff", numOfImages + " images gathered");
+
+            int[] _images = new int[numOfImages];
+
+            for (int i = 0; i < numOfImages ; i++){
+                TimeStepDataBuffer.TimeStepData.ImageData.SingleImage image = imageData.images.get(i);
+
+                int _r = Pixels.createRVector(builder, image.pixels.r);
+                int _g = Pixels.createGVector(builder, image.pixels.g);
+                int _b = Pixels.createBVector(builder, image.pixels.b);
+                int _pixels = Pixels.createPixels(builder, _r, _g, _b);
+
+                jp.oist.abcvlib.core.learning.fbclasses.Image.startImage(builder);
+                jp.oist.abcvlib.core.learning.fbclasses.Image.addPixels(builder, _pixels);
+                jp.oist.abcvlib.core.learning.fbclasses.Image.addTimestamp(builder, image.timestamp);
+                jp.oist.abcvlib.core.learning.fbclasses.Image.addHeight(builder, image.height);
+                jp.oist.abcvlib.core.learning.fbclasses.Image.addWidth(builder, image.width);
+                int _image = jp.oist.abcvlib.core.learning.fbclasses.Image.endImage(builder);
+
+                _images[i] = _image;
+            }
+
+            if (numOfImages > 0){
+                int _images_offset = ImageData.createImagesVector(builder, _images);
+                ImageData.startImageData(builder);
+                ImageData.addImages(builder, _images_offset);
+                _imageData = ImageData.endImageData(builder);
+            }
+
+            return _imageData;
+        }
+
 //        private int addActionData(){}
-        //        private int addImageData(){}
 
 
         public void endEpisode(){
@@ -381,7 +422,7 @@ public class MainActivity extends AbcvlibActivity {
             wheelDataGathererFuture.cancel(true);
             chargerDataGathererFuture.cancel(true);
             batteryDataGathererFuture.cancel(true);
-//            imageAnalysis.clearAnalyzer();
+            imageAnalysis.clearAnalyzer();
             microphoneInput.stop();
             microphoneInput.close();
         }

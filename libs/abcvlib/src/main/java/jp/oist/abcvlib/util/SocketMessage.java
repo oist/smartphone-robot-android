@@ -6,6 +6,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.ClosedChannelException;
@@ -13,6 +14,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
 import java.util.Vector;
 
 public class SocketMessage {
@@ -30,6 +32,7 @@ public class SocketMessage {
     private JSONObject jsonHeaderWrite;
     private boolean msgReadComplete = false;
     private SocketListener socketListener;
+    private long socketTimeStart;
 
 
     public SocketMessage(SocketListener socketListener, SocketChannel sc, Selector selector){
@@ -132,10 +135,13 @@ public class SocketMessage {
 
                 Log.v(TAG, "socketChannel.isConnected ? : " + socketChannel.isConnected());
 
-                // Write Bytes to socketChannel
-                if (_send_buffer.remaining() > 0){
+                // Write Bytes to socketChannel //todo shouldn't be while as should be non-blocking
+                while (_send_buffer.remaining() > 0){
                     int numBytes = socketChannel.write(_send_buffer);
-                    Log.d(TAG, "Sent " + numBytes + " bytes to " + socketChannel.getRemoteAddress());
+                    int percentDone = (int) Math.ceil((((double) _send_buffer.limit() - (double) _send_buffer.remaining())
+                            / (double) _send_buffer.limit()) * 100);
+                    int total = _send_buffer.limit() / 1000000;
+//                    Log.d(TAG, "Sent " + percentDone + "% of " + total + "Mb to " + socketChannel.getRemoteAddress());
                 }
             } else{
                 // Write Bytes to socketChannel
@@ -144,6 +150,11 @@ public class SocketMessage {
                 }
             }
             if (_send_buffer.remaining() == 0){
+                int total = _send_buffer.limit() / 1000000;
+                double timeTaken = (System.nanoTime() - socketTimeStart) * 10e-10;
+                DecimalFormat df = new DecimalFormat();
+                df.setMaximumFractionDigits(2);
+                Log.i(TAG, "Sent " + total + "Mb in " + df.format(timeTaken) + "s");
                 // Remove episode from buffer so as to not write it again.
                 writeBufferVector.remove(0);
                 // Clear sending buffer
@@ -164,8 +175,8 @@ public class SocketMessage {
 
         jsonHeader.put("byteorder", ByteOrder.nativeOrder().toString());
         jsonHeader.put("content-length", numBytesToWrite);
-        jsonHeader.put("content-type", "flatbuffer");
-        jsonHeader.put("content-encoding", "flatbuffer");
+        jsonHeader.put("content-type", "other"); // todo Change to flatbuffer later
+        jsonHeader.put("content-encoding", "other"); //Change to flatbuffer later
         return jsonHeader;
     }
 
@@ -249,6 +260,7 @@ public class SocketMessage {
             // Set socket to write now that reading has finished.
             int ops = SelectionKey.OP_WRITE;
             sc.register(selectionKey.selector(), ops, selectionKey.attachment());
+            socketTimeStart = System.nanoTime();
         }
     }
 
