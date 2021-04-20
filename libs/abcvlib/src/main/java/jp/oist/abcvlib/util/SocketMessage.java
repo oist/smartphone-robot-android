@@ -6,7 +6,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.ClosedChannelException;
@@ -32,7 +31,8 @@ public class SocketMessage {
     private JSONObject jsonHeaderWrite;
     private boolean msgReadComplete = false;
     private SocketListener socketListener;
-    private long socketTimeStart;
+    private long socketWriteTimeStart;
+    private long socketReadTimeStart;
 
 
     public SocketMessage(SocketListener socketListener, SocketChannel sc, Selector selector){
@@ -77,7 +77,7 @@ public class SocketMessage {
 
             if (bitsRead > 0 || _recv_buffer.position() > 0){
                 if (bitsRead > 0){
-                    Log.d(TAG, "Read " + bitsRead + " bytes from " + socketChannel.getRemoteAddress());
+//                    Log.v(TAG, "Read " + bitsRead + " bytes from " + socketChannel.getRemoteAddress());
                 }
 
                 // If you have not determined the length of the header via the 2 byte short protoheader,
@@ -85,7 +85,9 @@ public class SocketMessage {
                 // pass through this if statement multiple times. Only after it has been read will
                 // _jsonheader_len have a non-zero length;
                 if (this._jsonheader_len == 0){
+                    socketReadTimeStart = System.nanoTime();
                     process_protoheader();
+                    Log.d(TAG, "Reading from server ...");
                 }
                 // _jsonheader_len will only be larger than 0 if set properly (finished being set).
                 // jsonHeaderRead will be null until the buffer gathering it has filled and converted it to
@@ -135,6 +137,8 @@ public class SocketMessage {
 
                 Log.v(TAG, "socketChannel.isConnected ? : " + socketChannel.isConnected());
 
+                Log.d(TAG, "Writing to server ...");
+
                 // Write Bytes to socketChannel //todo shouldn't be while as should be non-blocking
                 while (_send_buffer.remaining() > 0){
                     int numBytes = socketChannel.write(_send_buffer);
@@ -151,7 +155,7 @@ public class SocketMessage {
             }
             if (_send_buffer.remaining() == 0){
                 int total = _send_buffer.limit() / 1000000;
-                double timeTaken = (System.nanoTime() - socketTimeStart) * 10e-10;
+                double timeTaken = (System.nanoTime() - socketWriteTimeStart) * 10e-10;
                 DecimalFormat df = new DecimalFormat();
                 df.setMaximumFractionDigits(2);
                 Log.i(TAG, "Sent " + total + "Mb in " + df.format(timeTaken) + "s");
@@ -175,8 +179,8 @@ public class SocketMessage {
 
         jsonHeader.put("byteorder", ByteOrder.nativeOrder().toString());
         jsonHeader.put("content-length", numBytesToWrite);
-        jsonHeader.put("content-type", "other"); // todo Change to flatbuffer later
-        jsonHeader.put("content-encoding", "other"); //Change to flatbuffer later
+        jsonHeader.put("content-type", "flatbuffer"); // todo Change to flatbuffer later
+        jsonHeader.put("content-encoding", "flatbuffer"); //Change to flatbuffer later
         return jsonHeader;
     }
 
@@ -254,13 +258,17 @@ public class SocketMessage {
             jsonHeaderRead = null;
             msgContent.clear();
 
-            Log.d(TAG, "Entire message from " + sc.getRemoteAddress() + " read in its entirety");
+            int totalBytes = msgContent.capacity() / 1000000;
+            double timeTaken = (System.nanoTime() - socketReadTimeStart) * 10e-10;
+            DecimalFormat df = new DecimalFormat();
+            df.setMaximumFractionDigits(2);
+            Log.i(TAG, "Entire message containing " + totalBytes + "Mb recv'd in " + df.format(timeTaken) + "s");
+
             msgReadComplete = true;
 
             // Set socket to write now that reading has finished.
             int ops = SelectionKey.OP_WRITE;
             sc.register(selectionKey.selector(), ops, selectionKey.attachment());
-            socketTimeStart = System.nanoTime();
         }
     }
 
@@ -278,6 +286,7 @@ public class SocketMessage {
             ByteBuffer bb = ByteBuffer.wrap(episode);
             success = writeBufferVector.add(bb);
             int ops = SelectionKey.OP_WRITE;
+            socketWriteTimeStart = System.nanoTime();
             sc.register(selector, ops, this);
             // I want this to trigger the selector that this channel is writeReady.
         } catch (NullPointerException | ClosedChannelException e){
