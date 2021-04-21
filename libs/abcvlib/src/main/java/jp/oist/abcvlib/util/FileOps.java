@@ -15,6 +15,10 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -23,38 +27,48 @@ import java.util.List;
  * Not used anywhere else in the library at this time. Leaving for possible future use.
  */
 public class FileOps {
-    private final String TAG = this.getClass().getName();
+    private static final String TAG = "FileOps";
 
-    String saved="saved!";
-
-    public void savedata(String content, String filename){
-
-        final String FILENAME=filename;
-        //final String FILENAME="datala.txt";
+    public static void savedata(String content, String filename){
         try{
-
             if(Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
-
                 File sdCardDir=Environment.getExternalStorageDirectory();
-                if(sdCardDir.exists()){
-
-                    if(sdCardDir.canWrite()){
-                        File file=new File(sdCardDir.getAbsolutePath()+"/DataDir");
-                        file.mkdir();
+                if(sdCardDir.exists() && sdCardDir.canWrite()){
+                    File file=new File(sdCardDir.getAbsolutePath() + "/DataDir" + filename);
+                    boolean madeDir = file.mkdir();
+                    if (madeDir){
+//                        String filepath = file.getAbsolutePath() + filename;
+                        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file.getAbsolutePath(),false), StandardCharsets.UTF_8));
+                        bw.write(content);
+                        bw.close();
+                    } else{
+                        Log.d(TAG, "Unable to create DataDir directory");
                     }
                 }
-                String filepath=sdCardDir.getAbsolutePath()+"/DataDir/"+FILENAME;
-                BufferedWriter bw=new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filepath,false),"UTF-8"));
-                bw.write(content);
-                bw.close();
-
-
-
             }
         }catch(Exception e){
             Log.e(TAG,"Error", e);
         }
+    }
 
+    public static void savedata(Context context, byte[] content, String filename){
+        try{
+            boolean deleted = false;
+            boolean created = false;
+            File file=new File(context.getFilesDir() + File.separator + filename);
+            if (file.exists()){
+                deleted = file.delete();
+            }
+            if (!file.exists() || deleted){
+                created = file.createNewFile();
+                Log.v(TAG, "Writing " + file.getAbsolutePath());
+                FileOutputStream fileOutputStream = new FileOutputStream(file.getAbsolutePath(),false);
+                fileOutputStream.write(content);
+                fileOutputStream.close();
+            }
+        }catch(Exception e){
+            Log.e(TAG,"Error", e);
+        }
     }
 
     public double[] readData(String fileName){
