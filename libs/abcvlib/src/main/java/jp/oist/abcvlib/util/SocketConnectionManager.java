@@ -68,7 +68,7 @@ public class SocketConnectionManager implements Runnable{
 
             Log.d(TAG, "Initializing connection with " + inetSocketAddress);
             boolean connected = sc.connect(inetSocketAddress);
-            Log.v(TAG, "Connection established?: " + connected);
+            Log.v(TAG, "socketChannel.isConnected ? : " + sc.isConnected());
 
         } catch (IOException | ClosedSelectorException | IllegalBlockingModeException
                 | CancelledKeyException | IllegalArgumentException e) {

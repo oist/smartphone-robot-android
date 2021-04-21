@@ -50,6 +50,8 @@ public class SocketMessage {
             if (selectionKey.isConnectable()){
                 sc.finishConnect();
                 Log.d(TAG, "Finished connecting to " + ((SocketChannel) selectionKey.channel()).getRemoteAddress());
+                Log.v(TAG, "socketChannel.isConnected ? : " + sc.isConnected());
+
             }
             if (selectionKey.isWritable()){
 //                Log.i(TAG, "write event");
@@ -87,7 +89,6 @@ public class SocketMessage {
                 if (this._jsonheader_len == 0){
                     socketReadTimeStart = System.nanoTime();
                     process_protoheader();
-                    Log.d(TAG, "Reading from server ...");
                 }
                 // _jsonheader_len will only be larger than 0 if set properly (finished being set).
                 // jsonHeaderRead will be null until the buffer gathering it has filled and converted it to
@@ -135,8 +136,6 @@ public class SocketMessage {
                 _send_buffer.put(writeBufferVector.get(0));
                 _send_buffer.flip();
 
-                Log.v(TAG, "socketChannel.isConnected ? : " + socketChannel.isConnected());
-
                 Log.d(TAG, "Writing to server ...");
 
                 // Write Bytes to socketChannel //todo shouldn't be while as should be non-blocking
@@ -167,6 +166,7 @@ public class SocketMessage {
                 jsonHeaderWrite = null;
 
                 // Set socket to read now that writing has finished.
+                Log.d(TAG, "Reading from server ...");
                 int ops = SelectionKey.OP_READ;
                 sc.register(selectionKey.selector(), ops, selectionKey.attachment());
             }
@@ -285,6 +285,7 @@ public class SocketMessage {
         try{
             ByteBuffer bb = ByteBuffer.wrap(episode);
             success = writeBufferVector.add(bb);
+            Log.v(TAG, "Added data to writeBuffer");
             int ops = SelectionKey.OP_WRITE;
             socketWriteTimeStart = System.nanoTime();
             sc.register(selector, ops, this);
