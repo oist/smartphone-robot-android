@@ -42,7 +42,7 @@ table RobotAction{
 }
 table Image{
     timestamp:long;
-    pixels:[Pixels];
+    pixels:Pixels;
     width:int;
     height:int;
 }

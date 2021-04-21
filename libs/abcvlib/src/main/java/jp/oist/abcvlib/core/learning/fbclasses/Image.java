@@ -16,11 +16,8 @@ public final class Image extends Table {
   public Image __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
   public long timestamp() { int o = __offset(4); return o != 0 ? bb.getLong(o + bb_pos) : 0L; }
-  public jp.oist.abcvlib.core.learning.fbclasses.Pixels pixels(int j) { return pixels(new jp.oist.abcvlib.core.learning.fbclasses.Pixels(), j); }
-  public jp.oist.abcvlib.core.learning.fbclasses.Pixels pixels(jp.oist.abcvlib.core.learning.fbclasses.Pixels obj, int j) { int o = __offset(6); return o != 0 ? obj.__assign(__indirect(__vector(o) + j * 4), bb) : null; }
-  public int pixelsLength() { int o = __offset(6); return o != 0 ? __vector_len(o) : 0; }
-  public jp.oist.abcvlib.core.learning.fbclasses.Pixels.Vector pixelsVector() { return pixelsVector(new jp.oist.abcvlib.core.learning.fbclasses.Pixels.Vector()); }
-  public jp.oist.abcvlib.core.learning.fbclasses.Pixels.Vector pixelsVector(jp.oist.abcvlib.core.learning.fbclasses.Pixels.Vector obj) { int o = __offset(6); return o != 0 ? obj.__assign(__vector(o), 4, bb) : null; }
+  public jp.oist.abcvlib.core.learning.fbclasses.Pixels pixels() { return pixels(new jp.oist.abcvlib.core.learning.fbclasses.Pixels()); }
+  public jp.oist.abcvlib.core.learning.fbclasses.Pixels pixels(jp.oist.abcvlib.core.learning.fbclasses.Pixels obj) { int o = __offset(6); return o != 0 ? obj.__assign(__indirect(o + bb_pos), bb) : null; }
   public int width() { int o = __offset(8); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
   public int height() { int o = __offset(10); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
 
@@ -40,8 +37,6 @@ public final class Image extends Table {
   public static void startImage(FlatBufferBuilder builder) { builder.startTable(4); }
   public static void addTimestamp(FlatBufferBuilder builder, long timestamp) { builder.addLong(0, timestamp, 0L); }
   public static void addPixels(FlatBufferBuilder builder, int pixelsOffset) { builder.addOffset(1, pixelsOffset, 0); }
-  public static int createPixelsVector(FlatBufferBuilder builder, int[] data) { builder.startVector(4, data.length, 4); for (int i = data.length - 1; i >= 0; i--) builder.addOffset(data[i]); return builder.endVector(); }
-  public static void startPixelsVector(FlatBufferBuilder builder, int numElems) { builder.startVector(4, numElems, 4); }
   public static void addWidth(FlatBufferBuilder builder, int width) { builder.addInt(2, width, 0); }
   public static void addHeight(FlatBufferBuilder builder, int height) { builder.addInt(3, height, 0); }
   public static int endImage(FlatBufferBuilder builder) {
