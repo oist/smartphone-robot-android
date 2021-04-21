@@ -1,4 +1,4 @@
-package jp.oist.abcvlib.core.outputs;
+package jp.oist.abcvlib.util;
 
 import android.content.Context;
 import android.os.Environment;

@@ -2,6 +2,8 @@ package jp.oist.abcvlib.core.outputs;
 
 import org.json.JSONObject;
 
+import jp.oist.abcvlib.util.FileOps;
+
 public interface OutputsInterface {
 
     FileOps fileOps = null;
