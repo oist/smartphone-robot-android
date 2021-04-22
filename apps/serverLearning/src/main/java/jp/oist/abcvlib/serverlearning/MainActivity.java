@@ -105,10 +105,12 @@ public class MainActivity extends AbcvlibActivity {
                 batteryDataGatherer = new BatteryDataGatherer();
                 timeStepDataAssembler = new TimeStepDataAssembler();
 //        testFlatBuffers();
-                wheelDataGathererFuture = executor.scheduleAtFixedRate(wheelDataGatherer, 500, 100, TimeUnit.MILLISECONDS);
-                chargerDataGathererFuture = executor.scheduleAtFixedRate(new ChargerDataGatherer(), 500, 100, TimeUnit.MILLISECONDS);
-                batteryDataGathererFuture = executor.scheduleAtFixedRate(new BatteryDataGatherer(), 500, 100, TimeUnit.MILLISECONDS);
-                timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(timeStepDataAssembler, 500,500, TimeUnit.MILLISECONDS);
+
+                long initDelay = 5000;
+                wheelDataGathererFuture = executor.scheduleAtFixedRate(wheelDataGatherer, initDelay, 100, TimeUnit.MILLISECONDS);
+                chargerDataGathererFuture = executor.scheduleAtFixedRate(new ChargerDataGatherer(), initDelay, 100, TimeUnit.MILLISECONDS);
+                batteryDataGathererFuture = executor.scheduleAtFixedRate(new BatteryDataGatherer(), initDelay, 100, TimeUnit.MILLISECONDS);
+                timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(timeStepDataAssembler, initDelay,500, TimeUnit.MILLISECONDS);
                 microphoneInput.start();
             }
         });
@@ -231,7 +233,7 @@ public class MainActivity extends AbcvlibActivity {
     class TimeStepDataAssembler implements Runnable{
 
         private int timeStepCount = 0;
-        private int maxTimeStep = 5;
+        private int maxTimeStep = 10;
         private FlatBufferBuilder builder;
         private int[] timeStepVector = new int[maxTimeStep + 1];
 
