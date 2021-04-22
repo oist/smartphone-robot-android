@@ -139,8 +139,8 @@ public class SocketMessage {
                 Log.d(TAG, "Writing to server ...");
 
                 // Write Bytes to socketChannel //todo shouldn't be while as should be non-blocking
-                while (_send_buffer.remaining() > 0){
-                    int numBytes = socketChannel.write(_send_buffer);
+                if (_send_buffer.remaining() > 0){
+                    int numBytes = socketChannel.write(_send_buffer); // todo memory dump error here!
                     int percentDone = (int) Math.ceil((((double) _send_buffer.limit() - (double) _send_buffer.remaining())
                             / (double) _send_buffer.limit()) * 100);
                     int total = _send_buffer.limit() / 1000000;

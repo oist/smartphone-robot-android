@@ -1,9 +1,11 @@
 package jp.oist.abcvlib.serverlearning;
 
+import android.app.ActivityManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.media.Image;
 import android.os.Bundle;
+import android.os.Debug;
 import android.util.Log;
 import android.util.Size;
 
@@ -17,6 +19,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
@@ -360,9 +365,25 @@ public class MainActivity extends AbcvlibActivity {
 
 
         public void endEpisode(){
+            try {
+//                ActivityManager.getMyMemoryState();
+                boolean deleted = false;
+                boolean created = false;
+                File file=new File(getFilesDir() + File.separator + "dump.hprof");
+                if (file.exists()){
+                    deleted = file.delete();
+                }
+                if (!file.exists() || deleted){
+                    created = file.createNewFile();
+                }
+                Debug.dumpHprofData(file.getAbsolutePath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             closeall();
 
-            int ts = Episode.createTimestepsVector(builder, timeStepVector);
+            int ts = Episode.createTimestepsVector(builder, timeStepVector); //todo I think I need to add each timestep when it is generated rather than all at once? Is this the leak?
             Episode.startEpisode(builder);
             Episode.addTimesteps(builder, ts);
             int ep = Episode.endEpisode(builder);
@@ -471,6 +492,8 @@ public class MainActivity extends AbcvlibActivity {
     }
 
     private void sendToServer(byte[] episode){
+        ActivityManager am = (ActivityManager) getApplicationContext().getSystemService(ACTIVITY_SERVICE);
+        int mb = am.getMemoryClass();
         socketConnectionManager.sendMsgToServer(episode);
     }
 }
