@@ -138,7 +138,9 @@ public class SocketMessage {
                 _send_buffer.put(writeBufferVector.get(0));
                 _send_buffer.flip();
 
-                Log.d(TAG, "Writing to server ...");
+                int total = _send_buffer.limit() / 1000000;
+
+                Log.d(TAG, "Writing to " + total + "MB to server ...");
 
                 // Write Bytes to socketChannel //todo shouldn't be while as should be non-blocking
                 if (_send_buffer.remaining() > 0){
