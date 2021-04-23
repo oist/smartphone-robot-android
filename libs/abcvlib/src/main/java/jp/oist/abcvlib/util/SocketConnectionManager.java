@@ -4,6 +4,7 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.CancelledKeyException;
 import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.IllegalBlockingModeException;
@@ -77,7 +78,7 @@ public class SocketConnectionManager implements Runnable{
         }
     }
 
-    public void sendMsgToServer(byte[] episode){
+    public void sendMsgToServer(ByteBuffer episode){
         boolean writeSuccess = socketMessage.addEpisodeToWriteBuffer(episode);
     }
 

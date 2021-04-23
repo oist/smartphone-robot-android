@@ -107,10 +107,10 @@ public class MainActivity extends AbcvlibActivity {
 //        testFlatBuffers();
 
                 long initDelay = 0;
-                wheelDataGathererFuture = executor.scheduleAtFixedRate(wheelDataGatherer, initDelay, 100, TimeUnit.MILLISECONDS);
-                chargerDataGathererFuture = executor.scheduleAtFixedRate(new ChargerDataGatherer(), initDelay, 100, TimeUnit.MILLISECONDS);
-                batteryDataGathererFuture = executor.scheduleAtFixedRate(new BatteryDataGatherer(), initDelay, 100, TimeUnit.MILLISECONDS);
-                timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(timeStepDataAssembler, initDelay,500, TimeUnit.MILLISECONDS);
+                wheelDataGathererFuture = executor.scheduleAtFixedRate(wheelDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
+                chargerDataGathererFuture = executor.scheduleAtFixedRate(new ChargerDataGatherer(), initDelay, 10, TimeUnit.MILLISECONDS);
+                batteryDataGathererFuture = executor.scheduleAtFixedRate(new BatteryDataGatherer(), initDelay, 10, TimeUnit.MILLISECONDS);
+                timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(timeStepDataAssembler, initDelay,50, TimeUnit.MILLISECONDS);
                 microphoneInput.start();
             }
         });
@@ -233,7 +233,7 @@ public class MainActivity extends AbcvlibActivity {
     class TimeStepDataAssembler implements Runnable{
 
         private int timeStepCount = 0;
-        private int maxTimeStep = 10;
+        private int maxTimeStep = 40;
         private FlatBufferBuilder builder;
         private int[] timeStepVector = new int[maxTimeStep + 1];
 
@@ -332,6 +332,7 @@ public class MainActivity extends AbcvlibActivity {
             int numOfImages = imageData.images.size();
 
             Log.i("flatbuff", numOfImages + " images gathered");
+            Log.i("flatbuff", "Step:" + timeStepCount);
 
             int[] _images = new int[numOfImages];
 
@@ -391,15 +392,17 @@ public class MainActivity extends AbcvlibActivity {
             int ep = Episode.endEpisode(builder);
             builder.finish(ep);
 
-            byte[] episode = builder.sizedByteArray();
-            java.nio.ByteBuffer bb = java.nio.ByteBuffer.wrap(episode);
-            Episode episodeTest = Episode.getRootAsEpisode(bb);
-            Log.d("flatbuff", "TimeSteps Length: "  + String.valueOf(episodeTest.timestepsLength()));
-            Log.d("flatbuff", "WheelCounts TimeStep 0 Length: "  + String.valueOf(episodeTest.timesteps(0).wheelCounts().timestampsLength()));
-            Log.d("flatbuff", "WheelCounts TimeStep 1 Length: "  + String.valueOf(episodeTest.timesteps(1).wheelCounts().timestampsLength()));
-            Log.d("flatbuff", "WheelCounts TimeStep 2 Length: "  + String.valueOf(episodeTest.timesteps(2).wheelCounts().timestampsLength()));
-            Log.d("flatbuff", "WheelCounts TimeStep 3 Length: "  + String.valueOf(episodeTest.timesteps(3).wheelCounts().timestampsLength()));
-            Log.d("flatbuff", "WheelCounts TimeStep 3 idx 0: "  + String.valueOf(episodeTest.timesteps(3).wheelCounts().timestamps(0)));
+
+            ByteBuffer episode = builder.dataBuffer();
+
+            // The following is just to check the contents of the flatbuffer prior to sending to the server. You should comment this out if not using it as it doubles the required memory.
+//            Episode episodeTest = Episode.getRootAsEpisode(episode);
+//            Log.d("flatbuff", "TimeSteps Length: "  + String.valueOf(episodeTest.timestepsLength()));
+//            Log.d("flatbuff", "WheelCounts TimeStep 0 Length: "  + String.valueOf(episodeTest.timesteps(0).wheelCounts().timestampsLength()));
+//            Log.d("flatbuff", "WheelCounts TimeStep 1 Length: "  + String.valueOf(episodeTest.timesteps(1).wheelCounts().timestampsLength()));
+//            Log.d("flatbuff", "WheelCounts TimeStep 2 Length: "  + String.valueOf(episodeTest.timesteps(2).wheelCounts().timestampsLength()));
+//            Log.d("flatbuff", "WheelCounts TimeStep 3 Length: "  + String.valueOf(episodeTest.timesteps(3).wheelCounts().timestampsLength()));
+//            Log.d("flatbuff", "WheelCounts TimeStep 3 idx 0: "  + String.valueOf(episodeTest.timesteps(3).wheelCounts().timestamps(0)));
 
 
             sendToServer(episode);
@@ -493,7 +496,7 @@ public class MainActivity extends AbcvlibActivity {
         }
     }
 
-    private void sendToServer(byte[] episode){
+    private void sendToServer(ByteBuffer episode){
         ActivityManager am = (ActivityManager) getApplicationContext().getSystemService(ACTIVITY_SERVICE);
         int mb = am.getMemoryClass();
         socketConnectionManager.sendMsgToServer(episode);

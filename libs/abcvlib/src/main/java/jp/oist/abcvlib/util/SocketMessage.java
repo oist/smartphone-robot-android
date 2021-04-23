@@ -115,7 +115,10 @@ public class SocketMessage {
 //            Log.v(TAG, "writeBufferVector contains data");
 
             if (jsonHeaderWrite == null){
-                int numBytesToWrite = writeBufferVector.get(0).limit();
+                // This is because the data in this ByteBuffer does NOT start at 0, but at
+                // buf.position(). Even if it were some other type of buffer here (e.g. compacted one)
+                // the position should be zero and thus this shouldn't change anything
+                int numBytesToWrite = writeBufferVector.get(0).limit() - writeBufferVector.get(0).position();
 
                 // Create JSONHeader containing length of episode in Bytes
                 Log.v(TAG, "generating jsonheader");
@@ -128,8 +131,10 @@ public class SocketMessage {
                 // Add up length of protoHeader, JSONheader and episode bytes
                 int totalNumBytesToWrite = Integer.BYTES + jsonLength + numBytesToWrite;
 
+                int optimalBufferSize = findOptimalBufferSize(totalNumBytesToWrite);
+
                 // Create new buffer that compiles protoHeader, JsonHeader, and Episode
-                _send_buffer = ByteBuffer.allocate(totalNumBytesToWrite);
+                _send_buffer = ByteBuffer.allocate(optimalBufferSize);
 
                 Log.v(TAG, "Assembling _send_buffer");
                 // Assemble all bytes and flip to prepare to read
@@ -180,6 +185,14 @@ public class SocketMessage {
             }
 
         }
+    }
+
+    private int findOptimalBufferSize(int dataSize){
+        int optimalBufferSize;
+
+        optimalBufferSize = (int) Math.pow(Math.ceil(Math.sqrt(dataSize)), 2);
+
+        return optimalBufferSize;
     }
 
     private JSONObject generate_jsonheader(int numBytesToWrite) throws JSONException {
@@ -288,11 +301,10 @@ public class SocketMessage {
     }
 
     // todo should be able deal with ByteBuffer from FlatBuffer rather than byte[]
-    public boolean addEpisodeToWriteBuffer(byte[] episode){
+    public boolean addEpisodeToWriteBuffer(ByteBuffer episode){
         boolean success = false;
         try{
-            ByteBuffer bb = ByteBuffer.wrap(episode);
-            success = writeBufferVector.add(bb);
+            success = writeBufferVector.add(episode);
             Log.v(TAG, "Added data to writeBuffer");
             int ops = SelectionKey.OP_WRITE;
             socketWriteTimeStart = System.nanoTime();
