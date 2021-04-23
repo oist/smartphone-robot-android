@@ -112,7 +112,7 @@ public class SocketMessage {
         if (!writeBufferVector.isEmpty()){
             SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
 
-            Log.v(TAG, "writeBufferVector contains data");
+//            Log.v(TAG, "writeBufferVector contains data");
 
             if (jsonHeaderWrite == null){
                 int numBytesToWrite = writeBufferVector.get(0).limit();
@@ -143,15 +143,19 @@ public class SocketMessage {
                 // Write Bytes to socketChannel //todo shouldn't be while as should be non-blocking
                 if (_send_buffer.remaining() > 0){
                     int numBytes = socketChannel.write(_send_buffer); // todo memory dump error here!
-                    int percentDone = (int) Math.ceil((((double) _send_buffer.limit() - (double) _send_buffer.remaining())
-                            / (double) _send_buffer.limit()) * 100);
-                    int total = _send_buffer.limit() / 1000000;
+//                    int percentDone = (int) Math.ceil((((double) _send_buffer.limit() - (double) _send_buffer.remaining())
+//                            / (double) _send_buffer.limit()) * 100);
+//                    int total = _send_buffer.limit() / 1000000;
 //                    Log.d(TAG, "Sent " + percentDone + "% of " + total + "Mb to " + socketChannel.getRemoteAddress());
                 }
             } else{
                 // Write Bytes to socketChannel
                 if (_send_buffer.remaining() > 0){
                     socketChannel.write(_send_buffer);
+//                    int percentDone = (int) Math.ceil((((double) _send_buffer.limit() - (double) _send_buffer.remaining())
+//                            / (double) _send_buffer.limit()) * 100);
+//                    int total = _send_buffer.limit() / 1000000;
+//                    Log.d(TAG, "Sent " + percentDone + "% of " + total + "Mb to " + socketChannel.getRemoteAddress());
                 }
             }
             if (_send_buffer.remaining() == 0){
