@@ -78,8 +78,8 @@ public class SocketConnectionManager implements Runnable{
         }
     }
 
-    public void sendMsgToServer(ByteBuffer episode){
-        boolean writeSuccess = socketMessage.addEpisodeToWriteBuffer(episode);
+    public boolean sendMsgToServer(byte[] episode){
+        return socketMessage.addEpisodeToWriteBuffer(episode);
     }
 
     /**

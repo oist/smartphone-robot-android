@@ -106,7 +106,7 @@ public class MainActivity extends AbcvlibActivity {
                 timeStepDataAssembler = new TimeStepDataAssembler();
 //        testFlatBuffers();
 
-                long initDelay = 0;
+                long initDelay = 5000;
                 wheelDataGathererFuture = executor.scheduleAtFixedRate(wheelDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
                 chargerDataGathererFuture = executor.scheduleAtFixedRate(new ChargerDataGatherer(), initDelay, 10, TimeUnit.MILLISECONDS);
                 batteryDataGathererFuture = executor.scheduleAtFixedRate(new BatteryDataGatherer(), initDelay, 10, TimeUnit.MILLISECONDS);
@@ -368,6 +368,33 @@ public class MainActivity extends AbcvlibActivity {
 
 
         public void endEpisode(){
+
+            closeall();
+
+            int ts = Episode.createTimestepsVector(builder, timeStepVector); //todo I think I need to add each timestep when it is generated rather than all at once? Is this the leak?
+            Episode.startEpisode(builder);
+            Episode.addTimesteps(builder, ts);
+            int ep = Episode.endEpisode(builder);
+            builder.finish(ep);
+
+            byte[] episode = builder.sizedByteArray();
+
+            // The following is just to check the contents of the flatbuffer prior to sending to the server. You should comment this out if not using it as it doubles the required memory.
+//            Episode episodeTest = Episode.getRootAsEpisode(episode);
+//            Log.d("flatbuff", "TimeSteps Length: "  + String.valueOf(episodeTest.timestepsLength()));
+//            Log.d("flatbuff", "WheelCounts TimeStep 0 Length: "  + String.valueOf(episodeTest.timesteps(0).wheelCounts().timestampsLength()));
+//            Log.d("flatbuff", "WheelCounts TimeStep 1 Length: "  + String.valueOf(episodeTest.timesteps(1).wheelCounts().timestampsLength()));
+//            Log.d("flatbuff", "WheelCounts TimeStep 2 Length: "  + String.valueOf(episodeTest.timesteps(2).wheelCounts().timestampsLength()));
+//            Log.d("flatbuff", "WheelCounts TimeStep 3 Length: "  + String.valueOf(episodeTest.timesteps(3).wheelCounts().timestampsLength()));
+//            Log.d("flatbuff", "WheelCounts TimeStep 3 idx 0: "  + String.valueOf(episodeTest.timesteps(3).wheelCounts().timestamps(0)));
+
+            boolean wroteToSendBuffer = sendToServer(episode);
+
+            if (wroteToSendBuffer){
+                builder.clear();
+                builder = null;
+            }
+
             try {
 //                ActivityManager.getMyMemoryState();
                 boolean deleted = false;
@@ -383,29 +410,6 @@ public class MainActivity extends AbcvlibActivity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-            closeall();
-
-            int ts = Episode.createTimestepsVector(builder, timeStepVector); //todo I think I need to add each timestep when it is generated rather than all at once? Is this the leak?
-            Episode.startEpisode(builder);
-            Episode.addTimesteps(builder, ts);
-            int ep = Episode.endEpisode(builder);
-            builder.finish(ep);
-
-
-            ByteBuffer episode = builder.dataBuffer();
-
-            // The following is just to check the contents of the flatbuffer prior to sending to the server. You should comment this out if not using it as it doubles the required memory.
-//            Episode episodeTest = Episode.getRootAsEpisode(episode);
-//            Log.d("flatbuff", "TimeSteps Length: "  + String.valueOf(episodeTest.timestepsLength()));
-//            Log.d("flatbuff", "WheelCounts TimeStep 0 Length: "  + String.valueOf(episodeTest.timesteps(0).wheelCounts().timestampsLength()));
-//            Log.d("flatbuff", "WheelCounts TimeStep 1 Length: "  + String.valueOf(episodeTest.timesteps(1).wheelCounts().timestampsLength()));
-//            Log.d("flatbuff", "WheelCounts TimeStep 2 Length: "  + String.valueOf(episodeTest.timesteps(2).wheelCounts().timestampsLength()));
-//            Log.d("flatbuff", "WheelCounts TimeStep 3 Length: "  + String.valueOf(episodeTest.timesteps(3).wheelCounts().timestampsLength()));
-//            Log.d("flatbuff", "WheelCounts TimeStep 3 idx 0: "  + String.valueOf(episodeTest.timesteps(3).wheelCounts().timestamps(0)));
-
-
-            sendToServer(episode);
 
 //            Log.i("flatbuff", "prior to getting msg from server");
 //            outputs.socketClient.getMessageFromServer();
@@ -496,9 +500,9 @@ public class MainActivity extends AbcvlibActivity {
         }
     }
 
-    private void sendToServer(ByteBuffer episode){
+    private boolean sendToServer(byte[] episode){
         ActivityManager am = (ActivityManager) getApplicationContext().getSystemService(ACTIVITY_SERVICE);
         int mb = am.getMemoryClass();
-        socketConnectionManager.sendMsgToServer(episode);
+        return socketConnectionManager.sendMsgToServer(episode);
     }
 }

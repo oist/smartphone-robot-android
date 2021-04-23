@@ -26,7 +26,7 @@ public class SocketMessage {
     private JSONObject jsonHeaderRead; // Will tell Java at which points in msgContent each model lies (e.g. model1 is from 0 to 1018, model2 is from 1019 to 2034, etc.)
     private byte[] jsonHeaderBytes;
     private ByteBuffer msgContent; // Should contain ALL model files. Parse to individual files after reading
-    private final Vector<ByteBuffer> writeBufferVector = new Vector<>(); // List of episodes
+    private final Vector<byte[]> writeBufferVector = new Vector<>(); // List of episodes
     private final String TAG = "SocketConnectionManager";
     private JSONObject jsonHeaderWrite;
     private boolean msgReadComplete = false;
@@ -118,7 +118,7 @@ public class SocketMessage {
                 // This is because the data in this ByteBuffer does NOT start at 0, but at
                 // buf.position(). Even if it were some other type of buffer here (e.g. compacted one)
                 // the position should be zero and thus this shouldn't change anything
-                int numBytesToWrite = writeBufferVector.get(0).limit() - writeBufferVector.get(0).position();
+                int numBytesToWrite = writeBufferVector.get(0).length;
 
                 // Create JSONHeader containing length of episode in Bytes
                 Log.v(TAG, "generating jsonheader");
@@ -138,9 +138,14 @@ public class SocketMessage {
 
                 Log.v(TAG, "Assembling _send_buffer");
                 // Assemble all bytes and flip to prepare to read
+                // todo try to write the episode directly rather than copy it.
                 _send_buffer.putInt(jsonLength);
                 _send_buffer.put(jsonBytes);
                 _send_buffer.put(writeBufferVector.get(0));
+                // Remove episode to clear memory note builder will reference the flatbuffer builder in memory
+                byte[] builder = writeBufferVector.remove(0);
+                builder = null;
+
                 _send_buffer.flip();
 
                 int total = _send_buffer.limit() / 1000000;
@@ -150,19 +155,11 @@ public class SocketMessage {
                 // Write Bytes to socketChannel //todo shouldn't be while as should be non-blocking
                 if (_send_buffer.remaining() > 0){
                     int numBytes = socketChannel.write(_send_buffer); // todo memory dump error here!
-//                    int percentDone = (int) Math.ceil((((double) _send_buffer.limit() - (double) _send_buffer.remaining())
-//                            / (double) _send_buffer.limit()) * 100);
-//                    int total = _send_buffer.limit() / 1000000;
-//                    Log.d(TAG, "Sent " + percentDone + "% of " + total + "Mb to " + socketChannel.getRemoteAddress());
                 }
             } else{
                 // Write Bytes to socketChannel
                 if (_send_buffer.remaining() > 0){
                     socketChannel.write(_send_buffer);
-//                    int percentDone = (int) Math.ceil((((double) _send_buffer.limit() - (double) _send_buffer.remaining())
-//                            / (double) _send_buffer.limit()) * 100);
-//                    int total = _send_buffer.limit() / 1000000;
-//                    Log.d(TAG, "Sent " + percentDone + "% of " + total + "Mb to " + socketChannel.getRemoteAddress());
                 }
             }
             if (_send_buffer.remaining() == 0){
@@ -171,8 +168,7 @@ public class SocketMessage {
                 DecimalFormat df = new DecimalFormat();
                 df.setMaximumFractionDigits(2);
                 Log.i(TAG, "Sent " + total + "Mb in " + df.format(timeTaken) + "s");
-                // Remove episode from buffer so as to not write it again.
-                writeBufferVector.remove(0);
+
                 // Clear sending buffer
                 _send_buffer.clear();
                 // make null so as to catch the initial if statement to write a new one.
@@ -185,6 +181,13 @@ public class SocketMessage {
             }
 
         }
+    }
+
+    private void printTotalBytes(SocketChannel socketChannel) throws IOException {
+        int percentDone = (int) Math.ceil((((double) _send_buffer.limit() - (double) _send_buffer.remaining())
+                / (double) _send_buffer.limit()) * 100);
+        int total = _send_buffer.limit() / 1000000;
+        Log.d(TAG, "Sent " + percentDone + "% of " + total + "Mb to " + socketChannel.getRemoteAddress());
     }
 
     private int findOptimalBufferSize(int dataSize){
@@ -301,7 +304,7 @@ public class SocketMessage {
     }
 
     // todo should be able deal with ByteBuffer from FlatBuffer rather than byte[]
-    public boolean addEpisodeToWriteBuffer(ByteBuffer episode){
+    public boolean addEpisodeToWriteBuffer(byte[] episode){
         boolean success = false;
         try{
             success = writeBufferVector.add(episode);
