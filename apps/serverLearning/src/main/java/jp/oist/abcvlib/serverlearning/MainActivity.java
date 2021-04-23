@@ -106,7 +106,7 @@ public class MainActivity extends AbcvlibActivity {
                 timeStepDataAssembler = new TimeStepDataAssembler();
 //        testFlatBuffers();
 
-                long initDelay = 5000;
+                long initDelay = 1000;
                 wheelDataGathererFuture = executor.scheduleAtFixedRate(wheelDataGatherer, initDelay, 100, TimeUnit.MILLISECONDS);
                 chargerDataGathererFuture = executor.scheduleAtFixedRate(new ChargerDataGatherer(), initDelay, 100, TimeUnit.MILLISECONDS);
                 batteryDataGathererFuture = executor.scheduleAtFixedRate(new BatteryDataGatherer(), initDelay, 100, TimeUnit.MILLISECONDS);
@@ -233,7 +233,7 @@ public class MainActivity extends AbcvlibActivity {
     class TimeStepDataAssembler implements Runnable{
 
         private int timeStepCount = 0;
-        private int maxTimeStep = 10;
+        private int maxTimeStep = 3;
         private FlatBufferBuilder builder;
         private int[] timeStepVector = new int[maxTimeStep + 1];
 
