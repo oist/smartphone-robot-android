@@ -48,10 +48,11 @@ public class SocketMessage {
 //        Log.i(TAG, "process_events");
         try{
             if (selectionKey.isConnectable()){
-                sc.finishConnect();
-                Log.d(TAG, "Finished connecting to " + ((SocketChannel) selectionKey.channel()).getRemoteAddress());
-                Log.v(TAG, "socketChannel.isConnected ? : " + sc.isConnected());
-
+                boolean connected = sc.finishConnect();
+                if (connected){
+                    Log.d(TAG, "Finished connecting to " + ((SocketChannel) selectionKey.channel()).getRemoteAddress());
+                    Log.v(TAG, "socketChannel.isConnected ? : " + sc.isConnected());
+                }
             }
             if (selectionKey.isWritable()){
 //                Log.i(TAG, "write event");
@@ -60,6 +61,7 @@ public class SocketMessage {
             if (selectionKey.isReadable()){
 //                Log.i(TAG, "read event");
                 read(selectionKey);
+
 //                int ops = SelectionKey.OP_WRITE;
 //                sc.register(selectionKey.selector(), ops, selectionKey.attachment());
             }

@@ -42,6 +42,7 @@ public class SocketConnectionManager implements Runnable{
                         try{
                             SocketMessage socketMessage = (SocketMessage) selectedKey.attachment();
                             socketMessage.process_events(selectedKey);
+                            selectedKeys.remove(selectedKey);
                         }catch (ClassCastException e){
                             Log.e(TAG,"Error", e);
                             Log.e(TAG, "selectedKey attachment not a SocketMessage type");
@@ -62,13 +63,13 @@ public class SocketConnectionManager implements Runnable{
             sc.configureBlocking(false);
             socketMessage = new SocketMessage(socketListener, sc, selector);
 
-            Log.v(TAG, "registering with selector to connect");
-            int ops = SelectionKey.OP_CONNECT;
-            sc.register(selector, ops, socketMessage);
-
             Log.d(TAG, "Initializing connection with " + inetSocketAddress);
             boolean connected = sc.connect(inetSocketAddress);
             Log.v(TAG, "socketChannel.isConnected ? : " + sc.isConnected());
+
+            Log.v(TAG, "registering with selector to connect");
+            int ops = SelectionKey.OP_CONNECT;
+            sc.register(selector, ops, socketMessage);
 
         } catch (IOException | ClosedSelectorException | IllegalBlockingModeException
                 | CancelledKeyException | IllegalArgumentException e) {
