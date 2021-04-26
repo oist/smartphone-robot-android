@@ -517,4 +517,14 @@ public class MainActivity extends AbcvlibActivity {
         int mb = am.getMemoryClass();
         return socketConnectionManager.sendMsgToServer(episode);
     }
+
+    @Override
+    public Context getAbcContext() {
+        return this.getApplicationContext();
+    }
+
+    public int getStep(){
+        return timeStepDataAssembler.timeStepCount;
+    }
+
 }

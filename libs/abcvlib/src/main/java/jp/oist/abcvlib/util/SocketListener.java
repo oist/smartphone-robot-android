@@ -1,5 +1,7 @@
 package jp.oist.abcvlib.util;
 
+import android.content.Context;
+
 import org.json.JSONObject;
 
 import java.nio.ByteBuffer;
@@ -15,4 +17,8 @@ public interface SocketListener {
      *                      the Java end.
      */
     void onServerReadSuccess(JSONObject jsonHeader, ByteBuffer msgFromServer);
+
+    Context getAbcContext();
+
+    int getStep();
 }
