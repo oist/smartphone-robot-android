@@ -246,7 +246,8 @@ public class MainActivity extends AbcvlibActivity {
         }
 
         public void startEpisode(){
-            builder = new FlatBufferBuilder(1024);
+            ByteBuffer bb = ByteBuffer.allocateDirect(4096);
+            builder = new FlatBufferBuilder(bb);
         }
 
         public void addTimeStep(){
