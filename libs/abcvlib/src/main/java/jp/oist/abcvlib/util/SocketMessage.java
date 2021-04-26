@@ -215,17 +215,19 @@ public class SocketMessage {
         }
     }
 
-    private void printTotalBytes(SocketChannel socketChannel) throws IOException {
-        int percentDone = (int) Math.ceil((((double) _send_buffer.limit() - (double) _send_buffer.remaining())
-                / (double) _send_buffer.limit()) * 100);
-        int total = _send_buffer.limit() / 1000000;
+    private void printTotalBytes(SocketChannel socketChannel, int bytesWritten) throws IOException {
+        int percentDone = (int) Math.ceil(((double) totalNumBytesToWrite - (double) writeBufferVector.get(0).remaining())
+                / (double) totalNumBytesToWrite * 100);
+        int total = totalNumBytesToWrite / 1000000;
         Log.d(TAG, "Sent " + percentDone + "% of " + total + "Mb to " + socketChannel.getRemoteAddress());
     }
 
     private int findOptimalBufferSize(int dataSize){
         int optimalBufferSize;
 
-        optimalBufferSize = (int) Math.pow(Math.ceil(Math.sqrt(dataSize)), 2);
+        int closestLog2 = (int) Math.ceil(Math.log(dataSize) / Math.log(2));
+
+        optimalBufferSize = (int) Math.pow(closestLog2, 2);
 
         return optimalBufferSize;
     }
