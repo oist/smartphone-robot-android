@@ -240,8 +240,10 @@ public class MainActivity extends AbcvlibActivity {
         private int maxTimeStep = 50;
         private FlatBufferBuilder builder;
         private int[] timeStepVector = new int[maxTimeStep + 1];
+        private MyStepHandler myStepHandler;
 
         public TimeStepDataAssembler(){
+            myStepHandler = new MyStepHandler(maxTimeStep, 100, 5);
             startEpisode();
         }
 
@@ -408,17 +410,11 @@ public class MainActivity extends AbcvlibActivity {
 //            Log.i("flatbuff", "after getting msg from server");
         }
 
-        // Don't start a new episode. Some reward criterion has been met for average of past X episodes or something
-        public void endTrail(){
-            closeall();
-        }
-
         @Override
         public void run() {
 
-            // Choose action based on current timestep data
-            MyStepHandler myStepHandler = new MyStepHandler(timeStepDataBuffer.writeData, maxTimeStep);
-            boolean lastEpisode = myStepHandler.foward(timeStepCount);
+            // Choose action wte based on current timestep data
+            ActionSet actionSet = myStepHandler.foward(timeStepDataBuffer.writeData, timeStepCount);
 
             assembleAudio();
 
@@ -429,8 +425,11 @@ public class MainActivity extends AbcvlibActivity {
             addTimeStep();
 
             // If some criteria met, end episode.
-            if (lastEpisode){
+            if (myStepHandler.isLastTimestep()){
                 endEpisode();
+                if(myStepHandler.isLastEpisode()){
+                    closeall();
+                }
             }
 
             // This is helpful code when you have an OutOfMemoryError. Keeping as comment for easy access until we're sure we won't have these any longer.
