@@ -4,30 +4,37 @@ public class MyStepHandler{
 
     private TimeStepDataBuffer.TimeStepData timeStepData;
     private int maxTimeStepCount;
+    private boolean lastEpisode = false; // Use to trigger MainActivity to stop generating episodes
+    private boolean lastTimestep = false; // Use to trigger MainActivity to stop generating timesteps for a single episode
 
     public MyStepHandler(TimeStepDataBuffer.TimeStepData data, int maxTimeStepCount){
         this.timeStepData = data;
         this.maxTimeStepCount = maxTimeStepCount;
     }
 
-    public boolean foward(int timeStepCount){
+    public ActionSet foward(int timeStepCount){
 
-        // set to true if episode should end after this timestep
-        boolean endEpisode = false;
-
-        int motionAction = 0;
-        int commAction = 0;
+        ActionSet actionSet;
+        MotionAction motionAction;
+        CommAction commAction;
 
         // Do something with timeStepData...
+
+        // Set actions based on above results. e.g:
+        motionAction = MotionAction.FORWARD;
+        commAction = CommAction.COMM_ACTION1;
+
+        // Bundle them into ActionSet so it can return both
+        actionSet = new ActionSet(motionAction, commAction);
 
         // set your action to some ints
         timeStepData.actions.add(motionAction, commAction);
 
         if (timeStepCount >= maxTimeStepCount){
-            endEpisode = true;
+            this.lastTimestep = true;
         }
 
-        return endEpisode;
+        return actionSet;
     }
 
 }

@@ -239,9 +239,9 @@ public class TimeStepDataBuffer {
         }
 
         class RobotAction{
-            private int motionAction;
-            private int commAction;
-            public void add(int motionAction, int commAction){
+            private MotionAction motionAction;
+            private CommAction commAction;
+            public void add(MotionAction motionAction, CommAction commAction){
                 this.motionAction = motionAction;
                 this.commAction = commAction;
             }

@@ -372,9 +372,8 @@ public class MainActivity extends AbcvlibActivity {
 //        private int addActionData(){}
 
 
+        // End episode after some reward has been acheived or maxtimesteps has been reached
         public void endEpisode(){
-
-            closeall();
 
             int ts = Episode.createTimestepsVector(builder, timeStepVector); //todo I think I need to add each timestep when it is generated rather than all at once? Is this the leak?
             Episode.startEpisode(builder);
@@ -409,6 +408,11 @@ public class MainActivity extends AbcvlibActivity {
 //            Log.i("flatbuff", "after getting msg from server");
         }
 
+        // Don't start a new episode. Some reward criterion has been met for average of past X episodes or something
+        public void endTrail(){
+            closeall();
+        }
+
         @Override
         public void run() {
 
@@ -429,7 +433,7 @@ public class MainActivity extends AbcvlibActivity {
                 endEpisode();
             }
 
-            // This is helpful code when you have an OutOfMemoryError. Keeping as comment for easy access until we're sure we won't have these any longer. 
+            // This is helpful code when you have an OutOfMemoryError. Keeping as comment for easy access until we're sure we won't have these any longer.
 //            if(timeStepCount == 550){
 //                try {
 //                    boolean deleted = false;
