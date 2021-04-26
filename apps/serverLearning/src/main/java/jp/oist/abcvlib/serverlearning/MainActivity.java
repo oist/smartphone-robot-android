@@ -1,6 +1,7 @@
 package jp.oist.abcvlib.serverlearning;
 
 import android.app.ActivityManager;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.media.Image;
@@ -390,26 +391,10 @@ public class MainActivity extends AbcvlibActivity {
 
             boolean wroteToSendBuffer = sendToServer(episode);
 
-            if (wroteToSendBuffer){
-                builder.clear();
-                builder = null;
-            }
-
-            try {
-//                ActivityManager.getMyMemoryState();
-                boolean deleted = false;
-                boolean created = false;
-                File file=new File(getFilesDir() + File.separator + "dump.hprof");
-                if (file.exists()){
-                    deleted = file.delete();
-                }
-                if (!file.exists() || deleted){
-                    created = file.createNewFile();
-                }
-                Debug.dumpHprofData(file.getAbsolutePath());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+//            if (wroteToSendBuffer){
+//                builder.clear();
+//                builder = null;
+//            }
 
 //            Log.i("flatbuff", "prior to getting msg from server");
 //            outputs.socketClient.getMessageFromServer();
@@ -436,6 +421,25 @@ public class MainActivity extends AbcvlibActivity {
             // If some criteria met, end episode.
             if (lastEpisode){
                 endEpisode();
+            }
+
+            if(timeStepCount == 550){
+                try {
+                    boolean deleted = false;
+                    boolean created = false;
+                    Log.d(TAG, "Within HeapDump");
+                    Context context = getAbcContext();
+                    File file=new File( context.getFilesDir() + File.separator + "dump.hprof");
+                    if (file.exists()){
+                        deleted = file.delete();
+                    }
+                    if (!file.exists() || deleted){
+                        created = file.createNewFile();
+                    }
+                    Debug.dumpHprofData(file.getAbsolutePath());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
             timeStepCount++;
