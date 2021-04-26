@@ -29,13 +29,14 @@ public class SocketMessage {
     private JSONObject jsonHeaderRead; // Will tell Java at which points in msgContent each model lies (e.g. model1 is from 0 to 1018, model2 is from 1019 to 2034, etc.)
     private byte[] jsonHeaderBytes;
     private ByteBuffer msgContent; // Should contain ALL model files. Parse to individual files after reading
-    private final Vector<byte[]> writeBufferVector = new Vector<>(); // List of episodes
+    private final Vector<ByteBuffer> writeBufferVector = new Vector<>(); // List of episodes
     private final String TAG = "SocketConnectionManager";
     private JSONObject jsonHeaderWrite;
     private boolean msgReadComplete = false;
     private SocketListener socketListener;
     private long socketWriteTimeStart;
     private long socketReadTimeStart;
+    private int totalNumBytesToWrite;
 
 
     public SocketMessage(SocketListener socketListener, SocketChannel sc, Selector selector){
@@ -121,44 +122,48 @@ public class SocketMessage {
                 // This is because the data in this ByteBuffer does NOT start at 0, but at
                 // buf.position(). Even if it were some other type of buffer here (e.g. compacted one)
                 // the position should be zero and thus this shouldn't change anything
-                int numBytesToWrite = writeBufferVector.get(0).length;
+                int numBytesToWrite = writeBufferVector.get(0).limit() - writeBufferVector.get(0).position();
 
                 // Create JSONHeader containing length of episode in Bytes
                 Log.v(TAG, "generating jsonheader");
                 jsonHeaderWrite = generate_jsonheader(numBytesToWrite);
                 byte[] jsonBytes = jsonHeaderWrite.toString().getBytes(StandardCharsets.UTF_8);
+//                ByteBuffer jsonByteBuffer = ByteBuffer.wrap(jsonBytes); //todo optimize buffer length
 
-                // Encode length of JSONHeader to first two bytes and write to socketChannel
+                // Encode length of JSONHeader to first four bytes (int) and write to socketChannel
                 int jsonLength = jsonBytes.length;
 
                 // Add up length of protoHeader, JSONheader and episode bytes
-                int totalNumBytesToWrite = Integer.BYTES + jsonLength + numBytesToWrite;
+                totalNumBytesToWrite = Integer.BYTES + jsonLength + numBytesToWrite;
 
-                int optimalBufferSize = findOptimalBufferSize(totalNumBytesToWrite);
+//                int optimalBufferSize = findOptimalBufferSize(totalNumBytesToWrite);
 
                 // Create new buffer that compiles protoHeader, JsonHeader, and Episode
-                _send_buffer = ByteBuffer.allocate(optimalBufferSize);
+                _send_buffer = ByteBuffer.allocate(Integer.BYTES + jsonLength);
 
                 Log.v(TAG, "Assembling _send_buffer");
                 // Assemble all bytes and flip to prepare to read
                 // todo try to write the episode directly rather than copy it.
                 _send_buffer.putInt(jsonLength);
                 _send_buffer.put(jsonBytes);
-                _send_buffer.put(writeBufferVector.get(0));
                 // Remove episode to clear memory note builder will reference the flatbuffer builder in memory
-                byte[] builder = writeBufferVector.remove(0);
-                builder = null;
+//                ByteBuffer builder = writeBufferVector.remove(0);
+//                builder = null;
 
                 _send_buffer.flip();
 
-                int total = _send_buffer.limit() / 1000000;
+                int total = _send_buffer.limit();
 
-                Log.d(TAG, "Writing to " + total + "MB to server ...");
+                Log.d(TAG, "Writing JSONHeader of length " + total + " bytes to server ...");
 
-                // Write Bytes to socketChannel //todo shouldn't be while as should be non-blocking
+                // Write Bytes to socketChannel
                 if (_send_buffer.remaining() > 0){
                     int numBytes = socketChannel.write(_send_buffer); // todo memory dump error here!
                 }
+
+                int msgSize = writeBufferVector.get(0).limit() / 1000000;
+                Log.d(TAG, "Writing message of length " + msgSize + "MB to server ...");
+
             } else{
                 // Write Bytes to socketChannel
                 if (_send_buffer.remaining() > 0){
@@ -186,15 +191,18 @@ public class SocketMessage {
 //                    }
                 }
             }
-            if (_send_buffer.remaining() == 0){
-                int total = _send_buffer.limit() / 1000000;
+            if (writeBufferVector.get(0).remaining() == 0){
+                int total = writeBufferVector.get(0).limit() / 1000000;
                 double timeTaken = (System.nanoTime() - socketWriteTimeStart) * 10e-10;
                 DecimalFormat df = new DecimalFormat();
                 df.setMaximumFractionDigits(2);
                 Log.i(TAG, "Sent " + total + "Mb in " + df.format(timeTaken) + "s");
+                Log.i(TAG, "Mean transfer rate of " + df.format(total/timeTaken) + " MB/s");
 
                 // Clear sending buffer
                 _send_buffer.clear();
+                writeBufferVector.get(0).clear();
+                writeBufferVector.remove(0);
                 // make null so as to catch the initial if statement to write a new one.
                 jsonHeaderWrite = null;
 
@@ -328,10 +336,10 @@ public class SocketMessage {
     }
 
     // todo should be able deal with ByteBuffer from FlatBuffer rather than byte[]
-    public boolean addEpisodeToWriteBuffer(byte[] episode){
+    public boolean addEpisodeToWriteBuffer(ByteBuffer episode){
         boolean success = false;
         try{
-            success = writeBufferVector.add(episode);
+            success = writeBufferVector.add(episode); // does pos or limit change in either episode or writeBufferVector at this point?
             Log.v(TAG, "Added data to writeBuffer");
             int ops = SelectionKey.OP_WRITE;
             socketWriteTimeStart = System.nanoTime();

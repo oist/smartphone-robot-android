@@ -15,6 +15,7 @@ import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageProxy;
 
 import com.google.flatbuffers.FlatBufferBuilder;
+import com.google.flatbuffers.FloatVector;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -24,7 +25,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -378,9 +381,10 @@ public class MainActivity extends AbcvlibActivity {
             int ep = Episode.endEpisode(builder);
             builder.finish(ep);
 
-            byte[] episode = builder.sizedByteArray();
+//            byte[] episode = builder.sizedByteArray();
+            ByteBuffer episode = builder.dataBuffer();
 
-            // The following is just to check the contents of the flatbuffer prior to sending to the server. You should comment this out if not using it as it doubles the required memory.
+//             The following is just to check the contents of the flatbuffer prior to sending to the server. You should comment this out if not using it as it doubles the required memory.
 //            Episode episodeTest = Episode.getRootAsEpisode(episode);
 //            Log.d("flatbuff", "TimeSteps Length: "  + String.valueOf(episodeTest.timestepsLength()));
 //            Log.d("flatbuff", "WheelCounts TimeStep 0 Length: "  + String.valueOf(episodeTest.timesteps(0).wheelCounts().timestampsLength()));
@@ -504,7 +508,7 @@ public class MainActivity extends AbcvlibActivity {
         }
     }
 
-    private boolean sendToServer(byte[] episode){
+    private boolean sendToServer(ByteBuffer episode){
         ActivityManager am = (ActivityManager) getApplicationContext().getSystemService(ACTIVITY_SERVICE);
         int mb = am.getMemoryClass();
         return socketConnectionManager.sendMsgToServer(episode);
