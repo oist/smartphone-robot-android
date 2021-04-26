@@ -422,9 +422,7 @@ public class MainActivity extends AbcvlibActivity {
             timeStepDataBuffer.nextTimeStep();
 
             // Add timestep and return int representing offset in flatbuffer
-            Log.i("flatbuff", "prior addTimeStep");
             addTimeStep();
-            Log.i("flatbuff", "after addTimeStep");
 
             // If some criteria met, end episode.
             if (lastEpisode){
