@@ -13,6 +13,8 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Set;
 
+import static java.net.StandardSocketOptions.SO_SNDBUF;
+
 public class SocketConnectionManager implements Runnable{
 
     private SocketChannel sc;
@@ -62,6 +64,7 @@ public class SocketConnectionManager implements Runnable{
             InetSocketAddress inetSocketAddress = new InetSocketAddress(serverIp, serverPort);
             sc = SocketChannel.open();
             sc.configureBlocking(false);
+            sc.setOption(SO_SNDBUF, 2^27);
             socketMessage = new SocketMessage(socketListener, sc, selector);
 
             Log.d(TAG, "Initializing connection with " + inetSocketAddress);
