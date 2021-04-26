@@ -429,24 +429,25 @@ public class MainActivity extends AbcvlibActivity {
                 endEpisode();
             }
 
-            if(timeStepCount == 550){
-                try {
-                    boolean deleted = false;
-                    boolean created = false;
-                    Log.d(TAG, "Within HeapDump");
-                    Context context = getAbcContext();
-                    File file=new File( context.getFilesDir() + File.separator + "dump.hprof");
-                    if (file.exists()){
-                        deleted = file.delete();
-                    }
-                    if (!file.exists() || deleted){
-                        created = file.createNewFile();
-                    }
-                    Debug.dumpHprofData(file.getAbsolutePath());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+            // This is helpful code when you have an OutOfMemoryError. Keeping as comment for easy access until we're sure we won't have these any longer. 
+//            if(timeStepCount == 550){
+//                try {
+//                    boolean deleted = false;
+//                    boolean created = false;
+//                    Log.d(TAG, "Within HeapDump");
+//                    Context context = getAbcContext();
+//                    File file=new File( context.getFilesDir() + File.separator + "dump.hprof");
+//                    if (file.exists()){
+//                        deleted = file.delete();
+//                    }
+//                    if (!file.exists() || deleted){
+//                        created = file.createNewFile();
+//                    }
+//                    Debug.dumpHprofData(file.getAbsolutePath());
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
 
             timeStepCount++;
         }
