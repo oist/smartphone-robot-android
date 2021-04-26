@@ -82,7 +82,7 @@ public class MainActivity extends AbcvlibActivity {
 
         microphoneInput = new MicrophoneInput(this);
 
-        executor.execute(socketConnectionManager = new SocketConnectionManager(this,"192.168.19.196", 3000));
+        executor.execute(socketConnectionManager = new SocketConnectionManager(this,"192.168.2.102", 3000));
 
         imageAnalysis =
                 new ImageAnalysis.Builder()
@@ -93,7 +93,7 @@ public class MainActivity extends AbcvlibActivity {
         imageAnalysis.setAnalyzer(imageExecutor, new ImageDataGatherer());
 
         //todo I guess the imageAnalyzerActivity Interface is uncessary
-        initialzer(this, "192.168.0.108", 3000, null, this);
+        initialzer(this, "192.168.2.102", 3000, null, this);
         super.onCreate(savedInstanceState);
 
     }
@@ -110,7 +110,7 @@ public class MainActivity extends AbcvlibActivity {
                 timeStepDataAssembler = new TimeStepDataAssembler();
 //        testFlatBuffers();
 
-                long initDelay = 5000;
+                long initDelay = 1000;
                 wheelDataGathererFuture = executor.scheduleAtFixedRate(wheelDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
                 chargerDataGathererFuture = executor.scheduleAtFixedRate(new ChargerDataGatherer(), initDelay, 10, TimeUnit.MILLISECONDS);
                 batteryDataGathererFuture = executor.scheduleAtFixedRate(new BatteryDataGatherer(), initDelay, 10, TimeUnit.MILLISECONDS);
@@ -237,7 +237,7 @@ public class MainActivity extends AbcvlibActivity {
     class TimeStepDataAssembler implements Runnable{
 
         private int timeStepCount = 0;
-        private int maxTimeStep = 40;
+        private int maxTimeStep = 50;
         private FlatBufferBuilder builder;
         private int[] timeStepVector = new int[maxTimeStep + 1];
 
