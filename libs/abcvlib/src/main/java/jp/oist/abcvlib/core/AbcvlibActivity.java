@@ -132,7 +132,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
 
     protected void initialzer(AbcvlibActivity abcvlibActivity,
                               AbcvlibController controller,
-                              ImageAnalyzerActivity imageAnalyzerActivity){
+                              ImageAnalyzerActivity imageAnalyzerActivity) throws InterruptedException {
 
         //Todo some logic here to test for boolean combinations that would lead to errors.
         // e.g. balanceApp without pythonControlApp
@@ -162,13 +162,13 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     /**
      * null initializer for basic module or those not interacting with anything other than itself
      */
-    protected void initialzer(AbcvlibActivity abcvlibActivity){
+    protected void initialzer(AbcvlibActivity abcvlibActivity) throws InterruptedException {
 
         initialzer(abcvlibActivity, null, null);
 
     }
 
-    protected void onSetupFinished(){
+    protected void onSetupFinished() throws InterruptedException {
 
     }
 

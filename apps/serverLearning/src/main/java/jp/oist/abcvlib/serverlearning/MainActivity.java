@@ -95,13 +95,17 @@ public class MainActivity extends AbcvlibActivity {
         imageAnalysis.setAnalyzer(imageExecutor, new ImageDataGatherer());
 
         //todo I guess the imageAnalyzerActivity Interface is uncessary
-        initialzer(this, null, this);
+        try {
+            initialzer(this, null, this);
+        } catch (InterruptedException e) {
+            Log.e(TAG, "Error initializing abcvlib", e);
+        }
         super.onCreate(savedInstanceState);
     }
 
     @Override
-    protected void onSetupFinished(){
-        
+    protected void onSetupFinished() throws InterruptedException {
+
         wheelDataGatherer = new WheelDataGatherer();
         chargerDataGatherer = new ChargerDataGatherer();
         batteryDataGatherer = new BatteryDataGatherer();
@@ -109,8 +113,11 @@ public class MainActivity extends AbcvlibActivity {
         startGatherers();
     }
 
-    protected void startGatherers(){
+    protected void startGatherers() throws InterruptedException {
+        CountDownLatch gatherersReady = new CountDownLatch(1);
         ExecutorService sequentialExecutor = Executors.newSingleThreadExecutor();
+
+        Log.d("SocketConnection", "Starting new runnable for gatherers");
 
         sequentialExecutor.submit(new Runnable() {
             @Override
@@ -121,12 +128,14 @@ public class MainActivity extends AbcvlibActivity {
                 wheelDataGathererFuture = executor.scheduleAtFixedRate(wheelDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
                 chargerDataGathererFuture = executor.scheduleAtFixedRate(new ChargerDataGatherer(), initDelay, 10, TimeUnit.MILLISECONDS);
                 batteryDataGathererFuture = executor.scheduleAtFixedRate(new BatteryDataGatherer(), initDelay, 10, TimeUnit.MILLISECONDS);
+                timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(timeStepDataAssembler, 0,50, TimeUnit.MILLISECONDS);
+                gatherersReady.countDown();
             }
         });
-    }
+        Log.d("SocketConnection", "Waiting for gatherers to finish");
+        gatherersReady.await();
+        Log.d("SocketConnection", "Gatherers finished initializing");
 
-    protected void startTimeStepAssembler(){
-        timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(timeStepDataAssembler, 0,50, TimeUnit.MILLISECONDS);
     }
 
 //    private void testFlatBuffers(){
@@ -513,6 +522,7 @@ public class MainActivity extends AbcvlibActivity {
             microphoneInput.stop();
             timeStepCount = 0;
             myStepHandler.setLastTimestep(false);
+            timeStepDataAssemblerFuture.cancel(false);
 //            microphoneInput.close(); //todo this needs to be added somewhere else to close it before exiting the app
         }
 

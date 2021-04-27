@@ -12,6 +12,9 @@ import android.util.Log;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
+
 import jp.oist.abcvlib.core.AbcvlibActivity;
 
 public class MicrophoneInput {
@@ -24,7 +27,7 @@ public class MicrophoneInput {
     private AudioRecord recorder;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public MicrophoneInput(AbcvlibActivity abcvlibActivity){
+    public MicrophoneInput(AbcvlibActivity abcvlibActivity) {
 
         Log.i("abcvlib", "In MicInput run method");
 
