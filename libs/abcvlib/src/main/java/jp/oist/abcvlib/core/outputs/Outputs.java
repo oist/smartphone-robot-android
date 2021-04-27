@@ -26,7 +26,7 @@ public class Outputs implements OutputsInterface {
     private ProcessPriorityThreadFactory processPriorityThreadFactory;
     private ScheduledThreadPoolExecutor threadPoolExecutor;
 
-    public Outputs(AbcvlibActivity abcvlibActivity, String hostIP, int port,
+    public Outputs(AbcvlibActivity abcvlibActivity,
                    AbcvlibController customController){
 
         // Determine number of necessary threads.
@@ -47,19 +47,6 @@ public class Outputs implements OutputsInterface {
         motion = new Motion(abcvlibActivity);
         Log.v("abcvlib", "motion object created");
 
-
-        // Todo: make all these threads self contained like in MicrophoneInput so you can set join/stop methods
-        // Python Socket Connection. Host IP:Port needs to be the same as python server.
-        // Todo: automatically detect host server or set this to static IP:Port. Tried UDP Broadcast,
-        //  but seems to be blocked by router. Could set up DNS and static hostname, but would
-        //  require intervention with IT
-        if (abcvlibActivity.switches.pythonControlledPIDBalancer){
-            Log.i("abcvlib", "Prior to Creating socketClient. IP:" + hostIP + ", Port:" + port);
-            socketClient = new SocketClient(hostIP, port, abcvlibActivity);
-            // This will run the default PID param exchange. This should be toggleable.
-            threadPoolExecutor.execute(socketClient);
-            Log.i("abcvlib", "socketClient Started");
-        }
 
         if (abcvlibActivity.switches.balanceApp){
             balancePIDController = new BalancePIDController(abcvlibActivity);

@@ -130,7 +130,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
         Log.i(TAG, "End of AbcvlibActivity.onResume");
     }
 
-    protected void initialzer(AbcvlibActivity abcvlibActivity, String hostIP, int hostPort,
+    protected void initialzer(AbcvlibActivity abcvlibActivity,
                               AbcvlibController controller,
                               ImageAnalyzerActivity imageAnalyzerActivity){
 
@@ -141,8 +141,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
         Log.i(TAG, "Start of AbcvlibActivity.initializer");
 
         inputs = new Inputs(abcvlibActivity, imageAnalyzerActivity);
-        Log.i(TAG, "Prior to Creating outputs. IP:" + hostIP + ", Port:" + hostPort);
-        outputs = new Outputs(abcvlibActivity, hostIP, hostPort, controller);
+        outputs = new Outputs(abcvlibActivity, controller);
 
         if (switches.actionSelectorApp){
             if (aD == null){
@@ -161,22 +160,11 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     }
 
     /**
-     * Default null controller
-     * @param hostIP
-     * @param hostPort
-     */
-    protected void initialzer(AbcvlibActivity abcvlibActivity, String hostIP, int hostPort){
-
-        initialzer(abcvlibActivity, hostIP, hostPort, null, null);
-
-    }
-
-    /**
      * null initializer for basic module or those not interacting with anything other than itself
      */
     protected void initialzer(AbcvlibActivity abcvlibActivity){
 
-        initialzer(abcvlibActivity, null, 0, null, null);
+        initialzer(abcvlibActivity, null, null);
 
     }
 

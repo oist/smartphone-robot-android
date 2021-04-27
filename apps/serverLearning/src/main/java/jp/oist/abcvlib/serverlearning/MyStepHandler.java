@@ -75,4 +75,8 @@ public class MyStepHandler{
     public int getRewardCriterion() {
         return rewardCriterion;
     }
+
+    public void setLastTimestep(boolean lastTimestep) {
+        this.lastTimestep = lastTimestep;
+    }
 }

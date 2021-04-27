@@ -24,10 +24,14 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -59,8 +63,8 @@ public class MainActivity extends AbcvlibActivity {
     ChargerDataGatherer chargerDataGatherer;
     BatteryDataGatherer batteryDataGatherer;
     TimeStepDataAssembler timeStepDataAssembler;
-
     SocketConnectionManager socketConnectionManager;
+    InetSocketAddress inetSocketAddress = new InetSocketAddress("192.168.2.102", 3000);
 
     java.nio.ByteBuffer Fbuf;
     byte[] byteBuff;
@@ -76,13 +80,11 @@ public class MainActivity extends AbcvlibActivity {
 
         timeStepDataBuffer = new TimeStepDataBuffer(3);
 
-        int threads = 2;
+        int threads = 4;
         executor = Executors.newScheduledThreadPool(threads, new ProcessPriorityThreadFactory(1, "dataGatherer"));
         imageExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(10, "imageAnalysis"));
 
         microphoneInput = new MicrophoneInput(this);
-
-        executor.execute(socketConnectionManager = new SocketConnectionManager(this,"192.168.2.102", 3000));
 
         imageAnalysis =
                 new ImageAnalysis.Builder()
@@ -93,29 +95,31 @@ public class MainActivity extends AbcvlibActivity {
         imageAnalysis.setAnalyzer(imageExecutor, new ImageDataGatherer());
 
         //todo I guess the imageAnalyzerActivity Interface is uncessary
-        initialzer(this, "192.168.2.102", 3000, null, this);
+        initialzer(this, null, this);
         super.onCreate(savedInstanceState);
-
     }
 
     @Override
     protected void onSetupFinished(){
+        wheelDataGatherer = new WheelDataGatherer();
+        chargerDataGatherer = new ChargerDataGatherer();
+        batteryDataGatherer = new BatteryDataGatherer();
+        timeStepDataAssembler = new TimeStepDataAssembler();
+        startGatherers();
+    }
+
+    protected void startGatherers(){
         ExecutorService sequentialExecutor = Executors.newSingleThreadExecutor();
         sequentialExecutor.submit(new Runnable() {
             @Override
             public void run() {
-                wheelDataGatherer = new WheelDataGatherer();
-                chargerDataGatherer = new ChargerDataGatherer();
-                batteryDataGatherer = new BatteryDataGatherer();
-                timeStepDataAssembler = new TimeStepDataAssembler();
-//        testFlatBuffers();
-
-                long initDelay = 1000;
+                long initDelay = 0;
+                microphoneInput.start();
+                imageAnalysis.setAnalyzer(imageExecutor, new ImageDataGatherer());
                 wheelDataGathererFuture = executor.scheduleAtFixedRate(wheelDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
                 chargerDataGathererFuture = executor.scheduleAtFixedRate(new ChargerDataGatherer(), initDelay, 10, TimeUnit.MILLISECONDS);
                 batteryDataGathererFuture = executor.scheduleAtFixedRate(new BatteryDataGatherer(), initDelay, 10, TimeUnit.MILLISECONDS);
                 timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(timeStepDataAssembler, initDelay,50, TimeUnit.MILLISECONDS);
-                microphoneInput.start();
             }
         });
     }
@@ -237,7 +241,7 @@ public class MainActivity extends AbcvlibActivity {
     class TimeStepDataAssembler implements Runnable{
 
         private int timeStepCount = 0;
-        private int maxTimeStep = 50;
+        private final int maxTimeStep = 20;
         private FlatBufferBuilder builder;
         private int[] timeStepVector = new int[maxTimeStep + 1];
         private MyStepHandler myStepHandler;
@@ -375,7 +379,7 @@ public class MainActivity extends AbcvlibActivity {
 
 
         // End episode after some reward has been acheived or maxtimesteps has been reached
-        public void endEpisode(){
+        public void endEpisode() throws BrokenBarrierException, InterruptedException, IOException {
 
             int ts = Episode.createTimestepsVector(builder, timeStepVector); //todo I think I need to add each timestep when it is generated rather than all at once? Is this the leak?
             Episode.startEpisode(builder);
@@ -385,6 +389,10 @@ public class MainActivity extends AbcvlibActivity {
 
 //            byte[] episode = builder.sizedByteArray();
             ByteBuffer episode = builder.dataBuffer();
+
+            // Stop all gathering threads momentarily.
+            closeall();
+            timeStepDataBuffer.nextTimeStep();
 
 //             The following is just to check the contents of the flatbuffer prior to sending to the server. You should comment this out if not using it as it doubles the required memory.
 //            Episode episodeTest = Episode.getRootAsEpisode(episode);
@@ -398,7 +406,25 @@ public class MainActivity extends AbcvlibActivity {
 //            episodeTest.timesteps(1).soundData().levelsAsByteBuffer().asFloatBuffer().get(soundFloats);
 //            Log.d("flatbuff", "Sound TimeStep 1 as numpy: "  + Arrays.toString(soundFloats));
 
-            boolean wroteToSendBuffer = sendToServer(episode);
+            // Sets action to take after server has recevied and sent back data completely
+            CyclicBarrier doneSignal = new CyclicBarrier(2, new Runnable() {
+                @Override
+                public void run() {
+                    builder.clear();
+                    builder = null;
+                    timeStepDataAssembler.startEpisode();
+                }
+            });
+
+            // Todo this is getting stuck on registering to the selector likely because selector is running in another thread?
+            sendToServer(episode, doneSignal);
+
+            // Waits for server to finish, then the runnable set in the init of doneSignal above will be fired.
+            doneSignal.await();
+
+            startGatherers();
+
+            // Wait for transfer to server and return message received
 
 //            if (wroteToSendBuffer){
 //                builder.clear();
@@ -426,9 +452,14 @@ public class MainActivity extends AbcvlibActivity {
 
             // If some criteria met, end episode.
             if (myStepHandler.isLastTimestep()){
-                endEpisode();
+                try {
+                    endEpisode();
+                } catch (BrokenBarrierException | InterruptedException | IOException e) {
+                    e.printStackTrace();
+                }
+
                 if(myStepHandler.isLastEpisode()){
-                    closeall();
+                    endTrail();
                 }
             }
 
@@ -471,7 +502,13 @@ public class MainActivity extends AbcvlibActivity {
             batteryDataGathererFuture.cancel(true);
             imageAnalysis.clearAnalyzer();
             microphoneInput.stop();
-            microphoneInput.close();
+            timeStepCount = 0;
+            myStepHandler.setLastTimestep(false);
+//            microphoneInput.close(); //todo this needs to be added somewhere else to close it before exiting the app
+        }
+
+        private void endTrail(){
+            Log.i(TAG, "Need to handle end of trail here");
         }
     }
 
@@ -514,10 +551,10 @@ public class MainActivity extends AbcvlibActivity {
         }
     }
 
-    private boolean sendToServer(ByteBuffer episode){
+    private void sendToServer(ByteBuffer episode, CyclicBarrier doneSignal) throws IOException {
         ActivityManager am = (ActivityManager) getApplicationContext().getSystemService(ACTIVITY_SERVICE);
         int mb = am.getMemoryClass();
-        return socketConnectionManager.sendMsgToServer(episode);
+        executor.execute(new SocketConnectionManager(this, inetSocketAddress, episode, doneSignal));
     }
 
     @Override

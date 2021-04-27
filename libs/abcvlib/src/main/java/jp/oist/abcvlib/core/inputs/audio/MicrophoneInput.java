@@ -91,10 +91,10 @@ public class MicrophoneInput {
 
     public void stop(){
         recorder.stop();
-        recorder.setRecordPositionUpdateListener(null);
     }
 
     public void close(){
+        recorder.setRecordPositionUpdateListener(null);
         abcvlibActivity.audioExecutor.shutdownNow();
         recorder.release();
         recorder = null;

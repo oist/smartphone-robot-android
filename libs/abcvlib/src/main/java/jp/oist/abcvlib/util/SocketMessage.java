@@ -1,13 +1,10 @@
 package jp.oist.abcvlib.util;
 
-import android.content.Context;
-import android.os.Debug;
 import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -18,6 +15,8 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.util.Vector;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
 
 public class SocketMessage {
     
@@ -37,12 +36,14 @@ public class SocketMessage {
     private long socketWriteTimeStart;
     private long socketReadTimeStart;
     private int totalNumBytesToWrite;
+    private CyclicBarrier doneSignal; // used to notify main thread that write/read to server has finished
 
 
     public SocketMessage(SocketListener socketListener, SocketChannel sc, Selector selector){
         this.socketListener = socketListener;
         this.sc = sc;
         this.selector = selector;
+//        this._recv_buffer = ByteBuffer.allocate((int) Math.pow(2,24));
         this._recv_buffer = ByteBuffer.allocate(1024);
         this._send_buffer = ByteBuffer.allocate(1024);
     }
@@ -56,6 +57,8 @@ public class SocketMessage {
                 if (connected){
                     Log.d(TAG, "Finished connecting to " + ((SocketChannel) selectionKey.channel()).getRemoteAddress());
                     Log.v(TAG, "socketChannel.isConnected ? : " + sc.isConnected());
+                    int ops = SelectionKey.OP_WRITE;
+                    sc.register(selectionKey.selector(), ops, selectionKey.attachment());
                 }
             }
             if (selectionKey.isWritable()){
@@ -70,12 +73,12 @@ public class SocketMessage {
 //                sc.register(selectionKey.selector(), ops, selectionKey.attachment());
             }
 
-        } catch (ClassCastException | IOException | JSONException e){
+        } catch (ClassCastException | IOException | JSONException | BrokenBarrierException | InterruptedException e){
             Log.e(TAG,"Error", e);
         }
     }
 
-    private void read(SelectionKey selectionKey) throws IOException, JSONException {
+    private void read(SelectionKey selectionKey) throws IOException, JSONException, BrokenBarrierException, InterruptedException {
 
         SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
 
@@ -111,7 +114,7 @@ public class SocketMessage {
         }
     }
 
-    private void write(SelectionKey selectionKey) throws IOException, JSONException {
+    private void write(SelectionKey selectionKey) throws IOException, JSONException, BrokenBarrierException, InterruptedException {
 
         if (!writeBufferVector.isEmpty()){
             SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
@@ -208,7 +211,7 @@ public class SocketMessage {
 
                 // Set socket to read now that writing has finished.
                 Log.d(TAG, "Reading from server ...");
-                int ops = SelectionKey.OP_READ;
+                int ops = SelectionKey.OP_READ; //todo might need to reconnect if send buffer empties
                 sc.register(selectionKey.selector(), ops, selectionKey.attachment());
             }
 
@@ -298,7 +301,7 @@ public class SocketMessage {
      * @param selectionKey : Used to reference the instance and selector
      * @throws ClosedChannelException :
      */
-    private void process_msgContent(SelectionKey selectionKey) throws IOException {
+    private void process_msgContent(SelectionKey selectionKey) throws IOException, BrokenBarrierException, InterruptedException {
 
         if (msgContent.remaining() > 0){
             _recv_buffer.flip(); //pos at 0 and limit set to bitsRead set ready to read
@@ -324,9 +327,11 @@ public class SocketMessage {
 
             msgReadComplete = true;
 
-            // Set socket to write now that reading has finished.
-            int ops = SelectionKey.OP_WRITE;
+//            // Set socket to write now that reading has finished.
+            int ops = 0;
             sc.register(selectionKey.selector(), ops, selectionKey.attachment());
+
+            doneSignal.await();
         }
     }
 
@@ -338,19 +343,20 @@ public class SocketMessage {
     }
 
     // todo should be able deal with ByteBuffer from FlatBuffer rather than byte[]
-    public boolean addEpisodeToWriteBuffer(ByteBuffer episode){
+    public void addEpisodeToWriteBuffer(ByteBuffer episode, CyclicBarrier doneSignal){
         boolean success = false;
         try{
             success = writeBufferVector.add(episode); // does pos or limit change in either episode or writeBufferVector at this point?
+            this.doneSignal = doneSignal;
             Log.v(TAG, "Added data to writeBuffer");
             int ops = SelectionKey.OP_WRITE;
             socketWriteTimeStart = System.nanoTime();
             sc.register(selector, ops, this);
+//            socketConnectionManager.start_connection();
             // I want this to trigger the selector that this channel is writeReady.
         } catch (NullPointerException | ClosedChannelException e){
             Log.e(TAG,"Error", e);
             Log.e(TAG, "SocketConnectionManager.data not initialized yet");
         }
-        return success;
     }
 }

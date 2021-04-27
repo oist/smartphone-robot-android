@@ -12,6 +12,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Set;
+import java.util.concurrent.CyclicBarrier;
 
 import static java.net.StandardSocketOptions.SO_SNDBUF;
 
@@ -22,20 +23,26 @@ public class SocketConnectionManager implements Runnable{
     private SocketListener socketListener;
     private final String TAG = "SocketConnectionManager";
     private SocketMessage socketMessage;
-    private final String serverIp;
-    private final int serverPort;
+    private final InetSocketAddress inetSocketAddress;
+    private ByteBuffer episode;
+    private CyclicBarrier doneSignal;
 
-    public SocketConnectionManager(SocketListener socketListener, String serverIp, int serverPort){
+    public SocketConnectionManager(SocketListener socketListener,
+                                   InetSocketAddress inetSocketAddress,
+                                   ByteBuffer episode,
+                                   CyclicBarrier doneSignal
+                                   ) {
         this.socketListener = socketListener;
-        this.serverIp = serverIp;
-        this.serverPort = serverPort;
+        this.inetSocketAddress = inetSocketAddress;
+        this.episode = episode;
+        this.doneSignal = doneSignal;
     }
 
     @Override
     public void run() {
         try {
             selector = Selector.open();
-            start_connection(serverIp, serverPort);
+            start_connection();
             do {
                 int eventCount = selector.select(0);
                 Set<SelectionKey> events = selector.selectedKeys(); // events is int representing how many keys have changed state
@@ -59,30 +66,32 @@ public class SocketConnectionManager implements Runnable{
         }
     }
 
-    private void start_connection(String serverIp, int serverPort){
+    protected void start_connection(){
         try {
-            InetSocketAddress inetSocketAddress = new InetSocketAddress(serverIp, serverPort);
             sc = SocketChannel.open();
             sc.configureBlocking(false);
             sc.setOption(SO_SNDBUF, 2^27);
-            socketMessage = new SocketMessage(socketListener, sc, selector);
 
             Log.d(TAG, "Initializing connection with " + inetSocketAddress);
             boolean connected = sc.connect(inetSocketAddress);
+
+            socketMessage = new SocketMessage(socketListener, sc, selector);
             Log.v(TAG, "socketChannel.isConnected ? : " + sc.isConnected());
+
+            socketMessage.addEpisodeToWriteBuffer(episode, doneSignal);
 
             Log.v(TAG, "registering with selector to connect");
             int ops = SelectionKey.OP_CONNECT;
-            sc.register(selector, ops, socketMessage);
+            SelectionKey selectionKey = sc.register(selector, ops, socketMessage);
+            Log.v(TAG, "Registered with selector");
+
+
+
 
         } catch (IOException | ClosedSelectorException | IllegalBlockingModeException
                 | CancelledKeyException | IllegalArgumentException e) {
             Log.e(TAG, "Initial socket connect and registration:", e);
         }
-    }
-
-    public boolean sendMsgToServer(ByteBuffer episode){
-        return socketMessage.addEpisodeToWriteBuffer(episode);
     }
 
     /**
