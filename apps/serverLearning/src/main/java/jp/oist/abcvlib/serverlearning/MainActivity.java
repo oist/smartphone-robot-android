@@ -101,6 +101,7 @@ public class MainActivity extends AbcvlibActivity {
 
     @Override
     protected void onSetupFinished(){
+        
         wheelDataGatherer = new WheelDataGatherer();
         chargerDataGatherer = new ChargerDataGatherer();
         batteryDataGatherer = new BatteryDataGatherer();
@@ -110,6 +111,7 @@ public class MainActivity extends AbcvlibActivity {
 
     protected void startGatherers(){
         ExecutorService sequentialExecutor = Executors.newSingleThreadExecutor();
+
         sequentialExecutor.submit(new Runnable() {
             @Override
             public void run() {
@@ -119,9 +121,12 @@ public class MainActivity extends AbcvlibActivity {
                 wheelDataGathererFuture = executor.scheduleAtFixedRate(wheelDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
                 chargerDataGathererFuture = executor.scheduleAtFixedRate(new ChargerDataGatherer(), initDelay, 10, TimeUnit.MILLISECONDS);
                 batteryDataGathererFuture = executor.scheduleAtFixedRate(new BatteryDataGatherer(), initDelay, 10, TimeUnit.MILLISECONDS);
-                timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(timeStepDataAssembler, initDelay,50, TimeUnit.MILLISECONDS);
             }
         });
+    }
+
+    protected void startTimeStepAssembler(){
+        timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(timeStepDataAssembler, 0,50, TimeUnit.MILLISECONDS);
     }
 
 //    private void testFlatBuffers(){
@@ -275,7 +280,7 @@ public class MainActivity extends AbcvlibActivity {
         }
 
         private int addWheelCounts(){
-            Log.i("flatbuff", "STEP wheelCount TimeStamps Length: " +
+            Log.v("flatbuff", "STEP wheelCount TimeStamps Length: " +
                     timeStepDataBuffer.readData.wheelCounts.getTimeStamps().length);
             int ts = WheelCounts.createTimestampsVector(builder,
                     timeStepDataBuffer.readData.wheelCounts.getTimeStamps());
@@ -287,7 +292,7 @@ public class MainActivity extends AbcvlibActivity {
         }
 
         private int addChargerData(){
-            Log.i("flatbuff", "STEP chargerData TimeStamps Length: " +
+            Log.v("flatbuff", "STEP chargerData TimeStamps Length: " +
                     timeStepDataBuffer.readData.chargerData.getTimeStamps().length);
             int ts = WheelCounts.createTimestampsVector(builder,
                     timeStepDataBuffer.readData.chargerData.getTimeStamps());
@@ -297,7 +302,7 @@ public class MainActivity extends AbcvlibActivity {
         }
 
         private int addBatteryData(){
-            Log.i("flatbuff", "STEP batteryData TimeStamps Length: " +
+            Log.v("flatbuff", "STEP batteryData TimeStamps Length: " +
                     timeStepDataBuffer.readData.batteryData.getTimeStamps().length);
             int ts = WheelCounts.createTimestampsVector(builder,
                     timeStepDataBuffer.readData.batteryData.getTimeStamps());
@@ -310,7 +315,7 @@ public class MainActivity extends AbcvlibActivity {
 
             TimeStepDataBuffer.TimeStepData.SoundData soundData = timeStepDataBuffer.readData.soundData;
 
-            Log.i("flatbuff", "Sound Data TotalSamples: " +
+            Log.v("flatbuff", "Sound Data TotalSamples: " +
                     soundData.totalSamples);
 
             int _startTime = AudioTimestamp.createAudioTimestamp(builder,
@@ -342,8 +347,8 @@ public class MainActivity extends AbcvlibActivity {
 
             int numOfImages = imageData.images.size();
 
-            Log.i("flatbuff", numOfImages + " images gathered");
-            Log.i("flatbuff", "Step:" + timeStepCount);
+            Log.v("flatbuff", numOfImages + " images gathered");
+            Log.v("flatbuff", "Step:" + timeStepCount);
 
             int[] _images = new int[numOfImages];
 
@@ -420,7 +425,9 @@ public class MainActivity extends AbcvlibActivity {
             sendToServer(episode, doneSignal);
 
             // Waits for server to finish, then the runnable set in the init of doneSignal above will be fired.
+            Log.d("SocketConnection", "Waiting for socket transfer R/W to complete.");
             doneSignal.await();
+            Log.d("SocketConnection", "Finished waiting for socket connection. Starting gatherers again.");
 
             startGatherers();
 
@@ -442,6 +449,8 @@ public class MainActivity extends AbcvlibActivity {
             // Choose action wte based on current timestep data
             ActionSet actionSet = myStepHandler.foward(timeStepDataBuffer.writeData, timeStepCount);
 
+            Log.v("SocketConnection", "Running TimeStepAssembler Run Method");
+
             assembleAudio();
 
             // Moves timeStepDataBuffer.writeData to readData and nulls out the writeData for new data
@@ -449,6 +458,8 @@ public class MainActivity extends AbcvlibActivity {
 
             // Add timestep and return int representing offset in flatbuffer
             addTimeStep();
+
+            timeStepCount++;
 
             // If some criteria met, end episode.
             if (myStepHandler.isLastTimestep()){
@@ -482,8 +493,6 @@ public class MainActivity extends AbcvlibActivity {
 //                    e.printStackTrace();
 //                }
 //            }
-
-            timeStepCount++;
         }
 
         public void assembleAudio(){
@@ -554,6 +563,7 @@ public class MainActivity extends AbcvlibActivity {
     private void sendToServer(ByteBuffer episode, CyclicBarrier doneSignal) throws IOException {
         ActivityManager am = (ActivityManager) getApplicationContext().getSystemService(ACTIVITY_SERVICE);
         int mb = am.getMemoryClass();
+        Log.d("SocketConnection", "New executor deployed creating new SocketConnectionManager");
         executor.execute(new SocketConnectionManager(this, inetSocketAddress, episode, doneSignal));
     }
 
