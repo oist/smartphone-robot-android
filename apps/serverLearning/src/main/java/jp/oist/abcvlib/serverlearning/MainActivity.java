@@ -46,7 +46,6 @@ public class MainActivity extends AbcvlibActivity {
 
     ScheduledExecutorService executor;
     ExecutorService imageExecutor;
-    ScheduledExecutorService imageAnalysisExecutor;
     ImageAnalysis imageAnalysis;
     ScheduledFuture<?> wheelDataGathererFuture;
     ScheduledFuture<?> chargerDataGathererFuture;
@@ -75,7 +74,7 @@ public class MainActivity extends AbcvlibActivity {
         timeStepDataBuffer = new TimeStepDataBuffer(3);
 
         int threads = 5;
-        executor = Executors.newScheduledThreadPool(threads, new ProcessPriorityThreadFactory(9, "dataGatherer"));
+        executor = Executors.newScheduledThreadPool(threads, new ProcessPriorityThreadFactory(1, "dataGatherer"));
         imageExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(10, "imageAnalysis"));
 
         microphoneInput = new MicrophoneInput(this);
@@ -122,7 +121,7 @@ public class MainActivity extends AbcvlibActivity {
                 wheelDataGathererFuture = executor.scheduleAtFixedRate(wheelDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
                 chargerDataGathererFuture = executor.scheduleAtFixedRate(new ChargerDataGatherer(), initDelay, 10, TimeUnit.MILLISECONDS);
                 batteryDataGathererFuture = executor.scheduleAtFixedRate(new BatteryDataGatherer(), initDelay, 10, TimeUnit.MILLISECONDS);
-                timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(timeStepDataAssembler, 0,50, TimeUnit.MILLISECONDS);
+                timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(timeStepDataAssembler, 50,50, TimeUnit.MILLISECONDS);
                 gatherersReady.countDown();
             }
         });
@@ -207,6 +206,7 @@ public class MainActivity extends AbcvlibActivity {
 
                 // todo this is causing a memory leak and crashing.
                 timeStepDataBuffer.writeData.imageData.add(timestamp, width, height, rgbVectors);
+                Log.v("flatbuff", "Wrote image to timeStepDataBuffer");
             }
             imageProxy.close();
         }
@@ -505,6 +505,7 @@ public class MainActivity extends AbcvlibActivity {
 
         public void assembleAudio(){
             // Don't put these inline, else you will pass by reference rather than value and references will continue to update
+            // todo between episodes the startTime is larger than the end time somehow.
             android.media.AudioTimestamp startTime = microphoneInput.getStartTime();
             android.media.AudioTimestamp endTime = microphoneInput.getEndTime();
             int sampleRate = microphoneInput.getSampleRate();

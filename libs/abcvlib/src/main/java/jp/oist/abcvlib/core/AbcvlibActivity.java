@@ -272,9 +272,11 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
             public void run() {
                 int writeBufferSizeFrames = audioRecord.getBufferSizeInFrames();
                 int readBufferSize = audioRecord.getPositionNotificationPeriod();
+                Log.d("microphone", "readBufferSize:" + readBufferSize);
                 float[] audioData = new float[readBufferSize];
                 int numSamples = audioRecord.read(audioData, 0,
                         readBufferSize, AudioRecord.READ_NON_BLOCKING);
+                Log.d("microphone", "numSamples:" + numSamples);
                 if (numSamples < readBufferSize){
                     Log.w("microphone", "Missed some audio samples");
                 }

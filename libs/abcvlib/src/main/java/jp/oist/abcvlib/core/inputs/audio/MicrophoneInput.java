@@ -60,9 +60,10 @@ public class MicrophoneInput {
     public void start(){
         recorder.startRecording();
 
-        while (startTime.nanoTime == 0){
+        while (recorder.getTimestamp(startTime, AudioTimestamp.TIMEBASE_MONOTONIC) == AudioRecord.ERROR_INVALID_OPERATION){
             Log.i("microphone_start", "waiting for start timestamp");
-            recorder.getTimestamp(startTime, AudioTimestamp.TIMEBASE_MONOTONIC);
+            int successOrNot = recorder.getTimestamp(startTime, AudioTimestamp.TIMEBASE_MONOTONIC);
+            Log.i("microphone_start", "successOrNot (0=success, -3=invalid-op):" + successOrNot);
         }
         Log.i("microphone_start", "StartFrame:" + startTime.framePosition + " NanoTime: " + startTime.nanoTime);
 
