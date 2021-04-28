@@ -329,8 +329,10 @@ public class SocketMessage {
             msgReadComplete = true;
 
 //            // Set socket to write now that reading has finished.
-            int ops = 0;
-            sc.register(selectionKey.selector(), ops, selectionKey.attachment());
+//            int ops = 0;
+//            sc.register(selectionKey.selector(), ops, selectionKey.attachment());
+            selectionKey.cancel();
+            selector.close();
 
             doneSignal.await();
         }

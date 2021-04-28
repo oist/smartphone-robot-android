@@ -61,6 +61,8 @@ public class SocketConnectionManager implements Runnable{
                 }
             } while (selector.isOpen()); //todo remember to close the selector somewhere
 
+            close();
+
         } catch (IOException e) {
             Log.e(TAG,"Error", e);
         }
@@ -70,7 +72,7 @@ public class SocketConnectionManager implements Runnable{
         try {
             sc = SocketChannel.open();
             sc.configureBlocking(false);
-            sc.setOption(SO_SNDBUF, 2^27);
+//            sc.setOption(SO_SNDBUF, 2^27);
 
             Log.d(TAG, "Initializing connection with " + inetSocketAddress);
             boolean connected = sc.connect(inetSocketAddress);

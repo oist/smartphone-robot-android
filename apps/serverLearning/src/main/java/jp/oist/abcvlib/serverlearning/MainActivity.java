@@ -87,7 +87,7 @@ public class MainActivity extends AbcvlibActivity {
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .setImageQueueDepth(2)
                         .build();
-        imageAnalysis.setAnalyzer(imageExecutor, new ImageDataGatherer());
+//        imageAnalysis.setAnalyzer(imageExecutor, new ImageDataGatherer());
 
         //todo I guess the imageAnalyzerActivity Interface is uncessary
         try {
@@ -119,7 +119,7 @@ public class MainActivity extends AbcvlibActivity {
             public void run() {
                 long initDelay = 0;
                 microphoneInput.start();
-                imageAnalysis.setAnalyzer(imageExecutor, new ImageDataGatherer());
+//                imageAnalysis.setAnalyzer(imageExecutor, new ImageDataGatherer());
                 wheelDataGathererFuture = executor.scheduleAtFixedRate(wheelDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
                 chargerDataGathererFuture = executor.scheduleAtFixedRate(new ChargerDataGatherer(), initDelay, 10, TimeUnit.MILLISECONDS);
                 batteryDataGathererFuture = executor.scheduleAtFixedRate(new BatteryDataGatherer(), initDelay, 10, TimeUnit.MILLISECONDS);
@@ -191,7 +191,7 @@ public class MainActivity extends AbcvlibActivity {
         @androidx.camera.core.ExperimentalGetImage
         public void analyze(@NonNull ImageProxy imageProxy) {
             Image image = imageProxy.getImage();
-            if (image != null && timeStepDataBuffer.writeData.imageData.images.size() < 20) {
+            if (image != null && timeStepDataBuffer.writeData.imageData.images.size() < 2) {
                 int width = image.getWidth();
                 int height = image.getHeight();
                 long timestamp = image.getTimestamp();
@@ -251,10 +251,11 @@ public class MainActivity extends AbcvlibActivity {
     class TimeStepDataAssembler implements Runnable{
 
         private int timeStepCount = 0;
-        private final int maxTimeStep = 20;
+        private final int maxTimeStep = 5;
         private FlatBufferBuilder builder;
         private int[] timeStepVector = new int[maxTimeStep + 1];
         private MyStepHandler myStepHandler;
+        private int episodeCount = 0;
 
         public TimeStepDataAssembler(){
             myStepHandler = new MyStepHandler(maxTimeStep, 100, 5);
@@ -262,8 +263,9 @@ public class MainActivity extends AbcvlibActivity {
         }
 
         public void startEpisode(){
-            ByteBuffer bb = ByteBuffer.allocateDirect(4096);
-            builder = new FlatBufferBuilder(bb);
+//            ByteBuffer bb = ByteBuffer.allocateDirect(4096);
+            builder = new FlatBufferBuilder(1024);
+            Log.v("flatbuff", "starting New Episode");
         }
 
         public void addTimeStep(){
@@ -387,9 +389,67 @@ public class MainActivity extends AbcvlibActivity {
 
 //        private int addActionData(){}
 
+        @Override
+        public void run() {
+
+            // Choose action wte based on current timestep data
+            ActionSet actionSet = myStepHandler.foward(timeStepDataBuffer.writeData, timeStepCount);
+
+            Log.v("SocketConnection", "Running TimeStepAssembler Run Method");
+
+            assembleAudio();
+
+            // Moves timeStepDataBuffer.writeData to readData and nulls out the writeData for new data
+            timeStepDataBuffer.nextTimeStep();
+
+            // Add timestep and return int representing offset in flatbuffer
+            addTimeStep();
+
+            timeStepCount++;
+
+            // If some criteria met, end episode.
+            if (myStepHandler.isLastTimestep()){
+                try {
+                    endEpisode();
+                    if(myStepHandler.isLastEpisode()){
+                        endTrail();
+                    }
+                } catch (BrokenBarrierException | InterruptedException | IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        public void assembleAudio(){
+            // Don't put these inline, else you will pass by reference rather than value and references will continue to update
+            // todo between episodes the startTime is larger than the end time somehow.
+            android.media.AudioTimestamp startTime = microphoneInput.getStartTime();
+            android.media.AudioTimestamp endTime = microphoneInput.getEndTime();
+            int sampleRate = microphoneInput.getSampleRate();
+            timeStepDataBuffer.writeData.soundData.setMetaData(sampleRate, startTime, endTime);
+
+            microphoneInput.setStartTime();
+        }
+
+        public void stopRecordingData(){
+
+            pauseRecording = true;
+
+            wheelDataGathererFuture.cancel(true);
+            chargerDataGathererFuture.cancel(true);
+            batteryDataGathererFuture.cancel(true);
+            imageAnalysis.clearAnalyzer();
+            microphoneInput.stop();
+            timeStepCount = 0;
+            myStepHandler.setLastTimestep(false);
+            timeStepDataAssemblerFuture.cancel(false);
+//            microphoneInput.close(); //todo this needs to be added somewhere else to close it before exiting the app
+        }
 
         // End episode after some reward has been acheived or maxtimesteps has been reached
         public void endEpisode() throws BrokenBarrierException, InterruptedException, IOException {
+
+            Log.d("SocketConnections", "End of episode:" + episodeCount);
 
             int ts = Episode.createTimestepsVector(builder, timeStepVector); //todo I think I need to add each timestep when it is generated rather than all at once? Is this the leak?
             Episode.startEpisode(builder);
@@ -435,22 +495,22 @@ public class MainActivity extends AbcvlibActivity {
             sendToServer(episode, doneSignal);
 
             // This is helpful code when you have an OutOfMemoryError. Keeping as comment for easy access until we're sure we won't have these any longer.
-            try {
-                boolean deleted = false;
-                boolean created = false;
-                Log.d(TAG, "Within HeapDump");
-                Context context = getAbcContext();
-                File file=new File( context.getFilesDir() + File.separator + "dump.hprof");
-                if (file.exists()){
-                    deleted = file.delete();
-                }
-                if (!file.exists() || deleted){
-                    created = file.createNewFile();
-                }
-                Debug.dumpHprofData(file.getAbsolutePath());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+//            try {
+//                boolean deleted = false;
+//                boolean created = false;
+//                Log.d(TAG, "Within HeapDump");
+//                Context context = getAbcContext();
+//                File file=new File( context.getFilesDir() + File.separator + "dump.hprof");
+//                if (file.exists()){
+//                    deleted = file.delete();
+//                }
+//                if (!file.exists() || deleted){
+//                    created = file.createNewFile();
+//                }
+//                Debug.dumpHprofData(file.getAbsolutePath());
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
 
             // Waits for server to finish, then the runnable set in the init of doneSignal above will be fired.
             Log.d("SocketConnection", "Waiting for socket transfer R/W to complete.");
@@ -459,78 +519,19 @@ public class MainActivity extends AbcvlibActivity {
 
             startGatherers();
 
-            // Wait for transfer to server and return message received
+            episodeCount++;
 
-//            if (wroteToSendBuffer){
-//                builder.clear();
-//                builder = null;
-//            }
+            // Wait for transfer to server and return message received
 
 //            Log.i("flatbuff", "prior to getting msg from server");
 //            outputs.socketClient.getMessageFromServer();
 //            Log.i("flatbuff", "after getting msg from server");
         }
 
-        @Override
-        public void run() {
-
-            // Choose action wte based on current timestep data
-            ActionSet actionSet = myStepHandler.foward(timeStepDataBuffer.writeData, timeStepCount);
-
-            Log.v("SocketConnection", "Running TimeStepAssembler Run Method");
-
-            assembleAudio();
-
-            // Moves timeStepDataBuffer.writeData to readData and nulls out the writeData for new data
-            timeStepDataBuffer.nextTimeStep();
-
-            // Add timestep and return int representing offset in flatbuffer
-            addTimeStep();
-
-            timeStepCount++;
-
-            // If some criteria met, end episode.
-            if (myStepHandler.isLastTimestep()){
-                try {
-                    endEpisode();
-                } catch (BrokenBarrierException | InterruptedException | IOException e) {
-                    e.printStackTrace();
-                }
-
-                if(myStepHandler.isLastEpisode()){
-                    endTrail();
-                }
-            }
-        }
-
-        public void assembleAudio(){
-            // Don't put these inline, else you will pass by reference rather than value and references will continue to update
-            // todo between episodes the startTime is larger than the end time somehow.
-            android.media.AudioTimestamp startTime = microphoneInput.getStartTime();
-            android.media.AudioTimestamp endTime = microphoneInput.getEndTime();
-            int sampleRate = microphoneInput.getSampleRate();
-            timeStepDataBuffer.writeData.soundData.setMetaData(sampleRate, startTime, endTime);
-
-            microphoneInput.setStartTime();
-        }
-
-        public void stopRecordingData(){
-
-            pauseRecording = true;
-
-            wheelDataGathererFuture.cancel(true);
-            chargerDataGathererFuture.cancel(true);
-            batteryDataGathererFuture.cancel(true);
-            imageAnalysis.clearAnalyzer();
-            microphoneInput.stop();
-            timeStepCount = 0;
-            myStepHandler.setLastTimestep(false);
-            timeStepDataAssemblerFuture.cancel(false);
-//            microphoneInput.close(); //todo this needs to be added somewhere else to close it before exiting the app
-        }
-
         private void endTrail(){
             Log.i(TAG, "Need to handle end of trail here");
+            episodeCount = 0;
+            stopRecordingData();
         }
     }
 

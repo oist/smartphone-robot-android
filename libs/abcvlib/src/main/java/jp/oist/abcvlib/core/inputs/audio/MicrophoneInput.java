@@ -36,7 +36,7 @@ public class MicrophoneInput {
         checkRecordPermission();
 
         int mAudioSource = MediaRecorder.AudioSource.UNPROCESSED;
-        int mSampleRate = 16000;
+        int mSampleRate = 8000;
         int mChannelConfig = AudioFormat.CHANNEL_IN_MONO;
         int mAudioFormat = AudioFormat.ENCODING_PCM_FLOAT;
         int bufferSize = 3 * AudioRecord.getMinBufferSize(mSampleRate, mChannelConfig, // needed to be 3 or more times or would internally increase it within Native lib.
@@ -61,9 +61,9 @@ public class MicrophoneInput {
         recorder.startRecording();
 
         while (recorder.getTimestamp(startTime, AudioTimestamp.TIMEBASE_MONOTONIC) == AudioRecord.ERROR_INVALID_OPERATION){
-            Log.i("microphone_start", "waiting for start timestamp");
+//            Log.i("microphone_start", "waiting for start timestamp");
             int successOrNot = recorder.getTimestamp(startTime, AudioTimestamp.TIMEBASE_MONOTONIC);
-            Log.i("microphone_start", "successOrNot (0=success, -3=invalid-op):" + successOrNot);
+//            Log.i("microphone_start", "successOrNot (0=success, -3=invalid-op):" + successOrNot);
         }
         Log.i("microphone_start", "StartFrame:" + startTime.framePosition + " NanoTime: " + startTime.nanoTime);
     }
