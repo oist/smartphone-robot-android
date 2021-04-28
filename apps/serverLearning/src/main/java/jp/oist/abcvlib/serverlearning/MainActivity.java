@@ -6,7 +6,6 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.media.Image;
 import android.os.Bundle;
-import android.os.Debug;
 import android.util.Log;
 import android.util.Size;
 
@@ -15,20 +14,14 @@ import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageProxy;
 
 import com.google.flatbuffers.FlatBufferBuilder;
-import com.google.flatbuffers.FloatVector;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
@@ -65,6 +58,7 @@ public class MainActivity extends AbcvlibActivity {
     TimeStepDataAssembler timeStepDataAssembler;
     SocketConnectionManager socketConnectionManager;
     InetSocketAddress inetSocketAddress = new InetSocketAddress("192.168.2.102", 3000);
+    private boolean pauseRecording = false;
 
     java.nio.ByteBuffer Fbuf;
     byte[] byteBuff;
@@ -80,8 +74,8 @@ public class MainActivity extends AbcvlibActivity {
 
         timeStepDataBuffer = new TimeStepDataBuffer(3);
 
-        int threads = 4;
-        executor = Executors.newScheduledThreadPool(threads, new ProcessPriorityThreadFactory(1, "dataGatherer"));
+        int threads = 5;
+        executor = Executors.newScheduledThreadPool(threads, new ProcessPriorityThreadFactory(9, "dataGatherer"));
         imageExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(10, "imageAnalysis"));
 
         microphoneInput = new MicrophoneInput(this);
@@ -405,10 +399,15 @@ public class MainActivity extends AbcvlibActivity {
             ByteBuffer episode = builder.dataBuffer();
 
             // Stop all gathering threads momentarily.
-            closeall();
+            stopRecordingData();
             timeStepDataBuffer.nextTimeStep();
 
-//             The following is just to check the contents of the flatbuffer prior to sending to the server. You should comment this out if not using it as it doubles the required memory.
+//             The following is just to check the contents of the flatbuffer prior to sending to the server.
+//             You should comment this out if not using it as it doubles the required memory.
+//            Also it seems the getRootAsEpisode modifes the episode buffer itself, thus messing up later processing.
+//            Therefore I propose only using this as an inline debugging step or if you don't want
+//            To evaluate anything past this point for a given run.
+
 //            Episode episodeTest = Episode.getRootAsEpisode(episode);
 //            Log.d("flatbuff", "TimeSteps Length: "  + String.valueOf(episodeTest.timestepsLength()));
 //            Log.d("flatbuff", "WheelCounts TimeStep 0 Length: "  + String.valueOf(episodeTest.timesteps(0).wheelCounts().timestampsLength()));
@@ -514,7 +513,10 @@ public class MainActivity extends AbcvlibActivity {
             microphoneInput.setStartTime();
         }
 
-        public void closeall(){
+        public void stopRecordingData(){
+
+            pauseRecording = true;
+
             wheelDataGathererFuture.cancel(true);
             chargerDataGathererFuture.cancel(true);
             batteryDataGathererFuture.cancel(true);
