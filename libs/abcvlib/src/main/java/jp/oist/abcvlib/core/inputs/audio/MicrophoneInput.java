@@ -66,7 +66,6 @@ public class MicrophoneInput {
             Log.i("microphone_start", "successOrNot (0=success, -3=invalid-op):" + successOrNot);
         }
         Log.i("microphone_start", "StartFrame:" + startTime.framePosition + " NanoTime: " + startTime.nanoTime);
-
     }
     
     public AudioTimestamp getStartTime(){return startTime;}

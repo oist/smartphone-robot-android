@@ -29,6 +29,7 @@ import jp.oist.abcvlib.core.learning.ActionSelector;
 import jp.oist.abcvlib.core.learning.RewardGenerator;
 import jp.oist.abcvlib.core.outputs.AbcvlibController;
 import jp.oist.abcvlib.core.outputs.Outputs;
+import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.SocketListener;
 
 /**
@@ -52,7 +53,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     public ActionSelector aS;
     private Thread actionSelectorThread;
     public Switches switches = new Switches();
-    public ExecutorService audioExecutor = Executors.newSingleThreadExecutor();
+    public ExecutorService audioExecutor;
     private AbcvlibActivity mainActivity;
 
     /**
@@ -74,6 +75,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
         else{
             super.onCreate(savedInstanceState);
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            audioExecutor = Executors.newScheduledThreadPool(1, new ProcessPriorityThreadFactory(10, "dataGatherer"));
         }
 
         Log.i(TAG, "End of AbcvlibActivity.onCreate");
