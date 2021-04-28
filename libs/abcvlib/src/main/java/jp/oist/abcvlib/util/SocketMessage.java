@@ -320,6 +320,7 @@ public class SocketMessage {
             msgContent.clear();
 
             int totalBytes = msgContent.capacity() / 1000000;
+            msgContent = null;
             double timeTaken = (System.nanoTime() - socketReadTimeStart) * 10e-10;
             DecimalFormat df = new DecimalFormat();
             df.setMaximumFractionDigits(2);

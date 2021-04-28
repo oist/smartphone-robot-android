@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.media.Image;
 import android.os.Bundle;
+import android.os.Debug;
 import android.util.Log;
 import android.util.Size;
 
@@ -19,6 +20,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -189,7 +191,7 @@ public class MainActivity extends AbcvlibActivity {
         @androidx.camera.core.ExperimentalGetImage
         public void analyze(@NonNull ImageProxy imageProxy) {
             Image image = imageProxy.getImage();
-            if (image != null) {
+            if (image != null && timeStepDataBuffer.writeData.imageData.images.size() < 20) {
                 int width = image.getWidth();
                 int height = image.getHeight();
                 long timestamp = image.getTimestamp();
@@ -432,6 +434,24 @@ public class MainActivity extends AbcvlibActivity {
             // Todo this is getting stuck on registering to the selector likely because selector is running in another thread?
             sendToServer(episode, doneSignal);
 
+            // This is helpful code when you have an OutOfMemoryError. Keeping as comment for easy access until we're sure we won't have these any longer.
+            try {
+                boolean deleted = false;
+                boolean created = false;
+                Log.d(TAG, "Within HeapDump");
+                Context context = getAbcContext();
+                File file=new File( context.getFilesDir() + File.separator + "dump.hprof");
+                if (file.exists()){
+                    deleted = file.delete();
+                }
+                if (!file.exists() || deleted){
+                    created = file.createNewFile();
+                }
+                Debug.dumpHprofData(file.getAbsolutePath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             // Waits for server to finish, then the runnable set in the init of doneSignal above will be fired.
             Log.d("SocketConnection", "Waiting for socket transfer R/W to complete.");
             doneSignal.await();
@@ -481,26 +501,6 @@ public class MainActivity extends AbcvlibActivity {
                     endTrail();
                 }
             }
-
-            // This is helpful code when you have an OutOfMemoryError. Keeping as comment for easy access until we're sure we won't have these any longer.
-//            if(timeStepCount == 550){
-//                try {
-//                    boolean deleted = false;
-//                    boolean created = false;
-//                    Log.d(TAG, "Within HeapDump");
-//                    Context context = getAbcContext();
-//                    File file=new File( context.getFilesDir() + File.separator + "dump.hprof");
-//                    if (file.exists()){
-//                        deleted = file.delete();
-//                    }
-//                    if (!file.exists() || deleted){
-//                        created = file.createNewFile();
-//                    }
-//                    Debug.dumpHprofData(file.getAbsolutePath());
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }
         }
 
         public void assembleAudio(){
