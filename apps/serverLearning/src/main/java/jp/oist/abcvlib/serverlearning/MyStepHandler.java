@@ -16,7 +16,7 @@ public class MyStepHandler{
         this.maxEpisodecount = maxEpisodeCount;
     }
 
-    public ActionSet foward(TimeStepDataBuffer.TimeStepData data, int timeStepCount){
+    public ActionSet forward(TimeStepDataBuffer.TimeStepData data, int timeStepCount){
 
         ActionSet actionSet;
         MotionAction motionAction;
@@ -38,6 +38,8 @@ public class MyStepHandler{
         if (timeStepCount >= maxTimeStepCount || (reward >= rewardCriterion)){
             this.lastTimestep = true;
             episodeCount++;
+            // reseting reward after each episode
+            reward = 0;
         }
 
         // todo change criteria to something meaningful

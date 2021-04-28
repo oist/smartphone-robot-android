@@ -6,7 +6,6 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.media.Image;
 import android.os.Bundle;
-import android.os.Debug;
 import android.util.Log;
 import android.util.Size;
 
@@ -20,7 +19,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -251,7 +249,7 @@ public class MainActivity extends AbcvlibActivity {
     class TimeStepDataAssembler implements Runnable{
 
         private int timeStepCount = 0;
-        private final int maxTimeStep = 5;
+        private final int maxTimeStep = 50;
         private FlatBufferBuilder builder;
         private int[] timeStepVector = new int[maxTimeStep + 1];
         private MyStepHandler myStepHandler;
@@ -393,7 +391,7 @@ public class MainActivity extends AbcvlibActivity {
         public void run() {
 
             // Choose action wte based on current timestep data
-            ActionSet actionSet = myStepHandler.foward(timeStepDataBuffer.writeData, timeStepCount);
+            ActionSet actionSet = myStepHandler.forward(timeStepDataBuffer.writeData, timeStepCount);
 
             Log.v("SocketConnection", "Running TimeStepAssembler Run Method");
 
@@ -443,7 +441,6 @@ public class MainActivity extends AbcvlibActivity {
             timeStepCount = 0;
             myStepHandler.setLastTimestep(false);
             timeStepDataAssemblerFuture.cancel(false);
-//            microphoneInput.close(); //todo this needs to be added somewhere else to close it before exiting the app
         }
 
         // End episode after some reward has been acheived or maxtimesteps has been reached
@@ -532,6 +529,7 @@ public class MainActivity extends AbcvlibActivity {
             Log.i(TAG, "Need to handle end of trail here");
             episodeCount = 0;
             stopRecordingData();
+            microphoneInput.close();
         }
     }
 
