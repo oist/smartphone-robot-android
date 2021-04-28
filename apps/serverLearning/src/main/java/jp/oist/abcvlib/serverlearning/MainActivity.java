@@ -85,7 +85,7 @@ public class MainActivity extends AbcvlibActivity {
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .setImageQueueDepth(2)
                         .build();
-//        imageAnalysis.setAnalyzer(imageExecutor, new ImageDataGatherer());
+        imageAnalysis.setAnalyzer(imageExecutor, new ImageDataGatherer());
 
         //todo I guess the imageAnalyzerActivity Interface is uncessary
         try {
@@ -117,7 +117,7 @@ public class MainActivity extends AbcvlibActivity {
             public void run() {
                 long initDelay = 0;
                 microphoneInput.start();
-//                imageAnalysis.setAnalyzer(imageExecutor, new ImageDataGatherer());
+                imageAnalysis.setAnalyzer(imageExecutor, new ImageDataGatherer());
                 wheelDataGathererFuture = executor.scheduleAtFixedRate(wheelDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
                 chargerDataGathererFuture = executor.scheduleAtFixedRate(new ChargerDataGatherer(), initDelay, 10, TimeUnit.MILLISECONDS);
                 batteryDataGathererFuture = executor.scheduleAtFixedRate(new BatteryDataGatherer(), initDelay, 10, TimeUnit.MILLISECONDS);
@@ -249,14 +249,14 @@ public class MainActivity extends AbcvlibActivity {
     class TimeStepDataAssembler implements Runnable{
 
         private int timeStepCount = 0;
-        private final int maxTimeStep = 50;
+        private final int maxTimeStep = 500;
         private FlatBufferBuilder builder;
         private int[] timeStepVector = new int[maxTimeStep + 1];
         private MyStepHandler myStepHandler;
         private int episodeCount = 0;
 
         public TimeStepDataAssembler(){
-            myStepHandler = new MyStepHandler(maxTimeStep, 100, 5);
+            myStepHandler = new MyStepHandler(maxTimeStep, 100, 2);
             startEpisode();
         }
 
