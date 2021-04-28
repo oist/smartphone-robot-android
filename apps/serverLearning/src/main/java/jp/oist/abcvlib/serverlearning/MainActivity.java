@@ -189,7 +189,7 @@ public class MainActivity extends AbcvlibActivity {
         @androidx.camera.core.ExperimentalGetImage
         public void analyze(@NonNull ImageProxy imageProxy) {
             Image image = imageProxy.getImage();
-            if (image != null && timeStepDataBuffer.writeData.imageData.images.size() < 2) {
+            if (image != null && timeStepDataBuffer.writeData.imageData.images.size() < 1) {
                 int width = image.getWidth();
                 int height = image.getHeight();
                 long timestamp = image.getTimestamp();
@@ -249,14 +249,14 @@ public class MainActivity extends AbcvlibActivity {
     class TimeStepDataAssembler implements Runnable{
 
         private int timeStepCount = 0;
-        private final int maxTimeStep = 500;
+        private final int maxTimeStep = 100;
         private FlatBufferBuilder builder;
         private int[] timeStepVector = new int[maxTimeStep + 1];
         private MyStepHandler myStepHandler;
         private int episodeCount = 0;
 
         public TimeStepDataAssembler(){
-            myStepHandler = new MyStepHandler(maxTimeStep, 100, 2);
+            myStepHandler = new MyStepHandler(maxTimeStep, 10000, 10);
             startEpisode();
         }
 
@@ -474,6 +474,11 @@ public class MainActivity extends AbcvlibActivity {
 //            Log.d("flatbuff", "WheelCounts TimeStep 2 Length: "  + String.valueOf(episodeTest.timesteps(2).wheelCounts().timestampsLength()));
 //            Log.d("flatbuff", "WheelCounts TimeStep 3 Length: "  + String.valueOf(episodeTest.timesteps(3).wheelCounts().timestampsLength()));
 //            Log.d("flatbuff", "WheelCounts TimeStep 3 idx 0: "  + String.valueOf(episodeTest.timesteps(3).wheelCounts().timestamps(0)));
+//            Log.d("flatbuff", "Levels Length TimeStep 100: "  + String.valueOf(episodeTest.timesteps(100).soundData().levelsLength()));
+//            Log.d("flatbuff", "SoundData ByteBuffer Length TimeStep 100: "  + String.valueOf(episodeTest.timesteps(100).soundData().getByteBuffer().capacity()));
+//            Log.d("flatbuff", "ImageData ByteBuffer Length TimeStep 100: "  + String.valueOf(episodeTest.timesteps(100).imageData().getByteBuffer().capacity()));
+
+
 //            float[] soundFloats = new float[10];
 //            episodeTest.timesteps(1).soundData().levelsAsByteBuffer().asFloatBuffer().get(soundFloats);
 //            Log.d("flatbuff", "Sound TimeStep 1 as numpy: "  + Arrays.toString(soundFloats));
