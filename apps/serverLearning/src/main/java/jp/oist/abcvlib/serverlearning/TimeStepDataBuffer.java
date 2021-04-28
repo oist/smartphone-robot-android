@@ -245,6 +245,14 @@ public class TimeStepDataBuffer {
                 this.motionAction = motionAction;
                 this.commAction = commAction;
             }
+
+            public MotionAction getMotionAction() {
+                return motionAction;
+            }
+
+            public CommAction getCommAction() {
+                return commAction;
+            }
         }
     }
 

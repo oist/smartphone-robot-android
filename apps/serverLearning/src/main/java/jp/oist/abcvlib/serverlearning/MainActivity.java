@@ -273,6 +273,7 @@ public class MainActivity extends AbcvlibActivity {
             int _batteryData = addBatteryData();
             int _soundData = addSoundData();
             int _imageData = addImageData();
+            int _actionData = addActionData();
 
             TimeStep.startTimeStep(builder);
             TimeStep.addWheelCounts(builder, _wheelCounts);
@@ -280,6 +281,7 @@ public class MainActivity extends AbcvlibActivity {
             TimeStep.addBatteryData(builder, _batteryData);
             TimeStep.addSoundData(builder, _soundData);
             TimeStep.addImageData(builder, _imageData);
+            TimeStep.addActions(builder, _actionData);
             int ts = TimeStep.endTimeStep(builder);
             timeStepVector[timeStepCount]  = ts;
         }
@@ -385,7 +387,14 @@ public class MainActivity extends AbcvlibActivity {
             return _imageData;
         }
 
-//        private int addActionData(){}
+        private int addActionData(){
+            CommAction ca = timeStepDataBuffer.readData.actions.getCommAction();
+            MotionAction ma = timeStepDataBuffer.readData.actions.getMotionAction();
+            Log.v("flatbuff", "CommAction : " + ca.getActionNumber());
+            Log.v("flatbuff", "MotionAction : " + ma.getActionName());
+
+            return RobotAction.createRobotAction(builder, (byte) ca.getActionNumber(), (byte) ma.getActionByte());
+        }
 
         @Override
         public void run() {
