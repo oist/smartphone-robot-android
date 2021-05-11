@@ -84,7 +84,7 @@ public class MainActivity extends AbcvlibActivity {
                 new ImageAnalysis.Builder()
                         .setTargetResolution(new Size(10, 10))
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        .setImageQueueDepth(2)
+                        .setImageQueueDepth(20)
                         .build();
         imageAnalysis.setAnalyzer(imageExecutor, new ImageDataGatherer());
 
@@ -162,7 +162,7 @@ public class MainActivity extends AbcvlibActivity {
         @androidx.camera.core.ExperimentalGetImage
         public void analyze(@NonNull ImageProxy imageProxy) {
             Image image = imageProxy.getImage();
-            if (image != null && timeStepDataBuffer.writeData.imageData.images.size() < 1) {
+            if (image != null) {
                 int width = image.getWidth();
                 int height = image.getHeight();
                 long timestamp = image.getTimestamp();
