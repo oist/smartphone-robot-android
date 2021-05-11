@@ -309,12 +309,10 @@ public class MainActivity extends AbcvlibActivity {
                 _images[i] = _image;
             }
 
-            if (numOfImages > 0){
-                int _images_offset = ImageData.createImagesVector(builder, _images);
-                ImageData.startImageData(builder);
-                ImageData.addImages(builder, _images_offset);
-                _imageData = ImageData.endImageData(builder);
-            }
+            int _images_offset = ImageData.createImagesVector(builder, _images);
+            ImageData.startImageData(builder);
+            ImageData.addImages(builder, _images_offset);
+            _imageData = ImageData.endImageData(builder);
 
             return _imageData;
         }
