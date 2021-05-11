@@ -209,7 +209,7 @@ public class TimeStepDataBuffer {
             ArrayList<SingleImage> images = new ArrayList<SingleImage>();
 
             public void add(long timestamp, int width, int height, Bitmap bitmap, byte[] webpImage){
-                SingleImage singleImage = new SingleImage(timestamp, width, height, bitmap);
+                SingleImage singleImage = new SingleImage(timestamp, width, height, bitmap, webpImage);
                 images.add(singleImage);
             }
 
@@ -218,12 +218,15 @@ public class TimeStepDataBuffer {
                 int width;
                 int height;
                 Bitmap bitmap;
+                byte[] webpImage;
 
-                public SingleImage(long timestamp, int width, int height, Bitmap bitmap){
+                public SingleImage(long timestamp, int width, int height, Bitmap bitmap,
+                                   byte[] webpImage){
                     this.timestamp = timestamp;
                     this.width = width;
                     this.height = height;
                     this.bitmap = bitmap;
+                    this.webpImage = webpImage;
                 }
             }
         }

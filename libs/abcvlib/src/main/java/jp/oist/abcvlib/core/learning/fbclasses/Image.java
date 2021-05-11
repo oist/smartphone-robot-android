@@ -16,27 +16,34 @@ public final class Image extends Table {
   public Image __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
   public long timestamp() { int o = __offset(4); return o != 0 ? bb.getLong(o + bb_pos) : 0L; }
-  public jp.oist.abcvlib.core.learning.fbclasses.Pixels pixels() { return pixels(new jp.oist.abcvlib.core.learning.fbclasses.Pixels()); }
-  public jp.oist.abcvlib.core.learning.fbclasses.Pixels pixels(jp.oist.abcvlib.core.learning.fbclasses.Pixels obj) { int o = __offset(6); return o != 0 ? obj.__assign(__indirect(o + bb_pos), bb) : null; }
+  public byte webpImage(int j) { int o = __offset(6); return o != 0 ? bb.get(__vector(o) + j * 1) : 0; }
+  public int webpImageLength() { int o = __offset(6); return o != 0 ? __vector_len(o) : 0; }
+  public ByteVector webpImageVector() { return webpImageVector(new ByteVector()); }
+  public ByteVector webpImageVector(ByteVector obj) { int o = __offset(6); return o != 0 ? obj.__assign(__vector(o), bb) : null; }
+  public ByteBuffer webpImageAsByteBuffer() { return __vector_as_bytebuffer(6, 1); }
+  public ByteBuffer webpImageInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 6, 1); }
   public int width() { int o = __offset(8); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
   public int height() { int o = __offset(10); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
 
   public static int createImage(FlatBufferBuilder builder,
       long timestamp,
-      int pixelsOffset,
+      int webp_imageOffset,
       int width,
       int height) {
     builder.startTable(4);
     Image.addTimestamp(builder, timestamp);
     Image.addHeight(builder, height);
     Image.addWidth(builder, width);
-    Image.addPixels(builder, pixelsOffset);
+    Image.addWebpImage(builder, webp_imageOffset);
     return Image.endImage(builder);
   }
 
   public static void startImage(FlatBufferBuilder builder) { builder.startTable(4); }
   public static void addTimestamp(FlatBufferBuilder builder, long timestamp) { builder.addLong(0, timestamp, 0L); }
-  public static void addPixels(FlatBufferBuilder builder, int pixelsOffset) { builder.addOffset(1, pixelsOffset, 0); }
+  public static void addWebpImage(FlatBufferBuilder builder, int webpImageOffset) { builder.addOffset(1, webpImageOffset, 0); }
+  public static int createWebpImageVector(FlatBufferBuilder builder, byte[] data) { return builder.createByteVector(data); }
+  public static int createWebpImageVector(FlatBufferBuilder builder, ByteBuffer data) { return builder.createByteVector(data); }
+  public static void startWebpImageVector(FlatBufferBuilder builder, int numElems) { builder.startVector(1, numElems, 1); }
   public static void addWidth(FlatBufferBuilder builder, int width) { builder.addInt(2, width, 0); }
   public static void addHeight(FlatBufferBuilder builder, int height) { builder.addInt(3, height, 0); }
   public static int endImage(FlatBufferBuilder builder) {

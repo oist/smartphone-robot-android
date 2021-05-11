@@ -298,14 +298,9 @@ public class MainActivity extends AbcvlibActivity {
             for (int i = 0; i < numOfImages ; i++){
                 TimeStepDataBuffer.TimeStepData.ImageData.SingleImage image = imageData.images.get(i);
 
-                // todo create webp image and remove all rgb stuff.
-                int _r = Pixels.createRVector(builder, image.pixels.r);
-                int _g = Pixels.createGVector(builder, image.pixels.g);
-                int _b = Pixels.createBVector(builder, image.pixels.b);
-                int _pixels = Pixels.createPixels(builder, _r, _g, _b);
-
+                int _webpImage = jp.oist.abcvlib.core.learning.fbclasses.Image.createWebpImageVector(builder, image.webpImage);
                 jp.oist.abcvlib.core.learning.fbclasses.Image.startImage(builder);
-                jp.oist.abcvlib.core.learning.fbclasses.Image.addPixels(builder, _pixels);
+                jp.oist.abcvlib.core.learning.fbclasses.Image.addWebpImage(builder, _webpImage);
                 jp.oist.abcvlib.core.learning.fbclasses.Image.addTimestamp(builder, image.timestamp);
                 jp.oist.abcvlib.core.learning.fbclasses.Image.addHeight(builder, image.height);
                 jp.oist.abcvlib.core.learning.fbclasses.Image.addWidth(builder, image.width);
