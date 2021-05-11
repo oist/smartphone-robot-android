@@ -206,7 +206,7 @@ public class TimeStepDataBuffer {
         class ImageData{
             ArrayList<SingleImage> images = new ArrayList<SingleImage>();
 
-            public void add(long timestamp, int width, int height, int[][] pixels){
+            public void add(long timestamp, int width, int height, int[][] pixels, byte[] webpImage){
                 SingleImage singleImage = new SingleImage(timestamp, width, height, pixels);
                 images.add(singleImage);
             }

@@ -172,6 +172,7 @@ public class MainActivity extends AbcvlibActivity {
 
                 ByteArrayOutputStream webpByteArrayOutputStream = new ByteArrayOutputStream();
                 bitmap.compress(Bitmap.CompressFormat.WEBP, 0, webpByteArrayOutputStream);
+                byte[] webpImage = webpByteArrayOutputStream.toByteArray();
 
                 int[] intFrame = new int[width * height];
                 bitmap.getPixels(intFrame, 0, width, 0, 0, width, height);
@@ -181,7 +182,7 @@ public class MainActivity extends AbcvlibActivity {
                 int[][] rgbVectors = bitmap2RGBVectors.getRGBVectors();
 
                 // todo this is causing a memory leak and crashing.
-                timeStepDataBuffer.writeData.imageData.add(timestamp, width, height, rgbVectors);
+                timeStepDataBuffer.writeData.imageData.add(timestamp, width, height, rgbVectors, webpImage);
                 Log.v("flatbuff", "Wrote image to timeStepDataBuffer");
             }
             imageProxy.close();
