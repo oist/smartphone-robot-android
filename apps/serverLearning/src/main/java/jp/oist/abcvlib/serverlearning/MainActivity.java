@@ -174,52 +174,11 @@ public class MainActivity extends AbcvlibActivity {
                 bitmap.compress(Bitmap.CompressFormat.WEBP, 0, webpByteArrayOutputStream);
                 byte[] webpImage = webpByteArrayOutputStream.toByteArray();
 
-                int[] intFrame = new int[width * height];
-                bitmap.getPixels(intFrame, 0, width, 0, 0, width, height);
-
-                // convert bitmap to three byte[] with rgb.
-                Bitmap2RGBVectors bitmap2RGBVectors = new Bitmap2RGBVectors(bitmap);
-                int[][] rgbVectors = bitmap2RGBVectors.getRGBVectors();
-
                 // todo this is causing a memory leak and crashing.
-                timeStepDataBuffer.writeData.imageData.add(timestamp, width, height, rgbVectors, webpImage);
+                timeStepDataBuffer.writeData.imageData.add(timestamp, width, height, bitmap, webpImage);
                 Log.v("flatbuff", "Wrote image to timeStepDataBuffer");
             }
             imageProxy.close();
-        }
-    }
-
-    static class Bitmap2RGBVectors {
-
-        int[][] rgbVectors;
-
-        public Bitmap2RGBVectors(Bitmap bitmap){
-
-            int width = bitmap.getWidth();
-            int height = bitmap.getHeight();
-            int size = width * height;
-
-            int[] r = new int[size];
-            int[] g = new int[size];
-            int[] b = new int[size];
-
-            for(int y = 0; y < height; y++){
-                for(int x = 0 ; x < width ; x++){
-                    int pixel = bitmap.getPixel(x,y);
-                    r[(x + (y * width))] = Color.red(pixel);
-                    g[(x + (y * width))] = Color.green(pixel);
-                    b[(x + (y * width))] = Color.blue(pixel);
-                }
-            }
-            rgbVectors = new int[3][size];
-
-            rgbVectors[0] = r;
-            rgbVectors[1] = g;
-            rgbVectors[2] = b;
-        }
-
-        public int[][] getRGBVectors(){
-            return rgbVectors;
         }
     }
 

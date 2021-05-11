@@ -1,5 +1,7 @@
 package jp.oist.abcvlib.serverlearning;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.AudioTimestamp;
 import android.util.Log;
 
@@ -206,34 +208,22 @@ public class TimeStepDataBuffer {
         class ImageData{
             ArrayList<SingleImage> images = new ArrayList<SingleImage>();
 
-            public void add(long timestamp, int width, int height, int[][] pixels, byte[] webpImage){
-                SingleImage singleImage = new SingleImage(timestamp, width, height, pixels);
+            public void add(long timestamp, int width, int height, Bitmap bitmap, byte[] webpImage){
+                SingleImage singleImage = new SingleImage(timestamp, width, height, bitmap);
                 images.add(singleImage);
             }
 
             class SingleImage{
                 long timestamp;
-                Pixels pixels;
                 int width;
                 int height;
+                Bitmap bitmap;
 
-                public SingleImage(long timestamp, int width, int height, int[][] pixels){
+                public SingleImage(long timestamp, int width, int height, Bitmap bitmap){
                     this.timestamp = timestamp;
                     this.width = width;
                     this.height = height;
-                    this.pixels = new Pixels(pixels);
-                }
-
-                class Pixels{
-                    int[] r;
-                    int[] g;
-                    int[] b;
-
-                    public Pixels(int[][] pixels){
-                        r = pixels[0];
-                        g = pixels[1];
-                        b = pixels[2];
-                    }
+                    this.bitmap = bitmap;
                 }
             }
         }
