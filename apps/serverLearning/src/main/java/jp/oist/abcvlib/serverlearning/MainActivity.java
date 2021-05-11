@@ -71,7 +71,7 @@ public class MainActivity extends AbcvlibActivity {
 //        switches.pythonControlledPIDBalancer = true;
         switches.cameraXApp = true;
 
-        timeStepDataBuffer = new TimeStepDataBuffer(3);
+        timeStepDataBuffer = new TimeStepDataBuffer(10);
 
         int threads = 5;
         executor = Executors.newScheduledThreadPool(threads, new ProcessPriorityThreadFactory(1, "dataGatherer"));
