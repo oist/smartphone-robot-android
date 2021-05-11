@@ -76,7 +76,7 @@ public class MainActivity extends AbcvlibActivity {
 
         int threads = 5;
         executor = Executors.newScheduledThreadPool(threads, new ProcessPriorityThreadFactory(1, "dataGatherer"));
-        imageExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(10, "imageAnalysis"));
+        imageExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "imageAnalysis"));
 
         microphoneInput = new MicrophoneInput(this);
 
