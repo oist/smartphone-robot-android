@@ -170,21 +170,8 @@ public class MainActivity extends AbcvlibActivity {
                 Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
                 yuvToRgbConverter.yuvToRgb(image, bitmap);
 
-                ByteArrayOutputStream jpegByteArrayOutputStream = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 0, jpegByteArrayOutputStream);
-                FileOps.savedata(getApplicationContext(), jpegByteArrayOutputStream.toByteArray(), "jpeg");
-
                 ByteArrayOutputStream webpByteArrayOutputStream = new ByteArrayOutputStream();
                 bitmap.compress(Bitmap.CompressFormat.WEBP, 0, webpByteArrayOutputStream);
-                FileOps.savedata(getApplicationContext(), webpByteArrayOutputStream.toByteArray(), "webp-loss");
-
-                ByteArrayOutputStream pngByteArrayOutputStream = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.PNG, 0, pngByteArrayOutputStream);
-                FileOps.savedata(getApplicationContext(), pngByteArrayOutputStream.toByteArray(), "png");
-
-                ByteArrayOutputStream webpLosslessByteArrayOutputStream = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.WEBP, 100, webpLosslessByteArrayOutputStream);
-                FileOps.savedata(getApplicationContext(), webpLosslessByteArrayOutputStream.toByteArray(), "webp-lossless");
 
                 int[] intFrame = new int[width * height];
                 bitmap.getPixels(intFrame, 0, width, 0, 0, width, height);
