@@ -339,6 +339,7 @@ public class MainActivity extends AbcvlibActivity {
             for (int i = 0; i < numOfImages ; i++){
                 TimeStepDataBuffer.TimeStepData.ImageData.SingleImage image = imageData.images.get(i);
 
+                // todo create webp image and remove all rgb stuff.
                 int _r = Pixels.createRVector(builder, image.pixels.r);
                 int _g = Pixels.createGVector(builder, image.pixels.g);
                 int _b = Pixels.createBVector(builder, image.pixels.b);
