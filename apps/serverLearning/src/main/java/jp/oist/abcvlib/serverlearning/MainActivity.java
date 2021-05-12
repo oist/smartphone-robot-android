@@ -202,6 +202,7 @@ public class MainActivity extends AbcvlibActivity {
 //            ByteBuffer bb = ByteBuffer.allocateDirect(4096);
             builder = new FlatBufferBuilder(1024);
             Log.v("flatbuff", "starting New Episode");
+            // todo reload tflite models here for myStepHandler
         }
 
         public void addTimeStep(){
