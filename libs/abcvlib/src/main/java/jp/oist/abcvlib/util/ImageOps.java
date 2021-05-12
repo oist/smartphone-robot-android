@@ -15,4 +15,9 @@ public class ImageOps {
                 baos.toByteArray());
         return BitmapFactory.decodeStream(bais, null, null);
     }
+
+    public static Bitmap generateBitmap(byte[] image){
+        ByteArrayInputStream bais = new ByteArrayInputStream(image);
+        return BitmapFactory.decodeStream(bais, null, null);
+    }
 }
