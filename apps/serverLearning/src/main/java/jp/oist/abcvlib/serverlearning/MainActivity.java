@@ -99,6 +99,7 @@ public class MainActivity extends AbcvlibActivity {
             initialzer(this, null, this);
         } catch (InterruptedException e) {
             Log.e(TAG, "Error initializing abcvlib", e);
+            throw new RuntimeException("This is a crash");
         }
         super.onCreate(savedInstanceState);
     }
@@ -360,7 +361,8 @@ public class MainActivity extends AbcvlibActivity {
                         endTrail();
                     }
                 } catch (BrokenBarrierException | InterruptedException | IOException e) {
-                    e.printStackTrace();
+                    Log.e(TAG, "Error when trying to end episode or trail", e);
+                    throw new RuntimeException("This is a crash");
                 }
             }
         }
@@ -521,6 +523,7 @@ public class MainActivity extends AbcvlibActivity {
             }
         } catch (JSONException e) {
             Log.e(TAG, "Something wrong with parsing the JSONheader from python", e);
+            throw new RuntimeException("This is a crash");
         }
     }
 
