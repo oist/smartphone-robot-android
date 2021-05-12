@@ -194,7 +194,7 @@ public class MainActivity extends AbcvlibActivity {
         private int episodeCount = 0;
 
         public TimeStepDataAssembler(){
-            myStepHandler = new MyStepHandler(maxTimeStep, 10000, 10);
+            myStepHandler = new MyStepHandler(getApplicationContext(), maxTimeStep, 10000, 10);
             startEpisode();
         }
 
