@@ -2,6 +2,7 @@ package jp.oist.abcvlib.serverlearning;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.media.Image;
@@ -20,6 +21,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -67,6 +69,9 @@ public class MainActivity extends AbcvlibActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        FileOps.copyAssets(getApplicationContext(), "models/");
+
         // Setup a live preview of camera feed to the display. Remove if unwanted.
         setContentView(jp.oist.abcvlib.core.R.layout.camera_x_preview);
 
@@ -508,7 +513,7 @@ public class MainActivity extends AbcvlibActivity {
                 for (int i = 0; i < modelNames.length(); i++){
                     byte[] bytes = new byte[modelLengths.getInt(i)];
                     msgFromServer.get(bytes);
-                    FileOps.savedata(this, bytes, modelNames.getString(i) + ".tflite");
+                    FileOps.savedata(this, bytes, "models", modelNames.getString(i) + ".tflite");
                 }
 
             }else{

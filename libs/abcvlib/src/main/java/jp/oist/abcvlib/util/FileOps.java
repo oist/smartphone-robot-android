@@ -1,6 +1,7 @@
 package jp.oist.abcvlib.util;
 
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
@@ -14,6 +15,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -51,19 +54,49 @@ public class FileOps {
         }
     }
 
-    public static void savedata(Context context, byte[] content, String filename){
+    public static void savedata(Context context, byte[] content, String pathName, String filename){
         try{
             boolean deleted = false;
             boolean created = false;
-            File file=new File(context.getFilesDir() + File.separator + filename);
+            File file=new File(context.getFilesDir() + File.separator + pathName + File.separator + filename);
+            File path = new File(context.getFilesDir() + File.separator + pathName);
             if (file.exists()){
                 deleted = file.delete();
             }
             if (!file.exists() || deleted){
+                path.mkdirs();
                 created = file.createNewFile();
                 Log.v(TAG, "Writing " + file.getAbsolutePath());
                 FileOutputStream fileOutputStream = new FileOutputStream(file.getAbsolutePath(),false);
                 fileOutputStream.write(content);
+                fileOutputStream.close();
+            }
+        }catch(Exception e){
+            Log.e(TAG,"Error", e);
+        }
+    }
+
+    public static void savedata(Context context, InputStream content, String pathName, String filename){
+        try{
+            boolean deleted = false;
+            boolean created = false;
+            File file=new File(context.getFilesDir() + File.separator + pathName + File.separator + filename);
+            File path = new File(context.getFilesDir() + File.separator + pathName);
+            if (file.exists()){
+                deleted = file.delete();
+            }
+            if (!file.exists() || deleted){
+                path.mkdirs();
+                created = file.createNewFile();
+                Log.v(TAG, "Writing " + file.getAbsolutePath());
+                FileOutputStream fileOutputStream = new FileOutputStream(file.getAbsolutePath(),false);
+
+                byte[] buffer = new byte[1024];
+                int read;
+                while((read = content.read(buffer)) != -1){
+                    fileOutputStream.write(buffer, 0, read);
+                }
+
                 fileOutputStream.close();
             }
         }catch(Exception e){
@@ -163,4 +196,21 @@ public class FileOps {
         return file;
     }
 
+    public static void copyAssets(Context context, String path) {
+        AssetManager assetManager = context.getAssets();
+        String[] files = null;
+        try {
+            files = assetManager.list(path);
+        } catch (IOException e) {
+            Log.e("tag", "Failed to get asset file list.", e);
+        }
+        if (files != null) for (String filename : files) {
+            try (InputStream in = assetManager.open(path + filename)) {
+                savedata(context, in, path, filename);
+            } catch (IOException e) {
+                Log.e("tag", "Failed to copy asset file: " + filename, e);
+            }
+            // NOOP
+        }
+    }
 }
