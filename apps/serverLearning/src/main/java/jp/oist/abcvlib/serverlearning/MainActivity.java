@@ -37,6 +37,7 @@ import jp.oist.abcvlib.core.inputs.audio.MicrophoneInput;
 import jp.oist.abcvlib.core.inputs.vision.YuvToRgbConverter;
 import jp.oist.abcvlib.core.learning.fbclasses.*;
 import jp.oist.abcvlib.util.FileOps;
+import jp.oist.abcvlib.util.ImageOps;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.SocketConnectionManager;
 
@@ -172,10 +173,11 @@ public class MainActivity extends AbcvlibActivity {
 
                 ByteArrayOutputStream webpByteArrayOutputStream = new ByteArrayOutputStream();
                 bitmap.compress(Bitmap.CompressFormat.WEBP, 0, webpByteArrayOutputStream);
-                byte[] webpImage = webpByteArrayOutputStream.toByteArray();
+                byte[] webpBytes = webpByteArrayOutputStream.toByteArray();
+                Bitmap webpBitMap = ImageOps.generateBitmap(webpBytes);
 
                 // todo this is causing a memory leak and crashing.
-                timeStepDataBuffer.writeData.imageData.add(timestamp, width, height, bitmap, webpImage);
+                timeStepDataBuffer.writeData.imageData.add(timestamp, width, height, webpBitMap, webpBytes);
                 Log.v("flatbuff", "Wrote image to timeStepDataBuffer");
             }
             imageProxy.close();
