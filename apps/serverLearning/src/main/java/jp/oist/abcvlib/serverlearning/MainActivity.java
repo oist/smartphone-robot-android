@@ -38,6 +38,7 @@ import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.audio.MicrophoneInput;
 import jp.oist.abcvlib.core.inputs.vision.YuvToRgbConverter;
 import jp.oist.abcvlib.core.learning.fbclasses.*;
+import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.FileOps;
 import jp.oist.abcvlib.util.ImageOps;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
@@ -98,8 +99,7 @@ public class MainActivity extends AbcvlibActivity {
         try {
             initialzer(this, null, this);
         } catch (InterruptedException e) {
-            Log.e(TAG, "Error initializing abcvlib", e);
-            throw new RuntimeException("This is a crash");
+            ErrorHandler.eLog(TAG, "Error inititializing abcvlibActivity", e, true);
         }
         super.onCreate(savedInstanceState);
     }
@@ -361,8 +361,7 @@ public class MainActivity extends AbcvlibActivity {
                         endTrail();
                     }
                 } catch (BrokenBarrierException | InterruptedException | IOException e) {
-                    Log.e(TAG, "Error when trying to end episode or trail", e);
-                    throw new RuntimeException("This is a crash");
+                    ErrorHandler.eLog(TAG, "Error when trying to end episode or trail", e, true);
                 }
             }
         }
@@ -522,8 +521,8 @@ public class MainActivity extends AbcvlibActivity {
                 Log.d(TAG, "Data from server does not contain modelVector content. Be sure to set content-encoding to \"modelVector\" in the python jsonHeader");
             }
         } catch (JSONException e) {
-            Log.e(TAG, "Something wrong with parsing the JSONheader from python", e);
-            throw new RuntimeException("This is a crash");
+            ErrorHandler.eLog(TAG, "Something wrong with parsing the JSONheader from python", e, true);
+
         }
     }
 

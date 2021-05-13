@@ -42,6 +42,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
+import jp.oist.abcvlib.util.ErrorHandler;
+
 /**
  * Utils functions for bitmap conversions.
  */
@@ -67,8 +69,8 @@ public class BitmapUtils {
 
             stream.close();
             return rotateBitmap(bmp, metadata.getRotation(), false, false);
-        } catch (Exception e) {
-            Log.e("VisionProcessorBase", "Error: " + e.getMessage());
+        } catch (IOException e) {
+            ErrorHandler.eLog(TAG, "Error closing stream", e, true);
         }
         return null;
     }
@@ -120,13 +122,13 @@ public class BitmapUtils {
             inputStream = context.getAssets().open(fileName);
             return BitmapFactory.decodeStream(inputStream);
         } catch (IOException e) {
-            Log.e(TAG, "Error reading asset: " + fileName, e);
+            ErrorHandler.eLog(TAG, "Error reading asset: " + fileName, e, true);
         } finally {
             if (inputStream != null) {
                 try {
                     inputStream.close();
                 } catch (IOException e) {
-                    Log.e(TAG, "Failed to close input stream: ", e);
+                    ErrorHandler.eLog(TAG, "Failed to close input stream", e, true);
                 }
             }
         }

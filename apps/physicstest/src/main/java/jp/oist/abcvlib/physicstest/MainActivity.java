@@ -81,6 +81,7 @@ public class MainActivity extends AbcvlibActivity {
                 writer = new PrintWriter( new BufferedWriter(new FileWriter(filename, true)));
             } catch (IOException e) {
                 Log.e(TAG,"Error", e);
+                throw new RuntimeException("This is a crash");
             }
 
             long startTime = System.nanoTime();
@@ -173,7 +174,8 @@ public class MainActivity extends AbcvlibActivity {
             try {
                 executorSingle.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
             } catch (InterruptedException e) {
-                Log.e(TAG, "Interuption Exception Line 142");
+                Log.e(TAG,"Error", e);
+                throw new RuntimeException("This is a crash");
             }
 
             writer.flush();

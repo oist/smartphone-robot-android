@@ -5,6 +5,7 @@ import android.util.Log;
 import java.util.ArrayList;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.util.ErrorHandler;
 
 public class GrandController extends AbcvlibController{
 
@@ -26,7 +27,7 @@ public class GrandController extends AbcvlibController{
                 Log.i("abcvlib", this.toString() + "Waiting for appRunning to be true");
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                Log.e(TAG,"Error", e);
+                ErrorHandler.eLog(TAG, "Interupted while waiting for appRunning to be true", e, true);
             }
         }
 

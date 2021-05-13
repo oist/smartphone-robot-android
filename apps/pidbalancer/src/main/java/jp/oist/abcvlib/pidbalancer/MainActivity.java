@@ -10,6 +10,7 @@ import com.google.android.material.slider.Slider;
 import java.util.ArrayList;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.util.ErrorHandler;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -80,7 +81,7 @@ public class MainActivity extends AbcvlibActivity {
                         expWeight_.getValue(),
                         maxAbsTilt_.getValue());
             } catch (InterruptedException e) {
-                Log.e(TAG,"Error", e);
+                ErrorHandler.eLog(TAG, "Error when getting slider gui values", e, true);
             }
         }
     };

@@ -54,8 +54,7 @@ public class SocketConnectionManager implements Runnable{
                             socketMessage.process_events(selectedKey);
                             selectedKeys.remove(selectedKey);
                         }catch (ClassCastException e){
-                            Log.e(TAG,"Error", e);
-                            Log.e(TAG, "selectedKey attachment not a SocketMessage type");
+                            ErrorHandler.eLog(TAG, "selectedKey attachment not a SocketMessage type", e, true);
                         }
                     }
                 }
@@ -64,7 +63,7 @@ public class SocketConnectionManager implements Runnable{
             close();
 
         } catch (IOException e) {
-            Log.e(TAG,"Error", e);
+            ErrorHandler.eLog(TAG, "Error", e, true);
         }
     }
 
@@ -87,12 +86,10 @@ public class SocketConnectionManager implements Runnable{
             SelectionKey selectionKey = sc.register(selector, ops, socketMessage);
             Log.v(TAG, "Registered with selector");
 
-
-
-
         } catch (IOException | ClosedSelectorException | IllegalBlockingModeException
                 | CancelledKeyException | IllegalArgumentException e) {
-            Log.e(TAG, "Initial socket connect and registration:", e);
+            ErrorHandler.eLog(TAG, "Initial socket connect and registration:", e, true);
+
         }
     }
 
@@ -105,12 +102,7 @@ public class SocketConnectionManager implements Runnable{
             selector.close();
             sc.close();
         } catch (IOException e) {
-            Log.e(TAG,"Error", e);
+            ErrorHandler.eLog(TAG, "Error closing connection", e, true);
         }
     }
-
-
-
-
-
 }

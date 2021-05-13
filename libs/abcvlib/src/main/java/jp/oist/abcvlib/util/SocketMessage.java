@@ -74,7 +74,7 @@ public class SocketMessage {
             }
 
         } catch (ClassCastException | IOException | JSONException | BrokenBarrierException | InterruptedException e){
-            Log.e(TAG,"Error", e);
+            ErrorHandler.eLog(TAG, "Error processing selector events", e, true);
         }
     }
 
@@ -285,7 +285,7 @@ public class SocketMessage {
                 int msgLength = (int) jsonHeaderRead.get("content-length");
                 msgContent = ByteBuffer.allocate(msgLength);
             }catch (JSONException e) {
-                Log.e(TAG, "Couldn't get content-length from jsonHeader sent from server", e);
+                ErrorHandler.eLog(TAG, "Couldn't get content-length from jsonHeader sent from server", e, true);
             }
         }
         // Else return to selector and read more bytes into the _recv_buffer
@@ -358,8 +358,7 @@ public class SocketMessage {
 //            socketConnectionManager.start_connection();
             // I want this to trigger the selector that this channel is writeReady.
         } catch (NullPointerException | ClosedChannelException e){
-            Log.e(TAG,"Error", e);
-            Log.e(TAG, "SocketConnectionManager.data not initialized yet");
+            ErrorHandler.eLog(TAG, "SocketConnectionManager.data not initialized yet", e, true);
         }
     }
 }

@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,6 +28,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import jp.oist.abcvlib.core.outputs.Outputs;
+import jp.oist.abcvlib.util.ErrorHandler;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -41,6 +43,8 @@ public class PID_GUI extends Fragment {
     Slider p_wheel_;
     Slider expWeight_;
     Slider maxAbsTilt_;
+
+    private String TAG = this.getClass().toString();
 
     Map<String, Slider> controls = new HashMap<String, Slider>();
 
@@ -84,7 +88,7 @@ public class PID_GUI extends Fragment {
                         expWeight_.getValue(),
                         maxAbsTilt_.getValue());
             } catch (InterruptedException e) {
-                Log.e(TAG,"Error", e);
+                ErrorHandler.eLog(TAG, "Error when getting gui slider values", e, true);
             }
         }
     };
@@ -129,7 +133,7 @@ public class PID_GUI extends Fragment {
             try {
                 controlValues.put(entry.getKey(), value);
             } catch (JSONException e) {
-                Log.e(TAG,"Error", e);
+                ErrorHandler.eLog(TAG, "Error when processing hashmap for controls", e, true);
             }
         }
         return controlValues.toString();

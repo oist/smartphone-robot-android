@@ -1,6 +1,8 @@
 package jp.oist.abcvlib.setPath;
 
 import android.os.Bundle;
+import android.util.Log;
+
 import jp.oist.abcvlib.core.AbcvlibActivity;
 
 /**
@@ -51,6 +53,7 @@ public class MainActivity extends AbcvlibActivity {
                     Thread.sleep(5000);
                 } catch (InterruptedException e) {
                     Log.e(TAG,"Error", e);
+                    throw new RuntimeException("This is a crash");
                 }
             }
         }

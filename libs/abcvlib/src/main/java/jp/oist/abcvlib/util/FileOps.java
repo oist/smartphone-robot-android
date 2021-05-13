@@ -49,8 +49,8 @@ public class FileOps {
                     }
                 }
             }
-        }catch(Exception e){
-            Log.e(TAG,"Error", e);
+        }catch(IOException e){
+            ErrorHandler.eLog(TAG, "Error when saving data to file", e, true);
         }
     }
 
@@ -72,7 +72,8 @@ public class FileOps {
                 fileOutputStream.close();
             }
         }catch(Exception e){
-            Log.e(TAG,"Error", e);
+            ErrorHandler.eLog(TAG, "Error when saving data to file", e, true);
+
         }
     }
 
@@ -100,7 +101,7 @@ public class FileOps {
                 fileOutputStream.close();
             }
         }catch(Exception e){
-            Log.e(TAG,"Error", e);
+            ErrorHandler.eLog(TAG, "Error when saving data to file", e, true);
         }
     }
 
@@ -120,13 +121,8 @@ public class FileOps {
                 for (int i = 0; i < lineArray.length; i++){
                     output[i] = Double.parseDouble(lineArray[i]);
                 }
-
-            } catch (NullPointerException e){
-
-            } catch (IOException e) {
-                Log.e(TAG,"Error", e);
-                Log.e("abcvlib", "File read failed: " + e.toString());
-
+            } catch (IOException | NullPointerException e) {
+                ErrorHandler.eLog(TAG, "Error when reading data from file", e, true);
             }
         }
 
@@ -147,19 +143,19 @@ public class FileOps {
             try {
                 stream = new FileOutputStream(file);
             } catch (FileNotFoundException e) {
-                Log.e(TAG,"Error", e);
+                ErrorHandler.eLog(TAG, "Error file not found", e, true);
             }
 
             try {
                 stream.write(androidDataString.getBytes());
             }
             catch (IOException e) {
-                Log.e("abcvlib", "File write failed: " + e.toString());
+                ErrorHandler.eLog(TAG, "Error writing file", e, true);
             }finally {
                 try {
                     stream.close();
                 } catch (IOException e) {
-                    Log.e(TAG,"Error", e);
+                    ErrorHandler.eLog(TAG, "Error", e, true);
                 }
             }
         }
@@ -191,7 +187,7 @@ public class FileOps {
         try {
             file.createNewFile();
         } catch (IOException e) {
-            Log.e(TAG,"Error", e);
+            ErrorHandler.eLog(TAG, "Error when getting file", e, true);
         }
         return file;
     }
@@ -202,13 +198,13 @@ public class FileOps {
         try {
             files = assetManager.list(path);
         } catch (IOException e) {
-            Log.e("tag", "Failed to get asset file list.", e);
+            ErrorHandler.eLog(TAG, "Failed to get asset file list", e, true);
         }
         if (files != null) for (String filename : files) {
             try (InputStream in = assetManager.open(path + filename)) {
                 savedata(context, in, path, filename);
             } catch (IOException e) {
-                Log.e("tag", "Failed to copy asset file: " + filename, e);
+                ErrorHandler.eLog(TAG, "Failed to copy asset file = " + filename, e, true);
             }
             // NOOP
         }

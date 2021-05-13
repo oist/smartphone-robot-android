@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.util.ErrorHandler;
 
 public class BalancePIDController extends AbcvlibController{
 
@@ -110,7 +111,7 @@ public class BalancePIDController extends AbcvlibController{
                     bounceLoopCount = 0;
                     linearController();
                 } catch (InterruptedException e) {
-                    Log.e(TAG,"Error", e);
+                    ErrorHandler.eLog(TAG, "Interupted when trying to run linearController", e, true);
                 }
             }
 

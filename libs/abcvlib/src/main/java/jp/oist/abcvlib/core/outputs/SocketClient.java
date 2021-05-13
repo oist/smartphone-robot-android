@@ -17,6 +17,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.SocketListener;
 
 
@@ -114,10 +115,10 @@ public class SocketClient implements Runnable, Deprecated{
                 Thread.sleep(1000);
                 Log.i("abcvlib", "Waiting on Python server to initialize. Exception:" + e1);
             } catch (InterruptedException e) {
-                Log.e(TAG,"Error", e);
+                ErrorHandler.eLog(TAG, "Interrupted while waiting for python server to initialize", e, true);
             }
         } catch (IOException e2) {
-            e2.printStackTrace();
+            ErrorHandler.eLog(TAG, "IOException when connecting to server", e2, true);
         }
         ready = true;
         writePermission = true;
@@ -138,7 +139,7 @@ public class SocketClient implements Runnable, Deprecated{
                 Log.i("abcvlib_timers", "dt=" + dt);
                 prevTime = currentTime;
             } catch (JSONException e) {
-                Log.e(TAG,"Error", e);
+                ErrorHandler.eLog(TAG, "Error when reading control data from JSON", e, true);
             }
         }
     }
@@ -190,7 +191,7 @@ public class SocketClient implements Runnable, Deprecated{
             }
 
         } catch (JSONException e) {
-            Log.e(TAG,"Error", e);
+            ErrorHandler.eLog(TAG, "Error when writing Android input stateVariables", e, true);
         }
 
         writeInputsToServer(abcvlibActivity.inputs.stateVariables);
@@ -223,22 +224,21 @@ public class SocketClient implements Runnable, Deprecated{
             Log.v("abcvlib", "wrote to socketMsgIn");
         }
 
-        catch (NullPointerException e2){
-            Log.i("abcvlib", "bufferedReader still null. Trying to reconnect to socket");
-            e2.printStackTrace();}
-
+        catch (NullPointerException e2) {
+            ErrorHandler.eLog(TAG, "bufferedReader still null. Trying to reconnect to socket", e2, true);
+        }
         catch (IOException | JSONException e3) {
             try {
                 Thread.sleep(1000);
                 connect();
             } catch (InterruptedException e) {
-                Log.e(TAG,"Error", e);
+                ErrorHandler.eLog(TAG, "Error", e, true);
             }
             e3.printStackTrace();
         }
 
         catch (InterruptedException e4) {
-            e4.printStackTrace();
+            ErrorHandler.eLog(TAG, "Error", e4, true);
         }
 
         writePermission = true;

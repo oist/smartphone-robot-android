@@ -11,6 +11,7 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,6 +35,7 @@ import java.util.Objects;
 
 import jp.oist.abcvlib.core.outputs.AbcvlibController;
 import jp.oist.abcvlib.core.outputs.Outputs;
+import jp.oist.abcvlib.util.ErrorHandler;
 
 import static android.graphics.Color.BLACK;
 import static android.graphics.Color.WHITE;
@@ -47,6 +49,7 @@ public class QRCodeDisplay extends Fragment {
 
     private ImageView qrCode;
     private PID_GUI pid_gui;
+    private final String TAG = this.getClass().toString();
 
     public QRCodeDisplay() {
         // Required empty public constructor
@@ -98,7 +101,7 @@ public class QRCodeDisplay extends Fragment {
             qrCode.setImageBitmap(bitmap);
 
         } catch (WriterException e) {
-            Log.e(TAG,"Error", e);
+            ErrorHandler.eLog(TAG, "Error", e, true);
         }
 
         return rootView;
@@ -118,7 +121,7 @@ public class QRCodeDisplay extends Fragment {
         try {
             result = writer.encode(contentsToEncode, format, img_width, img_height, hints);
         } catch (IllegalArgumentException iae) {
-            // Unsupported format
+            Log.d(TAG, "Unsupported format", iae);
             return null;
         }
         int width = result.getWidth();
