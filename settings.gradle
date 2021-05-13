@@ -1,6 +1,5 @@
 def androidLibs = [
         'abcvlib',
-        'openCV411',
 ]
 
 gradle.ext.androidLibs = androidLibs

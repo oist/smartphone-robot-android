@@ -4,7 +4,6 @@ dependencies {
     api 'com.github.topherbuckley.ioio:IOIOLibAndroidBluetooth:dd80a066a29b304d4c70c6648abf30053a599c49'
     api 'com.github.topherbuckley.ioio:IOIOLibAndroidDevice:dd80a066a29b304d4c70c6648abf30053a599c49'
     implementation 'com.opencsv:opencsv:4.6'
-    api project(path: ':openCV411')
     // CameraX core library using the camera2 implementation
     implementation "androidx.camera:camera-camera2:1.1.0-alpha02"
     // If you want to additionally use the CameraX Lifecycle library
