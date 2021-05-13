@@ -16,7 +16,6 @@ import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 public class Inputs {
 
     public MotionSensors motionSensors; // Doesn't need thread since handled by sensorManager or SensorService
-    public Vision vision; // Doesn't need thread since this is started by CameraBridgeViewBase
     public QuadEncoders quadEncoders; // Doesnt need thread since AbcvlibLooper is handling this already
     public JSONObject stateVariables;
     public MicrophoneInput micInput;
@@ -34,10 +33,6 @@ public class Inputs {
 
         if (abcvlibActivity.switches.quadEncoderApp) {
             quadEncoders = new QuadEncoders(abcvlibActivity);
-        }
-
-        if (abcvlibActivity.switches.cameraApp) {
-            vision = new Vision(abcvlibActivity, 400, 240);
         }
 
         if (abcvlibActivity.switches.cameraXApp){

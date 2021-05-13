@@ -14,7 +14,6 @@ import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 public class Outputs implements OutputsInterface {
 
     private Thread centerBlobControllerThread;
-    private CenterBlobController centerBlobController;
     protected Thread pidControllerThread;
     public Motion motion;
     private Thread socketClientThread;
@@ -52,15 +51,6 @@ public class Outputs implements OutputsInterface {
             threadPoolExecutor.scheduleAtFixedRate(balancePIDController, 0, 1, TimeUnit.MILLISECONDS);
             controllers.add(balancePIDController);
             Log.i("abcvlib", "BalanceApp Started");
-        }
-
-        // Todo need some method to handle combining balancePIDController output with another controller
-        //  (centerBlobApp, setPath, etc.). Maybe some grandController on another thread that reads in the
-        //  output from balancePIDController along with the output from e.g. centerBlobApp() and path().
-        if (abcvlibActivity.switches.centerBlobApp){
-            centerBlobController = new CenterBlobController(abcvlibActivity);
-            threadPoolExecutor.scheduleAtFixedRate(centerBlobController, 0, 1, TimeUnit.MILLISECONDS);
-            controllers.add(centerBlobController);
         }
 
         if (!controllers.isEmpty()){
