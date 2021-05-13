@@ -174,24 +174,6 @@ public class SocketMessage {
                 }else if (writeBufferVector.get(0).remaining() > 0){
                     int bytes = socketChannel.write(writeBufferVector.get(0));
                     printTotalBytes(socketChannel, bytes);
-//                    if(socketListener.getStep() == 500){
-//                        try {
-//                            boolean deleted = false;
-//                            boolean created = false;
-//                            Log.d(TAG, "Within HeapDump");
-//                            Context context = socketListener.getAbcContext();
-//                            File file=new File( context.getFilesDir() + File.separator + "dump.hprof");
-//                            if (file.exists()){
-//                                deleted = file.delete();
-//                            }
-//                            if (!file.exists() || deleted){
-//                                created = file.createNewFile();
-//                            }
-//                            Debug.dumpHprofData(file.getAbsolutePath());
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                        }
-//                    }
                 }
             }
             if (writeBufferVector.get(0).remaining() == 0){

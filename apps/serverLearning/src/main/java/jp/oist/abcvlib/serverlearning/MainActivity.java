@@ -533,13 +533,4 @@ public class MainActivity extends AbcvlibActivity {
         executor.execute(new SocketConnectionManager(this, inetSocketAddress, episode, doneSignal));
     }
 
-    @Override
-    public Context getAbcContext() {
-        return this.getApplicationContext();
-    }
-
-    public int getStep(){
-        return timeStepDataAssembler.timeStepCount;
-    }
-
 }

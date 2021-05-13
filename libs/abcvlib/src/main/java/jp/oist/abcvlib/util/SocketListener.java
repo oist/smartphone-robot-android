@@ -17,8 +17,4 @@ public interface SocketListener {
      *                      the Java end.
      */
     void onServerReadSuccess(JSONObject jsonHeader, ByteBuffer msgFromServer);
-
-    Context getAbcContext();
-
-    int getStep();
 }
