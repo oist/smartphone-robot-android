@@ -95,23 +95,22 @@ public class MainActivity extends AbcvlibActivity {
                         .build();
         imageAnalysis.setAnalyzer(imageExecutor, new ImageDataGatherer());
 
-        //todo I guess the imageAnalyzerActivity Interface is uncessary
-        try {
-            initialzer(this, null, this);
-        } catch (InterruptedException e) {
-            ErrorHandler.eLog(TAG, "Error inititializing abcvlibActivity", e, true);
-        }
+        initialzer(this, null, this);
+
         super.onCreate(savedInstanceState);
     }
 
     @Override
-    protected void onSetupFinished() throws InterruptedException {
-
+    protected void onSetupFinished() {
         wheelDataGatherer = new WheelDataGatherer();
         chargerDataGatherer = new ChargerDataGatherer();
         batteryDataGatherer = new BatteryDataGatherer();
         timeStepDataAssembler = new TimeStepDataAssembler();
-        startGatherers();
+        try {
+            startGatherers();
+        } catch (InterruptedException e) {
+            ErrorHandler.eLog(TAG, "Error starting gathers", e, true);
+        }
     }
 
     protected void startGatherers() throws InterruptedException {
