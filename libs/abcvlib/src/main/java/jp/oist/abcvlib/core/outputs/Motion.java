@@ -3,8 +3,6 @@ package jp.oist.abcvlib.core.outputs;
 
 import android.util.Log;
 
-import org.opencv.core.Point;
-
 import java.util.List;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
@@ -104,31 +102,5 @@ public class Motion {
      */
     public int getDutyCycleLeft(){
         return dutyCycleLeftWheel;
-    }
-
-    /**
-     * Take centroids, determine which direction to turn then send wheel speed
-     */
-    public void centerBlob(List<Point> centroids, Double CENTER_ROW, Double CENTER_THRESHOLD, int wheelSpeedL, int wheelSpeedR){
-
-        if (centroids.size() > 0){
-            // For whatever reason, the rows below physically corresponds to the columns of the screen
-            // when in portrait mode. y=0 at top right of screen, increases toward left
-            // x=0 at top right of screen, increases as moving down.
-            if (centroids.get(0).y > (CENTER_ROW + (CENTER_ROW * CENTER_THRESHOLD))){
-                // Turn right
-                setWheelOutput(wheelSpeedL, wheelSpeedR);
-                Log.i("abcvlib", "turning right");
-            } else if (centroids.get(0).y < (CENTER_ROW - (CENTER_ROW * CENTER_THRESHOLD))){
-                // Turn left
-                setWheelOutput(wheelSpeedL, wheelSpeedR);
-                Log.i("abcvlib", "turning left");
-            } else {
-                // Stay put
-                setWheelOutput(wheelSpeedL, wheelSpeedR);
-                Log.i("abcvlib", "Blob is within threshold. Staying put");
-            }
-            Log.i("abcvlib", "centroid y @" + centroids.get(0).y);
-        }
     }
 }
