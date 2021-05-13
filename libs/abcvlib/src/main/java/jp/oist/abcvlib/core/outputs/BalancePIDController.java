@@ -150,23 +150,6 @@ public class BalancePIDController extends AbcvlibController{
             throws InterruptedException {
 
         try {
-            if (abcvlibActivity.outputs.socketClient.socketMsgIn != null){
-
-                try {
-                    setPoint = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("setPoint").toString());
-                    p_tilt = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("p_tilt").toString());
-                    i_tilt = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("i_tilt").toString());
-                    d_tilt = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("d_tilt").toString());
-                    p_wheel = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("p_wheel").toString());
-                    expWeight = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("expWeight").toString());
-                    maxAbsTilt = Double.parseDouble(abcvlibActivity.outputs.socketClient.socketMsgIn.get("maxAbsTilt").toString());
-
-                Log.v("abcvlib", "linearConroller updated values from socketClient");
-
-                } catch (JSONException e){
-                    Log.e(TAG,"Error", e);
-                }
-            } else {
                 setPoint = setPoint_;
                 p_tilt = p_tilt_;
                 i_tilt = i_tilt_;
@@ -175,13 +158,10 @@ public class BalancePIDController extends AbcvlibController{
                 expWeight = expWeight_;
                 maxAbsTilt = maxAbsTilt_;
                 Log.v("abcvlib", "linearConroller updated values from local");
-
-            }
         } catch (NullPointerException e){
             Log.e(TAG,"Error", e);
             Thread.sleep(1000);
         }
-
     }
 
     private void bounce(boolean forward) {
