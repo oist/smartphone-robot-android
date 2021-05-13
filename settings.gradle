@@ -10,17 +10,12 @@ def apps = [
         'camera',
         'backAndForth',
         'pidbalancer',
-        'colorBlobFollower',
         'setPath',
-        'clapLearn',
         'compoundController',
-        'allAccess',
-        'physicstest',
         "tfapp",
         "pidtransfer_transmitter",
         "pidtransfer_receiver",
         "serverLearning",
-        "buffertest",
 ]
 
 gradle.ext.apps = apps
