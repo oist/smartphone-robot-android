@@ -82,11 +82,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
 
     @Override
     protected void onStart() {
-        if (switches.cameraApp){
-            inputs.vision.onStart();
-        }
         super.onStart();
-
         Log.i(TAG, "End of AbcvlibActivity.onStart");
     }
 
@@ -103,10 +99,6 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     @Override
     public void onPause()
     {
-        if (switches.cameraApp){
-            inputs.vision.onPause();
-        }
-
         super.onPause();
         outputs.motion.setWheelOutput(0, 0);
         Log.i(TAG, "End of AbcvlibActivity.onPause");
@@ -114,9 +106,6 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
 
     @Override
     public void onDestroy() {
-        if (switches.cameraApp) {
-            inputs.vision.onDestroy();
-        }
         super.onDestroy();
         Log.i(TAG, "End of AbcvlibActivity.onDestroy");
     }
@@ -124,9 +113,6 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     @Override
     public void onResume()
     {
-        if (switches.cameraApp){
-            inputs.vision.onResume();
-        }
         super.onResume();
         Log.i(TAG, "End of AbcvlibActivity.onResume");
     }
@@ -196,10 +182,6 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
                         Toast.LENGTH_SHORT).show();
                 finish();
             }
-        }
-        if (requestCode == Vision.CAMERA_PERMISSION_REQUEST_CODE && grantResults.length > 0
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            inputs.vision.onCameraPermissionGranted();
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
