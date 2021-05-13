@@ -4,8 +4,6 @@ import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.opencv.android.CameraBridgeViewBase;
-import org.opencv.core.Mat;
 
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
@@ -16,7 +14,7 @@ import jp.oist.abcvlib.core.inputs.vision.ImageAnalyzerActivity;
 import jp.oist.abcvlib.core.inputs.vision.Vision;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 
-public class Inputs implements CameraBridgeViewBase.CvCameraViewListener2 {
+public class Inputs {
 
     public MotionSensors motionSensors; // Doesn't need thread since handled by sensorManager or SensorService
     public Vision vision; // Doesn't need thread since this is started by CameraBridgeViewBase
@@ -78,18 +76,4 @@ public class Inputs implements CameraBridgeViewBase.CvCameraViewListener2 {
 
         return jsonObject;
     }
-
-    @Override
-    public void onCameraViewStarted(int width, int height) {
-
-    }
-    @Override
-    public void onCameraViewStopped() {
-
-    }
-    @Override
-    public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-        return null;
-    }
-
 }

@@ -17,7 +17,6 @@ public class Outputs implements OutputsInterface {
     private CenterBlobController centerBlobController;
     protected Thread pidControllerThread;
     public Motion motion;
-    public SocketClient socketClient;
     private Thread socketClientThread;
     public BalancePIDController balancePIDController;
     private GrandController grandController;
