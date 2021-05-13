@@ -103,7 +103,7 @@ public abstract class CameraActivity extends AbcvlibActivity
     switches.pythonControlledPIDBalancer = true;
 
     // Note the previously optional parameters that handle the connection to the python server
-    initialzer(this,"192.168.28.102", 3000);
+    initialzer(this);
 
     LOGGER.d("onCreate " + this);
     super.onCreate(null);
