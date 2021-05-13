@@ -63,16 +63,6 @@ public class MainActivity extends AbcvlibActivity {
 
                 errorSpeed = setSpeed - actualSpeed;
 
-                if (outputs.socketClient.socketMsgIn != null) {
-
-                    try {
-                        setSpeed = Double.parseDouble(outputs.socketClient.socketMsgIn.get("wheelSpeedL").toString());
-                        d_s = Double.parseDouble(outputs.socketClient.socketMsgIn.get("wheelSpeedControl").toString());
-                    } catch (JSONException e) {
-                        ErrorHandler.eLog(TAG,"Error when reading from JSON", e, true);
-                    }
-                }
-
                 // Note the use of the same output for controlling both wheels. Due to various errors
                 // that build up over time, controling individual wheels has so far led to chaos
                 // and unstable controllers.
