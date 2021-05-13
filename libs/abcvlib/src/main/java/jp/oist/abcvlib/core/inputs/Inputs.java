@@ -11,7 +11,6 @@ import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.audio.MicrophoneInput;
 import jp.oist.abcvlib.core.inputs.vision.CameraX;
 import jp.oist.abcvlib.core.inputs.vision.ImageAnalyzerActivity;
-import jp.oist.abcvlib.core.inputs.vision.Vision;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 
 public class Inputs {
