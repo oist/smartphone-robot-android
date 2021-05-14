@@ -88,8 +88,35 @@ public class TimeStepDataAssembler implements Runnable{
         return timeStepDataBuffer;
     }
 
-    public ImageAnalysis getImageAnalysis() {
-        return imageAnalysis;
+    @Override
+    public void run() {
+
+        // Choose action wte based on current timestep data
+        ActionSet actionSet = myStepHandler.forward(timeStepDataBuffer.getWriteData(), timeStepCount);
+
+        Log.v("SocketConnection", "Running TimeStepAssembler Run Method");
+
+        assembleAudio();
+
+        // Moves timeStepDataBuffer.writeData to readData and nulls out the writeData for new data
+        timeStepDataBuffer.nextTimeStep();
+
+        // Add timestep and return int representing offset in flatbuffer
+        addTimeStep();
+
+        timeStepCount++;
+
+        // If some criteria met, end episode.
+        if (myStepHandler.isLastTimestep()){
+            try {
+                endEpisode();
+                if(myStepHandler.isLastEpisode()){
+                    endTrail();
+                }
+            } catch (BrokenBarrierException | InterruptedException | IOException e) {
+                ErrorHandler.eLog(TAG, "Error when trying to end episode or trail", e, true);
+            }
+        }
     }
 
     public void startEpisode(){
@@ -97,6 +124,29 @@ public class TimeStepDataAssembler implements Runnable{
         builder = new FlatBufferBuilder(1024);
         Log.v("flatbuff", "starting New Episode");
         // todo reload tflite models here for myStepHandler
+    }
+
+    protected void startGatherers() throws InterruptedException {
+        CountDownLatch gatherersReady = new CountDownLatch(1);
+
+        WheelDataGatherer wheelDataGatherer = new WheelDataGatherer(abcvlibActivity, timeStepDataBuffer);
+        ChargerDataGatherer chargerDataGatherer = new ChargerDataGatherer(abcvlibActivity, timeStepDataBuffer);
+        BatteryDataGatherer batteryDataGatherer = new BatteryDataGatherer(abcvlibActivity, timeStepDataBuffer);
+        ImageDataGatherer imageDataGatherer = new ImageDataGatherer(abcvlibActivity, timeStepDataBuffer);
+
+        Log.d("SocketConnection", "Starting new runnable for gatherers");
+
+        long initDelay = 0;
+        microphoneInput.start();
+        imageAnalysis.setAnalyzer(imageExecutor, imageDataGatherer);
+        wheelDataGathererFuture = executor.scheduleAtFixedRate(wheelDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
+        chargerDataGathererFuture = executor.scheduleAtFixedRate(chargerDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
+        batteryDataGathererFuture = executor.scheduleAtFixedRate(batteryDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
+        timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(this, 50,50, TimeUnit.MILLISECONDS);
+        gatherersReady.countDown();
+        Log.d("SocketConnection", "Waiting for gatherers to finish");
+        gatherersReady.await();
+        Log.d("SocketConnection", "Gatherers finished initializing");
     }
 
     public void addTimeStep(){
@@ -222,35 +272,9 @@ public class TimeStepDataAssembler implements Runnable{
         return RobotAction.createRobotAction(builder, (byte) ca.getActionNumber(), (byte) ma.getActionByte());
     }
 
-    @Override
-    public void run() {
-
-        // Choose action wte based on current timestep data
-        ActionSet actionSet = myStepHandler.forward(timeStepDataBuffer.getWriteData(), timeStepCount);
-
-        Log.v("SocketConnection", "Running TimeStepAssembler Run Method");
-
-        assembleAudio();
-
-        // Moves timeStepDataBuffer.writeData to readData and nulls out the writeData for new data
-        timeStepDataBuffer.nextTimeStep();
-
-        // Add timestep and return int representing offset in flatbuffer
-        addTimeStep();
-
-        timeStepCount++;
-
-        // If some criteria met, end episode.
-        if (myStepHandler.isLastTimestep()){
-            try {
-                endEpisode();
-                if(myStepHandler.isLastEpisode()){
-                    endTrail();
-                }
-            } catch (BrokenBarrierException | InterruptedException | IOException e) {
-                ErrorHandler.eLog(TAG, "Error when trying to end episode or trail", e, true);
-            }
-        }
+    private void sendToServer(ByteBuffer episode, CyclicBarrier doneSignal) {
+        Log.d("SocketConnection", "New executor deployed creating new SocketConnectionManager");
+        executor.execute(new SocketConnectionManager(abcvlibActivity, inetSocketAddress, episode, doneSignal));
     }
 
     public void assembleAudio(){
@@ -261,29 +285,6 @@ public class TimeStepDataAssembler implements Runnable{
         timeStepDataBuffer.getWriteData().getSoundData().setMetaData(sampleRate, startTime, endTime);
 
         microphoneInput.setStartTime();
-    }
-
-    protected void startGatherers() throws InterruptedException {
-        CountDownLatch gatherersReady = new CountDownLatch(1);
-
-        WheelDataGatherer wheelDataGatherer = new WheelDataGatherer(abcvlibActivity, timeStepDataBuffer);
-        ChargerDataGatherer chargerDataGatherer = new ChargerDataGatherer(abcvlibActivity, timeStepDataBuffer);
-        BatteryDataGatherer batteryDataGatherer = new BatteryDataGatherer(abcvlibActivity, timeStepDataBuffer);
-        ImageDataGatherer imageDataGatherer = new ImageDataGatherer(abcvlibActivity, timeStepDataBuffer);
-
-        Log.d("SocketConnection", "Starting new runnable for gatherers");
-
-        long initDelay = 0;
-        microphoneInput.start();
-        imageAnalysis.setAnalyzer(imageExecutor, imageDataGatherer);
-        wheelDataGathererFuture = executor.scheduleAtFixedRate(wheelDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
-        chargerDataGathererFuture = executor.scheduleAtFixedRate(chargerDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
-        batteryDataGathererFuture = executor.scheduleAtFixedRate(batteryDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
-        timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(this, 50,50, TimeUnit.MILLISECONDS);
-        gatherersReady.countDown();
-        Log.d("SocketConnection", "Waiting for gatherers to finish");
-        gatherersReady.await();
-        Log.d("SocketConnection", "Gatherers finished initializing");
     }
 
     public void stopRecordingData(){
@@ -354,6 +355,13 @@ public class TimeStepDataAssembler implements Runnable{
         episodeCount++;
     }
 
+    private void endTrail(){
+        Log.i(TAG, "Need to handle end of trail here");
+        episodeCount = 0;
+        stopRecordingData();
+        microphoneInput.close();
+    }
+
     private class CyclicBarrierHandler implements Runnable {
 
         private final TimeStepDataAssembler timeStepDataAssembler;
@@ -370,16 +378,9 @@ public class TimeStepDataAssembler implements Runnable{
         }
     }
 
-    private void endTrail(){
-        Log.i(TAG, "Need to handle end of trail here");
-        episodeCount = 0;
-        stopRecordingData();
-        microphoneInput.close();
+    public ImageAnalysis getImageAnalysis() {
+        return imageAnalysis;
     }
 
-    private void sendToServer(ByteBuffer episode, CyclicBarrier doneSignal) {
-        Log.d("SocketConnection", "New executor deployed creating new SocketConnectionManager");
-        executor.execute(new SocketConnectionManager(abcvlibActivity, inetSocketAddress, episode, doneSignal));
-    }
 }
 
