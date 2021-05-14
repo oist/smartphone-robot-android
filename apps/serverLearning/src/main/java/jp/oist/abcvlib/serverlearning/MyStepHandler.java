@@ -2,6 +2,8 @@ package jp.oist.abcvlib.serverlearning;
 
 import android.content.Context;
 
+import jp.oist.abcvlib.serverlearning.gatherers.TimeStepDataBuffer;
+
 public class MyStepHandler{
 
     private final int maxTimeStepCount;
@@ -37,7 +39,7 @@ public class MyStepHandler{
         actionSet = new ActionSet(motionAction, commAction);
 
         // set your action to some ints
-        data.actions.add(motionAction, commAction);
+        data.getActions().add(motionAction, commAction);
 
         if (timeStepCount >= maxTimeStepCount || (reward >= rewardCriterion)){
             this.lastTimestep = true;

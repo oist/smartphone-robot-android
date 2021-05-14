@@ -1,10 +1,7 @@
 package jp.oist.abcvlib.serverlearning;
 
 import android.app.ActivityManager;
-import android.content.Context;
-import android.content.res.AssetManager;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.media.Image;
 import android.os.Bundle;
 import android.util.Log;
@@ -21,7 +18,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -38,6 +34,11 @@ import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.audio.MicrophoneInput;
 import jp.oist.abcvlib.core.inputs.vision.YuvToRgbConverter;
 import jp.oist.abcvlib.core.learning.fbclasses.*;
+import jp.oist.abcvlib.serverlearning.gatherers.BatteryDataGatherer;
+import jp.oist.abcvlib.serverlearning.gatherers.ChargerDataGatherer;
+import jp.oist.abcvlib.serverlearning.gatherers.ImageDataGatherer;
+import jp.oist.abcvlib.serverlearning.gatherers.TimeStepDataBuffer;
+import jp.oist.abcvlib.serverlearning.gatherers.WheelDataGatherer;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.FileOps;
 import jp.oist.abcvlib.util.ImageOps;
@@ -60,6 +61,7 @@ public class MainActivity extends AbcvlibActivity {
     WheelDataGatherer wheelDataGatherer;
     ChargerDataGatherer chargerDataGatherer;
     BatteryDataGatherer batteryDataGatherer;
+    ImageDataGatherer imageDataGatherer;
     TimeStepDataAssembler timeStepDataAssembler;
     SocketConnectionManager socketConnectionManager;
     InetSocketAddress inetSocketAddress = new InetSocketAddress("192.168.2.102", 3000);
@@ -94,7 +96,6 @@ public class MainActivity extends AbcvlibActivity {
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .setImageQueueDepth(20)
                         .build();
-        imageAnalysis.setAnalyzer(imageExecutor, new ImageDataGatherer());
 
         initialzer(this, null, this);
 
@@ -103,9 +104,6 @@ public class MainActivity extends AbcvlibActivity {
 
     @Override
     protected void onSetupFinished() {
-        wheelDataGatherer = new WheelDataGatherer();
-        chargerDataGatherer = new ChargerDataGatherer();
-        batteryDataGatherer = new BatteryDataGatherer();
         timeStepDataAssembler = new TimeStepDataAssembler();
         try {
             startGatherers();
@@ -116,6 +114,12 @@ public class MainActivity extends AbcvlibActivity {
 
     protected void startGatherers() throws InterruptedException {
         CountDownLatch gatherersReady = new CountDownLatch(1);
+
+        wheelDataGatherer = new WheelDataGatherer(this, timeStepDataBuffer);
+        chargerDataGatherer = new ChargerDataGatherer(this, timeStepDataBuffer);
+        batteryDataGatherer = new BatteryDataGatherer(this, timeStepDataBuffer);
+        imageDataGatherer = new ImageDataGatherer(this, timeStepDataBuffer);
+
         ExecutorService sequentialExecutor = Executors.newSingleThreadExecutor();
 
         Log.d("SocketConnection", "Starting new runnable for gatherers");
@@ -125,10 +129,10 @@ public class MainActivity extends AbcvlibActivity {
             public void run() {
                 long initDelay = 0;
                 microphoneInput.start();
-                imageAnalysis.setAnalyzer(imageExecutor, new ImageDataGatherer());
+                imageAnalysis.setAnalyzer(imageExecutor, imageDataGatherer);
                 wheelDataGathererFuture = executor.scheduleAtFixedRate(wheelDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
-                chargerDataGathererFuture = executor.scheduleAtFixedRate(new ChargerDataGatherer(), initDelay, 10, TimeUnit.MILLISECONDS);
-                batteryDataGathererFuture = executor.scheduleAtFixedRate(new BatteryDataGatherer(), initDelay, 10, TimeUnit.MILLISECONDS);
+                chargerDataGathererFuture = executor.scheduleAtFixedRate(chargerDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
+                batteryDataGathererFuture = executor.scheduleAtFixedRate(batteryDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
                 timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(timeStepDataAssembler, 50,50, TimeUnit.MILLISECONDS);
                 gatherersReady.countDown();
             }
@@ -137,57 +141,6 @@ public class MainActivity extends AbcvlibActivity {
         gatherersReady.await();
         Log.d("SocketConnection", "Gatherers finished initializing");
 
-    }
-
-    class WheelDataGatherer implements Runnable{
-        @Override
-        public void run() {
-            double left = inputs.quadEncoders.getWheelCountL();
-            double right = inputs.quadEncoders.getWheelCountR();
-            timeStepDataBuffer.writeData.wheelCounts.put(left, right);
-        }
-    }
-
-    class ChargerDataGatherer implements Runnable{
-        @Override
-        public void run() {
-            timeStepDataBuffer.writeData.chargerData.put(inputs.battery.getVoltageCharger());
-        }
-    }
-
-    class BatteryDataGatherer implements Runnable{
-        @Override
-        public void run() {
-            timeStepDataBuffer.writeData.batteryData.put(inputs.battery.getVoltageBatt());
-        }
-    }
-
-    class ImageDataGatherer implements ImageAnalysis.Analyzer{
-
-        YuvToRgbConverter yuvToRgbConverter = new YuvToRgbConverter(getApplicationContext());
-
-        @androidx.camera.core.ExperimentalGetImage
-        public void analyze(@NonNull ImageProxy imageProxy) {
-            Image image = imageProxy.getImage();
-            if (image != null) {
-                int width = image.getWidth();
-                int height = image.getHeight();
-                long timestamp = image.getTimestamp();
-
-                Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                yuvToRgbConverter.yuvToRgb(image, bitmap);
-
-                ByteArrayOutputStream webpByteArrayOutputStream = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.WEBP, 0, webpByteArrayOutputStream);
-                byte[] webpBytes = webpByteArrayOutputStream.toByteArray();
-                Bitmap webpBitMap = ImageOps.generateBitmap(webpBytes);
-
-                // todo this is causing a memory leak and crashing.
-                timeStepDataBuffer.writeData.imageData.add(timestamp, width, height, webpBitMap, webpBytes);
-                Log.v("flatbuff", "Wrote image to timeStepDataBuffer");
-            }
-            imageProxy.close();
-        }
     }
 
     class TimeStepDataAssembler implements Runnable{
@@ -233,71 +186,70 @@ public class MainActivity extends AbcvlibActivity {
 
         private int addWheelCounts(){
             Log.v("flatbuff", "STEP wheelCount TimeStamps Length: " +
-                    timeStepDataBuffer.readData.wheelCounts.getTimeStamps().length);
+                    timeStepDataBuffer.getReadData().getWheelCounts().getTimeStamps().length);
             int ts = WheelCounts.createTimestampsVector(builder,
-                    timeStepDataBuffer.readData.wheelCounts.getTimeStamps());
+                    timeStepDataBuffer.getReadData().getWheelCounts().getTimeStamps());
             int left = WheelCounts.createLeftVector(builder,
-                    timeStepDataBuffer.readData.wheelCounts.getLeft());
+                    timeStepDataBuffer.getReadData().getWheelCounts().getLeft());
             int right = WheelCounts.createLeftVector(builder,
-                    timeStepDataBuffer.readData.wheelCounts.getRight());
+                    timeStepDataBuffer.getReadData().getWheelCounts().getRight());
             return WheelCounts.createWheelCounts(builder, ts, left, right);
         }
 
         private int addChargerData(){
             Log.v("flatbuff", "STEP chargerData TimeStamps Length: " +
-                    timeStepDataBuffer.readData.chargerData.getTimeStamps().length);
+                    timeStepDataBuffer.getReadData().getChargerData().getTimeStamps().length);
             int ts = WheelCounts.createTimestampsVector(builder,
-                    timeStepDataBuffer.readData.chargerData.getTimeStamps());
+                    timeStepDataBuffer.getReadData().getChargerData().getTimeStamps());
             int voltage = WheelCounts.createLeftVector(builder,
-                    timeStepDataBuffer.readData.chargerData.getVoltage());
+                    timeStepDataBuffer.getReadData().getChargerData().getVoltage());
             return ChargerData.createChargerData(builder, ts, voltage);
         }
 
         private int addBatteryData(){
             Log.v("flatbuff", "STEP batteryData TimeStamps Length: " +
-                    timeStepDataBuffer.readData.batteryData.getTimeStamps().length);
+                    timeStepDataBuffer.getReadData().getBatteryData().getTimeStamps().length);
             int ts = WheelCounts.createTimestampsVector(builder,
-                    timeStepDataBuffer.readData.batteryData.getTimeStamps());
+                    timeStepDataBuffer.getReadData().getBatteryData().getTimeStamps());
             int voltage = WheelCounts.createLeftVector(builder,
-                    timeStepDataBuffer.readData.batteryData.getVoltage());
+                    timeStepDataBuffer.getReadData().getBatteryData().getVoltage());
             return ChargerData.createChargerData(builder, ts, voltage);
         }
 
         private int addSoundData(){
 
-            TimeStepDataBuffer.TimeStepData.SoundData soundData = timeStepDataBuffer.readData.soundData;
+            TimeStepDataBuffer.TimeStepData.SoundData soundData = timeStepDataBuffer.getReadData().getSoundData();
 
             Log.v("flatbuff", "Sound Data TotalSamples: " +
-                    soundData.totalSamples);
+                    soundData.getTotalSamples());
 
             int _startTime = AudioTimestamp.createAudioTimestamp(builder,
-                    soundData.startTime.framePosition,
-                    soundData.startTime.nanoTime);
+                    soundData.getStartTime().framePosition,
+                    soundData.getStartTime().nanoTime);
             int _endTime = AudioTimestamp.createAudioTimestamp(builder,
-                    soundData.startTime.framePosition,
-                    soundData.startTime.nanoTime);
+                    soundData.getStartTime().framePosition,
+                    soundData.getStartTime().nanoTime);
             int _levels = SoundData.createLevelsVector(builder,
-                    timeStepDataBuffer.readData.soundData.getLevels());
+                    timeStepDataBuffer.getReadData().getSoundData().getLevels());
 
             SoundData.startSoundData(builder);
             SoundData.addStartTime(builder, _startTime);
             SoundData.addEndTime(builder, _endTime);
-            SoundData.addTotalTime(builder, soundData.totalTime);
-            SoundData.addSampleRate(builder, soundData.sampleRate);
-            SoundData.addTotalSamples(builder, soundData.totalSamples);
+            SoundData.addTotalTime(builder, soundData.getTotalTime());
+            SoundData.addSampleRate(builder, soundData.getSampleRate());
+            SoundData.addTotalSamples(builder, soundData.getTotalSamples());
             SoundData.addLevels(builder, _levels);
-            int _soundData = SoundData.endSoundData(builder);
 
-            return _soundData;
+            return SoundData.endSoundData(builder);
         }
 
         private int addImageData(){
-            TimeStepDataBuffer.TimeStepData.ImageData imageData = timeStepDataBuffer.readData.imageData;
+            TimeStepDataBuffer.TimeStepData.ImageData imageData = timeStepDataBuffer.getReadData().getImageData();
 
             // Offset for all image data to be returned from this method
             int _imageData = 0;
 
-            int numOfImages = imageData.images.size();
+            int numOfImages = imageData.getImages().size();
 
             Log.v("flatbuff", numOfImages + " images gathered");
             Log.v("flatbuff", "Step:" + timeStepCount);
@@ -305,14 +257,14 @@ public class MainActivity extends AbcvlibActivity {
             int[] _images = new int[numOfImages];
 
             for (int i = 0; i < numOfImages ; i++){
-                TimeStepDataBuffer.TimeStepData.ImageData.SingleImage image = imageData.images.get(i);
+                TimeStepDataBuffer.TimeStepData.ImageData.SingleImage image = imageData.getImages().get(i);
 
-                int _webpImage = jp.oist.abcvlib.core.learning.fbclasses.Image.createWebpImageVector(builder, image.webpImage);
+                int _webpImage = jp.oist.abcvlib.core.learning.fbclasses.Image.createWebpImageVector(builder, image.getWebpImage());
                 jp.oist.abcvlib.core.learning.fbclasses.Image.startImage(builder);
                 jp.oist.abcvlib.core.learning.fbclasses.Image.addWebpImage(builder, _webpImage);
-                jp.oist.abcvlib.core.learning.fbclasses.Image.addTimestamp(builder, image.timestamp);
-                jp.oist.abcvlib.core.learning.fbclasses.Image.addHeight(builder, image.height);
-                jp.oist.abcvlib.core.learning.fbclasses.Image.addWidth(builder, image.width);
+                jp.oist.abcvlib.core.learning.fbclasses.Image.addTimestamp(builder, image.getTimestamp());
+                jp.oist.abcvlib.core.learning.fbclasses.Image.addHeight(builder, image.getHeight());
+                jp.oist.abcvlib.core.learning.fbclasses.Image.addWidth(builder, image.getWidth());
                 int _image = jp.oist.abcvlib.core.learning.fbclasses.Image.endImage(builder);
 
                 _images[i] = _image;
@@ -327,8 +279,8 @@ public class MainActivity extends AbcvlibActivity {
         }
 
         private int addActionData(){
-            CommAction ca = timeStepDataBuffer.readData.actions.getCommAction();
-            MotionAction ma = timeStepDataBuffer.readData.actions.getMotionAction();
+            CommAction ca = timeStepDataBuffer.getReadData().getActions().getCommAction();
+            MotionAction ma = timeStepDataBuffer.getReadData().getActions().getMotionAction();
             Log.v("flatbuff", "CommAction : " + ca.getActionNumber());
             Log.v("flatbuff", "MotionAction : " + ma.getActionName());
 
@@ -339,7 +291,7 @@ public class MainActivity extends AbcvlibActivity {
         public void run() {
 
             // Choose action wte based on current timestep data
-            ActionSet actionSet = myStepHandler.forward(timeStepDataBuffer.writeData, timeStepCount);
+            ActionSet actionSet = myStepHandler.forward(timeStepDataBuffer.getWriteData(), timeStepCount);
 
             Log.v("SocketConnection", "Running TimeStepAssembler Run Method");
 
@@ -372,7 +324,7 @@ public class MainActivity extends AbcvlibActivity {
             android.media.AudioTimestamp startTime = microphoneInput.getStartTime();
             android.media.AudioTimestamp endTime = microphoneInput.getEndTime();
             int sampleRate = microphoneInput.getSampleRate();
-            timeStepDataBuffer.writeData.soundData.setMetaData(sampleRate, startTime, endTime);
+            timeStepDataBuffer.getWriteData().getSoundData().setMetaData(sampleRate, startTime, endTime);
 
             microphoneInput.setStartTime();
         }
@@ -477,7 +429,7 @@ public class MainActivity extends AbcvlibActivity {
 
     @Override
     protected void onNewAudioData(float[] audioData, int numSamples){
-        timeStepDataBuffer.writeData.soundData.add(audioData, numSamples);
+        timeStepDataBuffer.getWriteData().getSoundData().add(audioData, numSamples);
     }
 
     @Override

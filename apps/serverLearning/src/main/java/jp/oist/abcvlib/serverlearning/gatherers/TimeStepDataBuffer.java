@@ -1,4 +1,4 @@
-package jp.oist.abcvlib.serverlearning;
+package jp.oist.abcvlib.serverlearning.gatherers;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -8,14 +8,17 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import jp.oist.abcvlib.serverlearning.CommAction;
+import jp.oist.abcvlib.serverlearning.MotionAction;
+
 public class TimeStepDataBuffer {
 
     private int bufferLength;
     private int writeIndex;
     private int readIndex;
     private TimeStepData[] buffer;
-    TimeStepData writeData;
-    TimeStepData readData;
+    private TimeStepData writeData;
+    private TimeStepData readData;
 
     public TimeStepDataBuffer(int bufferLength){
         if (bufferLength <= 1){
@@ -48,14 +51,18 @@ public class TimeStepDataBuffer {
         readData = buffer[readIndex];
     }
 
-    class TimeStepData{
-        WheelCounts wheelCounts;
-        ChargerData chargerData;
-        BatteryData batteryData;
-        ImageData imageData;
-        SoundData soundData;
-        RobotAction actions;
-        ReentrantReadWriteLock.WriteLock lock;
+    public TimeStepData getWriteData(){return writeData;}
+
+    public TimeStepData getReadData(){return readData;}
+
+    public class TimeStepData{
+        private WheelCounts wheelCounts;
+        private ChargerData chargerData;
+        private BatteryData batteryData;
+        private ImageData imageData;
+        private SoundData soundData;
+        private RobotAction actions;
+        private ReentrantReadWriteLock.WriteLock lock;
 
         public TimeStepData(){
             wheelCounts = new WheelCounts();
@@ -74,6 +81,12 @@ public class TimeStepDataBuffer {
             lock.unlock();
         }
 
+        public WheelCounts getWheelCounts(){return wheelCounts;}
+        public ChargerData getChargerData(){return chargerData;}
+        public BatteryData getBatteryData(){return batteryData;}
+        public ImageData getImageData(){return imageData;}
+        public SoundData getSoundData(){return soundData;}
+        public RobotAction getActions(){return actions;}
 
         public void clear(){
             wheelCounts = new WheelCounts();
@@ -84,7 +97,7 @@ public class TimeStepDataBuffer {
             actions = new RobotAction();
         }
 
-        class WheelCounts{
+        public class WheelCounts{
             ArrayList<Long> timestamps = new ArrayList<Long>();
             ArrayList<Double> left = new ArrayList<Double>();
             ArrayList<Double> right = new ArrayList<Double>();
@@ -119,7 +132,7 @@ public class TimeStepDataBuffer {
             }
         }
 
-        class ChargerData{
+        public class ChargerData{
             ArrayList<Long> timestamps = new ArrayList<Long>();
             ArrayList<Double> voltage = new ArrayList<Double>();
             public void put(double _voltage){
@@ -144,7 +157,7 @@ public class TimeStepDataBuffer {
             }
         }
 
-        class BatteryData{
+        public class BatteryData{
             ArrayList<Long> timestamps = new ArrayList<Long>();
             ArrayList<Double> voltage = new ArrayList<Double>();
             public void put(double _voltage){
@@ -169,13 +182,13 @@ public class TimeStepDataBuffer {
             }
         }
 
-        class SoundData{
-            AudioTimestamp startTime = new AudioTimestamp();
-            AudioTimestamp endTime = new AudioTimestamp();
-            double totalTime;
-            int sampleRate;
-            long totalSamples;
-            ArrayList<Float> levels = new ArrayList<Float>();
+        public class SoundData{
+            private AudioTimestamp startTime = new AudioTimestamp();
+            private AudioTimestamp endTime = new AudioTimestamp();
+            private double totalTime;
+            private int sampleRate;
+            private long totalSamples;
+            private ArrayList<Float> levels = new ArrayList<Float>();
 
             public SoundData(){
             }
@@ -203,22 +216,46 @@ public class TimeStepDataBuffer {
                 }
                 return levelsFloat;
             }
+
+            public long getTotalSamples() {
+                return totalSamples;
+            }
+
+            public AudioTimestamp getEndTime() {
+                return endTime;
+            }
+
+            public AudioTimestamp getStartTime() {
+                return startTime;
+            }
+
+            public double getTotalTime() {
+                return totalTime;
+            }
+
+            public int getSampleRate() {
+                return sampleRate;
+            }
         }
 
-        class ImageData{
-            ArrayList<SingleImage> images = new ArrayList<SingleImage>();
+        public class ImageData{
+            private ArrayList<SingleImage> images = new ArrayList<SingleImage>();
 
             public void add(long timestamp, int width, int height, Bitmap bitmap, byte[] webpImage){
                 SingleImage singleImage = new SingleImage(timestamp, width, height, bitmap, webpImage);
                 images.add(singleImage);
             }
 
-            class SingleImage{
-                long timestamp;
-                int width;
-                int height;
-                Bitmap bitmap;
-                byte[] webpImage;
+            public ArrayList<SingleImage> getImages() {
+                return images;
+            }
+
+            public class SingleImage{
+                private long timestamp;
+                private int width;
+                private int height;
+                private Bitmap bitmap;
+                private byte[] webpImage;
 
                 public SingleImage(long timestamp, int width, int height, Bitmap bitmap,
                                    byte[] webpImage){
@@ -228,10 +265,30 @@ public class TimeStepDataBuffer {
                     this.bitmap = bitmap;
                     this.webpImage = webpImage;
                 }
+
+                public Bitmap getBitmap() {
+                    return bitmap;
+                }
+
+                public byte[] getWebpImage() {
+                    return webpImage;
+                }
+
+                public int getHeight() {
+                    return height;
+                }
+
+                public int getWidth() {
+                    return width;
+                }
+
+                public long getTimestamp() {
+                    return timestamp;
+                }
             }
         }
 
-        class RobotAction{
+        public class RobotAction{
             private MotionAction motionAction;
             private CommAction commAction;
             public void add(MotionAction motionAction, CommAction commAction){

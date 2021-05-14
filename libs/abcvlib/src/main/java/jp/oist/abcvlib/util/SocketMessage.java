@@ -177,11 +177,11 @@ public class SocketMessage {
                 }
             }
             if (writeBufferVector.get(0).remaining() == 0){
-                int total = writeBufferVector.get(0).limit() / 1000000;
+                int total = writeBufferVector.get(0).limit() / 1000;
                 double timeTaken = (System.nanoTime() - socketWriteTimeStart) * 10e-10;
                 DecimalFormat df = new DecimalFormat();
                 df.setMaximumFractionDigits(2);
-                Log.i(TAG, "Sent " + total + "Mb in " + df.format(timeTaken) + "s");
+                Log.i(TAG, "Sent " + total + "kb in " + df.format(timeTaken) + "s");
                 Log.i(TAG, "Mean transfer rate of " + df.format(total/timeTaken) + " MB/s");
 
                 // Clear sending buffer
