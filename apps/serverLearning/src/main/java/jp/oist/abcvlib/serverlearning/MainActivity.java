@@ -51,7 +51,7 @@ public class MainActivity extends AbcvlibActivity {
     public ImageAnalysis getAnalyzer() {
         return timeStepDataAssembler.getImageAnalysis();
     }
-    
+
     @Override
     protected void onNewAudioData(float[] audioData, int numSamples){
         timeStepDataAssembler.getTimeStepDataBuffer().getWriteData().getSoundData().add(audioData, numSamples);

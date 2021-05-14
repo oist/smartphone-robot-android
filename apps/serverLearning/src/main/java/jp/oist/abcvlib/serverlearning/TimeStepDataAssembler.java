@@ -1,7 +1,5 @@
 package jp.oist.abcvlib.serverlearning;
 
-import android.app.ActivityManager;
-import android.content.Context;
 import android.util.Log;
 import android.util.Size;
 
@@ -45,27 +43,21 @@ public class TimeStepDataAssembler implements Runnable{
     private int timeStepCount = 0;
     private final int maxTimeStep = 100;
     private FlatBufferBuilder builder;
-    private int[] timeStepVector = new int[maxTimeStep + 1];
-    private MyStepHandler myStepHandler;
+    private final int[] timeStepVector = new int[maxTimeStep + 1];
+    private final MyStepHandler myStepHandler;
     private int episodeCount = 0;
-    private TimeStepDataBuffer timeStepDataBuffer;
-    private String TAG = getClass().toString();
-    private MicrophoneInput microphoneInput;
-    private boolean pauseRecording = false;
+    private final TimeStepDataBuffer timeStepDataBuffer;
+    private final String TAG = getClass().toString();
+    private final MicrophoneInput microphoneInput;
     private ScheduledFuture<?> wheelDataGathererFuture;
     private ScheduledFuture<?> chargerDataGathererFuture;
     private ScheduledFuture<?> batteryDataGathererFuture;
     private ScheduledFuture<?> timeStepDataAssemblerFuture;
-    private WheelDataGatherer wheelDataGatherer;
-    private ChargerDataGatherer chargerDataGatherer;
-    private BatteryDataGatherer batteryDataGatherer;
-    private ImageDataGatherer imageDataGatherer;
-    private SocketConnectionManager socketConnectionManager;
-    private ScheduledExecutorService executor;
-    private ExecutorService imageExecutor;
-    private InetSocketAddress inetSocketAddress;
-    private ImageAnalysis imageAnalysis;
-    private AbcvlibActivity abcvlibActivity;
+    private final ScheduledExecutorService executor;
+    private final ExecutorService imageExecutor;
+    private final InetSocketAddress inetSocketAddress;
+    private final ImageAnalysis imageAnalysis;
+    private final AbcvlibActivity abcvlibActivity;
 
     public TimeStepDataAssembler(AbcvlibActivity abcvlibActivity,
                                  InetSocketAddress inetSocketAddress){
@@ -86,7 +78,7 @@ public class TimeStepDataAssembler implements Runnable{
                         .setImageQueueDepth(20)
                         .build();
 
-        myStepHandler = new MyStepHandler(abcvlibActivity.getApplicationContext(), maxTimeStep,
+        myStepHandler = new MyStepHandler(maxTimeStep,
                 10000, 10);
 
         startEpisode();
@@ -190,7 +182,7 @@ public class TimeStepDataAssembler implements Runnable{
         TimeStepDataBuffer.TimeStepData.ImageData imageData = timeStepDataBuffer.getReadData().getImageData();
 
         // Offset for all image data to be returned from this method
-        int _imageData = 0;
+        int _imageData;
 
         int numOfImages = imageData.getImages().size();
 
@@ -263,7 +255,6 @@ public class TimeStepDataAssembler implements Runnable{
 
     public void assembleAudio(){
         // Don't put these inline, else you will pass by reference rather than value and references will continue to update
-        // todo between episodes the startTime is larger than the end time somehow.
         android.media.AudioTimestamp startTime = microphoneInput.getStartTime();
         android.media.AudioTimestamp endTime = microphoneInput.getEndTime();
         int sampleRate = microphoneInput.getSampleRate();
@@ -275,12 +266,11 @@ public class TimeStepDataAssembler implements Runnable{
     protected void startGatherers() throws InterruptedException {
         CountDownLatch gatherersReady = new CountDownLatch(1);
 
-        wheelDataGatherer = new WheelDataGatherer(abcvlibActivity, timeStepDataBuffer);
-        chargerDataGatherer = new ChargerDataGatherer(abcvlibActivity, timeStepDataBuffer);
-        batteryDataGatherer = new BatteryDataGatherer(abcvlibActivity, timeStepDataBuffer);
-        imageDataGatherer = new ImageDataGatherer(abcvlibActivity, timeStepDataBuffer);
+        WheelDataGatherer wheelDataGatherer = new WheelDataGatherer(abcvlibActivity, timeStepDataBuffer);
+        ChargerDataGatherer chargerDataGatherer = new ChargerDataGatherer(abcvlibActivity, timeStepDataBuffer);
+        BatteryDataGatherer batteryDataGatherer = new BatteryDataGatherer(abcvlibActivity, timeStepDataBuffer);
+        ImageDataGatherer imageDataGatherer = new ImageDataGatherer(abcvlibActivity, timeStepDataBuffer);
 
-        ExecutorService sequentialExecutor = Executors.newSingleThreadExecutor();
         Log.d("SocketConnection", "Starting new runnable for gatherers");
 
         long initDelay = 0;
@@ -298,8 +288,6 @@ public class TimeStepDataAssembler implements Runnable{
 
     public void stopRecordingData(){
 
-        pauseRecording = true;
-
         wheelDataGathererFuture.cancel(true);
         chargerDataGathererFuture.cancel(true);
         batteryDataGathererFuture.cancel(true);
@@ -315,13 +303,12 @@ public class TimeStepDataAssembler implements Runnable{
 
         Log.d("SocketConnections", "End of episode:" + episodeCount);
 
-        int ts = Episode.createTimestepsVector(builder, timeStepVector); //todo I think I need to add each timestep when it is generated rather than all at once? Is this the leak?
+        int ts = Episode.createTimestepsVector(builder, timeStepVector);
         Episode.startEpisode(builder);
         Episode.addTimesteps(builder, ts);
         int ep = Episode.endEpisode(builder);
         builder.finish(ep);
 
-//            byte[] episode = builder.sizedByteArray();
         ByteBuffer episode = builder.dataBuffer();
 
         // Stop all gathering threads momentarily.
@@ -355,7 +342,6 @@ public class TimeStepDataAssembler implements Runnable{
 
         });
 
-        // Todo this is getting stuck on registering to the selector likely because selector is running in another thread?
         sendToServer(episode, doneSignal);
 
         // Waits for server to finish, then the runnable set in the init of doneSignal above will be fired.
@@ -366,17 +352,11 @@ public class TimeStepDataAssembler implements Runnable{
         startGatherers();
 
         episodeCount++;
-
-        // Wait for transfer to server and return message received
-
-//            Log.i("flatbuff", "prior to getting msg from server");
-//            outputs.socketClient.getMessageFromServer();
-//            Log.i("flatbuff", "after getting msg from server");
     }
 
     private class CyclicBarrierHandler implements Runnable {
 
-        private TimeStepDataAssembler timeStepDataAssembler;
+        private final TimeStepDataAssembler timeStepDataAssembler;
 
         public CyclicBarrierHandler(TimeStepDataAssembler timeStepDataAssembler){
             this.timeStepDataAssembler = timeStepDataAssembler;
@@ -397,7 +377,7 @@ public class TimeStepDataAssembler implements Runnable{
         microphoneInput.close();
     }
 
-    private void sendToServer(ByteBuffer episode, CyclicBarrier doneSignal) throws IOException {
+    private void sendToServer(ByteBuffer episode, CyclicBarrier doneSignal) {
         Log.d("SocketConnection", "New executor deployed creating new SocketConnectionManager");
         executor.execute(new SocketConnectionManager(abcvlibActivity, inetSocketAddress, episode, doneSignal));
     }

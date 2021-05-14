@@ -5,8 +5,8 @@ import jp.oist.abcvlib.core.inputs.Inputs;
 
 public class WheelDataGatherer implements Runnable{
 
-    private Inputs inputs;
-    private TimeStepDataBuffer timeStepDataBuffer;
+    private final Inputs inputs;
+    private final TimeStepDataBuffer timeStepDataBuffer;
 
     public WheelDataGatherer(AbcvlibActivity abcvlibActivity, TimeStepDataBuffer timeStepDataBuffer){
         this.inputs = abcvlibActivity.inputs;

@@ -1,7 +1,5 @@
 package jp.oist.abcvlib.serverlearning;
 
-import android.content.Context;
-
 import jp.oist.abcvlib.serverlearning.gatherers.TimeStepDataBuffer;
 
 public class MyStepHandler{
@@ -13,10 +11,8 @@ public class MyStepHandler{
     private final int rewardCriterion;
     private final int maxEpisodecount;
     private int episodeCount = 0;
-    private Context context;
 
-    public MyStepHandler(Context context, int maxTimeStepCount, int rewardCriterion, int maxEpisodeCount){
-        this.context = context;
+    public MyStepHandler(int maxTimeStepCount, int rewardCriterion, int maxEpisodeCount){
         this.maxTimeStepCount = maxTimeStepCount;
         this.rewardCriterion = rewardCriterion;
         this.maxEpisodecount = maxEpisodeCount;

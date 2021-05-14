@@ -1,22 +1,20 @@
 package jp.oist.abcvlib.serverlearning.gatherers;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.AudioTimestamp;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import jp.oist.abcvlib.serverlearning.CommAction;
 import jp.oist.abcvlib.serverlearning.MotionAction;
 
 public class TimeStepDataBuffer {
 
-    private int bufferLength;
+    private final int bufferLength;
     private int writeIndex;
     private int readIndex;
-    private TimeStepData[] buffer;
+    private final TimeStepData[] buffer;
     private TimeStepData writeData;
     private TimeStepData readData;
 
@@ -55,14 +53,13 @@ public class TimeStepDataBuffer {
 
     public TimeStepData getReadData(){return readData;}
 
-    public class TimeStepData{
+    public static class TimeStepData{
         private WheelCounts wheelCounts;
         private ChargerData chargerData;
         private BatteryData batteryData;
         private ImageData imageData;
         private SoundData soundData;
         private RobotAction actions;
-        private ReentrantReadWriteLock.WriteLock lock;
 
         public TimeStepData(){
             wheelCounts = new WheelCounts();
@@ -71,14 +68,6 @@ public class TimeStepDataBuffer {
             imageData = new ImageData();
             soundData = new SoundData();
             actions = new RobotAction();
-        }
-
-        public void lock(){
-            lock.lock();
-        }
-
-        public void unlock(){
-            lock.unlock();
         }
 
         public WheelCounts getWheelCounts(){return wheelCounts;}
@@ -97,10 +86,10 @@ public class TimeStepDataBuffer {
             actions = new RobotAction();
         }
 
-        public class WheelCounts{
-            ArrayList<Long> timestamps = new ArrayList<Long>();
-            ArrayList<Double> left = new ArrayList<Double>();
-            ArrayList<Double> right = new ArrayList<Double>();
+        public static class WheelCounts{
+            ArrayList<Long> timestamps = new ArrayList<>();
+            ArrayList<Double> left = new ArrayList<>();
+            ArrayList<Double> right = new ArrayList<>();
             public void put(double _left, double _right){
                 timestamps.add(System.nanoTime());
                 left.add(_left);
@@ -132,9 +121,9 @@ public class TimeStepDataBuffer {
             }
         }
 
-        public class ChargerData{
-            ArrayList<Long> timestamps = new ArrayList<Long>();
-            ArrayList<Double> voltage = new ArrayList<Double>();
+        public static class ChargerData{
+            ArrayList<Long> timestamps = new ArrayList<>();
+            ArrayList<Double> voltage = new ArrayList<>();
             public void put(double _voltage){
                 timestamps.add(System.nanoTime());
                 voltage.add(_voltage);
@@ -157,9 +146,9 @@ public class TimeStepDataBuffer {
             }
         }
 
-        public class BatteryData{
-            ArrayList<Long> timestamps = new ArrayList<Long>();
-            ArrayList<Double> voltage = new ArrayList<Double>();
+        public static class BatteryData{
+            ArrayList<Long> timestamps = new ArrayList<>();
+            ArrayList<Double> voltage = new ArrayList<>();
             public void put(double _voltage){
                 timestamps.add(System.nanoTime());
                 voltage.add(_voltage);
@@ -182,13 +171,13 @@ public class TimeStepDataBuffer {
             }
         }
 
-        public class SoundData{
+        public static class SoundData{
             private AudioTimestamp startTime = new AudioTimestamp();
             private AudioTimestamp endTime = new AudioTimestamp();
             private double totalTime;
             private int sampleRate;
             private long totalSamples;
-            private ArrayList<Float> levels = new ArrayList<Float>();
+            private final ArrayList<Float> levels = new ArrayList<>();
 
             public SoundData(){
             }
@@ -238,8 +227,8 @@ public class TimeStepDataBuffer {
             }
         }
 
-        public class ImageData{
-            private ArrayList<SingleImage> images = new ArrayList<SingleImage>();
+        public static class ImageData{
+            private final ArrayList<SingleImage> images = new ArrayList<>();
 
             public void add(long timestamp, int width, int height, Bitmap bitmap, byte[] webpImage){
                 SingleImage singleImage = new SingleImage(timestamp, width, height, bitmap, webpImage);
@@ -250,12 +239,12 @@ public class TimeStepDataBuffer {
                 return images;
             }
 
-            public class SingleImage{
-                private long timestamp;
-                private int width;
-                private int height;
-                private Bitmap bitmap;
-                private byte[] webpImage;
+            public static class SingleImage{
+                private final long timestamp;
+                private final int width;
+                private final int height;
+                private final Bitmap bitmap;
+                private final byte[] webpImage;
 
                 public SingleImage(long timestamp, int width, int height, Bitmap bitmap,
                                    byte[] webpImage){
@@ -288,7 +277,7 @@ public class TimeStepDataBuffer {
             }
         }
 
-        public class RobotAction{
+        public static class RobotAction{
             private MotionAction motionAction;
             private CommAction commAction;
             public void add(MotionAction motionAction, CommAction commAction){

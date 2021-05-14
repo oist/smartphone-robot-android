@@ -12,17 +12,14 @@ import androidx.camera.core.ImageProxy;
 import java.io.ByteArrayOutputStream;
 
 import jp.oist.abcvlib.core.inputs.vision.YuvToRgbConverter;
-import jp.oist.abcvlib.core.learning.fbclasses.TimeStep;
 import jp.oist.abcvlib.util.ImageOps;
 
 public class ImageDataGatherer implements ImageAnalysis.Analyzer{
 
-    private Context context;
-    private TimeStepDataBuffer timeStepDataBuffer;
-    private YuvToRgbConverter yuvToRgbConverter;
+    private final TimeStepDataBuffer timeStepDataBuffer;
+    private final YuvToRgbConverter yuvToRgbConverter;
 
     public ImageDataGatherer(Context context, TimeStepDataBuffer timeStepDataBuffer){
-        this.context = context;
         this.timeStepDataBuffer = timeStepDataBuffer;
         yuvToRgbConverter = new YuvToRgbConverter(context);
     }
