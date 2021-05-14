@@ -113,7 +113,7 @@ public class TimeStepDataAssembler implements Runnable{
                 if(myStepHandler.isLastEpisode()){
                     endTrail();
                 }
-            } catch (BrokenBarrierException | InterruptedException | IOException e) {
+            } catch (BrokenBarrierException | InterruptedException e) {
                 ErrorHandler.eLog(TAG, "Error when trying to end episode or trail", e, true);
             }
         }
@@ -300,7 +300,7 @@ public class TimeStepDataAssembler implements Runnable{
     }
 
     // End episode after some reward has been acheived or maxtimesteps has been reached
-    public void endEpisode() throws BrokenBarrierException, InterruptedException, IOException {
+    public void endEpisode() throws BrokenBarrierException, InterruptedException {
 
         Log.d("SocketConnections", "End of episode:" + episodeCount);
 
