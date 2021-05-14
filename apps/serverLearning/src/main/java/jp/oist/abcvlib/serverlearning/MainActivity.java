@@ -30,7 +30,7 @@ public class MainActivity extends AbcvlibActivity {
         setContentView(jp.oist.abcvlib.core.R.layout.camera_x_preview);
 
         switches.cameraXApp = true;
-        
+
         initialzer(this, null, this);
 
         super.onCreate(savedInstanceState);
@@ -51,7 +51,7 @@ public class MainActivity extends AbcvlibActivity {
     public ImageAnalysis getAnalyzer() {
         return timeStepDataAssembler.getImageAnalysis();
     }
-
+    
     @Override
     protected void onNewAudioData(float[] audioData, int numSamples){
         timeStepDataAssembler.getTimeStepDataBuffer().getWriteData().getSoundData().add(audioData, numSamples);
