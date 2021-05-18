@@ -15,21 +15,23 @@ public final class RobotAction extends Table {
   public void __init(int _i, ByteBuffer _bb) { __reset(_i, _bb); }
   public RobotAction __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
-  public byte motionAction() { int o = __offset(4); return o != 0 ? bb.get(o + bb_pos) : 0; }
-  public byte commAction() { int o = __offset(6); return o != 0 ? bb.get(o + bb_pos) : 0; }
+  public jp.oist.abcvlib.core.learning.fbclasses.MotionAction motionAction() { return motionAction(new jp.oist.abcvlib.core.learning.fbclasses.MotionAction()); }
+  public jp.oist.abcvlib.core.learning.fbclasses.MotionAction motionAction(jp.oist.abcvlib.core.learning.fbclasses.MotionAction obj) { int o = __offset(4); return o != 0 ? obj.__assign(__indirect(o + bb_pos), bb) : null; }
+  public jp.oist.abcvlib.core.learning.fbclasses.CommAction commAction() { return commAction(new jp.oist.abcvlib.core.learning.fbclasses.CommAction()); }
+  public jp.oist.abcvlib.core.learning.fbclasses.CommAction commAction(jp.oist.abcvlib.core.learning.fbclasses.CommAction obj) { int o = __offset(6); return o != 0 ? obj.__assign(__indirect(o + bb_pos), bb) : null; }
 
   public static int createRobotAction(FlatBufferBuilder builder,
-      byte motion_action,
-      byte comm_action) {
+      int motion_actionOffset,
+      int comm_actionOffset) {
     builder.startTable(2);
-    RobotAction.addCommAction(builder, comm_action);
-    RobotAction.addMotionAction(builder, motion_action);
+    RobotAction.addCommAction(builder, comm_actionOffset);
+    RobotAction.addMotionAction(builder, motion_actionOffset);
     return RobotAction.endRobotAction(builder);
   }
 
   public static void startRobotAction(FlatBufferBuilder builder) { builder.startTable(2); }
-  public static void addMotionAction(FlatBufferBuilder builder, byte motionAction) { builder.addByte(0, motionAction, 0); }
-  public static void addCommAction(FlatBufferBuilder builder, byte commAction) { builder.addByte(1, commAction, 0); }
+  public static void addMotionAction(FlatBufferBuilder builder, int motionActionOffset) { builder.addOffset(0, motionActionOffset, 0); }
+  public static void addCommAction(FlatBufferBuilder builder, int commActionOffset) { builder.addOffset(1, commActionOffset, 0); }
   public static int endRobotAction(FlatBufferBuilder builder) {
     int o = builder.endTable();
     return o;
