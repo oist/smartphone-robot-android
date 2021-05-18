@@ -108,7 +108,7 @@ public class TimeStepDataAssembler implements Runnable{
         CountDownLatch gatherersReady = new CountDownLatch(1);
 
         WheelDataGatherer wheelDataGatherer = new WheelDataGatherer(abcvlibActivity, timeStepDataBuffer);
-        BatteryDataGatherer batteryDataGatherer = new BatteryDataGatherer(abcvlibActivity, timeStepDataBuffer);
+        BatteryDataGatherer batteryDataGatherer = new BatteryDataGatherer(timeStepDataBuffer);
         ImageDataGatherer imageDataGatherer = new ImageDataGatherer(abcvlibActivity, timeStepDataBuffer);
 
         Log.d("SocketConnection", "Starting new runnable for gatherers");
