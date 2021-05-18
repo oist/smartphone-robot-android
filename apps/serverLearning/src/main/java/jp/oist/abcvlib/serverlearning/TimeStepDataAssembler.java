@@ -31,7 +31,6 @@ import jp.oist.abcvlib.core.learning.fbclasses.SoundData;
 import jp.oist.abcvlib.core.learning.fbclasses.TimeStep;
 import jp.oist.abcvlib.core.learning.fbclasses.WheelCounts;
 import jp.oist.abcvlib.serverlearning.gatherers.BatteryDataGatherer;
-import jp.oist.abcvlib.serverlearning.gatherers.ChargerDataGatherer;
 import jp.oist.abcvlib.serverlearning.gatherers.ImageDataGatherer;
 import jp.oist.abcvlib.serverlearning.gatherers.TimeStepDataBuffer;
 import jp.oist.abcvlib.serverlearning.gatherers.WheelDataGatherer;
