@@ -32,6 +32,8 @@ public class MainActivity extends AbcvlibActivity {
 
         switches.cameraXApp = true;
 
+        timeStepDataAssembler = new TimeStepDataAssembler(this, inetSocketAddress);
+
         initialzer(this, null, this);
 
         super.onCreate(savedInstanceState);
@@ -39,7 +41,6 @@ public class MainActivity extends AbcvlibActivity {
 
     @Override
     protected void onSetupFinished() {
-        timeStepDataAssembler = new TimeStepDataAssembler(this, inetSocketAddress);
         try {
             timeStepDataAssembler.startGatherers();
         } catch (InterruptedException e) {
