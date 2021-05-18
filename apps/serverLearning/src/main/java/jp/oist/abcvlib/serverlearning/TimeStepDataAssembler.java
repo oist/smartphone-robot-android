@@ -114,10 +114,10 @@ public class TimeStepDataAssembler implements Runnable{
         Log.d("SocketConnection", "Starting new runnable for gatherers");
 
         long initDelay = 0;
+        batteryDataGatherer.setRecording(true);
         microphoneInput.start();
         imageAnalysis.setAnalyzer(imageExecutor, imageDataGatherer);
         wheelDataGathererFuture = executor.scheduleAtFixedRate(wheelDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
-        batteryDataGathererFuture = executor.scheduleAtFixedRate(batteryDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
         timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(this, 50,50, TimeUnit.MILLISECONDS);
         gatherersReady.countDown();
         Log.d("SocketConnection", "Waiting for gatherers to finish");
