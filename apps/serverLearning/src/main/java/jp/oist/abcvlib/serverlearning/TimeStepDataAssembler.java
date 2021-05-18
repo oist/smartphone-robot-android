@@ -51,7 +51,6 @@ public class TimeStepDataAssembler implements Runnable{
     private MicrophoneInput microphoneInput;
     private boolean pauseRecording = false;
     private ScheduledFuture<?> wheelDataGathererFuture;
-    private ScheduledFuture<?> chargerDataGathererFuture;
     private ScheduledFuture<?> batteryDataGathererFuture;
     private ScheduledFuture<?> timeStepDataAssemblerFuture;
     private WheelDataGatherer wheelDataGatherer;
@@ -103,6 +102,27 @@ public class TimeStepDataAssembler implements Runnable{
         builder = new FlatBufferBuilder(1024);
         Log.v("flatbuff", "starting New Episode");
         // todo reload tflite models here for myStepHandler
+    }
+
+    protected void startGatherers() throws InterruptedException {
+        CountDownLatch gatherersReady = new CountDownLatch(1);
+
+        WheelDataGatherer wheelDataGatherer = new WheelDataGatherer(abcvlibActivity, timeStepDataBuffer);
+        BatteryDataGatherer batteryDataGatherer = new BatteryDataGatherer(abcvlibActivity, timeStepDataBuffer);
+        ImageDataGatherer imageDataGatherer = new ImageDataGatherer(abcvlibActivity, timeStepDataBuffer);
+
+        Log.d("SocketConnection", "Starting new runnable for gatherers");
+
+        long initDelay = 0;
+        microphoneInput.start();
+        imageAnalysis.setAnalyzer(imageExecutor, imageDataGatherer);
+        wheelDataGathererFuture = executor.scheduleAtFixedRate(wheelDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
+        batteryDataGathererFuture = executor.scheduleAtFixedRate(batteryDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
+        timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(this, 50,50, TimeUnit.MILLISECONDS);
+        gatherersReady.countDown();
+        Log.d("SocketConnection", "Waiting for gatherers to finish");
+        gatherersReady.await();
+        Log.d("SocketConnection", "Gatherers finished initializing");
     }
 
     public void addTimeStep(){
@@ -299,7 +319,6 @@ public class TimeStepDataAssembler implements Runnable{
         pauseRecording = true;
 
         wheelDataGathererFuture.cancel(true);
-        chargerDataGathererFuture.cancel(true);
         batteryDataGathererFuture.cancel(true);
         imageAnalysis.clearAnalyzer();
         microphoneInput.stop();
