@@ -4,17 +4,16 @@ import org.jetbrains.annotations.NotNull;
 
 public enum CommAction {
     // Rename these to specific actions.
-    COMM_ACTION0("action1", 0),
-    COMM_ACTION1("action2", 1),
-    COMM_ACTION2("action3", 2);
+    COMM_ACTION0(0, "action1"),
+    COMM_ACTION1(1, "action2"),
+    COMM_ACTION2(2, "action3");
 
     private final String actionName;
-    private final int actionNumber;
+    private final int actionByte;
 
-
-    CommAction(String actionName, int actionNumber) {
+    CommAction(int actionNumber, String actionName) {
         this.actionName = actionName;
-        this.actionNumber = actionNumber;
+        this.actionByte = actionNumber;
     }
 
     @NotNull
@@ -23,7 +22,7 @@ public enum CommAction {
         return actionName;
     }
 
-    public int getActionNumber(){
-        return actionNumber;
+    public byte getActionNumber(){
+        return (byte) actionByte;
     }
 }
