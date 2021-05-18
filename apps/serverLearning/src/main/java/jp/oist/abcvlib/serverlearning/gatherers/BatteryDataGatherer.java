@@ -25,6 +25,6 @@ public class BatteryDataGatherer implements Runnable, BatteryDataListener {
 
     @Override
     public void onChargerVoltageUpdate(double voltage, double timestamp) {
-
+        timeStepDataBuffer.getWriteData().getChargerData().put(voltage);
     }
 }
