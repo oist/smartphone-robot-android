@@ -1,13 +1,9 @@
 package jp.oist.abcvlib.core.outputs;
 
 
-import android.util.Log;
-
-import java.util.List;
-
 import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.core.inputs.QuadEncoders;
-import jp.oist.abcvlib.core.inputs.MotionSensors;
+import jp.oist.abcvlib.core.inputs.microcontroller.QuadEncoders;
+import jp.oist.abcvlib.core.inputs.phone.MotionSensors;
 
 /**
  * Motion is a collection of methods that implement various predefined motions via

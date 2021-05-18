@@ -11,7 +11,7 @@ import androidx.camera.core.ImageProxy;
 
 import java.io.ByteArrayOutputStream;
 
-import jp.oist.abcvlib.core.inputs.vision.YuvToRgbConverter;
+import jp.oist.abcvlib.core.inputs.phone.vision.YuvToRgbConverter;
 import jp.oist.abcvlib.util.ImageOps;
 
 public class ImageDataGatherer implements ImageAnalysis.Analyzer{

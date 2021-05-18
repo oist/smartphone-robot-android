@@ -22,7 +22,7 @@ import java.util.concurrent.Executors;
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
 import jp.oist.abcvlib.core.inputs.Inputs;
-import jp.oist.abcvlib.core.inputs.vision.ImageAnalyzerActivity;
+import jp.oist.abcvlib.core.inputs.phone.vision.ImageAnalyzerActivity;
 import jp.oist.abcvlib.core.learning.ActionDistribution;
 import jp.oist.abcvlib.core.learning.ActionSelector;
 import jp.oist.abcvlib.core.learning.RewardGenerator;

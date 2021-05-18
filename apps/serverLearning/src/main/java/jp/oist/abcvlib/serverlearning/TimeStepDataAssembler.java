@@ -9,7 +9,6 @@ import androidx.camera.core.ImageAnalysis;
 
 import com.google.flatbuffers.FlatBufferBuilder;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.concurrent.BrokenBarrierException;
@@ -22,7 +21,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.core.inputs.audio.MicrophoneInput;
+import jp.oist.abcvlib.core.inputs.phone.audio.MicrophoneInput;
 import jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp;
 import jp.oist.abcvlib.core.learning.fbclasses.ChargerData;
 import jp.oist.abcvlib.core.learning.fbclasses.Episode;

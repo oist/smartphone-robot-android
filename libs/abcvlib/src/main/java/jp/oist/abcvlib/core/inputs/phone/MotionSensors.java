@@ -1,4 +1,4 @@
-package jp.oist.abcvlib.core.inputs;
+package jp.oist.abcvlib.core.inputs.phone;
 
 import android.content.Context;
 import android.hardware.Sensor;

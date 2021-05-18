@@ -1,17 +1,11 @@
-package jp.oist.abcvlib.core.inputs.vision;
+package jp.oist.abcvlib.core.inputs.phone.vision;
 
 import android.Manifest;
-import android.content.pm.PackageManager;
-import android.media.Image;
-import android.util.Log;
-import android.util.Size;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.camera.core.Camera;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
-import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
@@ -20,7 +14,6 @@ import androidx.core.content.ContextCompat;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
-import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;

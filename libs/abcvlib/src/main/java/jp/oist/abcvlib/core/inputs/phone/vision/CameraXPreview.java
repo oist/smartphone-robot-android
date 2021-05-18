@@ -1,4 +1,4 @@
-package jp.oist.abcvlib.core.inputs.vision;
+package jp.oist.abcvlib.core.inputs.phone.vision;
 
 import androidx.camera.view.PreviewView;
 

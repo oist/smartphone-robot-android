@@ -1,4 +1,4 @@
-package jp.oist.abcvlib.core.inputs.audio;
+package jp.oist.abcvlib.core.inputs.phone.audio;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -11,9 +11,6 @@ import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
-
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 

@@ -1,4 +1,4 @@
-package jp.oist.abcvlib.core.inputs;
+package jp.oist.abcvlib.core.inputs.microcontroller;
 
 import android.util.Log;
 

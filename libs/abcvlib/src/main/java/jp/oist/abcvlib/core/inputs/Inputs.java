@@ -8,9 +8,12 @@ import org.json.JSONObject;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.core.inputs.audio.MicrophoneInput;
-import jp.oist.abcvlib.core.inputs.vision.CameraX;
-import jp.oist.abcvlib.core.inputs.vision.ImageAnalyzerActivity;
+import jp.oist.abcvlib.core.inputs.microcontroller.Battery;
+import jp.oist.abcvlib.core.inputs.microcontroller.QuadEncoders;
+import jp.oist.abcvlib.core.inputs.phone.MotionSensors;
+import jp.oist.abcvlib.core.inputs.phone.audio.MicrophoneInput;
+import jp.oist.abcvlib.core.inputs.phone.vision.CameraX;
+import jp.oist.abcvlib.core.inputs.phone.vision.ImageAnalyzerActivity;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 
 public class Inputs {
