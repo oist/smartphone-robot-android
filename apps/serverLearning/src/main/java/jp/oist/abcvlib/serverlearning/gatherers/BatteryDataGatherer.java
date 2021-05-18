@@ -4,7 +4,7 @@ import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.Inputs;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataListener;
 
-public class BatteryDataGatherer implements Runnable, BatteryDataListener {
+public class BatteryDataGatherer implements BatteryDataListener {
 
     private final TimeStepDataBuffer timeStepDataBuffer;
     private final Inputs inputs;
@@ -12,10 +12,6 @@ public class BatteryDataGatherer implements Runnable, BatteryDataListener {
     public BatteryDataGatherer(AbcvlibActivity abcvlibActivity, TimeStepDataBuffer timeStepDataBuffer){
         this.inputs = abcvlibActivity.inputs;
         this.timeStepDataBuffer = timeStepDataBuffer;
-    }
-
-    @Override
-    public void run() {
     }
 
     @Override
