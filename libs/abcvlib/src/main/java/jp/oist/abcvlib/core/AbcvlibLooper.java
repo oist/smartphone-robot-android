@@ -39,7 +39,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     private int indexPrevious = 0;
     private int loopCount = 1;
     private int buffer = 5;
-    private double[] timeStamp = new double[buffer];
+    private long[] timeStamp = new long[buffer];
     private double dt = 0;
     private double lp_freq = 100.0; // Low Pass Cutoff Freq
     private int quadZeroCount = 0;
@@ -488,7 +488,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         return buffer;
     }
 
-    public double[] getTimeStamp() {
+    public long[] getTimeStamp() {
         return timeStamp;
     }
 
