@@ -8,6 +8,7 @@ public class BatteryDataGatherer implements BatteryDataListener {
 
     private final TimeStepDataBuffer timeStepDataBuffer;
     private final Inputs inputs;
+    private boolean isRecording = false;
 
     public BatteryDataGatherer(AbcvlibActivity abcvlibActivity, TimeStepDataBuffer timeStepDataBuffer){
         this.inputs = abcvlibActivity.inputs;
@@ -16,11 +17,19 @@ public class BatteryDataGatherer implements BatteryDataListener {
 
     @Override
     public void onBatteryVoltageUpdate(double voltage, long timestamp) {
-        timeStepDataBuffer.getWriteData().getBatteryData().put(voltage);
+        if (isRecording){
+            timeStepDataBuffer.getWriteData().getBatteryData().put(voltage);
+        }
     }
 
     @Override
     public void onChargerVoltageUpdate(double voltage, long timestamp) {
-        timeStepDataBuffer.getWriteData().getChargerData().put(voltage);
+        if (isRecording){
+            timeStepDataBuffer.getWriteData().getChargerData().put(voltage);
+        }
+    }
+
+    public void setRecording(boolean recording) {
+        isRecording = recording;
     }
 }
