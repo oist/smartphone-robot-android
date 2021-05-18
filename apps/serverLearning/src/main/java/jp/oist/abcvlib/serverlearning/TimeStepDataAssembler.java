@@ -100,11 +100,14 @@ public class TimeStepDataAssembler implements Runnable{
         // todo reload tflite models here for myStepHandler
     }
 
+    public void initializeGatherers(){
+        batteryDataGatherer = new BatteryDataGatherer(timeStepDataBuffer);
+    }
+
     protected void startGatherers() throws InterruptedException {
         CountDownLatch gatherersReady = new CountDownLatch(1);
 
         WheelDataGatherer wheelDataGatherer = new WheelDataGatherer(abcvlibActivity, timeStepDataBuffer);
-        BatteryDataGatherer batteryDataGatherer = new BatteryDataGatherer(timeStepDataBuffer);
         ImageDataGatherer imageDataGatherer = new ImageDataGatherer(abcvlibActivity, timeStepDataBuffer);
 
         Log.d("SocketConnection", "Starting new runnable for gatherers");

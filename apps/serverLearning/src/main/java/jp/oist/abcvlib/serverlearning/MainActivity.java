@@ -33,8 +33,9 @@ public class MainActivity extends AbcvlibActivity {
         switches.cameraXApp = true;
 
         timeStepDataAssembler = new TimeStepDataAssembler(this, inetSocketAddress);
+        timeStepDataAssembler.initializeGatherers();
 
-        initialzer(this, null, this);
+        initialzer(this, null, this, timeStepDataAssembler.getBatteryDataGatherer());
 
         super.onCreate(savedInstanceState);
     }
