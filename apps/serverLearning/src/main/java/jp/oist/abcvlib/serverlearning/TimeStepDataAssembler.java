@@ -104,7 +104,7 @@ public class TimeStepDataAssembler implements Runnable{
         batteryDataGatherer = new BatteryDataGatherer(timeStepDataBuffer);
     }
 
-    protected void startGatherers() throws InterruptedException {
+    public void startGatherers() throws InterruptedException {
         CountDownLatch gatherersReady = new CountDownLatch(1);
 
         WheelDataGatherer wheelDataGatherer = new WheelDataGatherer(abcvlibActivity, timeStepDataBuffer);
