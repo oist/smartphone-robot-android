@@ -53,16 +53,12 @@ public class TimeStepDataAssembler implements Runnable{
     private ScheduledFuture<?> wheelDataGathererFuture;
     private ScheduledFuture<?> batteryDataGathererFuture;
     private ScheduledFuture<?> timeStepDataAssemblerFuture;
-    private WheelDataGatherer wheelDataGatherer;
-    private ChargerDataGatherer chargerDataGatherer;
+    private final ScheduledExecutorService executor;
+    private final ExecutorService imageExecutor;
+    private final InetSocketAddress inetSocketAddress;
+    private final ImageAnalysis imageAnalysis;
+    private final AbcvlibActivity abcvlibActivity;
     private BatteryDataGatherer batteryDataGatherer;
-    private ImageDataGatherer imageDataGatherer;
-    private SocketConnectionManager socketConnectionManager;
-    private ScheduledExecutorService executor;
-    private ExecutorService imageExecutor;
-    private InetSocketAddress inetSocketAddress;
-    private ImageAnalysis imageAnalysis;
-    private AbcvlibActivity abcvlibActivity;
 
     public TimeStepDataAssembler(AbcvlibActivity abcvlibActivity,
                                  InetSocketAddress inetSocketAddress){
@@ -123,6 +119,10 @@ public class TimeStepDataAssembler implements Runnable{
         Log.d("SocketConnection", "Waiting for gatherers to finish");
         gatherersReady.await();
         Log.d("SocketConnection", "Gatherers finished initializing");
+    }
+
+    public BatteryDataGatherer getBatteryDataGatherer() {
+        return batteryDataGatherer;
     }
 
     public void addTimeStep(){
