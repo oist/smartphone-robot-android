@@ -22,6 +22,7 @@ import java.util.concurrent.Executors;
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
 import jp.oist.abcvlib.core.inputs.Inputs;
+import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataListener;
 import jp.oist.abcvlib.core.inputs.phone.vision.ImageAnalyzerActivity;
 import jp.oist.abcvlib.core.learning.ActionDistribution;
 import jp.oist.abcvlib.core.learning.ActionSelector;
@@ -54,6 +55,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     public Switches switches = new Switches();
     public ExecutorService audioExecutor;
     private AbcvlibActivity mainActivity;
+    private BatteryDataListener batteryDataListener;
 
     /**
      * Lets various loops know its time to wrap things up when false, and prevents other loops from
@@ -119,10 +121,13 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
 
     protected void initialzer(AbcvlibActivity abcvlibActivity,
                               AbcvlibController controller,
-                              ImageAnalyzerActivity imageAnalyzerActivity) {
+                              ImageAnalyzerActivity imageAnalyzerActivity,
+                              BatteryDataListener batteryDataListener) {
 
         //Todo some logic here to test for boolean combinations that would lead to errors.
         // e.g. balanceApp without pythonControlApp
+
+        this.batteryDataListener = batteryDataListener;
 
         mainActivity = abcvlibActivity;
         Log.i(TAG, "Start of AbcvlibActivity.initializer");
@@ -151,7 +156,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
      */
     protected void initialzer(AbcvlibActivity abcvlibActivity) {
 
-        initialzer(abcvlibActivity, null, null);
+        initialzer(abcvlibActivity, null, null, null);
 
     }
 
@@ -220,7 +225,10 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
 //            }
 //        }
         Log.d("abcvlib", "createIOIOLooper Finished");
-        return new AbcvlibLooper(this, switches.loggerOn, switches.wheelPolaritySwap);
+        return new AbcvlibLooper(this,
+                switches.loggerOn,
+                switches.wheelPolaritySwap,
+                batteryDataListener);
     }
 
     public double determineReward(){
