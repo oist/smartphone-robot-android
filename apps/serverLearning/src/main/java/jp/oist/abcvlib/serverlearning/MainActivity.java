@@ -42,6 +42,7 @@ import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.FileOps;
 import jp.oist.abcvlib.util.ImageOps;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
+import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 import jp.oist.abcvlib.util.SocketConnectionManager;
 
 public class MainActivity extends AbcvlibActivity {
@@ -49,7 +50,7 @@ public class MainActivity extends AbcvlibActivity {
     private TimeStepDataBuffer timeStepDataBuffer;
     private MicrophoneInput microphoneInput;
 
-    ScheduledExecutorService executor;
+    ScheduledExecutorServiceWithException executor;
     ExecutorService imageExecutor;
     ImageAnalysis imageAnalysis;
     ScheduledFuture<?> wheelDataGathererFuture;
@@ -82,7 +83,7 @@ public class MainActivity extends AbcvlibActivity {
         timeStepDataBuffer = new TimeStepDataBuffer(10);
 
         int threads = 5;
-        executor = Executors.newScheduledThreadPool(threads, new ProcessPriorityThreadFactory(1, "dataGatherer"));
+        executor = new ScheduledExecutorServiceWithException(threads, new ProcessPriorityThreadFactory(1, "dataGatherer"));
         imageExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "imageAnalysis"));
 
         microphoneInput = new MicrophoneInput(this);
