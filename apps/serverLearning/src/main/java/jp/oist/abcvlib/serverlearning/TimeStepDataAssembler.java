@@ -300,7 +300,7 @@ public class TimeStepDataAssembler implements Runnable{
         pauseRecording = true;
 
         wheelDataGathererFuture.cancel(true);
-        batteryDataGathererFuture.cancel(true);
+        batteryDataGatherer.setRecording(false);
         imageAnalysis.clearAnalyzer();
         microphoneInput.stop();
         timeStepCount = 0;
