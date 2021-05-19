@@ -1,4 +1,4 @@
-package jp.oist.abcvlib.serverlearning.gatherers;
+package jp.oist.abcvlib.core.learning.gatherers;
 
 import android.graphics.Bitmap;
 import android.media.AudioTimestamp;

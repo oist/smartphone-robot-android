@@ -1,7 +1,5 @@
-package jp.oist.abcvlib.serverlearning;
+package jp.oist.abcvlib.core.learning.gatherers;
 
-import android.app.ActivityManager;
-import android.content.Context;
 import android.util.Log;
 import android.util.Size;
 
@@ -17,12 +15,14 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataGatherer;
+import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataGatherer;
 import jp.oist.abcvlib.core.inputs.phone.audio.MicrophoneInput;
+import jp.oist.abcvlib.core.inputs.phone.vision.ImageDataGatherer;
 import jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp;
 import jp.oist.abcvlib.core.learning.fbclasses.ChargerData;
 import jp.oist.abcvlib.core.learning.fbclasses.Episode;
@@ -31,10 +31,10 @@ import jp.oist.abcvlib.core.learning.fbclasses.RobotAction;
 import jp.oist.abcvlib.core.learning.fbclasses.SoundData;
 import jp.oist.abcvlib.core.learning.fbclasses.TimeStep;
 import jp.oist.abcvlib.core.learning.fbclasses.WheelCounts;
-import jp.oist.abcvlib.serverlearning.gatherers.BatteryDataGatherer;
-import jp.oist.abcvlib.serverlearning.gatherers.ImageDataGatherer;
-import jp.oist.abcvlib.serverlearning.gatherers.TimeStepDataBuffer;
-import jp.oist.abcvlib.serverlearning.gatherers.WheelDataGatherer;
+import jp.oist.abcvlib.serverlearning.ActionSet;
+import jp.oist.abcvlib.serverlearning.CommAction;
+import jp.oist.abcvlib.serverlearning.MotionAction;
+import jp.oist.abcvlib.serverlearning.MyStepHandler;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;

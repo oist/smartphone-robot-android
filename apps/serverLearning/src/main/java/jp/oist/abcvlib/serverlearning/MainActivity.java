@@ -13,7 +13,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.serverlearning.gatherers.BatteryDataGatherer;
+import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataAssembler;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.FileOps;
 

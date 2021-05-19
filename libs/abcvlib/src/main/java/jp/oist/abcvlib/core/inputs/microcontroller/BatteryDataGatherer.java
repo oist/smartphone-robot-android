@@ -1,6 +1,7 @@
-package jp.oist.abcvlib.serverlearning.gatherers;
+package jp.oist.abcvlib.core.inputs.microcontroller;
 
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataListener;
+import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
 
 public class BatteryDataGatherer implements BatteryDataListener {
 

@@ -1,6 +1,6 @@
 package jp.oist.abcvlib.serverlearning;
 
-import jp.oist.abcvlib.serverlearning.gatherers.TimeStepDataBuffer;
+import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
 
 public class MyStepHandler{
 
