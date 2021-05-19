@@ -1,5 +1,8 @@
 package jp.oist.abcvlib.util;
 
+import android.util.Log;
+
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -50,10 +53,12 @@ public class ScheduledExecutorServiceWithException {
                     System.out.println("before get()");
                     scheduledFuture.get(); // will return only if canceled
                     System.out.println("after get()");
-                } catch (InterruptedException | ExecutionException e) {
+                } catch (ExecutionException e) {
+                    executor.shutdown();
                     throw new RuntimeException(e);
+                } catch (InterruptedException | CancellationException e){
+                    Log.d(TAG, "Executor Interrupted or Cancelled", e);
                 }
-                executor.shutdown();
             }
         });
     }
