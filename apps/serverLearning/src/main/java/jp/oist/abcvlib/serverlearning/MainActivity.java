@@ -20,7 +20,7 @@ import jp.oist.abcvlib.util.FileOps;
 public class MainActivity extends AbcvlibActivity {
 
     TimeStepDataAssembler timeStepDataAssembler;
-    InetSocketAddress inetSocketAddress = new InetSocketAddress("192.168.2.102", 3000);
+    InetSocketAddress inetSocketAddress = new InetSocketAddress("192.168.27.226", 3000);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
