@@ -1,12 +1,17 @@
 package jp.oist.abcvlib.core.learning;
 
-public interface CommAction {
-    String actionName = null;
-    byte actionByte = 0;
+public class CommAction {
+    String actionName;
+    byte actionByte;
 
-    String getActionName();
-    int getActionByte();
+    public CommAction(String actionName, byte actionByte){
+        this.actionName = actionName;
+        this.actionByte = actionByte;
+    }
 
-    void setActionName(String actionName);
-    void setActionByte(byte actionByte);
+    public String getActionName(){return actionName;};
+    public int getActionByte(){return  actionByte;};
+
+    public void setActionName(String actionName){this.actionName = actionName;};
+    public void setActionByte(byte actionByte){this.actionByte = actionByte;};
 }

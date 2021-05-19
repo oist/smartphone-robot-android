@@ -1,12 +1,17 @@
 package jp.oist.abcvlib.core.learning;
 
-public interface ActionSet {
-    MotionAction motionAction = null;
-    CommAction commAction = null;
+public class ActionSet {
+    MotionAction motionAction;;
+    CommAction commAction;
 
-    CommAction getCommAction();
-    MotionAction getMotionAction();
+    public ActionSet(MotionAction motionAction, CommAction commAction){
+        this.motionAction = motionAction;
+        this.commAction = commAction;
+    }
 
-    void setCommAction(CommAction commAction);
-    void setMotionAction(MotionAction motionAction);
+    public CommAction getCommAction(){return commAction;}
+    public MotionAction getMotionAction(){return motionAction;}
+
+    public void setCommAction(CommAction commAction){this.commAction = commAction;}
+    public void setMotionAction(MotionAction motionAction){this.motionAction = motionAction;}
 }

@@ -13,6 +13,8 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.learning.CommActionSet;
+import jp.oist.abcvlib.core.learning.MotionActionSet;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataAssembler;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.FileOps;
@@ -32,7 +34,13 @@ public class MainActivity extends AbcvlibActivity {
 
         switches.cameraXApp = true;
 
-        timeStepDataAssembler = new TimeStepDataAssembler(this, inetSocketAddress);
+        CommActionSet commActionSet = new CommActionSet(3);
+        MotionActionSet motionActionSet = new MotionActionSet(5);
+
+        MyStepHandler myStepHandler = new MyStepHandler(100, 100000,
+                10, commActionSet, motionActionSet);
+
+        timeStepDataAssembler = new TimeStepDataAssembler(this, inetSocketAddress, myStepHandler);
         timeStepDataAssembler.initializeGatherers();
 
         initialzer(this, null, this, timeStepDataAssembler.getBatteryDataGatherer());

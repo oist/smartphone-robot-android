@@ -1,8 +1,14 @@
 package jp.oist.abcvlib.serverlearning;
 
+import jp.oist.abcvlib.core.learning.ActionSet;
+import jp.oist.abcvlib.core.learning.CommAction;
+import jp.oist.abcvlib.core.learning.CommActionSet;
+import jp.oist.abcvlib.core.learning.MotionAction;
+import jp.oist.abcvlib.core.learning.MotionActionSet;
+import jp.oist.abcvlib.core.learning.StepHandler;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
 
-public class MyStepHandler{
+public class MyStepHandler implements StepHandler {
 
     private final int maxTimeStepCount;
     private boolean lastEpisode = false; // Use to trigger MainActivity to stop generating episodes
@@ -11,11 +17,16 @@ public class MyStepHandler{
     private final int rewardCriterion;
     private final int maxEpisodecount;
     private int episodeCount = 0;
+    private final CommActionSet commActionSet;
+    private final MotionActionSet motionActionSet;
 
-    public MyStepHandler(int maxTimeStepCount, int rewardCriterion, int maxEpisodeCount){
+    public MyStepHandler(int maxTimeStepCount, int rewardCriterion, int maxEpisodeCount,
+                         CommActionSet commActionSet, MotionActionSet motionActionSet){
         this.maxTimeStepCount = maxTimeStepCount;
         this.rewardCriterion = rewardCriterion;
         this.maxEpisodecount = maxEpisodeCount;
+        this.motionActionSet = motionActionSet;
+        this.commActionSet = commActionSet;
     }
 
     public ActionSet forward(TimeStepDataBuffer.TimeStepData data, int timeStepCount){
@@ -27,9 +38,9 @@ public class MyStepHandler{
         // Do something with timeStepData... and modify reward accordingly
         reward++;
 
-        // Set actions based on above results. e.g:
-        motionAction = MotionAction.FORWARD;
-        commAction = CommAction.COMM_ACTION1;
+        // Set actions based on above results. e.g: the first index of each
+        motionAction = motionActionSet.getMotionActions()[0];
+        commAction = commActionSet.getCommActions()[0];
 
         // Bundle them into ActionSet so it can return both
         actionSet = new ActionSet(motionAction, commAction);

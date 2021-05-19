@@ -25,7 +25,10 @@ import jp.oist.abcvlib.core.inputs.phone.audio.MicrophoneInput;
 import jp.oist.abcvlib.core.inputs.phone.vision.ImageDataGatherer;
 import jp.oist.abcvlib.core.learning.ActionSet;
 import jp.oist.abcvlib.core.learning.CommAction;
+import jp.oist.abcvlib.core.learning.CommActionSet;
 import jp.oist.abcvlib.core.learning.MotionAction;
+import jp.oist.abcvlib.core.learning.MotionActionSet;
+import jp.oist.abcvlib.core.learning.StepHandler;
 import jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp;
 import jp.oist.abcvlib.core.learning.fbclasses.ChargerData;
 import jp.oist.abcvlib.core.learning.fbclasses.Episode;
@@ -45,7 +48,7 @@ public class TimeStepDataAssembler implements Runnable{
     private final int maxTimeStep = 100;
     private FlatBufferBuilder builder;
     private int[] timeStepVector = new int[maxTimeStep + 1];
-    private MyStepHandler myStepHandler;
+    private StepHandler myStepHandler;
     private int episodeCount = 0;
     private TimeStepDataBuffer timeStepDataBuffer;
     private String TAG = getClass().toString();
@@ -62,7 +65,8 @@ public class TimeStepDataAssembler implements Runnable{
     private BatteryDataGatherer batteryDataGatherer;
 
     public TimeStepDataAssembler(AbcvlibActivity abcvlibActivity,
-                                 InetSocketAddress inetSocketAddress){
+                                 InetSocketAddress inetSocketAddress,
+                                 StepHandler myStepHandler){
         this.abcvlibActivity = abcvlibActivity;
         this.inetSocketAddress = inetSocketAddress;
         microphoneInput = new MicrophoneInput(abcvlibActivity);
@@ -80,8 +84,10 @@ public class TimeStepDataAssembler implements Runnable{
                         .setImageQueueDepth(20)
                         .build();
 
-        myStepHandler = new MyStepHandler(maxTimeStep,
-                10000, 10);
+//        this.myStepHandler = new MyStepHandler(maxTimeStep,
+//                10000, 10);
+
+        this.myStepHandler = myStepHandler;
 
         startEpisode();
     }
