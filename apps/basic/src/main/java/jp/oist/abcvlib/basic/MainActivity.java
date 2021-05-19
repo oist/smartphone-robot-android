@@ -7,6 +7,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 
 /**
  * Most basic Android application showing connection to IOIOBoard and Android Sensors
@@ -29,7 +30,7 @@ public class MainActivity extends AbcvlibActivity {
         setContentView(R.layout.activity_main);
 
         // Executors preferred over runnables or threads for built in memory/cleanup/error handling.
-        ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+        ScheduledExecutorServiceWithException executor = Executors.newScheduledThreadPool(1);
         SimpleTest simpleTest = new SimpleTest(this);
         // Run the simpleTest every 1 second
         executor.scheduleAtFixedRate(simpleTest, 0, 1, TimeUnit.SECONDS);

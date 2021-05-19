@@ -9,6 +9,7 @@ import androidx.camera.core.ImageAnalysis;
 
 import com.google.flatbuffers.FlatBufferBuilder;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.concurrent.BrokenBarrierException;
@@ -36,6 +37,7 @@ import jp.oist.abcvlib.serverlearning.gatherers.TimeStepDataBuffer;
 import jp.oist.abcvlib.serverlearning.gatherers.WheelDataGatherer;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
+import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 import jp.oist.abcvlib.util.SocketConnectionManager;
 
 public class TimeStepDataAssembler implements Runnable{
@@ -53,7 +55,7 @@ public class TimeStepDataAssembler implements Runnable{
     private ScheduledFuture<?> wheelDataGathererFuture;
     private ScheduledFuture<?> batteryDataGathererFuture;
     private ScheduledFuture<?> timeStepDataAssemblerFuture;
-    private final ScheduledExecutorService executor;
+    private final ScheduledExecutorServiceWithException executor;
     private final ExecutorService imageExecutor;
     private final InetSocketAddress inetSocketAddress;
     private final ImageAnalysis imageAnalysis;
@@ -69,7 +71,7 @@ public class TimeStepDataAssembler implements Runnable{
         timeStepDataBuffer = new TimeStepDataBuffer(10);
 
         int threads = 5;
-        executor = Executors.newScheduledThreadPool(threads, new ProcessPriorityThreadFactory(1, "dataGatherer"));
+        executor = new ScheduledExecutorServiceWithException(threads, new ProcessPriorityThreadFactory(1, "dataGatherer"));
         imageExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "imageAnalysis"));
 
         imageAnalysis =
@@ -79,7 +81,7 @@ public class TimeStepDataAssembler implements Runnable{
                         .setImageQueueDepth(20)
                         .build();
 
-        myStepHandler = new MyStepHandler(abcvlibActivity.getApplicationContext(), maxTimeStep,
+        myStepHandler = new MyStepHandler(maxTimeStep,
                 10000, 10);
 
         startEpisode();
@@ -291,30 +293,6 @@ public class TimeStepDataAssembler implements Runnable{
         timeStepDataBuffer.getWriteData().getSoundData().setMetaData(sampleRate, startTime, endTime);
 
         microphoneInput.setStartTime();
-    }
-
-    protected void startGatherers() throws InterruptedException {
-        CountDownLatch gatherersReady = new CountDownLatch(1);
-
-        wheelDataGatherer = new WheelDataGatherer(abcvlibActivity, timeStepDataBuffer);
-        chargerDataGatherer = new ChargerDataGatherer(abcvlibActivity, timeStepDataBuffer);
-        batteryDataGatherer = new BatteryDataGatherer(abcvlibActivity, timeStepDataBuffer);
-        imageDataGatherer = new ImageDataGatherer(abcvlibActivity, timeStepDataBuffer);
-
-        ExecutorService sequentialExecutor = Executors.newSingleThreadExecutor();
-        Log.d("SocketConnection", "Starting new runnable for gatherers");
-
-        long initDelay = 0;
-        microphoneInput.start();
-        imageAnalysis.setAnalyzer(imageExecutor, imageDataGatherer);
-        wheelDataGathererFuture = executor.scheduleAtFixedRate(wheelDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
-        chargerDataGathererFuture = executor.scheduleAtFixedRate(chargerDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
-        batteryDataGathererFuture = executor.scheduleAtFixedRate(batteryDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
-        timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(this, 50,50, TimeUnit.MILLISECONDS);
-        gatherersReady.countDown();
-        Log.d("SocketConnection", "Waiting for gatherers to finish");
-        gatherersReady.await();
-        Log.d("SocketConnection", "Gatherers finished initializing");
     }
 
     public void stopRecordingData(){
