@@ -35,7 +35,9 @@ public class MainActivity extends AbcvlibActivity {
         switches.cameraXApp = true;
 
         CommActionSet commActionSet = new CommActionSet(3);
+        commActionSet.addCommAction("action1", (byte) 0); // I'm just overwriting an existing to show how
         MotionActionSet motionActionSet = new MotionActionSet(5);
+        motionActionSet.addMotionAction("stop", (byte) 0, 0, 0); // I'm just overwriting an existing to show how
 
         MyStepHandler myStepHandler = new MyStepHandler(100, 100000,
                 10, commActionSet, motionActionSet);
