@@ -6,8 +6,8 @@ import android.util.Log;
 
 import java.util.ArrayList;
 
-import jp.oist.abcvlib.serverlearning.CommAction;
-import jp.oist.abcvlib.serverlearning.MotionAction;
+import jp.oist.abcvlib.core.learning.CommAction;
+import jp.oist.abcvlib.core.learning.MotionAction;
 
 public class TimeStepDataBuffer {
 

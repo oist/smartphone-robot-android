@@ -23,6 +23,9 @@ import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataGatherer;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataGatherer;
 import jp.oist.abcvlib.core.inputs.phone.audio.MicrophoneInput;
 import jp.oist.abcvlib.core.inputs.phone.vision.ImageDataGatherer;
+import jp.oist.abcvlib.core.learning.ActionSet;
+import jp.oist.abcvlib.core.learning.CommAction;
+import jp.oist.abcvlib.core.learning.MotionAction;
 import jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp;
 import jp.oist.abcvlib.core.learning.fbclasses.ChargerData;
 import jp.oist.abcvlib.core.learning.fbclasses.Episode;
@@ -31,10 +34,6 @@ import jp.oist.abcvlib.core.learning.fbclasses.RobotAction;
 import jp.oist.abcvlib.core.learning.fbclasses.SoundData;
 import jp.oist.abcvlib.core.learning.fbclasses.TimeStep;
 import jp.oist.abcvlib.core.learning.fbclasses.WheelCounts;
-import jp.oist.abcvlib.serverlearning.ActionSet;
-import jp.oist.abcvlib.serverlearning.CommAction;
-import jp.oist.abcvlib.serverlearning.MotionAction;
-import jp.oist.abcvlib.serverlearning.MyStepHandler;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
@@ -247,10 +246,10 @@ public class TimeStepDataAssembler implements Runnable{
     private int addActionData(){
         CommAction ca = timeStepDataBuffer.getReadData().getActions().getCommAction();
         MotionAction ma = timeStepDataBuffer.getReadData().getActions().getMotionAction();
-        Log.v("flatbuff", "CommAction : " + ca.getActionNumber());
+        Log.v("flatbuff", "CommAction : " + ca.getActionByte());
         Log.v("flatbuff", "MotionAction : " + ma.getActionName());
 
-        return RobotAction.createRobotAction(builder, (byte) ca.getActionNumber(), (byte) ma.getActionByte());
+        return RobotAction.createRobotAction(builder, (byte) ca.getActionByte(), (byte) ma.getActionByte());
     }
 
     @Override
