@@ -349,9 +349,8 @@ public class TimeStepDataAssembler implements Runnable{
 //            Log.d("flatbuff", "Sound TimeStep 1 as numpy: "  + Arrays.toString(soundFloats));
 
         // Sets action to take after server has recevied and sent back data completely
-        CyclicBarrier doneSignal = new CyclicBarrier(2, new CyclicBarrierHandler(this){
-
-        });
+        CyclicBarrier doneSignal = new CyclicBarrier(2,
+                new CyclicBarrierHandler(this));
 
         // Todo this is getting stuck on registering to the selector likely because selector is running in another thread?
         sendToServer(episode, doneSignal);
