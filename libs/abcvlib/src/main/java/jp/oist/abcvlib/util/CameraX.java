@@ -1,4 +1,4 @@
-package jp.oist.abcvlib.core.inputs.phone.vision;
+package jp.oist.abcvlib.util;
 
 import android.Manifest;
 
@@ -20,6 +20,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.R;
+import jp.oist.abcvlib.core.inputs.phone.vision.ImageAnalyzerActivity;
 
 public class CameraX {
 
