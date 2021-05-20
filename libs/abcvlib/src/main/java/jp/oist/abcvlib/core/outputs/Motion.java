@@ -2,7 +2,6 @@ package jp.oist.abcvlib.core.outputs;
 
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.core.inputs.microcontroller.QuadEncoders;
 import jp.oist.abcvlib.core.inputs.phone.MotionSensors;
 
 /**
@@ -39,7 +38,6 @@ public class Motion {
     private int dutyCycleLeftWheel = 0;
 
     private MotionSensors motionSensors;
-    private QuadEncoders quadEncoders;
     private AbcvlibActivity abcvlibActivity;
 
     /**
@@ -48,7 +46,6 @@ public class Motion {
     public Motion(AbcvlibActivity abcvlibActivity){
         this.abcvlibActivity = abcvlibActivity;
         this.motionSensors = abcvlibActivity.inputs.motionSensors;
-        this.quadEncoders = abcvlibActivity.inputs.quadEncoders;
     }
 
     /**

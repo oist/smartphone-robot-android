@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataGatherer;
 import jp.oist.abcvlib.util.ErrorHandler;
 
 public class BalancePIDController extends AbcvlibController{
@@ -59,10 +60,8 @@ public class BalancePIDController extends AbcvlibController{
     private int bouncePulseWidth = 100;
 
     public BalancePIDController(AbcvlibActivity abcvlibActivity){
-
         this.abcvlibActivity = abcvlibActivity;
         Log.i("abcvlib", "BalanceApp Created");
-
     }
 
     public void run(){
@@ -90,12 +89,12 @@ public class BalancePIDController extends AbcvlibController{
 
             thetaDeg = abcvlibActivity.inputs.motionSensors.getThetaDeg();
             thetaDegDot = abcvlibActivity.inputs.motionSensors.getThetaDegDot();
-            wheelCountL = abcvlibActivity.inputs.quadEncoders.getWheelCountL();
-            wheelCountL = abcvlibActivity.inputs.quadEncoders.getWheelCountR();
-            distanceL = abcvlibActivity.inputs.quadEncoders.getDistanceL();
-            distanceR = abcvlibActivity.inputs.quadEncoders.getDistanceR();
-            speedL = abcvlibActivity.inputs.quadEncoders.getWheelSpeedL_LP();
-            speedR = abcvlibActivity.inputs.quadEncoders.getWheelSpeedR_LP();
+            wheelCountL = abcvlibActivity.inputs.getWheelDataGatherer().getWheelCountL();
+            wheelCountL = abcvlibActivity.inputs.getWheelDataGatherer().getWheelCountR();
+            distanceL = abcvlibActivity.inputs.getWheelDataGatherer().getDistanceL();
+            distanceR = abcvlibActivity.inputs.getWheelDataGatherer().getDistanceR();
+            speedL = abcvlibActivity.inputs.getWheelDataGatherer().getWheelSpeedL_LP();
+            speedR = abcvlibActivity.inputs.getWheelDataGatherer().getWheelSpeedR_LP();
             maxTiltAngle = setPoint + maxAbsTilt;
             minTiltAngle = setPoint - maxAbsTilt;
 
@@ -192,7 +191,7 @@ public class BalancePIDController extends AbcvlibController{
 
         setPID(p_tilt, i_tilt, d_tilt, setPoint, p_wheel, expWeight, maxAbsTilt);
 
-        abcvlibActivity.inputs.quadEncoders.setExpWeight(expWeight);
+        abcvlibActivity.inputs.getWheelDataGatherer().setExpWeight(expWeight);
 
         // TODO this needs to account for length of time on each interval, or overall time length. Here this just assumes a width of 1 for all intervals.
         int_e_t = int_e_t + e_t;

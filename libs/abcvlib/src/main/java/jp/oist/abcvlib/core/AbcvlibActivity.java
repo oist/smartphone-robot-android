@@ -28,6 +28,7 @@ import jp.oist.abcvlib.core.inputs.phone.vision.ImageAnalyzerActivity;
 import jp.oist.abcvlib.core.learning.ActionDistribution;
 import jp.oist.abcvlib.core.learning.ActionSelector;
 import jp.oist.abcvlib.core.learning.RewardGenerator;
+import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
 import jp.oist.abcvlib.core.outputs.AbcvlibController;
 import jp.oist.abcvlib.core.outputs.Outputs;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
@@ -125,7 +126,8 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
                               AbcvlibController controller,
                               ImageAnalyzerActivity imageAnalyzerActivity,
                               BatteryDataGatherer batteryDataGatherer,
-                              WheelDataGatherer wheelDataGatherer) {
+                              WheelDataGatherer wheelDataGatherer,
+                              TimeStepDataBuffer timeStepDataBuffer) {
 
         //Todo some logic here to test for boolean combinations that would lead to errors.
         // e.g. balanceApp without pythonControlApp
@@ -136,7 +138,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
         mainActivity = abcvlibActivity;
         Log.i(TAG, "Start of AbcvlibActivity.initializer");
 
-        inputs = new Inputs(abcvlibActivity, imageAnalyzerActivity);
+        inputs = new Inputs(abcvlibActivity, imageAnalyzerActivity, timeStepDataBuffer);
         outputs = new Outputs(abcvlibActivity, controller);
 
         if (switches.actionSelectorApp){
@@ -160,7 +162,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
      */
     protected void initialzer(AbcvlibActivity abcvlibActivity) {
 
-        initialzer(abcvlibActivity, null, null, null, null);
+        initialzer(abcvlibActivity, null, null, null, null, null);
 
     }
 
