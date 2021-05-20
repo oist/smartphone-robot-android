@@ -2,12 +2,12 @@ package jp.oist.abcvlib.core.inputs.microcontroller;
 
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
 
-public class BatteryDataGatherer {
+public class BatteryData {
 
     private final TimeStepDataBuffer timeStepDataBuffer;
     private boolean isRecording = false;
 
-    public BatteryDataGatherer(TimeStepDataBuffer timeStepDataBuffer){
+    public BatteryData(TimeStepDataBuffer timeStepDataBuffer){
         this.timeStepDataBuffer = timeStepDataBuffer;
     }
 

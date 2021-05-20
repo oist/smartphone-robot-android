@@ -19,10 +19,10 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataGatherer;
-import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataGatherer;
+import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
+import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.phone.audio.MicrophoneInput;
-import jp.oist.abcvlib.core.inputs.phone.vision.ImageDataGatherer;
+import jp.oist.abcvlib.core.inputs.phone.vision.ImageData;
 import jp.oist.abcvlib.core.learning.ActionSet;
 import jp.oist.abcvlib.core.learning.CommAction;
 import jp.oist.abcvlib.core.learning.MotionAction;
@@ -30,7 +30,6 @@ import jp.oist.abcvlib.core.learning.StepHandler;
 import jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp;
 import jp.oist.abcvlib.core.learning.fbclasses.ChargerData;
 import jp.oist.abcvlib.core.learning.fbclasses.Episode;
-import jp.oist.abcvlib.core.learning.fbclasses.ImageData;
 import jp.oist.abcvlib.core.learning.fbclasses.RobotAction;
 import jp.oist.abcvlib.core.learning.fbclasses.SoundData;
 import jp.oist.abcvlib.core.learning.fbclasses.TimeStep;
@@ -58,8 +57,8 @@ public class TimeStepDataAssembler implements Runnable{
     private final InetSocketAddress inetSocketAddress;
     private ImageAnalysis imageAnalysis;
     private final AbcvlibActivity abcvlibActivity;
-    private BatteryDataGatherer batteryDataGatherer;
-    private WheelDataGatherer wheelDataGatherer;
+    private BatteryData batteryData;
+    private WheelData wheelData;
 
     public TimeStepDataAssembler(AbcvlibActivity abcvlibActivity,
                                  InetSocketAddress inetSocketAddress,
@@ -96,8 +95,8 @@ public class TimeStepDataAssembler implements Runnable{
     }
 
     public void initializeGatherers(){
-        batteryDataGatherer = new BatteryDataGatherer(timeStepDataBuffer);
-        wheelDataGatherer = new WheelDataGatherer(timeStepDataBuffer);
+        batteryData = new BatteryData(timeStepDataBuffer);
+        wheelData = new WheelData(timeStepDataBuffer);
         imageAnalysis =
                 new ImageAnalysis.Builder()
                         .setTargetResolution(new Size(10, 10))
@@ -109,15 +108,15 @@ public class TimeStepDataAssembler implements Runnable{
     public void startGatherers() throws InterruptedException {
         CountDownLatch gatherersReady = new CountDownLatch(1);
 
-        ImageDataGatherer imageDataGatherer = new ImageDataGatherer(abcvlibActivity, timeStepDataBuffer);
+        ImageData imageData = new ImageData(abcvlibActivity, timeStepDataBuffer);
 
         Log.d("SocketConnection", "Starting new runnable for gatherers");
 
         long initDelay = 0;
-        batteryDataGatherer.setRecording(true);
-        wheelDataGatherer.setRecording(true);
+        batteryData.setRecording(true);
+        wheelData.setRecording(true);
         microphoneInput.start();
-        imageAnalysis.setAnalyzer(imageExecutor, imageDataGatherer);
+        imageAnalysis.setAnalyzer(imageExecutor, imageData);
         timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(this, 50,50, TimeUnit.MILLISECONDS);
         gatherersReady.countDown();
         Log.d("SocketConnection", "Waiting for gatherers to finish");
@@ -125,11 +124,11 @@ public class TimeStepDataAssembler implements Runnable{
         Log.d("SocketConnection", "Gatherers finished initializing");
     }
 
-    public BatteryDataGatherer getBatteryDataGatherer() {
-        return batteryDataGatherer;
+    public BatteryData getBatteryData() {
+        return batteryData;
     }
 
-    public WheelDataGatherer getWheelDataGatherer() {return wheelDataGatherer;}
+    public WheelData getWheelData() {return wheelData;}
 
     public void addTimeStep(){
 
@@ -237,10 +236,10 @@ public class TimeStepDataAssembler implements Runnable{
             _images[i] = _image;
         }
 
-        int _images_offset = ImageData.createImagesVector(builder, _images);
-        ImageData.startImageData(builder);
-        ImageData.addImages(builder, _images_offset);
-        _imageData = ImageData.endImageData(builder);
+        int _images_offset = jp.oist.abcvlib.core.learning.fbclasses.ImageData.createImagesVector(builder, _images);
+        jp.oist.abcvlib.core.learning.fbclasses.ImageData.startImageData(builder);
+        jp.oist.abcvlib.core.learning.fbclasses.ImageData.addImages(builder, _images_offset);
+        _imageData = jp.oist.abcvlib.core.learning.fbclasses.ImageData.endImageData(builder);
 
         return _imageData;
     }
@@ -300,8 +299,8 @@ public class TimeStepDataAssembler implements Runnable{
 
         pauseRecording = true;
 
-        wheelDataGatherer.setRecording(false);
-        batteryDataGatherer.setRecording(false);
+        wheelData.setRecording(false);
+        batteryData.setRecording(false);
         imageAnalysis.clearAnalyzer();
         microphoneInput.stop();
         timeStepCount = 0;

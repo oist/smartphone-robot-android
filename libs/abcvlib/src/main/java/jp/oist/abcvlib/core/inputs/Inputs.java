@@ -8,7 +8,7 @@ import org.json.JSONObject;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataGatherer;
+import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.phone.MotionSensors;
 import jp.oist.abcvlib.core.inputs.phone.audio.MicrophoneInput;
 import jp.oist.abcvlib.core.inputs.phone.vision.CameraX;
@@ -21,7 +21,7 @@ public class Inputs {
     public MotionSensors motionSensors; // Doesn't need thread since handled by sensorManager or SensorService
     public JSONObject stateVariables;
     public MicrophoneInput micInput;
-    private WheelDataGatherer wheelDataGatherer;
+    private WheelData wheelData;
     public CameraX camerax;
     private final ProcessPriorityThreadFactory processPriorityThreadFactory = new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY, "Inputs");
     private ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(1, processPriorityThreadFactory);
@@ -43,7 +43,7 @@ public class Inputs {
         }
 
         if (abcvlibActivity.switches.quadEncoderApp){
-            wheelDataGatherer = new WheelDataGatherer(timeStepDataBuffer);
+            wheelData = new WheelData(timeStepDataBuffer);
         }
 
         stateVariables = initializeStateVariables();
@@ -72,7 +72,7 @@ public class Inputs {
         return jsonObject;
     }
 
-    public WheelDataGatherer getWheelDataGatherer() {
-        return wheelDataGatherer;
+    public WheelData getWheelData() {
+        return wheelData;
     }
 }

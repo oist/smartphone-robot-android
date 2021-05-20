@@ -4,7 +4,7 @@ import android.util.Log;
 
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
 
-public class WheelDataGatherer {
+public class WheelData {
 
     private final TimeStepDataBuffer timeStepDataBuffer;
     private boolean isRecording = false;
@@ -55,7 +55,7 @@ public class WheelDataGatherer {
 
     private final long[] timeStamps = new long[windowLength];
 
-    public WheelDataGatherer(TimeStepDataBuffer timeStepDataBuffer){
+    public WheelData(TimeStepDataBuffer timeStepDataBuffer){
         this.timeStepDataBuffer = timeStepDataBuffer;
     }
 

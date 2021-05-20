@@ -15,12 +15,12 @@ import jp.oist.abcvlib.core.inputs.phone.vision.YuvToRgbConverter;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
 import jp.oist.abcvlib.util.ImageOps;
 
-public class ImageDataGatherer implements ImageAnalysis.Analyzer{
+public class ImageData implements ImageAnalysis.Analyzer{
 
     private final TimeStepDataBuffer timeStepDataBuffer;
     private final YuvToRgbConverter yuvToRgbConverter;
 
-    public ImageDataGatherer(Context context, TimeStepDataBuffer timeStepDataBuffer){
+    public ImageData(Context context, TimeStepDataBuffer timeStepDataBuffer){
         this.timeStepDataBuffer = timeStepDataBuffer;
         yuvToRgbConverter = new YuvToRgbConverter(context);
     }
