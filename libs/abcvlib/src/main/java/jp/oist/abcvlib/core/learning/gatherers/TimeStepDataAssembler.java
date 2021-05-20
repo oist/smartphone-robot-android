@@ -83,9 +83,6 @@ public class TimeStepDataAssembler implements Runnable{
                         .setImageQueueDepth(20)
                         .build();
 
-//        this.myStepHandler = new MyStepHandler(maxTimeStep,
-//                10000, 10);
-
         this.myStepHandler = myStepHandler;
 
         startEpisode();
