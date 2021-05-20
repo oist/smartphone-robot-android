@@ -20,7 +20,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.R;
-import jp.oist.abcvlib.core.inputs.phone.vision.ImageAnalyzerActivity;
+import jp.oist.abcvlib.core.inputs.phone.vision.ImageData;
 
 public class CameraX {
 

@@ -46,7 +46,7 @@ import jp.oist.abcvlib.util.SocketListener;
  *
  */
 public abstract class AbcvlibActivity extends IOIOActivity implements RewardGenerator,
-        OnRecordPositionUpdateListener, ImageAnalyzerActivity, SocketListener{
+        OnRecordPositionUpdateListener, SocketListener{
 
     // Publically accessible objects that encapsulate a lot other core functionality
     public Inputs inputs;
