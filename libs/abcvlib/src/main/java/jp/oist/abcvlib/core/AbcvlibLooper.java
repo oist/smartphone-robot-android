@@ -644,7 +644,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
     private void updateQuadEncoders(){
 
-        abcvlibActivity.inputs.quadEncoders.setQuadVars(encoderCountLeftWheel[indexCurrent], encoderCountRightWheel[indexCurrent], indexCurrent, indexPrevious, timeStamp[indexCurrent]);
+        wheelDataGatherer.setQuadVars(encoderCountLeftWheel[indexCurrent], encoderCountRightWheel[indexCurrent], indexCurrent, indexPrevious, timeStamp[indexCurrent]);
         wheelDataGatherer.onWheelDataUpdate(timeStamp[indexCurrent], encoderCountLeftWheel[indexCurrent], encoderCountRightWheel[indexCurrent]);
 
     }
