@@ -56,7 +56,7 @@ public class TimeStepDataAssembler implements Runnable{
     private final ScheduledExecutorServiceWithException executor;
     private final ExecutorService imageExecutor;
     private final InetSocketAddress inetSocketAddress;
-    private final ImageAnalysis imageAnalysis;
+    private ImageAnalysis imageAnalysis;
     private final AbcvlibActivity abcvlibActivity;
     private BatteryDataGatherer batteryDataGatherer;
     private WheelDataGatherer wheelDataGatherer;
@@ -73,13 +73,6 @@ public class TimeStepDataAssembler implements Runnable{
         int threads = 5;
         executor = new ScheduledExecutorServiceWithException(threads, new ProcessPriorityThreadFactory(1, "dataGatherer"));
         imageExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "imageAnalysis"));
-
-        imageAnalysis =
-                new ImageAnalysis.Builder()
-                        .setTargetResolution(new Size(10, 10))
-                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        .setImageQueueDepth(20)
-                        .build();
 
         this.myStepHandler = myStepHandler;
 
@@ -105,6 +98,12 @@ public class TimeStepDataAssembler implements Runnable{
     public void initializeGatherers(){
         batteryDataGatherer = new BatteryDataGatherer(timeStepDataBuffer);
         wheelDataGatherer = new WheelDataGatherer(timeStepDataBuffer);
+        imageAnalysis =
+                new ImageAnalysis.Builder()
+                        .setTargetResolution(new Size(10, 10))
+                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                        .setImageQueueDepth(20)
+                        .build();
     }
 
     public void startGatherers() throws InterruptedException {
