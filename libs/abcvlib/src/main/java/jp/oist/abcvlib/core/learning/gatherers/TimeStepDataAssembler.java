@@ -53,9 +53,7 @@ public class TimeStepDataAssembler implements Runnable{
     private boolean pauseRecording = false;
     private ScheduledFuture<?> timeStepDataAssemblerFuture;
     private final ScheduledExecutorServiceWithException executor;
-    private final ExecutorService imageExecutor;
     private final InetSocketAddress inetSocketAddress;
-    private ImageAnalysis imageAnalysis;
     private final AbcvlibActivity abcvlibActivity;
     private BatteryData batteryData;
     private WheelData wheelData;
@@ -72,7 +70,6 @@ public class TimeStepDataAssembler implements Runnable{
 
         int threads = 5;
         executor = new ScheduledExecutorServiceWithException(threads, new ProcessPriorityThreadFactory(1, "dataGatherer"));
-        imageExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "imageAnalysis"));
 
         this.myStepHandler = myStepHandler;
 

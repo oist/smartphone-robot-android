@@ -11,6 +11,7 @@ import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.phone.MotionSensors;
 import jp.oist.abcvlib.core.inputs.phone.audio.MicrophoneInput;
+import jp.oist.abcvlib.core.inputs.phone.vision.ImageData;
 import jp.oist.abcvlib.util.CameraX;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
