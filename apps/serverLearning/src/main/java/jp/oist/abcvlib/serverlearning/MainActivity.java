@@ -43,7 +43,6 @@ public class MainActivity extends AbcvlibActivity {
                 10, commActionSet, motionActionSet);
 
         timeStepDataAssembler = new TimeStepDataAssembler(this, inetSocketAddress, myStepHandler);
-        timeStepDataAssembler.initializeGatherers();
 
         initialzer(this, null, this, timeStepDataAssembler.getBatteryDataGatherer(), timeStepDataAssembler.getWheelDataGatherer());
 

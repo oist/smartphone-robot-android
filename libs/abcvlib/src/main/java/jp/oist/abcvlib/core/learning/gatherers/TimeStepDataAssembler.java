@@ -86,6 +86,7 @@ public class TimeStepDataAssembler implements Runnable{
         this.myStepHandler = myStepHandler;
 
         startEpisode();
+        initializeGatherers();
     }
 
     public TimeStepDataBuffer getTimeStepDataBuffer() {
