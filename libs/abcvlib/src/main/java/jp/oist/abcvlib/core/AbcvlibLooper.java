@@ -643,10 +643,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     }
 
     private void updateQuadEncoders(){
-
-        wheelDataGatherer.setQuadVars(encoderCountLeftWheel[indexCurrent], encoderCountRightWheel[indexCurrent], indexCurrent, indexPrevious, timeStamp[indexCurrent]);
         wheelDataGatherer.onWheelDataUpdate(timeStamp[indexCurrent], encoderCountLeftWheel[indexCurrent], encoderCountRightWheel[indexCurrent]);
-
     }
 
     private void updateChargerVoltage(){

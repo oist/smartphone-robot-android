@@ -10,6 +10,7 @@ import com.google.android.material.slider.Slider;
 import java.util.ArrayList;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataAssembler;
 import jp.oist.abcvlib.util.ErrorHandler;
 
 import static java.lang.Math.max;
@@ -38,8 +39,12 @@ public class MainActivity extends AbcvlibActivity {
         switches.pythonControlledPIDBalancer = true;
         switches.wheelPolaritySwap = false;
 
+        // todo shouldn't require myStepHandler? or the BalancePIDContoller class could BE a myStepHandler via extension or implementation. myStepHandler is at odds with AbcvlibController
+        // todo TimeStepDataAssembler should accept a List of Objects and parse on constructor.
+        TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler(this, null, null);
+
         // Note the previously optional parameters that handle the connection to the python server
-        initialzer(this);
+        initialzer(this, null, this, timeStepDataAssembler.getBatteryDataGatherer(), timeStepDataAssembler.getWheelDataGatherer());
 
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);

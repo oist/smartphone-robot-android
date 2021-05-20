@@ -25,9 +25,7 @@ import jp.oist.abcvlib.core.inputs.phone.audio.MicrophoneInput;
 import jp.oist.abcvlib.core.inputs.phone.vision.ImageDataGatherer;
 import jp.oist.abcvlib.core.learning.ActionSet;
 import jp.oist.abcvlib.core.learning.CommAction;
-import jp.oist.abcvlib.core.learning.CommActionSet;
 import jp.oist.abcvlib.core.learning.MotionAction;
-import jp.oist.abcvlib.core.learning.MotionActionSet;
 import jp.oist.abcvlib.core.learning.StepHandler;
 import jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp;
 import jp.oist.abcvlib.core.learning.fbclasses.ChargerData;
@@ -106,7 +104,7 @@ public class TimeStepDataAssembler implements Runnable{
 
     public void initializeGatherers(){
         batteryDataGatherer = new BatteryDataGatherer(timeStepDataBuffer);
-        wheelDataGatherer = new WheelDataGatherer(abcvlibActivity, timeStepDataBuffer);
+        wheelDataGatherer = new WheelDataGatherer(timeStepDataBuffer);
     }
 
     public void startGatherers() throws InterruptedException {
