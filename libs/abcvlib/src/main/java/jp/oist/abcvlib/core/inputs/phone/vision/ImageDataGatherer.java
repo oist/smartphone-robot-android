@@ -42,7 +42,7 @@ public class ImageDataGatherer implements ImageAnalysis.Analyzer{
             Bitmap webpBitMap = ImageOps.generateBitmap(webpBytes);
 
             timeStepDataBuffer.getWriteData().getImageData().add(timestamp, width, height, webpBitMap, webpBytes);
-            Log.v("flatbuff", "Wrote image to timeStepDataBuffer");
+//            Log.v("flatbuff", "Wrote image to timeStepDataBuffer");
         }
         imageProxy.close();
     }
