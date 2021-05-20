@@ -54,8 +54,6 @@ public class TimeStepDataAssembler implements Runnable{
     private String TAG = getClass().toString();
     private MicrophoneInput microphoneInput;
     private boolean pauseRecording = false;
-    private ScheduledFuture<?> wheelDataGathererFuture;
-    private ScheduledFuture<?> batteryDataGathererFuture;
     private ScheduledFuture<?> timeStepDataAssemblerFuture;
     private final ScheduledExecutorServiceWithException executor;
     private final ExecutorService imageExecutor;
@@ -63,6 +61,7 @@ public class TimeStepDataAssembler implements Runnable{
     private final ImageAnalysis imageAnalysis;
     private final AbcvlibActivity abcvlibActivity;
     private BatteryDataGatherer batteryDataGatherer;
+    private WheelDataGatherer wheelDataGatherer;
 
     public TimeStepDataAssembler(AbcvlibActivity abcvlibActivity,
                                  InetSocketAddress inetSocketAddress,
@@ -109,21 +108,21 @@ public class TimeStepDataAssembler implements Runnable{
 
     public void initializeGatherers(){
         batteryDataGatherer = new BatteryDataGatherer(timeStepDataBuffer);
+        wheelDataGatherer = new WheelDataGatherer(abcvlibActivity, timeStepDataBuffer);
     }
 
     public void startGatherers() throws InterruptedException {
         CountDownLatch gatherersReady = new CountDownLatch(1);
 
-        WheelDataGatherer wheelDataGatherer = new WheelDataGatherer(abcvlibActivity, timeStepDataBuffer);
         ImageDataGatherer imageDataGatherer = new ImageDataGatherer(abcvlibActivity, timeStepDataBuffer);
 
         Log.d("SocketConnection", "Starting new runnable for gatherers");
 
         long initDelay = 0;
         batteryDataGatherer.setRecording(true);
+        wheelDataGatherer.setRecording(true);
         microphoneInput.start();
         imageAnalysis.setAnalyzer(imageExecutor, imageDataGatherer);
-        wheelDataGathererFuture = executor.scheduleAtFixedRate(wheelDataGatherer, initDelay, 10, TimeUnit.MILLISECONDS);
         timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(this, 50,50, TimeUnit.MILLISECONDS);
         gatherersReady.countDown();
         Log.d("SocketConnection", "Waiting for gatherers to finish");
@@ -134,6 +133,8 @@ public class TimeStepDataAssembler implements Runnable{
     public BatteryDataGatherer getBatteryDataGatherer() {
         return batteryDataGatherer;
     }
+
+    public WheelDataGatherer getWheelDataGatherer() {return wheelDataGatherer;}
 
     public void addTimeStep(){
 
@@ -304,7 +305,7 @@ public class TimeStepDataAssembler implements Runnable{
 
         pauseRecording = true;
 
-        wheelDataGathererFuture.cancel(true);
+        wheelDataGatherer.setRecording(false);
         batteryDataGatherer.setRecording(false);
         imageAnalysis.clearAnalyzer();
         microphoneInput.stop();

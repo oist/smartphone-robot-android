@@ -90,8 +90,8 @@ public class TimeStepDataBuffer {
             ArrayList<Long> timestamps = new ArrayList<>();
             ArrayList<Double> left = new ArrayList<>();
             ArrayList<Double> right = new ArrayList<>();
-            public void put(double _left, double _right){
-                timestamps.add(System.nanoTime());
+            public void put(long timestamp, double _left, double _right){
+                timestamps.add(timestamp);
                 left.add(_left);
                 right.add(_right);
             }

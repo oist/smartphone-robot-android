@@ -11,6 +11,7 @@ import ioio.lib.api.exception.ConnectionLostException;
 import ioio.lib.util.BaseIOIOLooper;
 import ioio.lib.util.IOIOConnectionManager;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataGatherer;
+import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataGatherer;
 
 /**
  * AbcvlibLooper provides the connection with the IOIOBoard by allowing access to the loop
@@ -308,17 +309,20 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     private double[] encoderCountLeftWheelLP = new double[buffer];
     private double[] encoderCountRightWheelLP = new double[buffer];
     private final BatteryDataGatherer batteryDataGatherer;
+    private final WheelDataGatherer wheelDataGatherer;
 
     // Constructor to pass other module objects in. No default loggerOn. Needs to remain public
     // despite what Android Studio says
     public AbcvlibLooper(AbcvlibActivity abcvlibActivity,
                          Boolean loggerOn,
                          Boolean wheelPolaritySwap,
-                         BatteryDataGatherer batteryDataGatherer){
+                         BatteryDataGatherer batteryDataGatherer,
+                         WheelDataGatherer wheelDataGatherer){
         this.abcvlibActivity = abcvlibActivity;
         this.loggerOn = loggerOn;
         this.wheelPolaritySwap = wheelPolaritySwap;
         this.batteryDataGatherer = batteryDataGatherer;
+        this.wheelDataGatherer = wheelDataGatherer;
         Log.d("abcvlib", "AbcvlibLooper constructor finished");
     }
 
@@ -434,9 +438,9 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
             updateQuadEncoders();
 
-            updateBatteryVoltage(batteryDataGatherer);
+            updateBatteryVoltage();
 
-            updateChargerVoltage(batteryDataGatherer);
+            updateChargerVoltage();
 
             indexUpdate();
 
@@ -641,10 +645,11 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     private void updateQuadEncoders(){
 
         abcvlibActivity.inputs.quadEncoders.setQuadVars(encoderCountLeftWheel[indexCurrent], encoderCountRightWheel[indexCurrent], indexCurrent, indexPrevious, timeStamp[indexCurrent]);
+        wheelDataGatherer.onWheelDataUpdate(timeStamp[indexCurrent], encoderCountLeftWheel[indexCurrent], encoderCountRightWheel[indexCurrent]);
 
     }
 
-    private void updateChargerVoltage(BatteryDataGatherer batteryDataGatherer){
+    private void updateChargerVoltage(){
 
         double chargerVoltage = 0;
 
@@ -658,7 +663,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         batteryDataGatherer.onChargerVoltageUpdate(chargerVoltage, timeStamp[indexCurrent]);
     }
 
-    private void updateBatteryVoltage(BatteryDataGatherer batteryDataGatherer){
+    private void updateBatteryVoltage(){
 
         double batteryVoltage = 0;
 

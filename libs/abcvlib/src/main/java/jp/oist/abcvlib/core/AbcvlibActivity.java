@@ -23,6 +23,7 @@ import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
 import jp.oist.abcvlib.core.inputs.Inputs;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataGatherer;
+import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataGatherer;
 import jp.oist.abcvlib.core.inputs.phone.vision.ImageAnalyzerActivity;
 import jp.oist.abcvlib.core.learning.ActionDistribution;
 import jp.oist.abcvlib.core.learning.ActionSelector;
@@ -56,6 +57,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     public ExecutorService audioExecutor;
     private AbcvlibActivity mainActivity;
     private BatteryDataGatherer batteryDataGatherer;
+    private WheelDataGatherer wheelDataGatherer;
 
     /**
      * Lets various loops know its time to wrap things up when false, and prevents other loops from
@@ -122,12 +124,14 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     protected void initialzer(AbcvlibActivity abcvlibActivity,
                               AbcvlibController controller,
                               ImageAnalyzerActivity imageAnalyzerActivity,
-                              BatteryDataGatherer batteryDataGatherer) {
+                              BatteryDataGatherer batteryDataGatherer,
+                              WheelDataGatherer wheelDataGatherer) {
 
         //Todo some logic here to test for boolean combinations that would lead to errors.
         // e.g. balanceApp without pythonControlApp
 
         this.batteryDataGatherer = batteryDataGatherer;
+        this.wheelDataGatherer = wheelDataGatherer;
 
         mainActivity = abcvlibActivity;
         Log.i(TAG, "Start of AbcvlibActivity.initializer");
@@ -156,7 +160,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
      */
     protected void initialzer(AbcvlibActivity abcvlibActivity) {
 
-        initialzer(abcvlibActivity, null, null, null);
+        initialzer(abcvlibActivity, null, null, null, null);
 
     }
 
@@ -228,7 +232,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
         return new AbcvlibLooper(this,
                 switches.loggerOn,
                 switches.wheelPolaritySwap,
-                batteryDataGatherer);
+                batteryDataGatherer, wheelDataGatherer);
     }
 
     public double determineReward(){
