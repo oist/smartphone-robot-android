@@ -22,7 +22,7 @@ import java.util.concurrent.Executors;
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
 import jp.oist.abcvlib.core.inputs.Inputs;
-import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataListener;
+import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataGatherer;
 import jp.oist.abcvlib.core.inputs.phone.vision.ImageAnalyzerActivity;
 import jp.oist.abcvlib.core.learning.ActionDistribution;
 import jp.oist.abcvlib.core.learning.ActionSelector;
@@ -55,7 +55,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     public Switches switches = new Switches();
     public ExecutorService audioExecutor;
     private AbcvlibActivity mainActivity;
-    private BatteryDataListener batteryDataListener;
+    private BatteryDataGatherer batteryDataGatherer;
 
     /**
      * Lets various loops know its time to wrap things up when false, and prevents other loops from
@@ -122,12 +122,12 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     protected void initialzer(AbcvlibActivity abcvlibActivity,
                               AbcvlibController controller,
                               ImageAnalyzerActivity imageAnalyzerActivity,
-                              BatteryDataListener batteryDataListener) {
+                              BatteryDataGatherer batteryDataGatherer) {
 
         //Todo some logic here to test for boolean combinations that would lead to errors.
         // e.g. balanceApp without pythonControlApp
 
-        this.batteryDataListener = batteryDataListener;
+        this.batteryDataGatherer = batteryDataGatherer;
 
         mainActivity = abcvlibActivity;
         Log.i(TAG, "Start of AbcvlibActivity.initializer");
@@ -228,7 +228,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
         return new AbcvlibLooper(this,
                 switches.loggerOn,
                 switches.wheelPolaritySwap,
-                batteryDataListener);
+                batteryDataGatherer);
     }
 
     public double determineReward(){

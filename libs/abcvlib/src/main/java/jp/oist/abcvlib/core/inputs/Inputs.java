@@ -8,7 +8,6 @@ import org.json.JSONObject;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.core.inputs.microcontroller.Battery;
 import jp.oist.abcvlib.core.inputs.microcontroller.QuadEncoders;
 import jp.oist.abcvlib.core.inputs.phone.MotionSensors;
 import jp.oist.abcvlib.core.inputs.phone.audio.MicrophoneInput;
@@ -23,7 +22,6 @@ public class Inputs {
     public JSONObject stateVariables;
     public MicrophoneInput micInput;
     public CameraX camerax;
-    public Battery battery;
     private final ProcessPriorityThreadFactory processPriorityThreadFactory = new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY, "Inputs");
     private ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(1, processPriorityThreadFactory);
     private final String TAG = this.getClass().getName();
@@ -45,8 +43,6 @@ public class Inputs {
         if (abcvlibActivity.switches.micApp){
             micInput = new MicrophoneInput(abcvlibActivity);
         }
-
-        battery = new Battery();
 
         stateVariables = initializeStateVariables();
 

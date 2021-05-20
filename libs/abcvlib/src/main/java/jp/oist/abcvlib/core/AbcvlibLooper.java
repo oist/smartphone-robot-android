@@ -10,7 +10,7 @@ import ioio.lib.api.PwmOutput;
 import ioio.lib.api.exception.ConnectionLostException;
 import ioio.lib.util.BaseIOIOLooper;
 import ioio.lib.util.IOIOConnectionManager;
-import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataListener;
+import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataGatherer;
 
 /**
  * AbcvlibLooper provides the connection with the IOIOBoard by allowing access to the loop
@@ -307,18 +307,18 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
     private double[] encoderCountLeftWheelLP = new double[buffer];
     private double[] encoderCountRightWheelLP = new double[buffer];
-    private final BatteryDataListener batteryDataListener;
+    private final BatteryDataGatherer batteryDataGatherer;
 
     // Constructor to pass other module objects in. No default loggerOn. Needs to remain public
     // despite what Android Studio says
     public AbcvlibLooper(AbcvlibActivity abcvlibActivity,
                          Boolean loggerOn,
                          Boolean wheelPolaritySwap,
-                         BatteryDataListener batteryDataListener){
+                         BatteryDataGatherer batteryDataGatherer){
         this.abcvlibActivity = abcvlibActivity;
         this.loggerOn = loggerOn;
         this.wheelPolaritySwap = wheelPolaritySwap;
-        this.batteryDataListener = batteryDataListener;
+        this.batteryDataGatherer = batteryDataGatherer;
         Log.d("abcvlib", "AbcvlibLooper constructor finished");
     }
 
@@ -434,9 +434,9 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
             updateQuadEncoders();
 
-            updateBatteryVoltage(batteryDataListener);
+            updateBatteryVoltage(batteryDataGatherer);
 
-            updateChargerVoltage(batteryDataListener);
+            updateChargerVoltage(batteryDataGatherer);
 
             indexUpdate();
 
@@ -644,7 +644,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
     }
 
-    private void updateChargerVoltage(BatteryDataListener batteryDataListener){
+    private void updateChargerVoltage(BatteryDataGatherer batteryDataGatherer){
 
         double chargerVoltage = 0;
 
@@ -655,10 +655,10 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         } catch (ConnectionLostException e) {
             Log.e(TAG,"Error", e);
         }
-        batteryDataListener.onChargerVoltageUpdate(chargerVoltage, timeStamp[indexCurrent]);
+        batteryDataGatherer.onChargerVoltageUpdate(chargerVoltage, timeStamp[indexCurrent]);
     }
 
-    private void updateBatteryVoltage(BatteryDataListener batteryDataListener){
+    private void updateBatteryVoltage(BatteryDataGatherer batteryDataGatherer){
 
         double batteryVoltage = 0;
 
@@ -669,7 +669,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         } catch (ConnectionLostException e) {
             Log.e(TAG,"Error", e);
         }
-        batteryDataListener.onBatteryVoltageUpdate(batteryVoltage, timeStamp[indexCurrent]);
+        batteryDataGatherer.onBatteryVoltageUpdate(batteryVoltage, timeStamp[indexCurrent]);
     }
 
     /**
