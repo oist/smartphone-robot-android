@@ -84,10 +84,6 @@ public class TimeStepDataAssembler implements Runnable{
         return timeStepDataBuffer;
     }
 
-    public ImageAnalysis getImageAnalysis() {
-        return imageAnalysis;
-    }
-
     public void startEpisode(){
 //            ByteBuffer bb = ByteBuffer.allocateDirect(4096);
         builder = new FlatBufferBuilder(1024);

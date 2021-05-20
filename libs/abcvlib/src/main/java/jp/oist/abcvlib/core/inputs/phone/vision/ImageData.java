@@ -23,11 +23,25 @@ public class ImageData implements ImageAnalysis.Analyzer{
     public ImageData(Context context, TimeStepDataBuffer timeStepDataBuffer){
         this.timeStepDataBuffer = timeStepDataBuffer;
         yuvToRgbConverter = new YuvToRgbConverter(context);
+
+        imageExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "imageAnalysis"));
+        imageAnalysis =
+                new ImageAnalysis.Builder()
+                        .setTargetResolution(new Size(10, 10))
+                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                        .setImageQueueDepth(20)
+                        .build();
+        imageAnalysis.setAnalyzer(imageExecutor, this);
     }
 
     @androidx.camera.core.ExperimentalGetImage
     public void analyze(@NonNull ImageProxy imageProxy) {
-        Image image = imageProxy.getImage();
+        Image image = null;
+        if (isRecording()){
+            image = imageProxy.getImage();
+        } else {
+            imageProxy.close();
+            return;}
         if (image != null) {
             int width = image.getWidth();
             int height = image.getHeight();
@@ -45,5 +59,17 @@ public class ImageData implements ImageAnalysis.Analyzer{
 //            Log.v("flatbuff", "Wrote image to timeStepDataBuffer");
         }
         imageProxy.close();
+    }
+
+    public synchronized void setRecording(boolean recording) {
+        isRecording = recording;
+    }
+
+    public synchronized boolean isRecording() {
+        return isRecording;
+    }
+
+    public ImageAnalysis getImageAnalysis() {
+        return imageAnalysis;
     }
 }

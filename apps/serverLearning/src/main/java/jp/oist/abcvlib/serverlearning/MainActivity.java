@@ -44,7 +44,7 @@ public class MainActivity extends AbcvlibActivity {
 
         timeStepDataAssembler = new TimeStepDataAssembler(this, inetSocketAddress, myStepHandler);
 
-        initialzer(this, null, this, timeStepDataAssembler.getBatteryData(),
+        initialzer(this, null, timeStepDataAssembler.getImageData(), timeStepDataAssembler.getBatteryData(),
                 timeStepDataAssembler.getWheelData(), timeStepDataAssembler.getTimeStepDataBuffer());
 
         super.onCreate(savedInstanceState);
@@ -57,12 +57,6 @@ public class MainActivity extends AbcvlibActivity {
         } catch (InterruptedException e) {
             ErrorHandler.eLog(TAG, "Error starting gathers", e, true);
         }
-    }
-
-    // Passes custom ImageAnalysis object to core CameraX lib to bind to lifecycle, and other admin functions
-    @Override
-    public ImageAnalysis getAnalyzer() {
-        return timeStepDataAssembler.getImageAnalysis();
     }
     
     @Override

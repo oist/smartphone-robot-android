@@ -242,11 +242,6 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     }
 
     @Override
-    public ImageAnalysis getAnalyzer() {
-        return null;
-    }
-
-    @Override
     public void onMarkerReached(AudioRecord audioRecord) {
 
     }
