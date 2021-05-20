@@ -31,7 +31,7 @@ public class CameraX {
 
     public ExecutorService analysisExecutor;
     private AbcvlibActivity abcvlibActivity;
-    private ImageAnalyzerActivity imageAnalyzerActivity;
+    private ImageData imageData;
 
     private PreviewView mPreviewView;
 
@@ -40,10 +40,10 @@ public class CameraX {
     public Camera camera;
     public ProcessCameraProvider cameraProvider;
 
-    public CameraX(AbcvlibActivity abcvlibActivity, ImageAnalyzerActivity imageAnalyzerActivity){
+    public CameraX(AbcvlibActivity abcvlibActivity, ImageData imageData){
 
         this.abcvlibActivity = abcvlibActivity;
-        this.imageAnalyzerActivity = imageAnalyzerActivity;
+        this.imageData = imageData;
 
         mPreviewView = abcvlibActivity.findViewById(R.id.camera_x_preview);
 
@@ -100,8 +100,8 @@ public class CameraX {
                 .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
                 .build();
 
-        if (imageAnalyzerActivity != null){
-            ImageAnalysis imageAnalysis =  imageAnalyzerActivity.getAnalyzer();
+        if (imageData != null){
+            ImageAnalysis imageAnalysis =  imageData.getImageAnalysis();
             if (imageAnalysis != null){
                 camera = cameraProvider.bindToLifecycle(abcvlibActivity, cameraSelector, preview, imageAnalysis);
             }

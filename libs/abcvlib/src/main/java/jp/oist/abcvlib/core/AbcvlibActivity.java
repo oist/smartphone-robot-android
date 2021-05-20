@@ -24,7 +24,7 @@ import ioio.lib.util.android.IOIOActivity;
 import jp.oist.abcvlib.core.inputs.Inputs;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
-import jp.oist.abcvlib.core.inputs.phone.vision.ImageAnalyzerActivity;
+import jp.oist.abcvlib.core.inputs.phone.vision.ImageData;
 import jp.oist.abcvlib.core.learning.ActionDistribution;
 import jp.oist.abcvlib.core.learning.ActionSelector;
 import jp.oist.abcvlib.core.learning.RewardGenerator;
@@ -124,7 +124,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
 
     protected void initialzer(AbcvlibActivity abcvlibActivity,
                               AbcvlibController controller,
-                              ImageAnalyzerActivity imageAnalyzerActivity,
+                              ImageData imageData,
                               BatteryData batteryData,
                               WheelData wheelData,
                               TimeStepDataBuffer timeStepDataBuffer) {
@@ -138,7 +138,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
         mainActivity = abcvlibActivity;
         Log.i(TAG, "Start of AbcvlibActivity.initializer");
 
-        inputs = new Inputs(abcvlibActivity, imageAnalyzerActivity, timeStepDataBuffer);
+        inputs = new Inputs(abcvlibActivity, imageData, timeStepDataBuffer);
         outputs = new Outputs(abcvlibActivity, controller);
 
         if (switches.actionSelectorApp){

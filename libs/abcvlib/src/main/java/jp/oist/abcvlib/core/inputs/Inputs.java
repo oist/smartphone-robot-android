@@ -27,7 +27,7 @@ public class Inputs {
     private ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(1, processPriorityThreadFactory);
     private final String TAG = this.getClass().getName();
 
-    public Inputs(AbcvlibActivity abcvlibActivity, ImageAnalyzerActivity imageAnalyzerActivity,
+    public Inputs(AbcvlibActivity abcvlibActivity, ImageData imageData,
                   TimeStepDataBuffer timeStepDataBuffer){
 
         if (abcvlibActivity.switches.motionSensorApp){
@@ -35,7 +35,7 @@ public class Inputs {
         }
 
         if (abcvlibActivity.switches.cameraXApp){
-            camerax = new CameraX(abcvlibActivity, imageAnalyzerActivity);
+            camerax = new CameraX(abcvlibActivity, imageData);
         }
 
         if (abcvlibActivity.switches.micApp){

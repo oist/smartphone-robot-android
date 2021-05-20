@@ -59,6 +59,7 @@ public class TimeStepDataAssembler implements Runnable{
     private final AbcvlibActivity abcvlibActivity;
     private BatteryData batteryData;
     private WheelData wheelData;
+    private ImageData imageData;
 
     public TimeStepDataAssembler(AbcvlibActivity abcvlibActivity,
                                  InetSocketAddress inetSocketAddress,
@@ -97,18 +98,11 @@ public class TimeStepDataAssembler implements Runnable{
     public void initializeGatherers(){
         batteryData = new BatteryData(timeStepDataBuffer);
         wheelData = new WheelData(timeStepDataBuffer);
-        imageAnalysis =
-                new ImageAnalysis.Builder()
-                        .setTargetResolution(new Size(10, 10))
-                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        .setImageQueueDepth(20)
-                        .build();
+        imageData = new ImageData(abcvlibActivity, timeStepDataBuffer);
     }
 
     public void startGatherers() throws InterruptedException {
         CountDownLatch gatherersReady = new CountDownLatch(1);
-
-        ImageData imageData = new ImageData(abcvlibActivity, timeStepDataBuffer);
 
         Log.d("SocketConnection", "Starting new runnable for gatherers");
 
@@ -116,7 +110,7 @@ public class TimeStepDataAssembler implements Runnable{
         batteryData.setRecording(true);
         wheelData.setRecording(true);
         microphoneInput.start();
-        imageAnalysis.setAnalyzer(imageExecutor, imageData);
+        imageData.setRecording(true);
         timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(this, 50,50, TimeUnit.MILLISECONDS);
         gatherersReady.countDown();
         Log.d("SocketConnection", "Waiting for gatherers to finish");
@@ -124,11 +118,9 @@ public class TimeStepDataAssembler implements Runnable{
         Log.d("SocketConnection", "Gatherers finished initializing");
     }
 
-    public BatteryData getBatteryData() {
-        return batteryData;
-    }
-
-    public WheelData getWheelData() {return wheelData;}
+    public BatteryData getBatteryData(){return batteryData;}
+    public WheelData getWheelData(){return wheelData;}
+    public ImageData getImageData(){return imageData;}
 
     public void addTimeStep(){
 
@@ -301,7 +293,7 @@ public class TimeStepDataAssembler implements Runnable{
 
         wheelData.setRecording(false);
         batteryData.setRecording(false);
-        imageAnalysis.clearAnalyzer();
+        imageData.setRecording(false);
         microphoneInput.stop();
         timeStepCount = 0;
         myStepHandler.setLastTimestep(false);
