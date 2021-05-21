@@ -1,13 +1,9 @@
 package jp.oist.abcvlib.compoundcontroller;
 
 import android.os.Bundle;
-import android.util.Log;
-
-import org.json.JSONException;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.outputs.AbcvlibController;
-import jp.oist.abcvlib.util.ErrorHandler;
 
 /**
  * Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors

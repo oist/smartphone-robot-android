@@ -2,6 +2,7 @@ package jp.oist.abcvlib.core.inputs.microcontroller;
 
 import android.util.Log;
 
+import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
 
 public class WheelData {
@@ -55,8 +56,8 @@ public class WheelData {
 
     private final long[] timeStamps = new long[windowLength];
 
-    public WheelData(TimeStepDataBuffer timeStepDataBuffer){
-        this.timeStepDataBuffer = timeStepDataBuffer;
+    public WheelData(AbcvlibActivity abcvlibActivity){
+        this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataAssembler().getTimeStepDataBuffer();
     }
 
     /**

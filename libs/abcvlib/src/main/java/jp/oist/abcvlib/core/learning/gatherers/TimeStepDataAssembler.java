@@ -72,9 +72,7 @@ public class TimeStepDataAssembler implements Runnable{
         executor = new ScheduledExecutorServiceWithException(threads, new ProcessPriorityThreadFactory(1, "dataGatherer"));
 
         this.myStepHandler = myStepHandler;
-
         startEpisode();
-        initializeGatherers();
     }
 
     public TimeStepDataBuffer getTimeStepDataBuffer() {
@@ -89,9 +87,9 @@ public class TimeStepDataAssembler implements Runnable{
     }
 
     public void initializeGatherers(){
-        batteryData = new BatteryData(timeStepDataBuffer);
-        wheelData = new WheelData(timeStepDataBuffer);
-        imageData = new ImageData(abcvlibActivity, timeStepDataBuffer);
+        batteryData = new BatteryData(abcvlibActivity);
+        wheelData = new WheelData(abcvlibActivity);
+        imageData = new ImageData(abcvlibActivity);
     }
 
     public void startGatherers() throws InterruptedException {
@@ -103,7 +101,7 @@ public class TimeStepDataAssembler implements Runnable{
         batteryData.setRecording(true);
         wheelData.setRecording(true);
         microphoneInput.start();
-        imageData.setRecording(true);
+        imageData.getImageAnalyzer().setRecording(true);
         timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(this, 50,50, TimeUnit.MILLISECONDS);
         gatherersReady.countDown();
         Log.d("SocketConnection", "Waiting for gatherers to finish");
@@ -286,7 +284,7 @@ public class TimeStepDataAssembler implements Runnable{
 
         wheelData.setRecording(false);
         batteryData.setRecording(false);
-        imageData.setRecording(false);
+        imageData.getImageAnalyzer().setRecording(false);
         microphoneInput.stop();
         timeStepCount = 0;
         myStepHandler.setLastTimestep(false);

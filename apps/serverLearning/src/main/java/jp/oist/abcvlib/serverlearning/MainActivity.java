@@ -41,10 +41,11 @@ public class MainActivity extends AbcvlibActivity {
                 10, commActionSet, motionActionSet);
 
         timeStepDataAssembler = new TimeStepDataAssembler(this, inetSocketAddress, myStepHandler);
-
-        initializer(this, null, timeStepDataAssembler);
-
+        setTimeStepDataAssembler(timeStepDataAssembler); //sets the instance in abcvlibAcvitiy;
         timeStepDataAssembler.initializeGatherers();
+        initializer(this, null);
+
+
         try {
             timeStepDataAssembler.startGatherers();
         } catch (InterruptedException e) {

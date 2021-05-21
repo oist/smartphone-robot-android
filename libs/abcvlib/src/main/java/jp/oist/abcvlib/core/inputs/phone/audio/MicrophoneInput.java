@@ -12,7 +12,12 @@ import android.util.Log;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataAssembler;
+import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 
 public class MicrophoneInput implements AudioRecord.OnRecordPositionUpdateListener {
 

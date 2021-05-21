@@ -1,8 +1,6 @@
 package jp.oist.abcvlib.core;
 
 import android.content.pm.PackageManager;
-import android.media.AudioRecord;
-import android.media.AudioRecord.OnRecordPositionUpdateListener;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.WindowManager;
@@ -15,22 +13,18 @@ import org.json.JSONObject;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
 import jp.oist.abcvlib.core.inputs.Inputs;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
-import jp.oist.abcvlib.core.inputs.phone.vision.ImageData;
 import jp.oist.abcvlib.core.learning.ActionDistribution;
 import jp.oist.abcvlib.core.learning.ActionSelector;
 import jp.oist.abcvlib.core.learning.RewardGenerator;
-import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
+import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataAssembler;
 import jp.oist.abcvlib.core.outputs.AbcvlibController;
 import jp.oist.abcvlib.core.outputs.Outputs;
-import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.SocketListener;
 
 /**
@@ -120,13 +114,10 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     }
 
     protected void initializer(AbcvlibActivity abcvlibActivity,
-                               AbcvlibController controller,
-                               TimeStepDataAssembler timeStepDataAssembler) {
+                               AbcvlibController controller) {
 
         //Todo some logic here to test for boolean combinations that would lead to errors.
         // e.g. balanceApp without pythonControlApp
-
-        this.timeStepDataAssembler = timeStepDataAssembler;
 
         mainActivity = abcvlibActivity;
         Log.i(TAG, "Start of AbcvlibActivity.initializer");
@@ -153,8 +144,12 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
      */
     protected void initializer(AbcvlibActivity abcvlibActivity) {
 
-        initializer(abcvlibActivity, null, null);
+        initializer(abcvlibActivity, null);
 
+    }
+
+    public void setTimeStepDataAssembler(TimeStepDataAssembler timeStepDataAssembler) {
+        this.timeStepDataAssembler = timeStepDataAssembler;
     }
 
     protected void onSetupFinished() {

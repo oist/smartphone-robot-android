@@ -12,6 +12,7 @@ import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.phone.MotionSensors;
 import jp.oist.abcvlib.core.inputs.phone.audio.MicrophoneInput;
 import jp.oist.abcvlib.core.inputs.phone.vision.ImageData;
+import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataAssembler;
 import jp.oist.abcvlib.util.CameraX;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
@@ -27,8 +28,7 @@ public class Inputs {
     private ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(1, processPriorityThreadFactory);
     private final String TAG = this.getClass().getName();
 
-    public Inputs(AbcvlibActivity abcvlibActivity, ImageData imageData,
-                  TimeStepDataBuffer timeStepDataBuffer){
+    public Inputs(AbcvlibActivity abcvlibActivity, ImageData imageData){
 
         if (abcvlibActivity.switches.motionSensorApp){
             motionSensors = new MotionSensors(abcvlibActivity);
@@ -43,7 +43,7 @@ public class Inputs {
         }
 
         if (abcvlibActivity.switches.quadEncoderApp){
-            wheelData = new WheelData(timeStepDataBuffer);
+            wheelData = new WheelData(abcvlibActivity);
         }
 
         stateVariables = initializeStateVariables();
