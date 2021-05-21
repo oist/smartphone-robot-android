@@ -45,7 +45,7 @@ public class ImageData implements ImageAnalysis.Analyzer{
     public ImageAnalysis getImageAnalysis() {
         return imageAnalysis;
     }
-    
+
     @androidx.camera.core.ExperimentalGetImage
     @Override
     public void analyze(@NonNull ImageProxy imageProxy) {

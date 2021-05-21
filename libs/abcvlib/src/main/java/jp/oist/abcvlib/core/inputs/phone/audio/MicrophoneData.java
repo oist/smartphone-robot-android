@@ -19,7 +19,7 @@ import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataAssembler;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 
-public class MicrophoneInput implements AudioRecord.OnRecordPositionUpdateListener {
+public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListener {
 
     private final AbcvlibActivity abcvlibActivity;
 
@@ -30,7 +30,7 @@ public class MicrophoneInput implements AudioRecord.OnRecordPositionUpdateListen
     private AudioRecord recorder;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public MicrophoneInput(AbcvlibActivity abcvlibActivity) {
+    public MicrophoneData(AbcvlibActivity abcvlibActivity) {
 
         Log.i("abcvlib", "In MicInput run method");
 

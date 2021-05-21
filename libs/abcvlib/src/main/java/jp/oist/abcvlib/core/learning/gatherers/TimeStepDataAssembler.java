@@ -1,9 +1,6 @@
 package jp.oist.abcvlib.core.learning.gatherers;
 
 import android.util.Log;
-import android.util.Size;
-
-import androidx.camera.core.ImageAnalysis;
 
 import com.google.flatbuffers.FlatBufferBuilder;
 
@@ -13,15 +10,13 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
-import jp.oist.abcvlib.core.inputs.phone.audio.MicrophoneInput;
+import jp.oist.abcvlib.core.inputs.phone.audio.MicrophoneData;
 import jp.oist.abcvlib.core.inputs.phone.vision.ImageData;
 import jp.oist.abcvlib.core.learning.ActionSet;
 import jp.oist.abcvlib.core.learning.CommAction;
@@ -49,7 +44,7 @@ public class TimeStepDataAssembler implements Runnable{
     private int episodeCount = 0;
     private TimeStepDataBuffer timeStepDataBuffer;
     private String TAG = getClass().toString();
-    private MicrophoneInput microphoneInput;
+    private MicrophoneData microphoneData;
     private boolean pauseRecording = false;
     private ScheduledFuture<?> timeStepDataAssemblerFuture;
     private final ScheduledExecutorServiceWithException executor;
@@ -64,7 +59,7 @@ public class TimeStepDataAssembler implements Runnable{
                                  StepHandler myStepHandler){
         this.abcvlibActivity = abcvlibActivity;
         this.inetSocketAddress = inetSocketAddress;
-        microphoneInput = new MicrophoneInput(abcvlibActivity);
+        microphoneData = new MicrophoneData(abcvlibActivity);
 
         timeStepDataBuffer = new TimeStepDataBuffer(10);
 
@@ -99,7 +94,7 @@ public class TimeStepDataAssembler implements Runnable{
 
         batteryData.setRecording(true);
         wheelData.setRecording(true);
-        microphoneInput.start();
+        microphoneData.start();
         imageData.setRecording(true);
         timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(this, 50,50, TimeUnit.MILLISECONDS);
         gatherersReady.countDown();
@@ -269,12 +264,12 @@ public class TimeStepDataAssembler implements Runnable{
     public void assembleAudio(){
         // Don't put these inline, else you will pass by reference rather than value and references will continue to update
         // todo between episodes the startTime is larger than the end time somehow.
-        android.media.AudioTimestamp startTime = microphoneInput.getStartTime();
-        android.media.AudioTimestamp endTime = microphoneInput.getEndTime();
-        int sampleRate = microphoneInput.getSampleRate();
+        android.media.AudioTimestamp startTime = microphoneData.getStartTime();
+        android.media.AudioTimestamp endTime = microphoneData.getEndTime();
+        int sampleRate = microphoneData.getSampleRate();
         timeStepDataBuffer.getWriteData().getSoundData().setMetaData(sampleRate, startTime, endTime);
 
-        microphoneInput.setStartTime();
+        microphoneData.setStartTime();
     }
 
     public void stopRecordingData(){
@@ -284,7 +279,7 @@ public class TimeStepDataAssembler implements Runnable{
         wheelData.setRecording(false);
         batteryData.setRecording(false);
         imageData.setRecording(false);
-        microphoneInput.stop();
+        microphoneData.stop();
         timeStepCount = 0;
         myStepHandler.setLastTimestep(false);
         timeStepDataAssemblerFuture.cancel(false);
@@ -373,7 +368,7 @@ public class TimeStepDataAssembler implements Runnable{
         Log.i(TAG, "Need to handle end of trail here");
         episodeCount = 0;
         stopRecordingData();
-        microphoneInput.close();
+        microphoneData.close();
     }
 
     private void sendToServer(ByteBuffer episode, CyclicBarrier doneSignal) throws IOException {
