@@ -10,8 +10,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.phone.MotionSensors;
-import jp.oist.abcvlib.core.inputs.phone.audio.MicrophoneData;
-import jp.oist.abcvlib.core.inputs.phone.vision.ImageData;
+import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
+import jp.oist.abcvlib.core.inputs.phone.ImageData;
 import jp.oist.abcvlib.util.CameraX;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 

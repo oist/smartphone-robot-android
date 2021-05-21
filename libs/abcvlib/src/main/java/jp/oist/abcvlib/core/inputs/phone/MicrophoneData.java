@@ -1,4 +1,4 @@
-package jp.oist.abcvlib.core.inputs.phone.audio;
+package jp.oist.abcvlib.core.inputs.phone;
 
 import android.Manifest;
 import android.content.pm.PackageManager;

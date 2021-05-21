@@ -1,4 +1,4 @@
-package jp.oist.abcvlib.core.inputs.phone.vision;
+package jp.oist.abcvlib.core.inputs.phone;
 
 import android.graphics.Bitmap;
 import android.media.Image;
