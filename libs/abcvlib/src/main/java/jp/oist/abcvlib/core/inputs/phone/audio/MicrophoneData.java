@@ -7,16 +7,22 @@ import android.media.AudioRecord;
 import android.media.AudioTimestamp;
 import android.media.MediaRecorder;
 import android.os.Build;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
+import androidx.core.os.HandlerCompat;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataAssembler;
+import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 
 public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListener {
@@ -28,6 +34,7 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
     private ExecutorService audioExecutor;
 
     private AudioRecord recorder;
+    private boolean isRecording = false;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public MicrophoneData(AbcvlibActivity abcvlibActivity) {
@@ -37,6 +44,9 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
         this.abcvlibActivity = abcvlibActivity;
 
         audioExecutor = Executors.newScheduledThreadPool(1, new ProcessPriorityThreadFactory(10, "dataGatherer"));
+        HandlerThread handlerThread = new HandlerThread("audioHandlerThread");
+        handlerThread.start();
+        Handler handler = new Handler(handlerThread.getLooper());
 
         checkRecordPermission();
 
@@ -59,7 +69,8 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
         int framePerBuffer = bufferSize / bytesPerFrame; // # of frames that can be kept in a bufferSize dimension
         int framePeriod = framePerBuffer / 2; // Read from buffer two times per full buffer.
         recorder.setPositionNotificationPeriod(framePeriod);
-        recorder.setRecordPositionUpdateListener(this);
+        recorder.setRecordPositionUpdateListener(this, handler);
+        start();
     }
 
     public void start(){
@@ -74,6 +85,10 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
     }
     
     public AudioTimestamp getStartTime(){return startTime;}
+
+    public AudioRecord getRecorder() {
+        return recorder;
+    }
 
     public void setStartTime(){
         recorder.getTimestamp(startTime, AudioTimestamp.TIMEBASE_MONOTONIC);
@@ -108,6 +123,14 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
         recorder = null;
     }
 
+    public synchronized void setRecording(boolean recording) {
+        isRecording = recording;
+    }
+
+    public synchronized boolean isRecording() {
+        return isRecording;
+    }
+
     @Override
     public void onMarkerReached(AudioRecord recorder) {
 
@@ -125,30 +148,36 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
      */
     @Override
     public void onPeriodicNotification(AudioRecord audioRecord) {
-
-        audioExecutor.execute(new Runnable() {
-            @Override
-            public void run() {
-                int writeBufferSizeFrames = audioRecord.getBufferSizeInFrames();
-                int readBufferSize = audioRecord.getPositionNotificationPeriod();
+        try{
+            audioExecutor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    int writeBufferSizeFrames = audioRecord.getBufferSizeInFrames();
+                    int readBufferSize = audioRecord.getPositionNotificationPeriod();
 //                Log.d("microphone", "readBufferSize:" + readBufferSize);
-                float[] audioData = new float[readBufferSize];
-                int numSamples = audioRecord.read(audioData, 0,
-                        readBufferSize, AudioRecord.READ_NON_BLOCKING);
+                    float[] audioData = new float[readBufferSize];
+                    int numSamples = audioRecord.read(audioData, 0,
+                            readBufferSize, AudioRecord.READ_NON_BLOCKING);
 //                Log.d("microphone", "numSamples:" + numSamples);
-                if (numSamples < readBufferSize){
-                    Log.w("microphone", "Missed some audio samples");
-                }
+                    if (numSamples < readBufferSize){
+                        Log.w("microphone", "Missed some audio samples");
+                    }
 //                Log.v("microphone", numSamples + " / " + writeBufferSizeFrames + " samples read");
-                onNewAudioData(audioData, numSamples);
-            }
-        });
+                    onNewAudioData(audioData, numSamples);
+                }
+            });
+        }catch (Exception e){
+            ErrorHandler.eLog("onPeriodicNotification", "sadfkjsdhf", e, true);
+        }
     }
 
     protected void onNewAudioData(float[] audioData, int numSamples){
-        abcvlibActivity.getTimeStepDataAssembler().getTimeStepDataBuffer().getWriteData().
-                getSoundData().add(audioData, numSamples);
+        if (isRecording) {
+            abcvlibActivity.getTimeStepDataAssembler().getTimeStepDataBuffer().getWriteData().
+                    getSoundData().add(audioData, numSamples);
+        }
     }
+
 //
 //    public void processAudioFrame(short[] audioFrame) {
 //        final double bufferLength = 20; //milliseconds
