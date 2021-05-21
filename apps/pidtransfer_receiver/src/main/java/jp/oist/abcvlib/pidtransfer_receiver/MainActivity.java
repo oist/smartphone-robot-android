@@ -73,7 +73,7 @@ public class MainActivity extends AbcvlibActivity{
         //switches.cameraApp = true;
 
         // Initalizes various objects in parent class.
-        initialzer(this);
+        initializer(this);
 
         super.onCreate(savedInstanceState);
 

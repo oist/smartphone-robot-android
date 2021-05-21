@@ -139,7 +139,7 @@ public final class CameraXLivePreviewActivity extends AbcvlibActivity
         switches.loggerOn = true;
 
         // Note the previously optional parameters that handle the connection to the python server
-        initialzer(this);
+        initializer(this);
 
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate");

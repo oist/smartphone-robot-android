@@ -44,8 +44,7 @@ public class MainActivity extends AbcvlibActivity {
         TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler(this, null, null);
 
         // Note the previously optional parameters that handle the connection to the python server
-        initialzer(this, null, this, timeStepDataAssembler.getBatteryData(),
-                timeStepDataAssembler.getWheelData(), timeStepDataAssembler.getTimeStepDataBuffer());
+        initializer(this, null, timeStepDataAssembler);
 
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);

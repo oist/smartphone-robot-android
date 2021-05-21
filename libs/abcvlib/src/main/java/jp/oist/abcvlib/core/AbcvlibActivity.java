@@ -119,12 +119,9 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
         Log.i(TAG, "End of AbcvlibActivity.onResume");
     }
 
-    protected void initialzer(AbcvlibActivity abcvlibActivity,
-                              AbcvlibController controller,
-                              ImageData imageData,
-                              BatteryData batteryData,
-                              WheelData wheelData,
-                              TimeStepDataBuffer timeStepDataBuffer) {
+    protected void initializer(AbcvlibActivity abcvlibActivity,
+                               AbcvlibController controller,
+                               TimeStepDataAssembler timeStepDataAssembler) {
 
         //Todo some logic here to test for boolean combinations that would lead to errors.
         // e.g. balanceApp without pythonControlApp
@@ -157,9 +154,9 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     /**
      * null initializer for basic module or those not interacting with anything other than itself
      */
-    protected void initialzer(AbcvlibActivity abcvlibActivity) {
+    protected void initializer(AbcvlibActivity abcvlibActivity) {
 
-        initialzer(abcvlibActivity, null, null, null, null, null);
+        initializer(abcvlibActivity, null, null);
 
     }
 

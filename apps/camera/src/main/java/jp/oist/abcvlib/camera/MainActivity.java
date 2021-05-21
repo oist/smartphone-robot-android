@@ -16,7 +16,7 @@ public class MainActivity extends AbcvlibActivity {
         setContentView(R.layout.camera_x_preview);
 
         switches.cameraXApp = true;
-        initialzer(this);
+        initializer(this);
         super.onCreate(savedInstanceState);
     }
 }

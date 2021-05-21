@@ -15,7 +15,7 @@ public class MainActivity extends AbcvlibActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        initialzer(this);
+        initializer(this);
 
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
