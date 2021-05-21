@@ -12,7 +12,6 @@ import androidx.core.content.ContextCompat;
 import org.json.JSONObject;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
@@ -44,9 +43,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
     public Outputs outputs;
     public ActionDistribution aD;
     public ActionSelector aS;
-    private Thread actionSelectorThread;
     public Switches switches = new Switches();
-    private AbcvlibActivity mainActivity;
     private BatteryData batteryData;
     private WheelData wheelData;
     private TimeStepDataAssembler timeStepDataAssembler;
@@ -60,8 +57,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
     // Other generics
     protected static final String TAG = "abcvlib";
 
-    public int avgCount = 1000;
-    private static String[] REQUIRED_PERMISSIONS = new String[0];
+    private static final String[] REQUIRED_PERMISSIONS = new String[0];
 
     protected void onCreate(Bundle savedInstanceState) {
         if(!appRunning){
@@ -116,13 +112,10 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
                                AbcvlibController controller,
                                TimeStepDataAssembler timeStepDataAssembler) throws InterruptedException {
 
-        //Todo some logic here to test for boolean combinations that would lead to errors.
-        // e.g. balanceApp without pythonControlApp
         this.timeStepDataAssembler = timeStepDataAssembler;
         timeStepDataAssembler.initializeGatherers();
         timeStepDataAssembler.startGatherers();
 
-        mainActivity = abcvlibActivity;
         Log.i(TAG, "Start of AbcvlibActivity.initializer");
 
         inputs = new Inputs(abcvlibActivity, timeStepDataAssembler.getImageData());
@@ -149,17 +142,6 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
 
         initializer(abcvlibActivity, null, null);
 
-    }
-
-    protected void onSetupFinished() {
-
-    }
-
-    public void setRequiredPermissions(String[] permissions){
-        for (String permission : permissions){
-            REQUIRED_PERMISSIONS = Arrays.copyOf(REQUIRED_PERMISSIONS, REQUIRED_PERMISSIONS.length + 1);
-            REQUIRED_PERMISSIONS[REQUIRED_PERMISSIONS.length - 1] = permission;
-        }
     }
 
     /**
@@ -220,19 +202,6 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
                 switches.loggerOn,
                 switches.wheelPolaritySwap,
                 batteryData, wheelData);
-    }
-
-    public double determineReward(){
-        return 0;
-    }
-
-    /**
-     * Interface type method used by onPeriodicNotification to send audioData to the main activity
-     * object for custom processing. This allows the buffer size checking and threading to be
-     * abstracted to this AbcvlibAcvitiy.
-     * @param audioData
-     */
-    protected void onNewAudioData(float[] audioData, int numSamples){
     }
 
     @Override
