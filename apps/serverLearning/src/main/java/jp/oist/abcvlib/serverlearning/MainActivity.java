@@ -57,11 +57,8 @@ public class MainActivity extends AbcvlibActivity {
         } catch (InterruptedException e) {
             ErrorHandler.eLog(TAG, "Error starting gathers", e, true);
         }
-    }
-    
-    @Override
-    protected void onNewAudioData(float[] audioData, int numSamples){
-        timeStepDataAssembler.getTimeStepDataBuffer().getWriteData().getSoundData().add(audioData, numSamples);
+
+        super.onCreate(savedInstanceState);
     }
 
     @Override

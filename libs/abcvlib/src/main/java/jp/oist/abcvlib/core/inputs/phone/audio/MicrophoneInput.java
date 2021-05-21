@@ -99,6 +99,48 @@ public class MicrophoneInput {
         recorder.release();
         recorder = null;
     }
+
+    @Override
+    public void onMarkerReached(AudioRecord recorder) {
+
+    }
+
+    /**
+     * This method fires 2 times during each loop of the audio record buffer.
+     * audioRecord.read(audioData) writes the buffer values (stored in the audioRecord) to a local
+     * float array called audioData. It is set to read in non_blocking mode
+     * (https://developer.android.com/reference/android/media/AudioRecord?hl=ja#READ_NON_BLOCKING)
+     * You can verify it is not blocking by checking the log for "Missed some audio samples"
+     * You can verify if the buffer writer is overflowing by checking the log for:
+     * "W/AudioFlinger: RecordThread: buffer overflow"
+     * @param audioRecord
+     */
+    @Override
+    public void onPeriodicNotification(AudioRecord audioRecord) {
+
+        audioExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                int writeBufferSizeFrames = audioRecord.getBufferSizeInFrames();
+                int readBufferSize = audioRecord.getPositionNotificationPeriod();
+//                Log.d("microphone", "readBufferSize:" + readBufferSize);
+                float[] audioData = new float[readBufferSize];
+                int numSamples = audioRecord.read(audioData, 0,
+                        readBufferSize, AudioRecord.READ_NON_BLOCKING);
+//                Log.d("microphone", "numSamples:" + numSamples);
+                if (numSamples < readBufferSize){
+                    Log.w("microphone", "Missed some audio samples");
+                }
+//                Log.v("microphone", numSamples + " / " + writeBufferSizeFrames + " samples read");
+                onNewAudioData(audioData, numSamples);
+            }
+        });
+    }
+
+    protected void onNewAudioData(float[] audioData, int numSamples){
+        abcvlibActivity.getTimeStepDataAssembler().getTimeStepDataBuffer().getWriteData().
+                getSoundData().add(audioData, numSamples);
+    }
 //
 //    public void processAudioFrame(short[] audioFrame) {
 //        final double bufferLength = 20; //milliseconds
