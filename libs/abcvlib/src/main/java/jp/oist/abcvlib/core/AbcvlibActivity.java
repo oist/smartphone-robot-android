@@ -16,10 +16,6 @@ import java.nio.ByteBuffer;
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
 import jp.oist.abcvlib.core.inputs.Inputs;
-import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
-import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
-import jp.oist.abcvlib.core.learning.ActionDistribution;
-import jp.oist.abcvlib.core.learning.ActionSelector;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataAssembler;
 import jp.oist.abcvlib.core.outputs.AbcvlibController;
 import jp.oist.abcvlib.core.outputs.Outputs;
@@ -41,11 +37,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
     // Publically accessible objects that encapsulate a lot other core functionality
     public Inputs inputs;
     public Outputs outputs;
-    public ActionDistribution aD;
-    public ActionSelector aS;
     public Switches switches = new Switches();
-    private BatteryData batteryData;
-    private WheelData wheelData;
     private TimeStepDataAssembler timeStepDataAssembler;
 
     /**
@@ -121,14 +113,6 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
         inputs = new Inputs(abcvlibActivity, timeStepDataAssembler.getImageData());
         outputs = new Outputs(abcvlibActivity, controller);
 
-        if (switches.actionSelectorApp){
-            if (aD == null){
-                aD = new ActionDistribution();
-            }
-            aS = new ActionSelector(this);
-            aS.start();
-        }
-
         // Tell all child classes it is ok to proceed.
         this.appRunning = true;
 
@@ -200,8 +184,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
         Log.d("abcvlib", "createIOIOLooper Finished");
         return new AbcvlibLooper(this,
                 switches.loggerOn,
-                switches.wheelPolaritySwap,
-                batteryData, wheelData);
+                switches.wheelPolaritySwap, timeStepDataAssembler);
     }
 
     @Override
