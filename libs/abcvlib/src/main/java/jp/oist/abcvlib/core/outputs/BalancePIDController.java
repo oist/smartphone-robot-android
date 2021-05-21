@@ -73,7 +73,7 @@ public class BalancePIDController extends AbcvlibController{
 
             PIDTimer[0] = System.nanoTime();
 
-            thetaDiff = thetaDeg - abcvlibActivity.inputs.motionSensors.getThetaDeg();
+            thetaDiff = thetaDeg - abcvlibActivity.inputs.orientationData.getThetaDeg();
 
             if (thetaDiff !=0){
                 updateTimeStep = PIDTimer[0]- lastUpdateTime;
@@ -83,8 +83,8 @@ public class BalancePIDController extends AbcvlibController{
                 }
             }
 
-            thetaDeg = abcvlibActivity.inputs.motionSensors.getThetaDeg();
-            thetaDegDot = abcvlibActivity.inputs.motionSensors.getThetaDegDot();
+            thetaDeg = abcvlibActivity.inputs.orientationData.getThetaDeg();
+            thetaDegDot = abcvlibActivity.inputs.orientationData.getThetaDegDot();
             wheelCountL = abcvlibActivity.inputs.getWheelData().getWheelCountL();
             wheelCountL = abcvlibActivity.inputs.getWheelData().getWheelCountR();
             distanceL = abcvlibActivity.inputs.getWheelData().getDistanceL();

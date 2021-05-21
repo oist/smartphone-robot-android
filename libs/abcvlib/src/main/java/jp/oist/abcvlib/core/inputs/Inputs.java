@@ -9,7 +9,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
-import jp.oist.abcvlib.core.inputs.phone.MotionSensors;
+import jp.oist.abcvlib.core.inputs.phone.OrientationData;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
 import jp.oist.abcvlib.core.inputs.phone.ImageData;
 import jp.oist.abcvlib.util.CameraX;
@@ -17,7 +17,7 @@ import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 
 public class Inputs {
 
-    public MotionSensors motionSensors; // Doesn't need thread since handled by sensorManager or SensorService
+    public OrientationData orientationData; // Doesn't need thread since handled by sensorManager or SensorService
     public JSONObject stateVariables;
     public MicrophoneData micInput;
     private WheelData wheelData;
@@ -29,7 +29,7 @@ public class Inputs {
     public Inputs(AbcvlibActivity abcvlibActivity, ImageData imageData){
 
         if (abcvlibActivity.switches.motionSensorApp){
-            motionSensors = new MotionSensors(abcvlibActivity);
+            orientationData = new OrientationData(abcvlibActivity);
         }
 
         if (abcvlibActivity.switches.cameraXApp){

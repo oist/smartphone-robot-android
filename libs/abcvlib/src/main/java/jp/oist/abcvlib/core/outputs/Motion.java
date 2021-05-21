@@ -2,7 +2,7 @@ package jp.oist.abcvlib.core.outputs;
 
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.core.inputs.phone.MotionSensors;
+import jp.oist.abcvlib.core.inputs.phone.OrientationData;
 
 /**
  * Motion is a collection of methods that implement various predefined motions via
@@ -37,7 +37,7 @@ public class Motion {
      */
     private int dutyCycleLeftWheel = 0;
 
-    private MotionSensors motionSensors;
+    private OrientationData orientationData;
     private AbcvlibActivity abcvlibActivity;
 
     /**
@@ -45,7 +45,7 @@ public class Motion {
       */
     public Motion(AbcvlibActivity abcvlibActivity){
         this.abcvlibActivity = abcvlibActivity;
-        this.motionSensors = abcvlibActivity.inputs.motionSensors;
+        this.orientationData = abcvlibActivity.inputs.orientationData;
     }
 
     /**

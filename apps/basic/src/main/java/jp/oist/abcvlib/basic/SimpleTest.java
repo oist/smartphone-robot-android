@@ -24,8 +24,8 @@ public class SimpleTest implements Runnable{
     public void run(){
 
         // Prints theta and angular velocity to android logcat
-        Log.i("SimpleTest", "theta:" + inputs.motionSensors.getThetaDeg() +
-                " thetaDot:" +  inputs.motionSensors.getThetaDegDot());
+        Log.i("SimpleTest", "theta:" + inputs.orientationData.getThetaDeg() +
+                " thetaDot:" +  inputs.orientationData.getThetaDegDot());
 
         abcvlibActivity.runOnUiThread(new Runnable() {
             @Override

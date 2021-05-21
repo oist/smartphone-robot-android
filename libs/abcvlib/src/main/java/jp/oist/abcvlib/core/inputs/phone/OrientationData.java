@@ -31,7 +31,7 @@ import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
  * @author Jiexin Wang https://github.com/ha5ha6
  * @author Christopher Buckley https://github.com/topherbuckley
  */
-public class MotionSensors implements SensorEventListener {
+public class OrientationData implements SensorEventListener {
     private AbcvlibActivity abcvlibActivity;
 
     //----------------------------------------- Counters -------------------------------------------
@@ -149,7 +149,7 @@ public class MotionSensors implements SensorEventListener {
      * accelerometer and gyroscope. Then registers both sensors such that their onSensorChanged
      * events will call the onSensorChanged method within this class.
      */
-    public MotionSensors(AbcvlibActivity abcvlibActivity){
+    public OrientationData(AbcvlibActivity abcvlibActivity){
         this.abcvlibActivity = abcvlibActivity;
         this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataAssembler().getTimeStepDataBuffer();
         sensorManager = (SensorManager) abcvlibActivity.getSystemService(Context.SENSOR_SERVICE);
