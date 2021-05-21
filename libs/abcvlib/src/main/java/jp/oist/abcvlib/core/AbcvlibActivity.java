@@ -56,6 +56,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     private AbcvlibActivity mainActivity;
     private BatteryData batteryData;
     private WheelData wheelData;
+    private TimeStepDataAssembler timeStepDataAssembler;
 
     /**
      * Lets various loops know its time to wrap things up when false, and prevents other loops from
@@ -125,13 +126,12 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
         //Todo some logic here to test for boolean combinations that would lead to errors.
         // e.g. balanceApp without pythonControlApp
 
-        this.batteryData = batteryData;
-        this.wheelData = wheelData;
+        this.timeStepDataAssembler = timeStepDataAssembler;
 
         mainActivity = abcvlibActivity;
         Log.i(TAG, "Start of AbcvlibActivity.initializer");
 
-        inputs = new Inputs(abcvlibActivity, imageData, timeStepDataBuffer);
+        inputs = new Inputs(abcvlibActivity, timeStepDataAssembler.getImageData());
         outputs = new Outputs(abcvlibActivity, controller);
 
         if (switches.actionSelectorApp){
@@ -249,4 +249,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
         Log.i("server", "Reading from Server Completed");
     }
 
+    public TimeStepDataAssembler getTimeStepDataAssembler() {
+        return timeStepDataAssembler;
+    }
 }
