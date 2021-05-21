@@ -60,6 +60,7 @@ public class TimeStepDataBuffer {
         private ImageData imageData;
         private SoundData soundData;
         private RobotAction actions;
+        private OrientationData orientationData;
 
         public TimeStepData(){
             wheelCounts = new WheelCounts();
@@ -68,6 +69,7 @@ public class TimeStepDataBuffer {
             imageData = new ImageData();
             soundData = new SoundData();
             actions = new RobotAction();
+            orientationData = new OrientationData();
         }
 
         public WheelCounts getWheelCounts(){return wheelCounts;}
@@ -76,6 +78,7 @@ public class TimeStepDataBuffer {
         public ImageData getImageData(){return imageData;}
         public SoundData getSoundData(){return soundData;}
         public RobotAction getActions(){return actions;}
+        public OrientationData getOrientationData(){return orientationData;}
 
         public void clear(){
             wheelCounts = new WheelCounts();
@@ -291,6 +294,41 @@ public class TimeStepDataBuffer {
 
             public CommAction getCommAction() {
                 return commAction;
+            }
+        }
+
+        public static class OrientationData{
+            ArrayList<Long> timestamps = new ArrayList<>();
+            ArrayList<Double> tiltAngle = new ArrayList<>();
+            ArrayList<Double> angularVelocity = new ArrayList<>();
+            public void put(long timestamp, double _tiltAngle, double _angularVelocity){
+                timestamps.add(timestamp);
+                tiltAngle.add(_tiltAngle);
+                angularVelocity.add(_angularVelocity);
+            }
+            public long[] getTimeStamps(){
+                int size = timestamps.size();
+                long[] timestampslong = new long[size];
+                for (int i=0 ; i < size ; i++){
+                    timestampslong[i] = timestamps.get(i);
+                }
+                return timestampslong;
+            }
+            public double[] getTiltAngle(){
+                int size = tiltAngle.size();
+                double[] leftLong = new double[size];
+                for (int i=0 ; i < size ; i++){
+                    leftLong[i] = tiltAngle.get(i);
+                }
+                return leftLong;
+            }
+            public double[] getAngularVelocity(){
+                int size = angularVelocity.size();
+                double[] rightLong = new double[size];
+                for (int i=0 ; i < size ; i++){
+                    rightLong[i] = angularVelocity.get(i);
+                }
+                return rightLong;
             }
         }
     }

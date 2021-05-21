@@ -25,16 +25,14 @@ public class SimpleTest implements Runnable{
 
         // Prints theta and angular velocity to android logcat
         Log.i("SimpleTest", "theta:" + inputs.motionSensors.getThetaDeg() +
-                " thetaDot:" +  inputs.motionSensors.getThetaDegDot() +
-                " Battery Voltage:" + inputs.battery.getVoltageBatt() +
-                " Charger Voltage:" + inputs.battery.getVoltageCharger());
+                " thetaDot:" +  inputs.motionSensors.getThetaDegDot());
 
         abcvlibActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                // Stuff that updates the UI
-                voltageBattDisplay.setText("Battery: " + inputs.battery.getVoltageBatt() + "V");
-                voltageChargerDisplay.setText("Charger: " + inputs.battery.getVoltageCharger() + "V");
+//                // Stuff that updates the UI
+//                voltageBattDisplay.setText("Battery: " + inputs.battery.getVoltageBatt() + "V");
+//                voltageChargerDisplay.setText("Charger: " + inputs.battery.getVoltageCharger() + "V");
 
             }
         });

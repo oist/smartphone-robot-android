@@ -9,6 +9,7 @@ import android.os.Build;
 import android.util.Log;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
 
 /**
  * MotionSensors reads and processes the data from the Android phone gryoscope and
@@ -122,6 +123,8 @@ public class MotionSensors implements SensorEventListener {
     float[] pythonSensorTimeSteps = new float[3];
     int timerCount = 1;
     private int avgCount = 1000;
+    private boolean isRecording = false;
+    private final TimeStepDataBuffer timeStepDataBuffer;
 
     //----------------------------------------------------------------------------------------------
 
@@ -148,6 +151,7 @@ public class MotionSensors implements SensorEventListener {
      */
     public MotionSensors(AbcvlibActivity abcvlibActivity){
         this.abcvlibActivity = abcvlibActivity;
+        this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataAssembler().getTimeStepDataBuffer();
         sensorManager = (SensorManager) abcvlibActivity.getSystemService(Context.SENSOR_SERVICE);
         gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         rotation_sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
@@ -263,11 +267,21 @@ public class MotionSensors implements SensorEventListener {
 
         timerCount ++;
 
+        if(isRecording){
+            timeStepDataBuffer.getWriteData().getOrientationData().put(timeStamps[indexCurrentRotation],
+                    thetaRad[indexCurrentRotation],
+                    angularVelocityRad[indexCurrentRotation]);
+        }
+
         // Todo: does this sleep the main thread or is this running on something else at this point?
         Thread.yield();
 
 
 //        Log.i("Sensor Delay Timer", "Time between last sensor changes: " + Arrays.toString(delayTimeSteps));
+    }
+
+    public void setRecording(boolean recording) {
+        isRecording = recording;
     }
 
     /**
