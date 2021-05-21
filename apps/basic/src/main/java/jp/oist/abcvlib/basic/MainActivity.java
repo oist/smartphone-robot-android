@@ -3,7 +3,6 @@ package jp.oist.abcvlib.basic;
 import android.os.Bundle;
 
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
