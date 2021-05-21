@@ -44,15 +44,11 @@ public class MainActivity extends AbcvlibActivity {
 
         initializer(this, null, timeStepDataAssembler);
 
-        super.onCreate(savedInstanceState);
-    }
-
-    @Override
-    protected void onSetupFinished() {
+        timeStepDataAssembler.initializeGatherers();
         try {
             timeStepDataAssembler.startGatherers();
         } catch (InterruptedException e) {
-            ErrorHandler.eLog(TAG, "Error starting gathers", e, true);
+            ErrorHandler.eLog(TAG, "Interrupted while starting gatherers", e, true);
         }
 
         super.onCreate(savedInstanceState);
