@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream;
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
 import jp.oist.abcvlib.util.ImageOps;
+import jp.oist.abcvlib.util.YuvToRgbConverter;
 
 public class ImageAnalyzer implements ImageAnalysis.Analyzer {
 

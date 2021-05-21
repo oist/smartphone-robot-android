@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package jp.oist.abcvlib.core.inputs.phone.vision
+package jp.oist.abcvlib.util
 
 import android.content.Context
 import android.graphics.Bitmap
