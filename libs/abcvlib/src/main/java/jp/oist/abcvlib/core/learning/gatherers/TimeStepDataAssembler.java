@@ -87,7 +87,7 @@ public class TimeStepDataAssembler implements Runnable{
         microphoneData = new MicrophoneData(abcvlibActivity);
     }
 
-    public void startGatherers() throws InterruptedException {
+    public void startGatherers() {
         CountDownLatch gatherersReady = new CountDownLatch(1);
 
         Log.d("SocketConnection", "Starting new runnable for gatherers");
@@ -99,7 +99,11 @@ public class TimeStepDataAssembler implements Runnable{
         timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(this, 50,50, TimeUnit.MILLISECONDS);
         gatherersReady.countDown();
         Log.d("SocketConnection", "Waiting for gatherers to finish");
-        gatherersReady.await();
+        try {
+            gatherersReady.await();
+        } catch (InterruptedException e) {
+            ErrorHandler.eLog(TAG, "InterruptedException", e, true);
+        }
         Log.d("SocketConnection", "Gatherers finished initializing");
     }
 

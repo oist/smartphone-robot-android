@@ -22,7 +22,7 @@ public class MainActivity extends AbcvlibActivity {
 
         // Initalizes various objects in parent class.
         try {
-            initializer(this, null, null);
+            initializer(this);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

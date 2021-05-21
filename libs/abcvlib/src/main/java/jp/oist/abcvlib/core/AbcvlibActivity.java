@@ -16,6 +16,7 @@ import java.nio.ByteBuffer;
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
 import jp.oist.abcvlib.core.inputs.Inputs;
+import jp.oist.abcvlib.core.inputs.phone.ImageData;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataAssembler;
 import jp.oist.abcvlib.core.outputs.AbcvlibController;
 import jp.oist.abcvlib.core.outputs.Outputs;
@@ -102,15 +103,19 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
 
     protected void initializer(AbcvlibActivity abcvlibActivity,
                                AbcvlibController controller,
-                               TimeStepDataAssembler timeStepDataAssembler) throws InterruptedException {
+                               TimeStepDataAssembler timeStepDataAssembler) {
 
-        this.timeStepDataAssembler = timeStepDataAssembler;
-        timeStepDataAssembler.initializeGatherers();
-        timeStepDataAssembler.startGatherers();
+        ImageData imageData = null;
+        if (timeStepDataAssembler != null){
+            this.timeStepDataAssembler = timeStepDataAssembler;
+            timeStepDataAssembler.initializeGatherers();
+            timeStepDataAssembler.startGatherers();
+            imageData = timeStepDataAssembler.getImageData();
+        }
 
         Log.i(TAG, "Start of AbcvlibActivity.initializer");
 
-        inputs = new Inputs(abcvlibActivity, timeStepDataAssembler.getImageData());
+        inputs = new Inputs(abcvlibActivity, imageData);
         outputs = new Outputs(abcvlibActivity, controller);
 
         // Tell all child classes it is ok to proceed.
@@ -122,8 +127,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
     /**
      * null initializer for basic module or those not interacting with anything other than itself
      */
-    protected void initializer(AbcvlibActivity abcvlibActivity) throws InterruptedException {
-
+    protected void initializer(AbcvlibActivity abcvlibActivity) {
         initializer(abcvlibActivity, null, null);
 
     }
