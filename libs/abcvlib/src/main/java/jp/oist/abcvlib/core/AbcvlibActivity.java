@@ -21,7 +21,6 @@ import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.learning.ActionDistribution;
 import jp.oist.abcvlib.core.learning.ActionSelector;
-import jp.oist.abcvlib.core.learning.RewardGenerator;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataAssembler;
 import jp.oist.abcvlib.core.outputs.AbcvlibController;
 import jp.oist.abcvlib.core.outputs.Outputs;
@@ -38,7 +37,7 @@ import jp.oist.abcvlib.util.SocketListener;
  * @author Christopher Buckley https://github.com/topherbuckley
  *
  */
-public abstract class AbcvlibActivity extends IOIOActivity implements RewardGenerator, SocketListener{
+public abstract class AbcvlibActivity extends IOIOActivity implements SocketListener {
 
     // Publically accessible objects that encapsulate a lot other core functionality
     public Inputs inputs;
