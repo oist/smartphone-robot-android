@@ -3,8 +3,6 @@ package jp.oist.abcvlib.serverlearning;
 import android.os.Bundle;
 import android.util.Log;
 
-import androidx.camera.core.ImageAnalysis;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

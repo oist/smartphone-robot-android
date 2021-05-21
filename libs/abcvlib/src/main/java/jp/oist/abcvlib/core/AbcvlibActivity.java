@@ -9,7 +9,6 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.camera.core.ImageAnalysis;
 import androidx.core.content.ContextCompat;
 
 import org.json.JSONObject;

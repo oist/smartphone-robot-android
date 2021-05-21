@@ -19,7 +19,7 @@ import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
 import jp.oist.abcvlib.util.ImageOps;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 
-public class ImageData implements ImageAnalysis.Analyzer{
+public class ImageData{
 
     private final TimeStepDataBuffer timeStepDataBuffer;
     private final YuvToRgbConverter yuvToRgbConverter;

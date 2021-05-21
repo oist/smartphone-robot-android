@@ -2,8 +2,6 @@ package jp.oist.abcvlib.camera;
 
 import android.os.Bundle;
 
-import androidx.camera.core.ImageAnalysis;
-
 import jp.oist.abcvlib.core.AbcvlibActivity;
 
 
