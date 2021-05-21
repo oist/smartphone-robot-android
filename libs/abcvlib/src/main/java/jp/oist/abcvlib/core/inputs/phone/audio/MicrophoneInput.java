@@ -14,12 +14,13 @@ import androidx.core.app.ActivityCompat;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 
-public class MicrophoneInput {
+public class MicrophoneInput implements AudioRecord.OnRecordPositionUpdateListener {
 
     private final AbcvlibActivity abcvlibActivity;
 
     private AudioTimestamp startTime = new AudioTimestamp();
     private AudioTimestamp endTime = new AudioTimestamp();
+    private ExecutorService audioExecutor;
 
     private AudioRecord recorder;
 
@@ -29,6 +30,8 @@ public class MicrophoneInput {
         Log.i("abcvlib", "In MicInput run method");
 
         this.abcvlibActivity = abcvlibActivity;
+
+        audioExecutor = Executors.newScheduledThreadPool(1, new ProcessPriorityThreadFactory(10, "dataGatherer"));
 
         checkRecordPermission();
 
@@ -51,7 +54,7 @@ public class MicrophoneInput {
         int framePerBuffer = bufferSize / bytesPerFrame; // # of frames that can be kept in a bufferSize dimension
         int framePeriod = framePerBuffer / 2; // Read from buffer two times per full buffer.
         recorder.setPositionNotificationPeriod(framePeriod);
-        recorder.setRecordPositionUpdateListener(abcvlibActivity);
+        recorder.setRecordPositionUpdateListener(this);
     }
 
     public void start(){
@@ -95,7 +98,7 @@ public class MicrophoneInput {
 
     public void close(){
         recorder.setRecordPositionUpdateListener(null);
-        abcvlibActivity.audioExecutor.shutdownNow();
+        audioExecutor.shutdownNow();
         recorder.release();
         recorder = null;
     }

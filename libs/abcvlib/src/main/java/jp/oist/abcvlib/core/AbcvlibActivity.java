@@ -45,8 +45,7 @@ import jp.oist.abcvlib.util.SocketListener;
  * @author Christopher Buckley https://github.com/topherbuckley
  *
  */
-public abstract class AbcvlibActivity extends IOIOActivity implements RewardGenerator,
-        OnRecordPositionUpdateListener, SocketListener{
+public abstract class AbcvlibActivity extends IOIOActivity implements RewardGenerator, SocketListener{
 
     // Publically accessible objects that encapsulate a lot other core functionality
     public Inputs inputs;
@@ -55,7 +54,6 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     public ActionSelector aS;
     private Thread actionSelectorThread;
     public Switches switches = new Switches();
-    public ExecutorService audioExecutor;
     private AbcvlibActivity mainActivity;
     private BatteryData batteryData;
     private WheelData wheelData;
@@ -79,7 +77,6 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
         else{
             super.onCreate(savedInstanceState);
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-            audioExecutor = Executors.newScheduledThreadPool(1, new ProcessPriorityThreadFactory(10, "dataGatherer"));
         }
 
         Log.i(TAG, "End of AbcvlibActivity.onCreate");
