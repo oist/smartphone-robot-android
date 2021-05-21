@@ -114,10 +114,14 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     }
 
     protected void initializer(AbcvlibActivity abcvlibActivity,
-                               AbcvlibController controller) {
+                               AbcvlibController controller,
+                               TimeStepDataAssembler timeStepDataAssembler) throws InterruptedException {
 
         //Todo some logic here to test for boolean combinations that would lead to errors.
         // e.g. balanceApp without pythonControlApp
+        this.timeStepDataAssembler = timeStepDataAssembler;
+        timeStepDataAssembler.initializeGatherers();
+        timeStepDataAssembler.startGatherers();
 
         mainActivity = abcvlibActivity;
         Log.i(TAG, "Start of AbcvlibActivity.initializer");
@@ -142,14 +146,10 @@ public abstract class AbcvlibActivity extends IOIOActivity implements RewardGene
     /**
      * null initializer for basic module or those not interacting with anything other than itself
      */
-    protected void initializer(AbcvlibActivity abcvlibActivity) {
+    protected void initializer(AbcvlibActivity abcvlibActivity) throws InterruptedException {
 
-        initializer(abcvlibActivity, null);
+        initializer(abcvlibActivity, null, null);
 
-    }
-
-    public void setTimeStepDataAssembler(TimeStepDataAssembler timeStepDataAssembler) {
-        this.timeStepDataAssembler = timeStepDataAssembler;
     }
 
     protected void onSetupFinished() {

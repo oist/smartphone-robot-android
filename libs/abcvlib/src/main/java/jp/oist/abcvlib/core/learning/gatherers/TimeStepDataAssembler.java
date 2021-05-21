@@ -97,7 +97,6 @@ public class TimeStepDataAssembler implements Runnable{
 
         Log.d("SocketConnection", "Starting new runnable for gatherers");
 
-        long initDelay = 0;
         batteryData.setRecording(true);
         wheelData.setRecording(true);
         microphoneInput.start();

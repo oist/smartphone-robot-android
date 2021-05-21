@@ -19,7 +19,6 @@ import jp.oist.abcvlib.util.FileOps;
 
 public class MainActivity extends AbcvlibActivity {
 
-    TimeStepDataAssembler timeStepDataAssembler;
     InetSocketAddress inetSocketAddress = new InetSocketAddress("192.168.27.226", 3000);
 
     @Override
@@ -40,16 +39,11 @@ public class MainActivity extends AbcvlibActivity {
         MyStepHandler myStepHandler = new MyStepHandler(100, 100000,
                 10, commActionSet, motionActionSet);
 
-        timeStepDataAssembler = new TimeStepDataAssembler(this, inetSocketAddress, myStepHandler);
-        setTimeStepDataAssembler(timeStepDataAssembler); //sets the instance in abcvlibAcvitiy;
-        timeStepDataAssembler.initializeGatherers();
-        initializer(this, null);
-
-
+        TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler(this, inetSocketAddress, myStepHandler);
         try {
-            timeStepDataAssembler.startGatherers();
+            initializer(this, null, timeStepDataAssembler);
         } catch (InterruptedException e) {
-            ErrorHandler.eLog(TAG, "Interrupted while starting gatherers", e, true);
+            ErrorHandler.eLog(TAG, "Interrupted while initializing abcvlibActivity", e, true);
         }
 
         super.onCreate(savedInstanceState);
