@@ -40,11 +40,7 @@ public class MainActivity extends AbcvlibActivity {
                 10, commActionSet, motionActionSet);
 
         TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler(this, inetSocketAddress, myStepHandler);
-        try {
-            initializer(this, null, timeStepDataAssembler);
-        } catch (InterruptedException e) {
-            ErrorHandler.eLog(TAG, "Interrupted while initializing abcvlibActivity", e, true);
-        }
+        initializer(this, null, timeStepDataAssembler);
 
         super.onCreate(savedInstanceState);
     }

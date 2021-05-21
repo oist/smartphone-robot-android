@@ -21,11 +21,7 @@ public class MainActivity extends AbcvlibActivity {
     protected void onCreate(Bundle savedInstanceState) {
 
         // Initalizes various objects in parent class.
-        try {
-            initializer(this);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        initializer(this);
 
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);

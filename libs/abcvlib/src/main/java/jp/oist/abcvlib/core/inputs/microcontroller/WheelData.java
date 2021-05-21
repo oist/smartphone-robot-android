@@ -7,7 +7,7 @@ import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
 
 public class WheelData {
 
-    private final TimeStepDataBuffer timeStepDataBuffer;
+    private TimeStepDataBuffer timeStepDataBuffer = null;
     private boolean isRecording = false;
 
     private final int windowLength = 5;
@@ -57,7 +57,9 @@ public class WheelData {
     private final long[] timeStamps = new long[windowLength];
 
     public WheelData(AbcvlibActivity abcvlibActivity){
-        this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataAssembler().getTimeStepDataBuffer();
+        if (abcvlibActivity.getTimeStepDataAssembler() != null){
+            this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataAssembler().getTimeStepDataBuffer();
+        }
     }
 
     /**

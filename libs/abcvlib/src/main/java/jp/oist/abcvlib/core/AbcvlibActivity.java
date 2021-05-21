@@ -115,7 +115,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
 
         Log.i(TAG, "Start of AbcvlibActivity.initializer");
 
-        inputs = new Inputs(abcvlibActivity, imageData);
+        inputs = new Inputs(abcvlibActivity);
         outputs = new Outputs(abcvlibActivity, controller);
 
         // Tell all child classes it is ok to proceed.
@@ -186,9 +186,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
 //            }
 //        }
         Log.d("abcvlib", "createIOIOLooper Finished");
-        return new AbcvlibLooper(this,
-                switches.loggerOn,
-                switches.wheelPolaritySwap, timeStepDataAssembler);
+        return new AbcvlibLooper(this);
     }
 
     @Override

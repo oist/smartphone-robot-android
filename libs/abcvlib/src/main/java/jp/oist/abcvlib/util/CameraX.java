@@ -54,13 +54,13 @@ public class CameraX {
             ActivityCompat.requestPermissions(
                     abcvlibActivity, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
         }
-
-        int threadPoolSize = 8;
-        analysisExecutor = new ScheduledThreadPoolExecutor(threadPoolSize);
     }
 
     public CameraX(AbcvlibActivity abcvlibActivity){
         this.abcvlibActivity = abcvlibActivity;
+        if (abcvlibActivity.getTimeStepDataAssembler() != null){
+            this.imageData = abcvlibActivity.getTimeStepDataAssembler().getImageData();
+        }
 
         mPreviewView = abcvlibActivity.findViewById(R.id.camera_x_preview);
 
@@ -71,9 +71,6 @@ public class CameraX {
             ActivityCompat.requestPermissions(
                     abcvlibActivity, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
         }
-
-        int threadPoolSize = 8;
-        analysisExecutor = new ScheduledThreadPoolExecutor(threadPoolSize);
     }
 
     public void startCamera() {

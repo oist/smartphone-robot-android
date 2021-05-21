@@ -309,20 +309,19 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
     private double[] encoderCountLeftWheelLP = new double[buffer];
     private double[] encoderCountRightWheelLP = new double[buffer];
-    private final BatteryData batteryData;
-    private final WheelData wheelData;
+    private BatteryData batteryData = null;
+    private WheelData wheelData = null;
 
     // Constructor to pass other module objects in. No default loggerOn. Needs to remain public
     // despite what Android Studio says
-    public AbcvlibLooper(AbcvlibActivity abcvlibActivity,
-                         Boolean loggerOn,
-                         Boolean wheelPolaritySwap,
-                         TimeStepDataAssembler timeStepDataAssembler){
+    public AbcvlibLooper(AbcvlibActivity abcvlibActivity){
         this.abcvlibActivity = abcvlibActivity;
-        this.loggerOn = loggerOn;
-        this.wheelPolaritySwap = wheelPolaritySwap;
-        this.batteryData = timeStepDataAssembler.getBatteryData();
-        this.wheelData = timeStepDataAssembler.getWheelData();
+        this.loggerOn = abcvlibActivity.switches.loggerOn;
+        this.wheelPolaritySwap = abcvlibActivity.switches.wheelPolaritySwap;
+        if (abcvlibActivity.getTimeStepDataAssembler() != null){
+            this.batteryData = abcvlibActivity.getTimeStepDataAssembler().getBatteryData();
+            this.wheelData = abcvlibActivity.getTimeStepDataAssembler().getWheelData();
+        }
         Log.d("abcvlib", "AbcvlibLooper constructor finished");
     }
 

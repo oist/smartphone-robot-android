@@ -26,14 +26,14 @@ public class Inputs {
     private ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(1, processPriorityThreadFactory);
     private final String TAG = this.getClass().getName();
 
-    public Inputs(AbcvlibActivity abcvlibActivity, ImageData imageData){
+    public Inputs(AbcvlibActivity abcvlibActivity){
 
         if (abcvlibActivity.switches.motionSensorApp){
             orientationData = new OrientationData(abcvlibActivity);
         }
 
         if (abcvlibActivity.switches.cameraXApp){
-            camerax = new CameraX(abcvlibActivity, imageData);
+            camerax = new CameraX(abcvlibActivity);
         }
 
         if (abcvlibActivity.switches.micApp){

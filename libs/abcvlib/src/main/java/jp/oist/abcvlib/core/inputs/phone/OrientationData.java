@@ -124,7 +124,7 @@ public class OrientationData implements SensorEventListener {
     int timerCount = 1;
     private int avgCount = 1000;
     private boolean isRecording = false;
-    private final TimeStepDataBuffer timeStepDataBuffer;
+    private TimeStepDataBuffer timeStepDataBuffer = null;
 
     //----------------------------------------------------------------------------------------------
 
@@ -151,7 +151,9 @@ public class OrientationData implements SensorEventListener {
      */
     public OrientationData(AbcvlibActivity abcvlibActivity){
         this.abcvlibActivity = abcvlibActivity;
-        this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataAssembler().getTimeStepDataBuffer();
+        if (abcvlibActivity.getTimeStepDataAssembler() != null){
+            this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataAssembler().getTimeStepDataBuffer();
+        }
         sensorManager = (SensorManager) abcvlibActivity.getSystemService(Context.SENSOR_SERVICE);
         gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         rotation_sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
