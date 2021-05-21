@@ -100,7 +100,7 @@ public class TimeStepDataAssembler implements Runnable{
         batteryData.setRecording(true);
         wheelData.setRecording(true);
         microphoneInput.start();
-        imageData.getImageAnalyzer().setRecording(true);
+        imageData.setRecording(true);
         timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(this, 50,50, TimeUnit.MILLISECONDS);
         gatherersReady.countDown();
         Log.d("SocketConnection", "Waiting for gatherers to finish");
@@ -283,7 +283,7 @@ public class TimeStepDataAssembler implements Runnable{
 
         wheelData.setRecording(false);
         batteryData.setRecording(false);
-        imageData.getImageAnalyzer().setRecording(false);
+        imageData.setRecording(false);
         microphoneInput.stop();
         timeStepCount = 0;
         myStepHandler.setLastTimestep(false);
