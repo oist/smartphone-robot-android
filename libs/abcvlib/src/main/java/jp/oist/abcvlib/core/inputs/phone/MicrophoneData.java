@@ -38,6 +38,7 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
     private AudioRecord recorder;
     private boolean isRecording = false;
     private TimeStepDataBuffer timeStepDataBuffer;
+    private MicrophoneDataListener microphoneDataListener = null;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public MicrophoneData(AbcvlibActivity abcvlibActivity) {
@@ -137,6 +138,10 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
         this.timeStepDataBuffer = timeStepDataBuffer;
     }
 
+    public void setMicrophoneDataListener(MicrophoneDataListener microphoneDataListener) {
+        this.microphoneDataListener = microphoneDataListener;
+    }
+
     @Override
     public TimeStepDataBuffer getTimeStepDataBuffer() {
         return timeStepDataBuffer;
@@ -189,6 +194,9 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
     protected void onNewAudioData(float[] audioData, int numSamples){
         if (isRecording) {
             timeStepDataBuffer.getWriteData().getSoundData().add(audioData, numSamples);
+        }
+        if (microphoneDataListener != null){
+            microphoneDataListener.onMicrophoneDataUpdate(audioData, numSamples);
         }
     }
 
