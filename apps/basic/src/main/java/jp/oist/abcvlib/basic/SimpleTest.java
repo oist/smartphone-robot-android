@@ -16,7 +16,7 @@ public class SimpleTest implements Runnable{
 
     public SimpleTest(AbcvlibActivity abcvlibActivity){
         this.abcvlibActivity = abcvlibActivity;
-        this.inputs = abcvlibActivity.inputs;
+        this.inputs = abcvlibActivity.getInputs();
         voltageBattDisplay = abcvlibActivity.findViewById(R.id.voltageBatt);
         voltageChargerDisplay = abcvlibActivity.findViewById(R.id.voltageCharger);
     }
@@ -25,8 +25,8 @@ public class SimpleTest implements Runnable{
     public void run(){
 
         // Prints most recent theta and angular velocity to android logcat
-        Log.i("SimpleTest", "theta:" + inputs.orientationData.getThetaDeg() +
-                " thetaDot:" +  inputs.orientationData.getThetaDegDot());
+        Log.i("SimpleTest", "theta:" + abcvlibActivity.getInputs().getOrientationData().getThetaDeg() +
+                " thetaDot:" +  abcvlibActivity.getInputs().getOrientationData().getThetaDegDot());
 
         // Another way of accessing this data, but you also get all readings within the current timestep;
         if (abcvlibActivity.getTimeStepDataAssembler() != null){

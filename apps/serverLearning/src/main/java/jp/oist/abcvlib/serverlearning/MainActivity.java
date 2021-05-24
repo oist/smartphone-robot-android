@@ -9,8 +9,12 @@ import org.json.JSONObject;
 
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.inputs.AbcvlibInput;
+import jp.oist.abcvlib.core.inputs.phone.ImageData;
+import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
 import jp.oist.abcvlib.core.learning.CommActionSet;
 import jp.oist.abcvlib.core.learning.MotionActionSet;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataAssembler;
@@ -40,7 +44,14 @@ public class MainActivity extends AbcvlibActivity {
                 10, commActionSet, motionActionSet);
 
         TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler(this, inetSocketAddress, myStepHandler);
-        initializer(this, null, timeStepDataAssembler);
+
+        ArrayList<AbcvlibInput> inputArrayList = new ArrayList<>();
+        ImageData imageData = new ImageData(this);
+        MicrophoneData microphoneData = new MicrophoneData(this);
+        inputArrayList.add(imageData);
+        inputArrayList.add(microphoneData);
+
+        initializer(this, null, timeStepDataAssembler, inputArrayList, null);
 
         super.onCreate(savedInstanceState);
     }

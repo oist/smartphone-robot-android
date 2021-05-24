@@ -2,9 +2,14 @@ package jp.oist.abcvlib.basic;
 
 import android.os.Bundle;
 
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.inputs.AbcvlibInput;
+import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
+import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
+import jp.oist.abcvlib.core.inputs.phone.OrientationData;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 
@@ -20,7 +25,7 @@ public class MainActivity extends AbcvlibActivity {
     protected void onCreate(Bundle savedInstanceState) {
 
         // Initalizes various objects in parent class.
-        initializer(this);
+        initializer(this, null, null, null, null);
 
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);

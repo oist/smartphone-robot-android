@@ -7,6 +7,7 @@ import com.google.flatbuffers.FlatBufferBuilder;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
@@ -14,6 +15,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
@@ -21,7 +23,7 @@ import jp.oist.abcvlib.core.inputs.phone.ImageData;
 import jp.oist.abcvlib.core.learning.ActionSet;
 import jp.oist.abcvlib.core.learning.CommAction;
 import jp.oist.abcvlib.core.learning.MotionAction;
-import jp.oist.abcvlib.core.learning.StepHandler;
+import jp.oist.abcvlib.core.outputs.StepHandler;
 import jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp;
 import jp.oist.abcvlib.core.learning.fbclasses.ChargerData;
 import jp.oist.abcvlib.core.learning.fbclasses.Episode;
@@ -31,6 +33,7 @@ import jp.oist.abcvlib.core.learning.fbclasses.TimeStep;
 import jp.oist.abcvlib.core.learning.fbclasses.WheelCounts;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
+import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
 import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 import jp.oist.abcvlib.util.SocketConnectionManager;
 
@@ -53,11 +56,13 @@ public class TimeStepDataAssembler implements Runnable{
     private BatteryData batteryData;
     private WheelData wheelData;
     private ImageData imageData;
+    private final ArrayList<AbcvlibInput> inputs = new ArrayList<>();
 
     public TimeStepDataAssembler(AbcvlibActivity abcvlibActivity,
                                  InetSocketAddress inetSocketAddress,
                                  StepHandler myStepHandler){
         this.abcvlibActivity = abcvlibActivity;
+
         this.inetSocketAddress = inetSocketAddress;
 
         timeStepDataBuffer = new TimeStepDataBuffer(10);
@@ -66,6 +71,7 @@ public class TimeStepDataAssembler implements Runnable{
         executor = new ScheduledExecutorServiceWithException(threads, new ProcessPriorityThreadFactory(1, "dataGatherer"));
 
         this.myStepHandler = myStepHandler;
+
         startEpisode();
     }
 
@@ -80,22 +86,28 @@ public class TimeStepDataAssembler implements Runnable{
         // todo reload tflite models here for myStepHandler
     }
 
-    public void initializeGatherers(){
-        batteryData = new BatteryData(abcvlibActivity);
-        wheelData = new WheelData(abcvlibActivity);
-        imageData = new ImageData(abcvlibActivity);
-        microphoneData = new MicrophoneData(abcvlibActivity);
+    public void initializeInputs(){
+        batteryData = abcvlibActivity.getInputs().getBatteryData();
+        inputs.add(batteryData);
+        wheelData = abcvlibActivity.getInputs().getWheelData();
+        inputs.add(wheelData);
+        imageData = abcvlibActivity.getInputs().getImageData();
+        inputs.add(imageData);
+        microphoneData = abcvlibActivity.getInputs().getMicrophoneData();
+        inputs.add(microphoneData);
     }
 
-    public void startGatherers() {
+    public void startGatherers() throws RecordingWithoutTimeStepBufferException {
         CountDownLatch gatherersReady = new CountDownLatch(1);
 
         Log.d("SocketConnection", "Starting new runnable for gatherers");
 
-        batteryData.setRecording(true);
-        wheelData.setRecording(true);
-        imageData.setRecording(true);
-        microphoneData.setRecording(true);
+        for (AbcvlibInput input:inputs){
+            if (input != null){
+                input.setRecording(true);
+            }
+        }
+
         timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(this, 50,50, TimeUnit.MILLISECONDS);
         gatherersReady.countDown();
         Log.d("SocketConnection", "Waiting for gatherers to finish");
@@ -238,6 +250,15 @@ public class TimeStepDataAssembler implements Runnable{
     public void run() {
 
         // Choose action wte based on current timestep data
+        if (myStepHandler == null){
+            try {
+                endEpisode();
+                endTrail();
+            } catch (BrokenBarrierException | InterruptedException | IOException | RecordingWithoutTimeStepBufferException e) {
+                ErrorHandler.eLog(TAG, "No StepHandler defined", e, true);
+            }
+        }
+
         ActionSet actionSet = myStepHandler.forward(timeStepDataBuffer.getWriteData(), timeStepCount);
 
         Log.v("SocketConnection", "Running TimeStepAssembler Run Method");
@@ -259,7 +280,7 @@ public class TimeStepDataAssembler implements Runnable{
                 if(myStepHandler.isLastEpisode()){
                     endTrail();
                 }
-            } catch (BrokenBarrierException | InterruptedException | IOException e) {
+            } catch (BrokenBarrierException | InterruptedException | IOException | RecordingWithoutTimeStepBufferException e) {
                 ErrorHandler.eLog(TAG, "Error when trying to end episode or trail", e, true);
             }
         }
@@ -276,21 +297,24 @@ public class TimeStepDataAssembler implements Runnable{
         microphoneData.setStartTime();
     }
 
-    public void stopRecordingData(){
+    public void stopRecordingData() throws RecordingWithoutTimeStepBufferException {
 
         pauseRecording = true;
 
-        wheelData.setRecording(false);
-        batteryData.setRecording(false);
-        imageData.setRecording(false);
-        microphoneData.setRecording(false);
+        for (AbcvlibInput input:inputs){
+            if (input != null){
+                input.setRecording(false);
+            }
+        }
         timeStepCount = 0;
-        myStepHandler.setLastTimestep(false);
+        if (myStepHandler != null) {
+            myStepHandler.setLastTimestep(false);
+        }
         timeStepDataAssemblerFuture.cancel(false);
     }
 
     // End episode after some reward has been acheived or maxtimesteps has been reached
-    public void endEpisode() throws BrokenBarrierException, InterruptedException, IOException {
+    public void endEpisode() throws BrokenBarrierException, InterruptedException, IOException, RecordingWithoutTimeStepBufferException {
 
         Log.d("SocketConnections", "End of episode:" + episodeCount);
 
@@ -368,7 +392,7 @@ public class TimeStepDataAssembler implements Runnable{
         }
     }
 
-    private void endTrail(){
+    private void endTrail() throws RecordingWithoutTimeStepBufferException {
         Log.i(TAG, "Need to handle end of trail here");
         episodeCount = 0;
         stopRecordingData();

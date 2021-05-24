@@ -11,15 +11,21 @@ import androidx.core.content.ContextCompat;
 
 import org.json.JSONObject;
 
+import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
+import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.Inputs;
 import jp.oist.abcvlib.core.inputs.phone.ImageData;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataAssembler;
 import jp.oist.abcvlib.core.outputs.AbcvlibController;
+import jp.oist.abcvlib.core.outputs.AbcvlibOutput;
 import jp.oist.abcvlib.core.outputs.Outputs;
+import jp.oist.abcvlib.util.ErrorHandler;
+import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
 import jp.oist.abcvlib.util.SocketListener;
 
 /**
@@ -36,7 +42,7 @@ import jp.oist.abcvlib.util.SocketListener;
 public abstract class AbcvlibActivity extends IOIOActivity implements SocketListener {
 
     // Publically accessible objects that encapsulate a lot other core functionality
-    public Inputs inputs;
+    private Inputs inputs;
     public Outputs outputs;
     public Switches switches = new Switches();
     private TimeStepDataAssembler timeStepDataAssembler;
@@ -103,20 +109,37 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
 
     protected void initializer(AbcvlibActivity abcvlibActivity,
                                AbcvlibController controller,
-                               TimeStepDataAssembler timeStepDataAssembler) {
-
-        ImageData imageData = null;
-        if (timeStepDataAssembler != null){
-            this.timeStepDataAssembler = timeStepDataAssembler;
-            timeStepDataAssembler.initializeGatherers();
-            timeStepDataAssembler.startGatherers();
-            imageData = timeStepDataAssembler.getImageData();
-        }
+                               TimeStepDataAssembler timeStepDataAssembler,
+                               ArrayList<AbcvlibInput> inputArrayList,
+                               ArrayList<AbcvlibOutput> outputArrayList) {
 
         Log.i(TAG, "Start of AbcvlibActivity.initializer");
 
-        inputs = new Inputs(abcvlibActivity);
+        if (inputArrayList == null){
+            inputArrayList = new ArrayList<>();
+        }
+        if (outputArrayList == null){
+            outputArrayList = new ArrayList<>();
+        }
+
+        if (timeStepDataAssembler != null){
+            this.timeStepDataAssembler = timeStepDataAssembler;
+        }else{
+            this.timeStepDataAssembler = new TimeStepDataAssembler(this, null, null);
+        }
+
+        inputs = new Inputs(abcvlibActivity, inputArrayList);
         outputs = new Outputs(abcvlibActivity, controller);
+
+        this.timeStepDataAssembler.initializeInputs();
+        try {
+            this.timeStepDataAssembler.startGatherers();
+        } catch (RecordingWithoutTimeStepBufferException e) {
+            ErrorHandler.eLog(TAG, "Make sure to initialize a TimeStepDataBuffer object prior " +
+                    "to setting isRecording to true", e, true);
+        }
+
+
 
         // Tell all child classes it is ok to proceed.
         this.appRunning = true;
@@ -128,29 +151,33 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
      * null initializer for basic module or those not interacting with anything other than itself
      */
     protected void initializer(AbcvlibActivity abcvlibActivity) {
-        initializer(abcvlibActivity, null, null);
+        initializer(abcvlibActivity, null, null, null, null);
 
     }
 
-    /**
-     * Process result from permission request dialog box, has the request
-     * been granted? If yes, start Camera. Otherwise display a toast
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        // super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 10) {
-            if (allPermissionsGranted()) {
-                inputs.camerax.startCamera();
-            } else {
-                Toast.makeText(this,
-                        "Permissions not granted by the user.",
-                        Toast.LENGTH_SHORT).show();
-                finish();
-            }
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    public Inputs getInputs() {
+        return inputs;
     }
+
+//    /**
+//     * Process result from permission request dialog box, has the request
+//     * been granted? If yes, start Camera. Otherwise display a toast
+//     */
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+//        // super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//        if (requestCode == 10) {
+//            if (allPermissionsGranted()) {
+//                inputs.camerax.startCamera();
+//            } else {
+//                Toast.makeText(this,
+//                        "Permissions not granted by the user.",
+//                        Toast.LENGTH_SHORT).show();
+//                finish();
+//            }
+//        }
+//        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//    }
 
     /**
      * Check if all permission specified in the manifest have been granted

@@ -21,11 +21,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataAssembler;
+import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 
-public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListener {
+public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListener, AbcvlibInput {
 
     private final AbcvlibActivity abcvlibActivity;
 
@@ -35,6 +37,7 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
 
     private AudioRecord recorder;
     private boolean isRecording = false;
+    private TimeStepDataBuffer timeStepDataBuffer;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public MicrophoneData(AbcvlibActivity abcvlibActivity) {
@@ -42,6 +45,8 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
         Log.i("abcvlib", "In MicInput run method");
 
         this.abcvlibActivity = abcvlibActivity;
+
+        this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataAssembler().getTimeStepDataBuffer();
 
         audioExecutor = Executors.newScheduledThreadPool(1, new ProcessPriorityThreadFactory(10, "dataGatherer"));
         HandlerThread handlerThread = new HandlerThread("audioHandlerThread");
@@ -127,6 +132,16 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
         isRecording = recording;
     }
 
+    @Override
+    public void setTimeStepDataBuffer(TimeStepDataBuffer timeStepDataBuffer) {
+        this.timeStepDataBuffer = timeStepDataBuffer;
+    }
+
+    @Override
+    public TimeStepDataBuffer getTimeStepDataBuffer() {
+        return timeStepDataBuffer;
+    }
+
     public synchronized boolean isRecording() {
         return isRecording;
     }
@@ -173,8 +188,7 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
 
     protected void onNewAudioData(float[] audioData, int numSamples){
         if (isRecording) {
-            abcvlibActivity.getTimeStepDataAssembler().getTimeStepDataBuffer().getWriteData().
-                    getSoundData().add(audioData, numSamples);
+            timeStepDataBuffer.getWriteData().getSoundData().add(audioData, numSamples);
         }
     }
 

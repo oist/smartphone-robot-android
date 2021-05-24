@@ -1,15 +1,13 @@
-package jp.oist.abcvlib.serverlearning;
+package jp.oist.abcvlib.core.outputs;
 
 import jp.oist.abcvlib.core.learning.ActionSet;
 import jp.oist.abcvlib.core.learning.CommAction;
 import jp.oist.abcvlib.core.learning.CommActionSet;
 import jp.oist.abcvlib.core.learning.MotionAction;
 import jp.oist.abcvlib.core.learning.MotionActionSet;
-import jp.oist.abcvlib.core.outputs.StepHandler;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
 
-public class MyStepHandler extends StepHandler {
-
+public abstract class StepHandler {
     private final int maxTimeStepCount;
     private boolean lastEpisode = false; // Use to trigger MainActivity to stop generating episodes
     private boolean lastTimestep = false; // Use to trigger MainActivity to stop generating timesteps for a single episode
@@ -20,9 +18,8 @@ public class MyStepHandler extends StepHandler {
     private final CommActionSet commActionSet;
     private final MotionActionSet motionActionSet;
 
-    public MyStepHandler(int maxTimeStepCount, int rewardCriterion, int maxEpisodeCount,
+    public StepHandler(int maxTimeStepCount, int rewardCriterion, int maxEpisodeCount,
                          CommActionSet commActionSet, MotionActionSet motionActionSet){
-        super(maxTimeStepCount, rewardCriterion, maxEpisodeCount, commActionSet, motionActionSet);
         this.maxTimeStepCount = maxTimeStepCount;
         this.rewardCriterion = rewardCriterion;
         this.maxEpisodecount = maxEpisodeCount;
@@ -35,9 +32,6 @@ public class MyStepHandler extends StepHandler {
         ActionSet actionSet;
         MotionAction motionAction;
         CommAction commAction;
-
-        // Do something with timeStepData... and modify reward accordingly
-        reward++;
 
         // Set actions based on above results. e.g: the first index of each
         motionAction = motionActionSet.getMotionActions()[0];
@@ -56,7 +50,6 @@ public class MyStepHandler extends StepHandler {
             reward = 0;
         }
 
-        // todo change criteria to something meaningful
         if (episodeCount >= maxEpisodecount){
             this.lastEpisode = true;
         }

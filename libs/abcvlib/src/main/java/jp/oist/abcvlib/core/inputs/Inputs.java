@@ -1,76 +1,66 @@
 package jp.oist.abcvlib.core.inputs;
 
-import android.util.Log;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.ArrayList;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
-import jp.oist.abcvlib.core.inputs.phone.OrientationData;
-import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
 import jp.oist.abcvlib.core.inputs.phone.ImageData;
-import jp.oist.abcvlib.util.CameraX;
-import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
+import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
+import jp.oist.abcvlib.core.inputs.phone.OrientationData;
 
 public class Inputs {
 
-    public OrientationData orientationData; // Doesn't need thread since handled by sensorManager or SensorService
-    public JSONObject stateVariables;
-    public MicrophoneData micInput;
-    private WheelData wheelData;
-    public CameraX camerax;
-    private final ProcessPriorityThreadFactory processPriorityThreadFactory = new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY, "Inputs");
-    private ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(1, processPriorityThreadFactory);
-    private final String TAG = this.getClass().getName();
+    private BatteryData batteryData = null;
+    private WheelData wheelData = null;
+    private ImageData imageData = null;
+    private MicrophoneData microphoneData = null;
+    private OrientationData orientationData = null;
 
-    public Inputs(AbcvlibActivity abcvlibActivity){
+    public Inputs(AbcvlibActivity abcvlibActivity, ArrayList<AbcvlibInput> inputArrayList){
 
-        if (abcvlibActivity.switches.motionSensorApp){
-            orientationData = new OrientationData(abcvlibActivity);
+        // Set default input data instances
+        batteryData = new BatteryData(abcvlibActivity);
+        wheelData = new WheelData(abcvlibActivity);
+        orientationData = new OrientationData(abcvlibActivity);
+
+        // Set custom input data instances if provided
+        for (AbcvlibInput input:inputArrayList){
+            Class<?> inputClass = input.getClass();
+
+            if (inputClass == BatteryData.class){
+                batteryData = (BatteryData) input;
+            }else if(inputClass == WheelData.class){
+                wheelData = (WheelData) input;
+            }else if(inputClass == ImageData.class){
+                imageData = (ImageData) input;
+            }else if(inputClass == MicrophoneData.class){
+                microphoneData = (MicrophoneData) input;
+            }else if(inputClass == OrientationData.class){
+                orientationData = (OrientationData) input;
+            }else {
+                throw new IllegalStateException("Unexpected value: " + input.getClass());
+            }
         }
-
-        if (abcvlibActivity.switches.cameraXApp){
-            camerax = new CameraX(abcvlibActivity);
-        }
-
-        if (abcvlibActivity.switches.micApp){
-            micInput = new MicrophoneData(abcvlibActivity);
-        }
-
-        if (abcvlibActivity.switches.quadEncoderApp){
-            wheelData = new WheelData(abcvlibActivity);
-        }
-
-        stateVariables = initializeStateVariables();
-
     }
 
-    private JSONObject initializeStateVariables(){
-
-        JSONObject jsonObject = new JSONObject();
-
-        try {
-            jsonObject.put("timeAndroid", 0.0);
-            jsonObject.put("theta", 0.0);
-            jsonObject.put("thetaDot", 0.0);
-            jsonObject.put("wheelCountL", 0.0);
-            jsonObject.put("wheelCountR", 0.0);
-            jsonObject.put("distanceL", 0.0);
-            jsonObject.put("distanceR", 0.0);
-            jsonObject.put("wheelSpeedL", 0.0);
-            jsonObject.put("wheelSpeedR", 0.0);
-
-        } catch (JSONException e) {
-            Log.e(TAG,"Error", e);
-        }
-
-        return jsonObject;
+    public BatteryData getBatteryData() {
+        return batteryData;
     }
 
     public WheelData getWheelData() {
         return wheelData;
+    }
+
+    public ImageData getImageData() {
+        return imageData;
+    }
+
+    public MicrophoneData getMicrophoneData() {
+        return microphoneData;
+    }
+
+    public OrientationData getOrientationData() {
+        return orientationData;
     }
 }

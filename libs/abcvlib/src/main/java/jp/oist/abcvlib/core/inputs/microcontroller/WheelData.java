@@ -3,9 +3,10 @@ package jp.oist.abcvlib.core.inputs.microcontroller;
 import android.util.Log;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
 
-public class WheelData {
+public class WheelData implements AbcvlibInput {
 
     private TimeStepDataBuffer timeStepDataBuffer = null;
     private boolean isRecording = false;
@@ -57,9 +58,7 @@ public class WheelData {
     private final long[] timeStamps = new long[windowLength];
 
     public WheelData(AbcvlibActivity abcvlibActivity){
-        if (abcvlibActivity.getTimeStepDataAssembler() != null){
-            this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataAssembler().getTimeStepDataBuffer();
-        }
+        this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataAssembler().getTimeStepDataBuffer();
     }
 
     /**
@@ -84,6 +83,14 @@ public class WheelData {
         setWheelSpeedR();
 
         quadCount++;
+    }
+
+    public void setTimeStepDataBuffer(TimeStepDataBuffer timeStepDataBuffer) {
+        this.timeStepDataBuffer = timeStepDataBuffer;
+    }
+
+    public TimeStepDataBuffer getTimeStepDataBuffer() {
+        return timeStepDataBuffer;
     }
 
     public void setRecording(boolean recording) {

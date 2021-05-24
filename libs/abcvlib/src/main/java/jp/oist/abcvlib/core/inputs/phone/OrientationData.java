@@ -9,6 +9,7 @@ import android.os.Build;
 import android.util.Log;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
 
 /**
@@ -31,7 +32,7 @@ import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
  * @author Jiexin Wang https://github.com/ha5ha6
  * @author Christopher Buckley https://github.com/topherbuckley
  */
-public class OrientationData implements SensorEventListener {
+public class OrientationData implements SensorEventListener, AbcvlibInput {
     private AbcvlibActivity abcvlibActivity;
 
     //----------------------------------------- Counters -------------------------------------------
@@ -151,9 +152,7 @@ public class OrientationData implements SensorEventListener {
      */
     public OrientationData(AbcvlibActivity abcvlibActivity){
         this.abcvlibActivity = abcvlibActivity;
-        if (abcvlibActivity.getTimeStepDataAssembler() != null){
-            this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataAssembler().getTimeStepDataBuffer();
-        }
+        this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataAssembler().getTimeStepDataBuffer();
         sensorManager = (SensorManager) abcvlibActivity.getSystemService(Context.SENSOR_SERVICE);
         gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         rotation_sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
@@ -162,6 +161,14 @@ public class OrientationData implements SensorEventListener {
             accelerometer_uncalibrated = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED);
         }
         register();
+    }
+
+    public void setTimeStepDataBuffer(TimeStepDataBuffer timeStepDataBuffer) {
+        this.timeStepDataBuffer = timeStepDataBuffer;
+    }
+
+    public TimeStepDataBuffer getTimeStepDataBuffer() {
+        return timeStepDataBuffer;
     }
 
     /**

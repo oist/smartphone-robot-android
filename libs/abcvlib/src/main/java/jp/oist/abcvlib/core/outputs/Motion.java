@@ -45,7 +45,7 @@ public class Motion {
       */
     public Motion(AbcvlibActivity abcvlibActivity){
         this.abcvlibActivity = abcvlibActivity;
-        this.orientationData = abcvlibActivity.inputs.orientationData;
+        this.orientationData = abcvlibActivity.getInputs().getOrientationData();
     }
 
     /**
