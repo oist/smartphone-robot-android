@@ -2,14 +2,7 @@ package jp.oist.abcvlib.basic;
 
 import android.os.Bundle;
 
-import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
-
 import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.core.inputs.AbcvlibInput;
-import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
-import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
-import jp.oist.abcvlib.core.inputs.phone.OrientationData;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 
@@ -34,11 +27,10 @@ public class MainActivity extends AbcvlibActivity {
         setContentView(R.layout.activity_main);
 
         // Executors preferred over runnables or threads for built in memory/cleanup/error handling.
-        ScheduledExecutorServiceWithException executor = new ScheduledExecutorServiceWithException(1, new ProcessPriorityThreadFactory(5, "SimpleTest"));
-        SimpleTest simpleTest = new SimpleTest(this);
-        // Run the simpleTest every 1 second
-        executor.scheduleAtFixedRate(simpleTest, 0, 1, TimeUnit.SECONDS);
+//        ScheduledExecutorServiceWithException executor = new ScheduledExecutorServiceWithException(1, new ProcessPriorityThreadFactory(5, "SimpleTest"));
+//        SimpleTest simpleTest = new SimpleTest(this);
+//        // Run the simpleTest every 1 second
+//        executor.scheduleAtFixedRate(simpleTest, 0, 1, TimeUnit.SECONDS);
     }
-
 }
 

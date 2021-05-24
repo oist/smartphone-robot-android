@@ -23,7 +23,6 @@ import jp.oist.abcvlib.core.inputs.phone.ImageData;
 import jp.oist.abcvlib.core.learning.ActionSet;
 import jp.oist.abcvlib.core.learning.CommAction;
 import jp.oist.abcvlib.core.learning.MotionAction;
-import jp.oist.abcvlib.core.outputs.StepHandler;
 import jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp;
 import jp.oist.abcvlib.core.learning.fbclasses.ChargerData;
 import jp.oist.abcvlib.core.learning.fbclasses.Episode;
@@ -31,6 +30,7 @@ import jp.oist.abcvlib.core.learning.fbclasses.RobotAction;
 import jp.oist.abcvlib.core.learning.fbclasses.SoundData;
 import jp.oist.abcvlib.core.learning.fbclasses.TimeStep;
 import jp.oist.abcvlib.core.learning.fbclasses.WheelCounts;
+import jp.oist.abcvlib.core.outputs.StepHandler;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
@@ -118,10 +118,6 @@ public class TimeStepDataAssembler implements Runnable{
         }
         Log.d("SocketConnection", "Gatherers finished initializing");
     }
-
-    public BatteryData getBatteryData(){return batteryData;}
-    public WheelData getWheelData(){return wheelData;}
-    public ImageData getImageData(){return imageData;}
 
     public void addTimeStep(){
 
@@ -250,15 +246,6 @@ public class TimeStepDataAssembler implements Runnable{
     public void run() {
 
         // Choose action wte based on current timestep data
-        if (myStepHandler == null){
-            try {
-                endEpisode();
-                endTrail();
-            } catch (BrokenBarrierException | InterruptedException | IOException | RecordingWithoutTimeStepBufferException e) {
-                ErrorHandler.eLog(TAG, "No StepHandler defined", e, true);
-            }
-        }
-
         ActionSet actionSet = myStepHandler.forward(timeStepDataBuffer.getWriteData(), timeStepCount);
 
         Log.v("SocketConnection", "Running TimeStepAssembler Run Method");

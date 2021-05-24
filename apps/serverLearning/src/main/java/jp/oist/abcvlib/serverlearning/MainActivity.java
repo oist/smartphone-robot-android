@@ -15,33 +15,46 @@ import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.phone.ImageData;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
+import jp.oist.abcvlib.core.learning.ActionSet;
+import jp.oist.abcvlib.core.learning.CommAction;
 import jp.oist.abcvlib.core.learning.CommActionSet;
+import jp.oist.abcvlib.core.learning.MotionAction;
 import jp.oist.abcvlib.core.learning.MotionActionSet;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataAssembler;
+import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
+import jp.oist.abcvlib.core.outputs.ActionSelector;
+import jp.oist.abcvlib.core.outputs.StepHandler;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.FileOps;
 
-public class MainActivity extends AbcvlibActivity {
+public class MainActivity extends AbcvlibActivity implements ActionSelector {
 
     InetSocketAddress inetSocketAddress = new InetSocketAddress("192.168.27.226", 3000);
+    private StepHandler myStepHandler;
+    private int reward = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
-        FileOps.copyAssets(getApplicationContext(), "models/");
-
-        // Setup a live preview of camera feed to the display. Remove if unwanted.
-        setContentView(jp.oist.abcvlib.core.R.layout.camera_x_preview);
-
-        switches.cameraXApp = true;
 
         CommActionSet commActionSet = new CommActionSet(3);
         commActionSet.addCommAction("action1", (byte) 0); // I'm just overwriting an existing to show how
         MotionActionSet motionActionSet = new MotionActionSet(5);
         motionActionSet.addMotionAction("stop", (byte) 0, 0, 0); // I'm just overwriting an existing to show how
 
-        MyStepHandler myStepHandler = new MyStepHandler(20, 100000,
-                10, commActionSet, motionActionSet);
+        myStepHandler = new StepHandler.StepHandlerBuilder()
+                .setMaxTimeStepCount(20)
+                .setMaxEpisodeCount(3)
+                .setMaxReward(100000)
+                .setMotionActionSet(motionActionSet)
+                .setCommActionSet(commActionSet)
+                .buildStepHandler();
+
+        myStepHandler.setActionSelector(this);
+
+        FileOps.copyAssets(getApplicationContext(), "models/");
+
+        // Setup a live preview of camera feed to the display. Remove if unwanted.
+        setContentView(jp.oist.abcvlib.core.R.layout.camera_x_preview);
 
         TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler(this, inetSocketAddress, myStepHandler);
 
@@ -54,6 +67,36 @@ public class MainActivity extends AbcvlibActivity {
         initializer(this, null, timeStepDataAssembler, inputArrayList, null);
 
         super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    public ActionSet forward(TimeStepDataBuffer.TimeStepData data, int timeStepCount) {
+        ActionSet actionSet;
+        MotionAction motionAction;
+        CommAction commAction;
+
+        // Set actions based on above results. e.g: the first index of each
+        motionAction = myStepHandler.getMotionActionSet().getMotionActions()[0];
+        commAction = myStepHandler.getCommActionSet().getCommActions()[0];
+
+        // Bundle them into ActionSet so it can return both
+        actionSet = new ActionSet(motionAction, commAction);
+
+        // set your action to some ints
+        data.getActions().add(motionAction, commAction);
+
+        if (timeStepCount >= myStepHandler.getMaxTimeStepCount() || (reward >= myStepHandler.getMaxReward())){
+            myStepHandler.setLastTimestep(true);
+            myStepHandler.incrementEpisodeCount();
+            // reseting reward after each episode
+            reward = 0;
+        }
+
+        if (myStepHandler.getEpisodeCount() >= myStepHandler.getMaxEpisodecount()){
+            myStepHandler.setLastTimestep(true);
+        }
+
+        return actionSet;
     }
 
     @Override

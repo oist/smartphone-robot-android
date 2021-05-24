@@ -319,8 +319,8 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         this.loggerOn = abcvlibActivity.switches.loggerOn;
         this.wheelPolaritySwap = abcvlibActivity.switches.wheelPolaritySwap;
         if (abcvlibActivity.getTimeStepDataAssembler() != null){
-            this.batteryData = abcvlibActivity.getTimeStepDataAssembler().getBatteryData();
-            this.wheelData = abcvlibActivity.getTimeStepDataAssembler().getWheelData();
+            this.batteryData = abcvlibActivity.getInputs().getBatteryData();
+            this.wheelData = abcvlibActivity.getInputs().getWheelData();
         }
         Log.d("abcvlib", "AbcvlibLooper constructor finished");
     }

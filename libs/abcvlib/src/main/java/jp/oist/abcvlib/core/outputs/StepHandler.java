@@ -7,54 +7,73 @@ import jp.oist.abcvlib.core.learning.MotionAction;
 import jp.oist.abcvlib.core.learning.MotionActionSet;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
 
-public abstract class StepHandler {
+public class StepHandler {
     private final int maxTimeStepCount;
     private boolean lastEpisode = false; // Use to trigger MainActivity to stop generating episodes
     private boolean lastTimestep = false; // Use to trigger MainActivity to stop generating timesteps for a single episode
     private int reward = 0;
-    private final int rewardCriterion;
+    private final int maxReward;
     private final int maxEpisodecount;
     private int episodeCount = 0;
     private final CommActionSet commActionSet;
     private final MotionActionSet motionActionSet;
+    private ActionSelector actionSelector;
 
-    public StepHandler(int maxTimeStepCount, int rewardCriterion, int maxEpisodeCount,
-                         CommActionSet commActionSet, MotionActionSet motionActionSet){
+    public StepHandler(int maxTimeStepCount, int maxReward, int maxEpisodeCount,
+                       CommActionSet commActionSet, MotionActionSet motionActionSet){
         this.maxTimeStepCount = maxTimeStepCount;
-        this.rewardCriterion = rewardCriterion;
+        this.maxReward = maxReward;
         this.maxEpisodecount = maxEpisodeCount;
         this.motionActionSet = motionActionSet;
         this.commActionSet = commActionSet;
     }
 
+    public static class StepHandlerBuilder {
+        private int maxTimeStepCount = 100;
+        private int maxReward = 100;
+        private int maxEpisodeCount = 3;
+        private CommActionSet commActionSet = new CommActionSet();
+        private MotionActionSet motionActionSet = new MotionActionSet();
+
+        public StepHandlerBuilder(){}
+
+        public StepHandler buildStepHandler(){
+            return new StepHandler(maxTimeStepCount, maxReward, maxEpisodeCount,
+                    commActionSet, motionActionSet);
+        }
+
+        public StepHandlerBuilder setMaxTimeStepCount(int maxTimeStepCount){
+            this.maxEpisodeCount = maxTimeStepCount;
+            return this;
+        }
+
+        public StepHandlerBuilder setMaxReward(int maxReward){
+            this.maxReward = maxReward;
+            return this;
+        }
+
+        public StepHandlerBuilder setMaxEpisodeCount(int maxEpisodeCount){
+            this.maxEpisodeCount = maxEpisodeCount;
+            return this;
+        }
+
+        public StepHandlerBuilder setCommActionSet(CommActionSet commActionSet){
+            this.commActionSet = commActionSet;
+            return this;
+        }
+
+        public StepHandlerBuilder setMotionActionSet(MotionActionSet moctionActionSet){
+            this.motionActionSet = moctionActionSet;
+            return this;
+        }
+    }
+
+    public void setActionSelector(ActionSelector actionSelector){
+        this.actionSelector = actionSelector;
+    }
+
     public ActionSet forward(TimeStepDataBuffer.TimeStepData data, int timeStepCount){
-
-        ActionSet actionSet;
-        MotionAction motionAction;
-        CommAction commAction;
-
-        // Set actions based on above results. e.g: the first index of each
-        motionAction = motionActionSet.getMotionActions()[0];
-        commAction = commActionSet.getCommActions()[0];
-
-        // Bundle them into ActionSet so it can return both
-        actionSet = new ActionSet(motionAction, commAction);
-
-        // set your action to some ints
-        data.getActions().add(motionAction, commAction);
-
-        if (timeStepCount >= maxTimeStepCount || (reward >= rewardCriterion)){
-            this.lastTimestep = true;
-            episodeCount++;
-            // reseting reward after each episode
-            reward = 0;
-        }
-
-        if (episodeCount >= maxEpisodecount){
-            this.lastEpisode = true;
-        }
-
-        return actionSet;
+        return this.actionSelector.forward(data, timeStepCount);
     }
 
     public int getEpisodeCount() {
@@ -81,8 +100,24 @@ public abstract class StepHandler {
         return reward;
     }
 
-    public int getRewardCriterion() {
-        return rewardCriterion;
+    public int getMaxReward() {
+        return maxReward;
+    }
+
+    public void incrementEpisodeCount() {
+        this.episodeCount = episodeCount++;
+    }
+
+    public void setLastEpisode(boolean lastEpisode) {
+        this.lastEpisode = lastEpisode;
+    }
+
+    public MotionActionSet getMotionActionSet() {
+        return motionActionSet;
+    }
+
+    public CommActionSet getCommActionSet() {
+        return commActionSet;
     }
 
     public void setLastTimestep(boolean lastTimestep) {
