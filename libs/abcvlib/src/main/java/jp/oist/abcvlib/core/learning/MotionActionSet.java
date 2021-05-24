@@ -6,9 +6,11 @@ public class MotionActionSet {
 
     public MotionActionSet(int actionCount){
         motionActions = new MotionAction[actionCount];
-        if (actionCount >= 5){
-            addDefaultActions();
-        }
+    }
+
+    public MotionActionSet(){
+        motionActions = new MotionAction[5];
+        addDefaultActions();
     }
 
     private void addDefaultActions(){

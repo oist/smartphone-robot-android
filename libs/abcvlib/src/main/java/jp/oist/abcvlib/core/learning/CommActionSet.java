@@ -6,9 +6,11 @@ public class CommActionSet {
 
     public CommActionSet(int actionCount){
         commActions = new CommAction[actionCount];
-        if (actionCount >= 3){
-            addDefaultActions();
-        }
+    }
+
+    public CommActionSet(){
+        commActions = new CommAction[3];
+        addDefaultActions();
     }
 
     private void addDefaultActions(){
