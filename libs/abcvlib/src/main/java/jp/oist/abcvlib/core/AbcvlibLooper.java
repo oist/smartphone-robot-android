@@ -301,14 +301,14 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      *
      * @see #loop()
      */
-    private double[] encoderCountRightWheel = new double[buffer];
+    private int[] encoderCountRightWheel = new int[buffer];
     /**
      * @see #encoderCountRightWheel
      */
-    private double[] encoderCountLeftWheel = new double[buffer];
+    private int[] encoderCountLeftWheel = new int[buffer];
 
-    private double[] encoderCountLeftWheelLP = new double[buffer];
-    private double[] encoderCountRightWheelLP = new double[buffer];
+    private int[] encoderCountLeftWheelLP = new int[buffer];
+    private int[] encoderCountRightWheelLP = new int[buffer];
     private BatteryData batteryData = null;
     private WheelData wheelData = null;
 
@@ -318,7 +318,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         this.abcvlibActivity = abcvlibActivity;
         this.loggerOn = abcvlibActivity.switches.loggerOn;
         this.wheelPolaritySwap = abcvlibActivity.switches.wheelPolaritySwap;
-        if (abcvlibActivity.getTimeStepDataAssembler() != null){
+        if (abcvlibActivity != null){
             this.batteryData = abcvlibActivity.getInputs().getBatteryData();
             this.wheelData = abcvlibActivity.getInputs().getWheelData();
         }

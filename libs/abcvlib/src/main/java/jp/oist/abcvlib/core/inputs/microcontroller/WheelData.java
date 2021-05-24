@@ -56,9 +56,10 @@ public class WheelData implements AbcvlibInput {
     private double distanceRLP = 0;
 
     private final long[] timeStamps = new long[windowLength];
+    private WheelDataListener wheelDataListener = null;
 
     public WheelData(AbcvlibActivity abcvlibActivity){
-        this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataAssembler().getTimeStepDataBuffer();
+        this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataBuffer();
     }
 
     /**
@@ -66,9 +67,12 @@ public class WheelData implements AbcvlibInput {
      * method exists for the AbcvlibLooper class to get/set encoder counts as the AbcvlibLooper
      * class is responsible for constantly reading the encoder values from the IOIOBoard.
      */
-    public void onWheelDataUpdate(long timestamp, double countLeft, double countRight) {
+    public void onWheelDataUpdate(long timestamp, int countLeft, int countRight) {
         if (isRecording){
             timeStepDataBuffer.getWriteData().getWheelCounts().put(timestamp, countLeft, countRight);
+        }
+        if (wheelDataListener != null){
+            wheelDataListener.onWheelDataUpdate(timestamp, countLeft, countRight);
         }
         int indexCurrent = (quadCount) % windowLength;
         int indexPrevious = (quadCount - 1) % windowLength;
@@ -83,6 +87,10 @@ public class WheelData implements AbcvlibInput {
         setWheelSpeedR();
 
         quadCount++;
+    }
+
+    public void setWheelDataListener(WheelDataListener wheelDataListener) {
+        this.wheelDataListener = wheelDataListener;
     }
 
     public void setTimeStepDataBuffer(TimeStepDataBuffer timeStepDataBuffer) {
@@ -109,32 +117,14 @@ public class WheelData implements AbcvlibInput {
     public double getWheelCountL(){ return encoderCountLeftWheel; }
 
     /**
-     * Get distances traveled by left wheel from start point.
-     * This does not account for slippage/lifting/etc. so
-     * use with a grain of salt
-     * @return distanceL in mm
+     * Convert quadrature encoder counts to distance traveled by wheel from start point.
+     * This does not account for slippage/lifting/etc. so use with a grain of salt
+     * @return distance in mm
      */
-    public double getDistanceL(){return distanceL;}
-
-    /**
-     * Get distances traveled by right wheel from start point.
-     * This does not account for slippage/lifting/etc. so
-     * use with a grain of salt
-     * @return distanceR in mm
-     */
-    public double getDistanceR(){return distanceR;}
-
-    /**
-     * @return Current speed of left wheel in encoder counts per second. May want to convert to
-     * rotations per second if the encoder resolution (counts per revolution) is known.
-     */
-    public double getWheelSpeedL() {return speedLeftWheel;}
-
-    /**
-     * @return Current speed of right wheel in encoder counts per second. May want to convert to
-     * rotations per second if the encoder resolution (counts per revolution) is known.
-     */
-    public double getWheelSpeedR() {return speedRightWheel;}
+    public static double countsToDistance(int count){
+        double mmPerCount = (2 * Math.PI * 30) / 128;
+        return count * mmPerCount;
+    }
 
     /**
      * @return Current speed of left wheel in encoder counts per second with a Low Pass filter.

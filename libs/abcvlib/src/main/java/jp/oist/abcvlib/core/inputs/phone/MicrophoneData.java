@@ -46,7 +46,7 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
 
         this.abcvlibActivity = abcvlibActivity;
 
-        this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataAssembler().getTimeStepDataBuffer();
+        this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataBuffer();
 
         audioExecutor = Executors.newScheduledThreadPool(1, new ProcessPriorityThreadFactory(10, "dataGatherer"));
         HandlerThread handlerThread = new HandlerThread("audioHandlerThread");

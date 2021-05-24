@@ -21,6 +21,7 @@ import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.Inputs;
 import jp.oist.abcvlib.core.inputs.phone.ImageData;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataAssembler;
+import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
 import jp.oist.abcvlib.core.outputs.AbcvlibController;
 import jp.oist.abcvlib.core.outputs.AbcvlibOutput;
 import jp.oist.abcvlib.core.outputs.Outputs;
@@ -46,6 +47,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
     public Outputs outputs;
     public Switches switches = new Switches();
     private TimeStepDataAssembler timeStepDataAssembler;
+    private TimeStepDataBuffer timeStepDataBuffer;
 
     /**
      * Lets various loops know its time to wrap things up when false, and prevents other loops from
@@ -125,21 +127,21 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
         if (timeStepDataAssembler != null){
             this.timeStepDataAssembler = timeStepDataAssembler;
         }else{
-            this.timeStepDataAssembler = new TimeStepDataAssembler(this, null, null);
+            this.timeStepDataBuffer = new TimeStepDataBuffer(10);
         }
 
         inputs = new Inputs(abcvlibActivity, inputArrayList);
         outputs = new Outputs(abcvlibActivity, controller);
 
-        this.timeStepDataAssembler.initializeInputs();
-        try {
-            this.timeStepDataAssembler.startGatherers();
-        } catch (RecordingWithoutTimeStepBufferException e) {
-            ErrorHandler.eLog(TAG, "Make sure to initialize a TimeStepDataBuffer object prior " +
-                    "to setting isRecording to true", e, true);
+        if (timeStepDataAssembler != null){
+            this.timeStepDataAssembler.initializeInputs();
+            try {
+                this.timeStepDataAssembler.startGatherers();
+            } catch (RecordingWithoutTimeStepBufferException e) {
+                ErrorHandler.eLog(TAG, "Make sure to initialize a TimeStepDataBuffer object prior " +
+                        "to setting isRecording to true", e, true);
+            }
         }
-
-
 
         // Tell all child classes it is ok to proceed.
         this.appRunning = true;
@@ -224,5 +226,9 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
 
     public TimeStepDataAssembler getTimeStepDataAssembler() {
         return timeStepDataAssembler;
+    }
+
+    public TimeStepDataBuffer getTimeStepDataBuffer() {
+        return timeStepDataBuffer;
     }
 }

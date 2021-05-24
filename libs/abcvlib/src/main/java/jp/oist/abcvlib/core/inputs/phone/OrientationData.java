@@ -126,6 +126,7 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
     private int avgCount = 1000;
     private boolean isRecording = false;
     private TimeStepDataBuffer timeStepDataBuffer = null;
+    private OrientationDataListener orientationDataListener = null;
 
     //----------------------------------------------------------------------------------------------
 
@@ -152,7 +153,7 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
      */
     public OrientationData(AbcvlibActivity abcvlibActivity){
         this.abcvlibActivity = abcvlibActivity;
-        this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataAssembler().getTimeStepDataBuffer();
+        this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataBuffer();
         sensorManager = (SensorManager) abcvlibActivity.getSystemService(Context.SENSOR_SERVICE);
         gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         rotation_sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
@@ -165,6 +166,10 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
 
     public void setTimeStepDataBuffer(TimeStepDataBuffer timeStepDataBuffer) {
         this.timeStepDataBuffer = timeStepDataBuffer;
+    }
+
+    public void setOrientationDataListener(OrientationDataListener orientationDataListener) {
+        this.orientationDataListener = orientationDataListener;
     }
 
     public TimeStepDataBuffer getTimeStepDataBuffer() {
@@ -227,22 +232,10 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
             SensorManager.remapCoordinateSystem(rotationMatrix, SensorManager.AXIS_MINUS_X, SensorManager.AXIS_Z, rotationMatrixRemap);
             SensorManager.getOrientation(rotationMatrixRemap, orientation);
             thetaRad[indexCurrentRotation] = orientation[1]; //Pitch
-//            thetaRad = lowpassFilter(thetaRad, dt_sample, lp_freq_theta);
-
             angularVelocityRad[indexCurrentRotation] = (thetaRad[indexCurrentRotation] - thetaRad[indexPreviousRotation]) / dt;
-//            angularVelocityRad = lowpassFilter(angularVelocityRad, 0.005, lp_freq_thetaDot);
-//            if (sensorChangeCountRotation > windowLength){
-//                angularVelocityRad[indexCurrentRotation] = runningAvg(angularVelocityRad, 3);
-//            }
-
-            thetaDeg[indexCurrentRotation] = (thetaRad[indexCurrentRotation] * (180 / Math.PI));
-            angularVelocityDeg[indexCurrentRotation] = (thetaDeg[indexCurrentRotation] - thetaDeg[indexPreviousRotation]) / dt;
 
             // Update all previous variables with current ones
             sensorChangeCountRotation++;
-            if (abcvlibActivity.switches.loggerOn){
-                sendToLog();
-            }
 
             pythonSensorTimer[1] = System.nanoTime();
         }
@@ -278,6 +271,11 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
 
         if(isRecording){
             timeStepDataBuffer.getWriteData().getOrientationData().put(timeStamps[indexCurrentRotation],
+                    thetaRad[indexCurrentRotation],
+                    angularVelocityRad[indexCurrentRotation]);
+        }
+        if(orientationDataListener != null){
+            orientationDataListener.onOrientationUpdate(timeStamps[indexCurrentRotation],
                     thetaRad[indexCurrentRotation],
                     angularVelocityRad[indexCurrentRotation]);
         }
@@ -348,34 +346,18 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
     }
 
     /**
-     * @return Phone tilt angle in radians
+     * @return utility function converting radians to degrees
      */
-    public double getThetaRad(){ return thetaRad[indexCurrentRotation]; }
-
-    /**
-     * @return Phone tilt angle in degrees
-     */
-    public double getThetaDeg(){
-        return thetaDeg[indexCurrentRotation];
+    public static double getThetaDeg(double radians){
+        return (radians * (180 / Math.PI));
     }
 
     /**
-     * @return Phone tilt speed (angular velocity) in radians per second
+     * @return utility function converting rad/s to deg/s
      */
-    public double getThetaRadDot(){ return angularVelocityRad[indexCurrentRotation]; }
-
-    /**
-     * @return Phone tilt speed (angular velocity) in degrees per second
-     */
-    public double getThetaDegDot(){
-        return angularVelocityDeg[indexCurrentRotation];
+    public static double getAngularVelocityDeg(double radPerSec){
+        return getThetaDeg(radPerSec);
     }
-
-    /**
-     * @return Total combined count for how many times the accelerometer and gyroscope have provided
-     * data.
-     */
-    int getSensorChangeCount() {return sensorChangeCountRotation;}
 
     /**
      * Sets the history length for which to base the derivative functions off of (angular velocity,
@@ -384,39 +366,6 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
      */
     public void setWindowLength(int len) {
         windowLength = len; }
-
-    /**
-     * Send accelerometer and gyroscope data, along with calculated tilt angles, speeds, etc. such
-     * that they can be read by the sensor data graphing utility.
-     */
-    private void sendToLog() {
-
-        // Compile thetaDegVectorMsg values to push to separate adb tag
-        String thetaMsg = Double.toString(thetaDeg[indexCurrentRotation]);
-
-        // Compile thetaDegVectorMsg values to push to separate adb tag
-        String angularVelocityRadMsg = Double.toString(angularVelocityRad[indexCurrentRotation]);
-
-//        // Compile thetaDegVectorMsg values to push to separate adb tag
-//        String thetaVectorVelMsg = Double.toString(angularVelocityDeg);
-//
-//        // Compile dt_sample values to push to separate adb tag
-//        String dtRotationMsg = Double.toString(dt_sample);
-//
-//        // Compile dt_sample values to push to separate adb tag
-//        String thetaDotGyroMsg = Double.toString(thetaDotGyro);
-//
-//        // Compile dt_sample values to push to separate adb tag
-//        String dtGyroMsg = Double.toString(dtGyro);
-
-//        Log.i("thetaMsg", thetaMsg);
-//        Log.i("angularVelocityRadMsg", angularVelocityRadMsg);
-//        Log.i("thetaVectorVelMsg", thetaVectorVelMsg);
-//        Log.i("dtRotation", dtRotationMsg);
-//        Log.i("thetaDotGyroMsg", thetaDotGyroMsg);
-//        Log.i("dtGyroMsg", dtGyroMsg);
-
-    }
 
     /**
      * This seems to be a very convoluted way to do this, but it seems to work just fine

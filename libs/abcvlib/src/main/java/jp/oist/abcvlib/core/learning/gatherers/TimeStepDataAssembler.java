@@ -246,11 +246,15 @@ public class TimeStepDataAssembler implements Runnable{
     public void run() {
 
         // Choose action wte based on current timestep data
-        ActionSet actionSet = myStepHandler.forward(timeStepDataBuffer.getWriteData(), timeStepCount);
+        if (myStepHandler != null){
+            ActionSet actionSet = myStepHandler.forward(timeStepDataBuffer.getWriteData(), timeStepCount);
+        }
 
         Log.v("SocketConnection", "Running TimeStepAssembler Run Method");
 
-        assembleAudio();
+        if (microphoneData != null){
+            assembleAudio();
+        }
 
         // Moves timeStepDataBuffer.writeData to readData and nulls out the writeData for new data
         timeStepDataBuffer.nextTimeStep();
@@ -388,7 +392,9 @@ public class TimeStepDataAssembler implements Runnable{
 
     private void sendToServer(ByteBuffer episode, CyclicBarrier doneSignal) throws IOException {
         Log.d("SocketConnection", "New executor deployed creating new SocketConnectionManager");
-        executor.execute(new SocketConnectionManager(abcvlibActivity, inetSocketAddress, episode, doneSignal));
+        if (inetSocketAddress != null){
+            executor.execute(new SocketConnectionManager(abcvlibActivity, inetSocketAddress, episode, doneSignal));
+        }
     }
 }
 

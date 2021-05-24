@@ -73,7 +73,7 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput {
         }
 
         yuvToRgbConverter = new YuvToRgbConverter(abcvlibActivity.getApplicationContext());
-        this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataAssembler().getTimeStepDataBuffer();
+        this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataBuffer();
     }
 
     public ImageAnalysis getImageAnalysis() {

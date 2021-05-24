@@ -8,20 +8,27 @@ public class BatteryData implements AbcvlibInput {
 
     private TimeStepDataBuffer timeStepDataBuffer = null;
     private boolean isRecording = false;
+    private BatteryDataListener batteryDataListener = null;
 
     public BatteryData(AbcvlibActivity abcvlibActivity){
-        this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataAssembler().getTimeStepDataBuffer();
+        this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataBuffer();
     }
 
     public void onBatteryVoltageUpdate(double voltage, long timestamp) {
         if (isRecording){
             timeStepDataBuffer.getWriteData().getBatteryData().put(voltage);
         }
+        if (batteryDataListener != null){
+            batteryDataListener.onBatteryVoltageUpdate(voltage, timestamp);
+        }
     }
 
     public void onChargerVoltageUpdate(double voltage, long timestamp) {
         if (isRecording){
             timeStepDataBuffer.getWriteData().getChargerData().put(voltage);
+        }
+        if (batteryDataListener != null){
+            batteryDataListener.onChargerVoltageUpdate(voltage, timestamp);
         }
     }
 
@@ -35,5 +42,9 @@ public class BatteryData implements AbcvlibInput {
 
     public TimeStepDataBuffer getTimeStepDataBuffer() {
         return timeStepDataBuffer;
+    }
+
+    public void setBatteryDataListener(BatteryDataListener batteryDataListener) {
+        this.batteryDataListener = batteryDataListener;
     }
 }

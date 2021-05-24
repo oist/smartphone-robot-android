@@ -5,6 +5,7 @@ import android.util.Log;
 import java.util.Arrays;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.util.ErrorHandler;
 
 public class BalancePIDController extends AbcvlibController{
@@ -22,8 +23,8 @@ public class BalancePIDController extends AbcvlibController{
     // BalancePIDController Setup
     double thetaDeg; // tilt of phone with vertical being 0.
     double thetaDegDot; // derivative of tilt (angular velocity)
-    double wheelCountL; // encoder count on left wheel
-    double wheelCountR; // encoder count on right wheel
+    int wheelCountL; // encoder count on left wheel
+    int wheelCountR; // encoder count on right wheel
     double distanceL; // distances traveled by left wheel from start point (mm)
     double distanceR; // distances traveled by right wheel from start point (mm)
     double speedL; // Current speed on left wheel in mm/s
@@ -67,72 +68,72 @@ public class BalancePIDController extends AbcvlibController{
             Thread.yield();
         }
 
-        if (abcvlibActivity.switches.balanceApp) {
-
-//            Log.v("abcvlib", "In balanceApp.run");
-
-            PIDTimer[0] = System.nanoTime();
-
-            thetaDiff = thetaDeg - abcvlibActivity.getInputs().getOrientationData().getThetaDeg();
-
-            if (thetaDiff !=0){
-                updateTimeStep = PIDTimer[0]- lastUpdateTime;
-                lastUpdateTime = PIDTimer[0];
-                if (abcvlibActivity.switches.loggerOn){
-                    Log.v("theta", "theta was updated in " + (updateTimeStep / 1000000) + " ms");
-                }
-            }
-
-            thetaDeg = abcvlibActivity.getInputs().getOrientationData().getThetaDeg();
-            thetaDegDot = abcvlibActivity.getInputs().getOrientationData().getThetaDegDot();
-            wheelCountL = abcvlibActivity.getInputs().getWheelData().getWheelCountL();
-            wheelCountL = abcvlibActivity.getInputs().getWheelData().getWheelCountR();
-            distanceL = abcvlibActivity.getInputs().getWheelData().getDistanceL();
-            distanceR = abcvlibActivity.getInputs().getWheelData().getDistanceR();
-            speedL = abcvlibActivity.getInputs().getWheelData().getWheelSpeedL_LP();
-            speedR = abcvlibActivity.getInputs().getWheelData().getWheelSpeedR_LP();
-            maxTiltAngle = setPoint + maxAbsTilt;
-            minTiltAngle = setPoint - maxAbsTilt;
-
-            PIDTimer[1] = System.nanoTime();
-
-            // Bounce Up
-            if (minTiltAngle > thetaDeg){
-                bounce(false);
-            }else if(maxTiltAngle < thetaDeg){
-                bounce(true);
-            }else{
-                try {
-                    bounceLoopCount = 0;
-                    linearController();
-                } catch (InterruptedException e) {
-                    ErrorHandler.eLog(TAG, "Interupted when trying to run linearController", e, true);
-                }
-            }
-
-            PIDTimer[2] = System.nanoTime();
-
-            PIDTimeSteps[3] += System.nanoTime() - PIDTimer[2];
-            PIDTimeSteps[2] += PIDTimer[2] - PIDTimer[1];
-            PIDTimeSteps[1] += PIDTimer[1] - PIDTimer[0];
-            PIDTimeSteps[0] = PIDTimer[0];
-
-            // Take basic stats of every 1000 time step lengths rather than pushing all.
-            if (timerCount % avgCount == 0){
-
-                for (int i=1; i < PIDTimeSteps.length; i++){
-
-                    PIDTimeSteps[i] = (PIDTimeSteps[i] / avgCount) / 1000000;
-
-                }
-
-                if (abcvlibActivity.switches.loggerOn){
-                    Log.v("timers", "PIDTimer Averages = " + Arrays.toString(PIDTimeSteps));
-                }
-            }
-
-            timerCount ++;
-        }
+//        if (abcvlibActivity.switches.balanceApp) {
+//
+////            Log.v("abcvlib", "In balanceApp.run");
+//
+//            PIDTimer[0] = System.nanoTime();
+//
+//            thetaDiff = thetaDeg - abcvlibActivity.getInputs().getOrientationData().getThetaDeg();
+//
+//            if (thetaDiff !=0){
+//                updateTimeStep = PIDTimer[0]- lastUpdateTime;
+//                lastUpdateTime = PIDTimer[0];
+//                if (abcvlibActivity.switches.loggerOn){
+//                    Log.v("theta", "theta was updated in " + (updateTimeStep / 1000000) + " ms");
+//                }
+//            }
+//
+//            thetaDeg = abcvlibActivity.getInputs().getOrientationData().getThetaDeg();
+//            thetaDegDot = abcvlibActivity.getInputs().getOrientationData().getAngularVelocityDeg();
+//            wheelCountL = abcvlibActivity.getInputs().getWheelData().getWheelCountL();
+//            wheelCountR = abcvlibActivity.getInputs().getWheelData().getWheelCountR();
+//            distanceL = WheelData.countsToDistance(wheelCountL);
+//            distanceR = WheelData.countsToDistance(wheelCountR);
+//            speedL = abcvlibActivity.getInputs().getWheelData().getWheelSpeedL_LP();
+//            speedR = abcvlibActivity.getInputs().getWheelData().getWheelSpeedR_LP();
+//            maxTiltAngle = setPoint + maxAbsTilt;
+//            minTiltAngle = setPoint - maxAbsTilt;
+//
+//            PIDTimer[1] = System.nanoTime();
+//
+//            // Bounce Up
+//            if (minTiltAngle > thetaDeg){
+//                bounce(false);
+//            }else if(maxTiltAngle < thetaDeg){
+//                bounce(true);
+//            }else{
+//                try {
+//                    bounceLoopCount = 0;
+//                    linearController();
+//                } catch (InterruptedException e) {
+//                    ErrorHandler.eLog(TAG, "Interupted when trying to run linearController", e, true);
+//                }
+//            }
+//
+//            PIDTimer[2] = System.nanoTime();
+//
+//            PIDTimeSteps[3] += System.nanoTime() - PIDTimer[2];
+//            PIDTimeSteps[2] += PIDTimer[2] - PIDTimer[1];
+//            PIDTimeSteps[1] += PIDTimer[1] - PIDTimer[0];
+//            PIDTimeSteps[0] = PIDTimer[0];
+//
+//            // Take basic stats of every 1000 time step lengths rather than pushing all.
+//            if (timerCount % avgCount == 0){
+//
+//                for (int i=1; i < PIDTimeSteps.length; i++){
+//
+//                    PIDTimeSteps[i] = (PIDTimeSteps[i] / avgCount) / 1000000;
+//
+//                }
+//
+//                if (abcvlibActivity.switches.loggerOn){
+//                    Log.v("timers", "PIDTimer Averages = " + Arrays.toString(PIDTimeSteps));
+//                }
+//            }
+//
+//            timerCount ++;
+//        }
     }
 
     synchronized public void setPID(double p_tilt_,
