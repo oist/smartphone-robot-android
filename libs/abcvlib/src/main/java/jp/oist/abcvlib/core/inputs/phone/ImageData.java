@@ -64,6 +64,7 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
         imageAnalysis.setAnalyzer(imageExecutor, this);
 
         mPreviewView = abcvlibActivity.findViewById(R.id.camera_x_preview);
+        mPreviewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
 
         // Request camera permissions
         if (abcvlibActivity.allPermissionsGranted()) {
