@@ -68,6 +68,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
+    <TextView
+        android:id="@+id/soundDataHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/soundDataHeader" />
+    <TextView
+        android:id="@+id/soundData"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
     <androidx.camera.view.PreviewView
         android:id="@+id/camera_x_preview"
         android:layout_width="wrap_content"

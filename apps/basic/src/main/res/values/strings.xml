@@ -6,4 +6,5 @@
     <string name="angularVelocityHeader">Angular Velocity (deg/s):</string>
     <string name="leftWheelHeader">Left Wheel Count:</string>
     <string name="rightWheelHeader">Right Wheel Count:</string>
+    <string name="soundDataHeader">Sound Data:</string>
 </resources>

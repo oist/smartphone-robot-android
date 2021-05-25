@@ -42,7 +42,10 @@ public class ScheduledExecutorServiceWithException {
     }
 
     public void execute(Runnable command){
-        executor.execute(command);
+        ScheduledFuture<?> scheduledFuture = executor
+                .schedule(command, 0,TimeUnit.MILLISECONDS);
+
+        catchErrors(scheduledFuture);
     }
 
     private void catchErrors(ScheduledFuture<?> scheduledFuture){
@@ -61,5 +64,9 @@ public class ScheduledExecutorServiceWithException {
                 }
             }
         });
+    }
+
+    public void shutdownNow(){
+        executor.shutdownNow();
     }
 }

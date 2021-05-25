@@ -26,6 +26,7 @@ import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataAssembler;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
+import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 
 public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListener, AbcvlibInput {
 
@@ -33,7 +34,7 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
 
     private AudioTimestamp startTime = new AudioTimestamp();
     private AudioTimestamp endTime = new AudioTimestamp();
-    private ExecutorService audioExecutor;
+    private ScheduledExecutorServiceWithException audioExecutor;
 
     private AudioRecord recorder;
     private boolean isRecording = false;
@@ -49,7 +50,7 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
 
         this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataBuffer();
 
-        audioExecutor = Executors.newScheduledThreadPool(1, new ProcessPriorityThreadFactory(10, "dataGatherer"));
+        audioExecutor = new ScheduledExecutorServiceWithException(1, new ProcessPriorityThreadFactory(10, "dataGatherer"));
         HandlerThread handlerThread = new HandlerThread("audioHandlerThread");
         handlerThread.start();
         Handler handler = new Handler(handlerThread.getLooper());

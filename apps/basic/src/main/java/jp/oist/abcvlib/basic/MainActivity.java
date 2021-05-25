@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -56,6 +57,7 @@ public class MainActivity extends AbcvlibActivity implements BatteryDataListener
         angularVelocity = findViewById(R.id.angularVelcoity);
         leftWheel = findViewById(R.id.leftWheelCount);
         rightWheel = findViewById(R.id.rightWheelCount);
+        soundData = findViewById(R.id.soundData);
 
         String[] permissions = new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
 
@@ -159,11 +161,12 @@ public class MainActivity extends AbcvlibActivity implements BatteryDataListener
 
     @Override
     public void onMicrophoneDataUpdate(float[] audioData, int numSamples) {
-//        float[] arraySlice = Arrays.copyOfRange(audioData, 0, 9);
-//        String audioDataString = Arrays.toString(arraySlice);
-//        Log.i(TAG, "Microphone Data Update: First 10 Samples=" + audioDataString +
-//                 " of " + numSamples + " total samples");
-
+        DecimalFormat df = new DecimalFormat("#.00");
+        float[] arraySlice = Arrays.copyOfRange(audioData, 0, 9);
+        String audioDataString = df.format(arraySlice);
+        Log.i(TAG, "Microphone Data Update: First 10 Samples=" + audioDataString +
+                 " of " + numSamples + " total samples");
+        runOnUiThread(() -> soundData.setText(audioDataString));
     }
 
     @Override
