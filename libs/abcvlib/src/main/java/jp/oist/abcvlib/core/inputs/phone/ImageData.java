@@ -32,7 +32,7 @@ import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
 import jp.oist.abcvlib.util.YuvToRgbConverter;
 
-public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput {
+public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
 
     private ImageAnalysis imageAnalysis;
     private final ExecutorService imageExecutor;
@@ -49,6 +49,7 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput {
     private Preview preview;
     private Camera camera;
     private ProcessCameraProvider cameraProvider;
+    private ImageDataListener imageDataListener = null;
 
     public ImageData(AbcvlibActivity abcvlibActivity){
 
@@ -84,7 +85,7 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput {
     @Override
     public void analyze(@NonNull ImageProxy imageProxy) {
         Image image = null;
-        if (isRecording()){
+        if (isRecording() || imageDataListener != null){
             image = imageProxy.getImage();
         } else {
             imageProxy.close();
@@ -102,7 +103,12 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput {
             byte[] webpBytes = webpByteArrayOutputStream.toByteArray();
             Bitmap webpBitMap = ImageOps.generateBitmap(webpBytes);
 
-            timeStepDataBuffer.getWriteData().getImageData().add(timestamp, width, height, webpBitMap, webpBytes);
+            if (timeStepDataBuffer != null){
+                timeStepDataBuffer.getWriteData().getImageData().add(timestamp, width, height, webpBitMap, webpBytes);
+            }
+            if (imageDataListener != null){
+                imageDataListener.onImageDataUpdate(timestamp, width, height, webpBitMap, webpBytes);
+            }
 //            Log.v("flatbuff", "Wrote image to timeStepDataBuffer");
         }
         imageProxy.close();
@@ -155,6 +161,10 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput {
     @Override
     public void setTimeStepDataBuffer(TimeStepDataBuffer timeStepDataBuffer) {
         this.timeStepDataBuffer = timeStepDataBuffer;
+    }
+
+    public void setImageDataListenerTest(ImageDataListener imageDataListener) {
+        this.imageDataListener = imageDataListener;
     }
 
     @Override

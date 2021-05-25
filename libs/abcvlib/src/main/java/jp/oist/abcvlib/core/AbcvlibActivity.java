@@ -1,11 +1,14 @@
 package jp.oist.abcvlib.core;
 
+import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
@@ -61,13 +64,16 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
     private static final String[] REQUIRED_PERMISSIONS = new String[0];
 
     protected void onCreate(Bundle savedInstanceState) {
-        if(!appRunning){
-            throw new IllegalStateException("initialize() not called prior to onCreate()");
-        }
-        else{
-            super.onCreate(savedInstanceState);
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        }
+//        if(!appRunning){
+//            throw new IllegalStateException("initialize() not called prior to onCreate()");
+//        }
+//        else{
+//            super.onCreate(savedInstanceState);
+//            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+//        }
+
+        super.onCreate(savedInstanceState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         Log.i(TAG, "End of AbcvlibActivity.onCreate");
     }
@@ -185,6 +191,13 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
      * Check if all permission specified in the manifest have been granted
      */
     public boolean allPermissionsGranted() {
+        if (PackageManager.PERMISSION_DENIED ==
+                ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)){
+
+        }
+        ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
+
         for (String permission : REQUIRED_PERMISSIONS) {
             if (ContextCompat.checkSelfPermission(getBaseContext(), permission) != PackageManager.PERMISSION_GRANTED) {
                 return false;
@@ -207,13 +220,14 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
          only potentially add a few hundred milliseconds to the startup of the app, and have no
          performance degredation while up and running.
          */
-//        while (!appRunning){
-//            try {
-//                Thread.sleep(100);
-//            } catch (InterruptedException e) {
-//                Log.e(TAG,"Error", e);
-//            }
-//        }
+        while (!appRunning){
+            try {
+                Thread.yield();
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                Log.e(TAG,"Error", e);
+            }
+        }
         Log.d("abcvlib", "createIOIOLooper Finished");
         return new AbcvlibLooper(this);
     }
