@@ -170,7 +170,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
         return inputs;
     }
 
-    protected void checkPermissions(PermissionListener permissionListener, String[] permissions){
+    protected void checkPermissions(AbcvlibActivity abcvlibActivity, String[] permissions){
         boolean permissionsGranted = false;
         for (String permission:permissions){
             if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED){
@@ -180,7 +180,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
             }
         }
         if (permissionsGranted) {
-            permissionListener.onPermissionsGranted();
+            abcvlibActivity.onPermissionsGranted();
         } else {
             ActivityResultLauncher<String[]> requestPermissionLauncher =
                     registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), isGranted -> {
@@ -192,7 +192,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
                         }
                         if (allGranted) {
                             Log.i(TAG, "Permissions granted");
-                            permissionListener.onPermissionsGranted();
+                            abcvlibActivity.onPermissionsGranted();
                         } else {
                             throw new RuntimeException("You did not approve required permissions");
                         }
@@ -239,6 +239,8 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
         }
         return true;
     }
+
+    protected void onPermissionsGranted(){}
 
     /**
      Overriding here passes the initialized AbcvlibLooper object to the IOIOLooper class which
