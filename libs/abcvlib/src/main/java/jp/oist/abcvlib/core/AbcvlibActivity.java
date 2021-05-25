@@ -123,6 +123,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
 
         if (timeStepDataAssembler != null){
             this.timeStepDataAssembler = timeStepDataAssembler;
+            this.timeStepDataBuffer = timeStepDataAssembler.getTimeStepDataBuffer();
         }else{
             this.timeStepDataBuffer = new TimeStepDataBuffer(10);
         }

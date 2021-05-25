@@ -41,6 +41,8 @@ public class Inputs {
             }else {
                 throw new IllegalStateException("Unexpected value: " + input.getClass());
             }
+            //Ensures all inputs, including those that were initialized outside of this class have a buffer
+            input.setTimeStepDataBuffer(abcvlibActivity.getTimeStepDataBuffer());
         }
     }
 

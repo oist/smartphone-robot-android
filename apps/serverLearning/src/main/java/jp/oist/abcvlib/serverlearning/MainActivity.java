@@ -1,5 +1,6 @@
 package jp.oist.abcvlib.serverlearning;
 
+import android.Manifest;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -36,6 +37,14 @@ public class MainActivity extends AbcvlibActivity implements ActionSelector {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        String[] permissions = new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
+        checkPermissions(this, permissions);
+
+        super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    protected void onPermissionsGranted() {
         CommActionSet commActionSet = new CommActionSet(3);
         commActionSet.addCommAction("action1", (byte) 0); // I'm just overwriting an existing to show how
         MotionActionSet motionActionSet = new MotionActionSet(5);
@@ -65,8 +74,6 @@ public class MainActivity extends AbcvlibActivity implements ActionSelector {
         inputArrayList.add(microphoneData);
 
         initializer(this, null, timeStepDataAssembler, inputArrayList, null);
-
-        super.onCreate(savedInstanceState);
     }
 
     @Override
