@@ -7,24 +7,18 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.ActivityResultCaller;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.content.ContextCompat;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataListener;
-import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataListener;
 import jp.oist.abcvlib.core.inputs.phone.ImageData;
 import jp.oist.abcvlib.core.inputs.phone.ImageDataListener;
@@ -44,6 +38,8 @@ public class MainActivity extends AbcvlibActivity implements BatteryDataListener
 
     TextView voltageBatt;
     TextView voltageCharger;
+    TextView tiltAngle;
+    TextView angularVelocity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +48,8 @@ public class MainActivity extends AbcvlibActivity implements BatteryDataListener
         setContentView(R.layout.activity_main);
         voltageBatt = findViewById(R.id.voltageBattLevel);
         voltageCharger = findViewById(R.id.voltageChargerLevel);
+        tiltAngle = findViewById(R.id.tiltAngle);
+        angularVelocity = findViewById(R.id.angularVelcoity);
 
         String[] permissions = new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
 
@@ -120,7 +118,7 @@ public class MainActivity extends AbcvlibActivity implements BatteryDataListener
 
     @Override
     public void onChargerVoltageUpdate(double voltage, long timestamp) {
-        Log.i(TAG, "Charger Update: Voltage=" + voltage + " Timestemp=" + timestamp);
+//        Log.i(TAG, "Charger Update: Voltage=" + voltage + " Timestemp=" + timestamp);
         DecimalFormat df = new DecimalFormat("#.00");
         runOnUiThread(() -> voltageCharger.setText(df.format(voltage)));
     }
@@ -130,9 +128,15 @@ public class MainActivity extends AbcvlibActivity implements BatteryDataListener
 //        Log.i(TAG, "Orientation Data Update: Timestamp=" + timestamp + " thetaRad=" + thetaRad
 //                + " angularVelocity=" + angularVelocityRad);
 //
-//        // You can also convert them to degrees using the following static utility methods.
-//        double thetaDeg = OrientationData.getThetaDeg(thetaRad);
-//        double angularVelocityDeg = OrientationData.getAngularVelocityDeg(angularVelocityRad);
+        // You can also convert them to degrees using the following static utility methods.
+        double thetaDeg = OrientationData.getThetaDeg(thetaRad);
+        double angularVelocityDeg = OrientationData.getAngularVelocityDeg(angularVelocityRad);
+        DecimalFormat df = new DecimalFormat("#.00");
+        runOnUiThread(() -> {
+                    tiltAngle.setText(df.format(thetaDeg));
+                    angularVelocity.setText(df.format(angularVelocityDeg));
+                }
+        );
     }
 
     @Override
