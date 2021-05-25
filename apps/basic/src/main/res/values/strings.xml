@@ -4,4 +4,6 @@
     <string name="voltageChargerHeader">Charger Voltage:</string>
     <string name="tiltAngleHeader">Tilt Angle (deg):</string>
     <string name="angularVelocityHeader">Angular Velocity (deg/s):</string>
+    <string name="leftWheelHeader">Left Wheel Count:</string>
+    <string name="rightWheelHeader">Right Wheel Count:</string>
 </resources>

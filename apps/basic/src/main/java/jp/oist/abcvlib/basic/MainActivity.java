@@ -40,6 +40,10 @@ public class MainActivity extends AbcvlibActivity implements BatteryDataListener
     TextView voltageCharger;
     TextView tiltAngle;
     TextView angularVelocity;
+    TextView leftWheel;
+    TextView rightWheel;
+    TextView soundData;
+    TextView frameRate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +54,8 @@ public class MainActivity extends AbcvlibActivity implements BatteryDataListener
         voltageCharger = findViewById(R.id.voltageChargerLevel);
         tiltAngle = findViewById(R.id.tiltAngle);
         angularVelocity = findViewById(R.id.angularVelcoity);
+        leftWheel = findViewById(R.id.leftWheelCount);
+        rightWheel = findViewById(R.id.rightWheelCount);
 
         String[] permissions = new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
 
@@ -144,6 +150,11 @@ public class MainActivity extends AbcvlibActivity implements BatteryDataListener
 //        Log.i(TAG, "Wheel Data Update: Timestamp=" + timestamp + " countLeft=" + countLeft +
 //                " countRight=" + countRight);
 //        double distanceLeft = WheelData.countsToDistance(countLeft);
+        DecimalFormat df = new DecimalFormat("#.00");
+        runOnUiThread(() -> {
+            leftWheel.setText(df.format(countLeft));
+            rightWheel.setText(df.format(countRight));
+        });
     }
 
     @Override
