@@ -1,24 +1,17 @@
 package jp.oist.abcvlib.basic;
 
 import android.Manifest;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.TextView;
-
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.core.content.ContextCompat;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.Locale;
-import java.util.Map;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.PermissionListener;
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataListener;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataListener;
@@ -35,7 +28,7 @@ import jp.oist.abcvlib.core.inputs.phone.OrientationDataListener;
  * theta and angular velocity via Logcat using onboard Android sensors.
  * @author Christopher Buckley https://github.com/topherbuckley
  */
-public class MainActivity extends AbcvlibActivity implements BatteryDataListener,
+public class MainActivity extends AbcvlibActivity implements PermissionListener, BatteryDataListener,
         OrientationDataListener, WheelDataListener, MicrophoneDataListener, ImageDataListener {
 
     TextView voltageBatt;
@@ -64,49 +57,13 @@ public class MainActivity extends AbcvlibActivity implements BatteryDataListener
         lastFrameTime = System.nanoTime();
 
         String[] permissions = new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
-
-        checkPermissions(permissions);
+        checkPermissions(this, permissions);
 
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
     }
 
-    private void checkPermissions(String[] permissions){
-        boolean permissionsGranted = false;
-        for (String permission:permissions){
-            if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED){
-                permissionsGranted = true;
-            }else{
-                permissionsGranted = false;
-            }
-        }
-        if (permissionsGranted) {
-            start();
-        } else {
-            requestPermissionLauncher.launch(permissions);
-        }
-    }
-
-    // Register the permissions callback, which handles the user's response to the
-    // system permissions dialog. Save the return value, an instance of
-    // ActivityResultLauncher, as an instance variable.
-    private final ActivityResultLauncher<String[]> requestPermissionLauncher =
-            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), isGranted -> {
-                Iterator<Map.Entry<String, Boolean>> iterator = isGranted.entrySet().iterator();
-                boolean allGranted = false;
-                while(iterator.hasNext()){
-                    Map.Entry<String, Boolean> pair = iterator.next();
-                    allGranted = pair.getValue();
-                }
-                if (allGranted) {
-                    Log.i(TAG, "Permissions granted");
-                    start();
-                } else {
-                    Log.i(TAG, "Permissions denied");
-                }
-            });
-
-    private void start(){
+    public void onPermissionsGranted(){
         // Initalizes various objects in parent class.
         MicrophoneData microphoneData = new MicrophoneData(this);
         ImageData imageData = new ImageData(this);

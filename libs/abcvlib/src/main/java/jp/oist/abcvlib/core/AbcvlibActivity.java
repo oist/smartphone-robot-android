@@ -17,6 +17,8 @@ import org.json.JSONObject;
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
 
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
@@ -71,6 +73,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
 //            super.onCreate(savedInstanceState);
 //            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 //        }
+
 
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -165,6 +168,37 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
 
     public Inputs getInputs() {
         return inputs;
+    }
+
+    protected void checkPermissions(PermissionListener permissionListener, String[] permissions){
+        boolean permissionsGranted = false;
+        for (String permission:permissions){
+            if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED){
+                permissionsGranted = true;
+            }else{
+                permissionsGranted = false;
+            }
+        }
+        if (permissionsGranted) {
+            permissionListener.onPermissionsGranted();
+        } else {
+            ActivityResultLauncher<String[]> requestPermissionLauncher =
+                    registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), isGranted -> {
+                        Iterator<Map.Entry<String, Boolean>> iterator = isGranted.entrySet().iterator();
+                        boolean allGranted = false;
+                        while(iterator.hasNext()){
+                            Map.Entry<String, Boolean> pair = iterator.next();
+                            allGranted = pair.getValue();
+                        }
+                        if (allGranted) {
+                            Log.i(TAG, "Permissions granted");
+                            permissionListener.onPermissionsGranted();
+                        } else {
+                            throw new RuntimeException("You did not approve required permissions");
+                        }
+                    });
+            requestPermissionLauncher.launch(permissions);
+        }
     }
 
 //    /**
