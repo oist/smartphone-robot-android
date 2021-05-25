@@ -163,7 +163,7 @@ public class MainActivity extends AbcvlibActivity implements BatteryDataListener
     public void onMicrophoneDataUpdate(float[] audioData, int numSamples) {
         DecimalFormat df = new DecimalFormat("#.00");
         float[] arraySlice = Arrays.copyOfRange(audioData, 0, 9);
-        String audioDataString = df.format(arraySlice);
+        String audioDataString = Arrays.toString(arraySlice);
         Log.i(TAG, "Microphone Data Update: First 10 Samples=" + audioDataString +
                  " of " + numSamples + " total samples");
         runOnUiThread(() -> soundData.setText(audioDataString));
