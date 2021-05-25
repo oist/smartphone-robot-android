@@ -9,12 +9,10 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
 import org.json.JSONObject;
 
-import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -24,7 +22,6 @@ import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.Inputs;
-import jp.oist.abcvlib.core.inputs.phone.ImageData;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataAssembler;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
 import jp.oist.abcvlib.core.outputs.AbcvlibController;
@@ -66,15 +63,6 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
     private static final String[] REQUIRED_PERMISSIONS = new String[0];
 
     protected void onCreate(Bundle savedInstanceState) {
-//        if(!appRunning){
-//            throw new IllegalStateException("initialize() not called prior to onCreate()");
-//        }
-//        else{
-//            super.onCreate(savedInstanceState);
-//            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-//        }
-
-
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -200,26 +188,6 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
             requestPermissionLauncher.launch(permissions);
         }
     }
-
-//    /**
-//     * Process result from permission request dialog box, has the request
-//     * been granted? If yes, start Camera. Otherwise display a toast
-//     */
-//    @Override
-//    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-//        // super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-//        if (requestCode == 10) {
-//            if (allPermissionsGranted()) {
-//                inputs.camerax.startCamera();
-//            } else {
-//                Toast.makeText(this,
-//                        "Permissions not granted by the user.",
-//                        Toast.LENGTH_SHORT).show();
-//                finish();
-//            }
-//        }
-//        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-//    }
 
     /**
      * Check if all permission specified in the manifest have been granted
