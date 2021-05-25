@@ -40,6 +40,7 @@ public class MainActivity extends AbcvlibActivity implements PermissionListener,
     TextView soundData;
     TextView frameRateText;
     long lastFrameTime;
+    DecimalFormat df = new DecimalFormat("#.00");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,14 +82,12 @@ public class MainActivity extends AbcvlibActivity implements PermissionListener,
     @Override
     public void onBatteryVoltageUpdate(double voltage, long timestamp) {
 //        Log.i(TAG, "Battery Update: Voltage=" + voltage + " Timestemp=" + timestamp);
-        DecimalFormat df = new DecimalFormat("#.00");
         runOnUiThread(() -> voltageBatt.setText(df.format(voltage)));
     }
 
     @Override
     public void onChargerVoltageUpdate(double voltage, long timestamp) {
 //        Log.i(TAG, "Charger Update: Voltage=" + voltage + " Timestemp=" + timestamp);
-        DecimalFormat df = new DecimalFormat("#.00");
         runOnUiThread(() -> voltageCharger.setText(df.format(voltage)));
     }
 
@@ -100,7 +99,6 @@ public class MainActivity extends AbcvlibActivity implements PermissionListener,
         // You can also convert them to degrees using the following static utility methods.
         double thetaDeg = OrientationData.getThetaDeg(thetaRad);
         double angularVelocityDeg = OrientationData.getAngularVelocityDeg(angularVelocityRad);
-        DecimalFormat df = new DecimalFormat("#.00");
         runOnUiThread(() -> {
                     tiltAngle.setText(df.format(thetaDeg));
                     angularVelocity.setText(df.format(angularVelocityDeg));
@@ -113,7 +111,6 @@ public class MainActivity extends AbcvlibActivity implements PermissionListener,
 //        Log.i(TAG, "Wheel Data Update: Timestamp=" + timestamp + " countLeft=" + countLeft +
 //                " countRight=" + countRight);
 //        double distanceLeft = WheelData.countsToDistance(countLeft);
-        DecimalFormat df = new DecimalFormat("#.00");
         runOnUiThread(() -> {
             leftWheel.setText(df.format(countLeft));
             rightWheel.setText(df.format(countRight));
@@ -122,7 +119,6 @@ public class MainActivity extends AbcvlibActivity implements PermissionListener,
 
     @Override
     public void onMicrophoneDataUpdate(float[] audioData, int numSamples) {
-        DecimalFormat df = new DecimalFormat("#.00");
         float[] arraySlice = Arrays.copyOfRange(audioData, 0, 9);
         String audioDataString = Arrays.toString(arraySlice);
 //        Log.i(TAG, "Microphone Data Update: First 10 Samples=" + audioDataString +
