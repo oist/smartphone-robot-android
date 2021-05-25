@@ -7,4 +7,5 @@
     <string name="leftWheelHeader">Left Wheel Count:</string>
     <string name="rightWheelHeader">Right Wheel Count:</string>
     <string name="soundDataHeader">Sound Data:</string>
+    <string name="frameRateHeader">Frame Rate:</string>
 </resources>

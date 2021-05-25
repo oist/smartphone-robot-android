@@ -15,6 +15,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
@@ -44,7 +45,8 @@ public class MainActivity extends AbcvlibActivity implements BatteryDataListener
     TextView leftWheel;
     TextView rightWheel;
     TextView soundData;
-    TextView frameRate;
+    TextView frameRateText;
+    long lastFrameTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +60,8 @@ public class MainActivity extends AbcvlibActivity implements BatteryDataListener
         leftWheel = findViewById(R.id.leftWheelCount);
         rightWheel = findViewById(R.id.rightWheelCount);
         soundData = findViewById(R.id.soundData);
+        frameRateText = findViewById(R.id.frameRate);
+        lastFrameTime = System.nanoTime();
 
         String[] permissions = new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
 
@@ -164,8 +168,8 @@ public class MainActivity extends AbcvlibActivity implements BatteryDataListener
         DecimalFormat df = new DecimalFormat("#.00");
         float[] arraySlice = Arrays.copyOfRange(audioData, 0, 9);
         String audioDataString = Arrays.toString(arraySlice);
-        Log.i(TAG, "Microphone Data Update: First 10 Samples=" + audioDataString +
-                 " of " + numSamples + " total samples");
+//        Log.i(TAG, "Microphone Data Update: First 10 Samples=" + audioDataString +
+//                 " of " + numSamples + " total samples");
         runOnUiThread(() -> soundData.setText(audioDataString));
     }
 
@@ -173,6 +177,11 @@ public class MainActivity extends AbcvlibActivity implements BatteryDataListener
     public void onImageDataUpdate(long timestamp, int width, int height, Bitmap bitmap, byte[] webpImage) {
 //        Log.i(TAG, "Image Data Update: Timestamp=" + timestamp + " dims=" + width + " x "
 //                + height);
+        double frameRate = 1.0 / ((System.nanoTime() - lastFrameTime) / 1000000000.0);
+        lastFrameTime = System.nanoTime();
+        frameRate = Math.round(frameRate);
+        String frameRateString = String.format(Locale.JAPAN,"%.0f", frameRate);
+        runOnUiThread(() -> frameRateText.setText(frameRateString));
     }
 }
 
