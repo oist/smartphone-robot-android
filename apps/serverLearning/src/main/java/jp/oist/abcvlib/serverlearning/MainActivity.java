@@ -27,8 +27,9 @@ import jp.oist.abcvlib.core.outputs.ActionSelector;
 import jp.oist.abcvlib.core.outputs.StepHandler;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.FileOps;
+import jp.oist.abcvlib.util.SocketListener;
 
-public class MainActivity extends AbcvlibActivity implements ActionSelector {
+public class MainActivity extends AbcvlibActivity implements ActionSelector, SocketListener {
 
     InetSocketAddress inetSocketAddress = new InetSocketAddress("192.168.27.226", 3000);
     private StepHandler myStepHandler;

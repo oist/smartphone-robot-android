@@ -42,7 +42,7 @@ import jp.oist.abcvlib.util.SocketListener;
  * @author Christopher Buckley https://github.com/topherbuckley
  *
  */
-public abstract class AbcvlibActivity extends IOIOActivity implements SocketListener {
+public abstract class AbcvlibActivity extends IOIOActivity {
 
     // Publically accessible objects that encapsulate a lot other core functionality
     private Inputs inputs;
@@ -190,25 +190,6 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
         }
     }
 
-    /**
-     * Check if all permission specified in the manifest have been granted
-     */
-    public boolean allPermissionsGranted() {
-        if (PackageManager.PERMISSION_DENIED ==
-                ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)){
-
-        }
-        ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
-
-        for (String permission : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(getBaseContext(), permission) != PackageManager.PERMISSION_GRANTED) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     protected void onPermissionsGranted(){}
 
     /**
@@ -235,12 +216,6 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SocketList
         }
         Log.d("abcvlib", "createIOIOLooper Finished");
         return new AbcvlibLooper(this);
-    }
-
-    @Override
-    public void onServerReadSuccess(JSONObject jsonHeader, ByteBuffer msgFromServer) {
-        // Parse Message from Server
-        Log.i("server", "Reading from Server Completed");
     }
 
     public TimeStepDataAssembler getTimeStepDataAssembler() {
