@@ -20,7 +20,7 @@ public class Inputs {
     private OrientationData orientationData = null;
     private ArrayList<AbcvlibInput> inputsList;
 
-    public Inputs(Context context, TimeStepDataBuffer timeStepDataBuffer, ArrayList<AbcvlibInput> inputsList){
+    public Inputs(Context context, TimeStepDataBuffer timeStepDataBuffer){
         this.timeStepDataBuffer = timeStepDataBuffer;
 
         if (timeStepDataBuffer == null){
@@ -30,32 +30,6 @@ public class Inputs {
         batteryData = new BatteryData(this.timeStepDataBuffer);
         wheelData = new WheelData(this.timeStepDataBuffer);
         orientationData = new OrientationData(this.timeStepDataBuffer, context);
-
-        if (inputsList == null){
-            inputsList = new ArrayList<>();
-        }
-        this.inputsList = inputsList;
-
-        // Set custom input data instances if provided
-        for (AbcvlibInput input:inputsList){
-            Class<?> inputClass = input.getClass();
-
-            if (inputClass == BatteryData.class){
-                this.batteryData = (BatteryData) input;
-            }else if(inputClass == WheelData.class){
-                wheelData = (WheelData) input;
-            }else if(inputClass == ImageData.class){
-                imageData = (ImageData) input;
-            }else if(inputClass == MicrophoneData.class){
-                microphoneData = (MicrophoneData) input;
-            }else if(inputClass == OrientationData.class){
-                orientationData = (OrientationData) input;
-            }else {
-                throw new IllegalStateException("Unexpected value: " + input.getClass());
-            }
-            //Ensures all inputs, including those that were initialized outside of this class have a buffer
-            input.setTimeStepDataBuffer(this.timeStepDataBuffer);
-        }
     }
 
     public BatteryData getBatteryData() {
@@ -80,5 +54,33 @@ public class Inputs {
 
     public ArrayList<AbcvlibInput> getInputsList() {
         return inputsList;
+    }
+
+    public void setTimeStepDataBuffer(TimeStepDataBuffer timeStepDataBuffer) {
+        this.timeStepDataBuffer = timeStepDataBuffer;
+    }
+
+    public void setBatteryData(BatteryData batteryData) {
+        this.batteryData = batteryData;
+    }
+
+    public void setImageData(ImageData imageData) {
+        this.imageData = imageData;
+    }
+
+    public void setInputsList(ArrayList<AbcvlibInput> inputsList) {
+        this.inputsList = inputsList;
+    }
+
+    public void setMicrophoneData(MicrophoneData microphoneData) {
+        this.microphoneData = microphoneData;
+    }
+
+    public void setOrientationData(OrientationData orientationData) {
+        this.orientationData = orientationData;
+    }
+
+    public void setWheelData(WheelData wheelData) {
+        this.wheelData = wheelData;
     }
 }
