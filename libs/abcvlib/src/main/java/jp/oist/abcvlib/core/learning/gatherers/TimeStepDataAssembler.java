@@ -36,6 +36,7 @@ import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
 import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 import jp.oist.abcvlib.util.SocketConnectionManager;
+import jp.oist.abcvlib.util.SocketListener;
 
 public class TimeStepDataAssembler implements Runnable{
 
@@ -52,6 +53,7 @@ public class TimeStepDataAssembler implements Runnable{
     private ScheduledFuture<?> timeStepDataAssemblerFuture;
     private final ScheduledExecutorServiceWithException executor;
     private final InetSocketAddress inetSocketAddress;
+    private final SocketListener socketListener;
     private final AbcvlibActivity abcvlibActivity;
     private BatteryData batteryData;
     private WheelData wheelData;
@@ -59,9 +61,11 @@ public class TimeStepDataAssembler implements Runnable{
     private final ArrayList<AbcvlibInput> inputs = new ArrayList<>();
 
     public TimeStepDataAssembler(AbcvlibActivity abcvlibActivity,
+                                 StepHandler myStepHandler,
                                  InetSocketAddress inetSocketAddress,
-                                 StepHandler myStepHandler){
+                                 SocketListener socketListener){
         this.abcvlibActivity = abcvlibActivity;
+        this.socketListener = socketListener;
 
         this.inetSocketAddress = inetSocketAddress;
 
@@ -393,7 +397,7 @@ public class TimeStepDataAssembler implements Runnable{
     private void sendToServer(ByteBuffer episode, CyclicBarrier doneSignal) throws IOException {
         Log.d("SocketConnection", "New executor deployed creating new SocketConnectionManager");
         if (inetSocketAddress != null){
-            executor.execute(new SocketConnectionManager(abcvlibActivity, inetSocketAddress, episode, doneSignal));
+            executor.execute(new SocketConnectionManager(socketListener, inetSocketAddress, episode, doneSignal));
         }
     }
 }

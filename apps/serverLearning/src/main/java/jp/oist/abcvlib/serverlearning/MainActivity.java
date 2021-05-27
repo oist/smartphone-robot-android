@@ -66,7 +66,7 @@ public class MainActivity extends AbcvlibActivity implements ActionSelector, Soc
         // Setup a live preview of camera feed to the display. Remove if unwanted.
         setContentView(jp.oist.abcvlib.core.R.layout.camera_x_preview);
 
-        TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler(this, inetSocketAddress, myStepHandler);
+        TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler(this, myStepHandler, inetSocketAddress, this);
 
         ArrayList<AbcvlibInput> inputArrayList = new ArrayList<>();
         ImageData imageData = new ImageData(this);

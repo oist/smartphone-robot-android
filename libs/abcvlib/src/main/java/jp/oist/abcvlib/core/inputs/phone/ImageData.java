@@ -66,13 +66,7 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
         mPreviewView = abcvlibActivity.findViewById(R.id.camera_x_preview);
         mPreviewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
 
-        // Request camera permissions
-        if (abcvlibActivity.allPermissionsGranted()) {
-            startCamera(abcvlibActivity);
-        } else {
-            ActivityCompat.requestPermissions(
-                    abcvlibActivity, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
-        }
+        startCamera(abcvlibActivity);
 
         yuvToRgbConverter = new YuvToRgbConverter(abcvlibActivity.getApplicationContext());
         this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataBuffer();
