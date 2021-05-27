@@ -109,16 +109,12 @@ public abstract class AbcvlibActivity extends IOIOActivity {
 
         Log.i(TAG, "Start of AbcvlibActivity.initializer");
 
-        if (outputArrayList == null){
-            outputArrayList = new ArrayList<>();
-        }
-
         if (timeStepDataAssembler != null){
             this.timeStepDataAssembler = timeStepDataAssembler;
         }
 
         inputs = new Inputs(getApplicationContext(), timeStepDataBuffer, inputArrayList);
-        outputs = new Outputs(abcvlibActivity, controller);
+        outputs = new Outputs(abcvlibActivity, controller, outputArrayList);
 
         if (timeStepDataAssembler != null){
             try {
