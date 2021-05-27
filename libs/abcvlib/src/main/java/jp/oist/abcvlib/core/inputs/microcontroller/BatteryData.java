@@ -2,6 +2,7 @@ package jp.oist.abcvlib.core.inputs.microcontroller;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
+import jp.oist.abcvlib.core.inputs.Inputs;
 import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
 
 public class BatteryData implements AbcvlibInput {

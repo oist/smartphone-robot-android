@@ -17,7 +17,7 @@ public class Inputs {
     private MicrophoneData microphoneData = null;
     private OrientationData orientationData = null;
 
-    public Inputs(AbcvlibActivity abcvlibActivity, ArrayList<AbcvlibInput> inputArrayList){
+    public Inputs(AbcvlibActivity abcvlibActivity, ArrayList<AbcvlibInput> inputs){
 
         // Set default input data instances
         batteryData = new BatteryData(abcvlibActivity);
@@ -25,11 +25,11 @@ public class Inputs {
         orientationData = new OrientationData(abcvlibActivity);
 
         // Set custom input data instances if provided
-        for (AbcvlibInput input:inputArrayList){
+        for (AbcvlibInput input:inputs){
             Class<?> inputClass = input.getClass();
 
             if (inputClass == BatteryData.class){
-                batteryData = (BatteryData) input;
+                this.batteryData = (BatteryData) input;
             }else if(inputClass == WheelData.class){
                 wheelData = (WheelData) input;
             }else if(inputClass == ImageData.class){

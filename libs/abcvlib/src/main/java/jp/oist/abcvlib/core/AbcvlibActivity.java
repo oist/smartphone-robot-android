@@ -132,7 +132,6 @@ public abstract class AbcvlibActivity extends IOIOActivity {
         outputs = new Outputs(abcvlibActivity, controller);
 
         if (timeStepDataAssembler != null){
-            this.timeStepDataAssembler.initializeInputs();
             try {
                 this.timeStepDataAssembler.startGatherers();
             } catch (RecordingWithoutTimeStepBufferException e) {

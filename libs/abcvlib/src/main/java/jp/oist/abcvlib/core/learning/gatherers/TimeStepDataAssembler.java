@@ -14,7 +14,6 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
@@ -38,7 +37,7 @@ import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 import jp.oist.abcvlib.util.SocketConnectionManager;
 import jp.oist.abcvlib.util.SocketListener;
 
-public class TimeStepDataAssembler implements Runnable{
+public class TimeStepDataAssembler implements Runnable {
 
     private int timeStepCount = 0;
     private final int maxTimeStep = 100;
@@ -54,17 +53,16 @@ public class TimeStepDataAssembler implements Runnable{
     private final ScheduledExecutorServiceWithException executor;
     private final InetSocketAddress inetSocketAddress;
     private final SocketListener socketListener;
-    private final AbcvlibActivity abcvlibActivity;
     private BatteryData batteryData;
     private WheelData wheelData;
     private ImageData imageData;
-    private final ArrayList<AbcvlibInput> inputs = new ArrayList<>();
+    private ArrayList<AbcvlibInput> inputs = new ArrayList<>();
 
-    public TimeStepDataAssembler(AbcvlibActivity abcvlibActivity,
+    public TimeStepDataAssembler(ArrayList<AbcvlibInput> inputs,
                                  StepHandler myStepHandler,
                                  InetSocketAddress inetSocketAddress,
                                  SocketListener socketListener){
-        this.abcvlibActivity = abcvlibActivity;
+        this.inputs = inputs;
         this.socketListener = socketListener;
 
         this.inetSocketAddress = inetSocketAddress;
@@ -88,17 +86,6 @@ public class TimeStepDataAssembler implements Runnable{
         builder = new FlatBufferBuilder(1024);
         Log.v("flatbuff", "starting New Episode");
         // todo reload tflite models here for myStepHandler
-    }
-
-    public void initializeInputs(){
-        batteryData = abcvlibActivity.getInputs().getBatteryData();
-        inputs.add(batteryData);
-        wheelData = abcvlibActivity.getInputs().getWheelData();
-        inputs.add(wheelData);
-        imageData = abcvlibActivity.getInputs().getImageData();
-        inputs.add(imageData);
-        microphoneData = abcvlibActivity.getInputs().getMicrophoneData();
-        inputs.add(microphoneData);
     }
 
     public void startGatherers() throws RecordingWithoutTimeStepBufferException {
