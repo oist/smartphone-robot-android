@@ -1,11 +1,9 @@
 package jp.oist.abcvlib.core.outputs;
 
 import jp.oist.abcvlib.core.learning.ActionSet;
-import jp.oist.abcvlib.core.learning.CommAction;
 import jp.oist.abcvlib.core.learning.CommActionSet;
-import jp.oist.abcvlib.core.learning.MotionAction;
 import jp.oist.abcvlib.core.learning.MotionActionSet;
-import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
+import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 
 public class StepHandler {
     private final int maxTimeStepCount;

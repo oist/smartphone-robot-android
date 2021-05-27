@@ -1,9 +1,7 @@
 package jp.oist.abcvlib.core.inputs.microcontroller;
 
-import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
-import jp.oist.abcvlib.core.inputs.Inputs;
-import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
+import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 
 public class BatteryData implements AbcvlibInput {
 
@@ -11,8 +9,8 @@ public class BatteryData implements AbcvlibInput {
     private boolean isRecording = false;
     private BatteryDataListener batteryDataListener = null;
 
-    public BatteryData(AbcvlibActivity abcvlibActivity){
-        this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataBuffer();
+    public BatteryData(TimeStepDataBuffer timeStepDataBuffer){
+        this.timeStepDataBuffer = timeStepDataBuffer;
     }
 
     public void onBatteryVoltageUpdate(double voltage, long timestamp) {

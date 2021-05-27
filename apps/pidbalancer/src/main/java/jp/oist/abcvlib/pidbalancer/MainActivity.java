@@ -10,7 +10,7 @@ import com.google.android.material.slider.Slider;
 import java.util.ArrayList;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataAssembler;
+import jp.oist.abcvlib.core.learning.TimeStepDataAssembler;
 import jp.oist.abcvlib.util.ErrorHandler;
 
 import static java.lang.Math.max;

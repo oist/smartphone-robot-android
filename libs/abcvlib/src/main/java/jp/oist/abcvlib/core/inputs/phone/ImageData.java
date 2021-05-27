@@ -13,7 +13,6 @@ import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -26,7 +25,7 @@ import java.util.concurrent.Executors;
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.R;
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
-import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
+import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 import jp.oist.abcvlib.util.ImageOps;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
@@ -51,7 +50,7 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
     private ProcessCameraProvider cameraProvider;
     private ImageDataListener imageDataListener = null;
 
-    public ImageData(AbcvlibActivity abcvlibActivity){
+    public ImageData(TimeStepDataBuffer timeStepDataBuffer, AbcvlibActivity abcvlibActivity){
 
         imageExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "imageAnalysis"));
 
@@ -69,7 +68,7 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
         startCamera(abcvlibActivity);
 
         yuvToRgbConverter = new YuvToRgbConverter(abcvlibActivity.getApplicationContext());
-        this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataBuffer();
+        this.timeStepDataBuffer = timeStepDataBuffer;
     }
 
     public ImageAnalysis getImageAnalysis() {

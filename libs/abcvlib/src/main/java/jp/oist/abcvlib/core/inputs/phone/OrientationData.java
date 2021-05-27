@@ -8,9 +8,8 @@ import android.hardware.SensorManager;
 import android.os.Build;
 import android.util.Log;
 
-import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
-import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
+import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 
 /**
  * MotionSensors reads and processes the data from the Android phone gryoscope and
@@ -33,7 +32,6 @@ import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
  * @author Christopher Buckley https://github.com/topherbuckley
  */
 public class OrientationData implements SensorEventListener, AbcvlibInput {
-    private AbcvlibActivity abcvlibActivity;
 
     //----------------------------------------- Counters -------------------------------------------
     /**
@@ -151,10 +149,9 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
      * accelerometer and gyroscope. Then registers both sensors such that their onSensorChanged
      * events will call the onSensorChanged method within this class.
      */
-    public OrientationData(AbcvlibActivity abcvlibActivity){
-        this.abcvlibActivity = abcvlibActivity;
-        this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataBuffer();
-        sensorManager = (SensorManager) abcvlibActivity.getSystemService(Context.SENSOR_SERVICE);
+    public OrientationData(TimeStepDataBuffer timeStepDataBuffer, Context context){
+        this.timeStepDataBuffer = timeStepDataBuffer;
+        sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         rotation_sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);

@@ -1,4 +1,4 @@
-package jp.oist.abcvlib.core.learning.gatherers;
+package jp.oist.abcvlib.core.learning;
 
 import android.util.Log;
 
@@ -15,13 +15,11 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
+import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
 import jp.oist.abcvlib.core.inputs.phone.ImageData;
-import jp.oist.abcvlib.core.learning.ActionSet;
-import jp.oist.abcvlib.core.learning.CommAction;
-import jp.oist.abcvlib.core.learning.MotionAction;
 import jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp;
 import jp.oist.abcvlib.core.learning.fbclasses.ChargerData;
 import jp.oist.abcvlib.core.learning.fbclasses.Episode;

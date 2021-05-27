@@ -66,12 +66,12 @@ public class MainActivity extends AbcvlibActivity implements BatteryDataListener
     @Override
     public void onPermissionsGranted(){
         // Initalizes various objects in parent class.
-        MicrophoneData microphoneData = new MicrophoneData(this);
-        ImageData imageData = new ImageData(this);
+        MicrophoneData microphoneData = new MicrophoneData();
+        ImageData imageData = new ImageData(null, this);
         ArrayList<AbcvlibInput> inputArrayList = new ArrayList<>();
         inputArrayList.add(microphoneData);
         inputArrayList.add(imageData);
-        initializer(this, null, null, inputArrayList, null);
+        initializer(this, null, null, null, inputArrayList, null);
         getInputs().getBatteryData().setBatteryDataListener(this);
         getInputs().getOrientationData().setOrientationDataListener(this);
         getInputs().getWheelData().setWheelDataListener(this);

@@ -12,7 +12,6 @@ import ioio.lib.util.BaseIOIOLooper;
 import ioio.lib.util.IOIOConnectionManager;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
-import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataAssembler;
 
 /**
  * AbcvlibLooper provides the connection with the IOIOBoard by allowing access to the loop

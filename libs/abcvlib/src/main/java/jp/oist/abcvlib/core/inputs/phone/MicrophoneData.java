@@ -1,7 +1,5 @@
 package jp.oist.abcvlib.core.inputs.phone;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.AudioTimestamp;
@@ -9,28 +7,18 @@ import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.Looper;
-import android.os.Message;
 import android.util.Log;
 
 import androidx.annotation.RequiresApi;
-import androidx.core.app.ActivityCompat;
-import androidx.core.os.HandlerCompat;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
-import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataAssembler;
-import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
+import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
+import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
 import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 
 public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListener, AbcvlibInput {
-
-    private final AbcvlibActivity abcvlibActivity;
 
     private AudioTimestamp startTime = new AudioTimestamp();
     private AudioTimestamp endTime = new AudioTimestamp();
@@ -42,20 +30,16 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
     private MicrophoneDataListener microphoneDataListener = null;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public MicrophoneData(AbcvlibActivity abcvlibActivity) {
+    public MicrophoneData(TimeStepDataBuffer timeStepDataBuffer) {
 
         Log.i("abcvlib", "In MicInput run method");
 
-        this.abcvlibActivity = abcvlibActivity;
-
-        this.timeStepDataBuffer = abcvlibActivity.getTimeStepDataBuffer();
+        this.timeStepDataBuffer = timeStepDataBuffer;
 
         audioExecutor = new ScheduledExecutorServiceWithException(1, new ProcessPriorityThreadFactory(10, "dataGatherer"));
         HandlerThread handlerThread = new HandlerThread("audioHandlerThread");
         handlerThread.start();
         Handler handler = new Handler(handlerThread.getLooper());
-
-        checkRecordPermission();
 
         int mAudioSource = MediaRecorder.AudioSource.UNPROCESSED;
         int mSampleRate = 8000;
@@ -79,6 +63,11 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
         recorder.setRecordPositionUpdateListener(this, handler);
         start();
     }
+
+    public MicrophoneData() {
+        this(null);
+    }
+
 
     public void start(){
         recorder.startRecording();
@@ -109,16 +98,6 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
 
     public int getSampleRate(){return recorder.getSampleRate();}
 
-    private void checkRecordPermission() {
-
-        if (ActivityCompat.checkSelfPermission(abcvlibActivity, Manifest.permission.RECORD_AUDIO)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(abcvlibActivity, new String[]{Manifest.permission.RECORD_AUDIO},
-                    123);
-        }
-    }
-
     public void stop(){
         recorder.stop();
     }
@@ -130,7 +109,10 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
         recorder = null;
     }
 
-    public synchronized void setRecording(boolean recording) {
+    public synchronized void setRecording(boolean recording) throws RecordingWithoutTimeStepBufferException {
+        if (this.timeStepDataBuffer == null){
+            throw new RecordingWithoutTimeStepBufferException();
+        }
         isRecording = recording;
     }
 

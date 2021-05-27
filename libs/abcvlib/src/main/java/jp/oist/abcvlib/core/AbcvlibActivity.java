@@ -1,6 +1,5 @@
 package jp.oist.abcvlib.core;
 
-import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,9 +10,6 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.content.ContextCompat;
 
-import org.json.JSONObject;
-
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
@@ -22,14 +18,13 @@ import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.Inputs;
-import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataAssembler;
-import jp.oist.abcvlib.core.learning.gatherers.TimeStepDataBuffer;
+import jp.oist.abcvlib.core.learning.TimeStepDataAssembler;
+import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 import jp.oist.abcvlib.core.outputs.AbcvlibController;
 import jp.oist.abcvlib.core.outputs.AbcvlibOutput;
 import jp.oist.abcvlib.core.outputs.Outputs;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
-import jp.oist.abcvlib.util.SocketListener;
 
 /**
  * AbcvlibActivity is where all of the other classes are initialized into objects. The objects
@@ -49,7 +44,6 @@ public abstract class AbcvlibActivity extends IOIOActivity {
     public Outputs outputs;
     public Switches switches = new Switches();
     private TimeStepDataAssembler timeStepDataAssembler;
-    private TimeStepDataBuffer timeStepDataBuffer;
 
     /**
      * Lets various loops know its time to wrap things up when false, and prevents other loops from
@@ -109,26 +103,21 @@ public abstract class AbcvlibActivity extends IOIOActivity {
     protected void initializer(AbcvlibActivity abcvlibActivity,
                                AbcvlibController controller,
                                TimeStepDataAssembler timeStepDataAssembler,
+                               TimeStepDataBuffer timeStepDataBuffer,
                                ArrayList<AbcvlibInput> inputArrayList,
                                ArrayList<AbcvlibOutput> outputArrayList) {
 
         Log.i(TAG, "Start of AbcvlibActivity.initializer");
 
-        if (inputArrayList == null){
-            inputArrayList = new ArrayList<>();
-        }
         if (outputArrayList == null){
             outputArrayList = new ArrayList<>();
         }
 
         if (timeStepDataAssembler != null){
             this.timeStepDataAssembler = timeStepDataAssembler;
-            this.timeStepDataBuffer = timeStepDataAssembler.getTimeStepDataBuffer();
-        }else{
-            this.timeStepDataBuffer = new TimeStepDataBuffer(10);
         }
 
-        inputs = new Inputs(abcvlibActivity, inputArrayList);
+        inputs = new Inputs(getApplicationContext(), timeStepDataBuffer, inputArrayList);
         outputs = new Outputs(abcvlibActivity, controller);
 
         if (timeStepDataAssembler != null){
@@ -150,7 +139,7 @@ public abstract class AbcvlibActivity extends IOIOActivity {
      * null initializer for basic module or those not interacting with anything other than itself
      */
     protected void initializer(AbcvlibActivity abcvlibActivity) {
-        initializer(abcvlibActivity, null, null, null, null);
+        initializer(abcvlibActivity, null, null, null, null, null);
 
     }
 
@@ -221,7 +210,4 @@ public abstract class AbcvlibActivity extends IOIOActivity {
         return timeStepDataAssembler;
     }
 
-    public TimeStepDataBuffer getTimeStepDataBuffer() {
-        return timeStepDataBuffer;
-    }
 }

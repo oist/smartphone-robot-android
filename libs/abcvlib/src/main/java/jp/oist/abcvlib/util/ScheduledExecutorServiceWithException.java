@@ -53,9 +53,9 @@ public class ScheduledExecutorServiceWithException {
             @Override
             public void run() {
                 try {
-                    System.out.println("before get()");
+//                    System.out.println("before get()");
                     scheduledFuture.get(); // will return only if canceled
-                    System.out.println("after get()");
+//                    System.out.println("after get()");
                 } catch (ExecutionException e) {
                     executor.shutdown();
                     throw new RuntimeException(e);
