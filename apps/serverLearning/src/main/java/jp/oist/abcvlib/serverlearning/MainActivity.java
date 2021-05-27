@@ -57,7 +57,7 @@ public class MainActivity extends AbcvlibActivity implements ActionSelector, Soc
                 .setMaxReward(100000)
                 .setMotionActionSet(motionActionSet)
                 .setCommActionSet(commActionSet)
-                .buildStepHandler();
+                .build();
 
         myStepHandler.setActionSelector(this);
 

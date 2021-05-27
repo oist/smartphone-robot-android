@@ -5,13 +5,13 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.widget.TextView;
 
+import androidx.camera.view.PreviewView;
+
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Locale;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataListener;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataListener;
 import jp.oist.abcvlib.core.inputs.phone.ImageData;
@@ -65,18 +65,19 @@ public class MainActivity extends AbcvlibActivity implements BatteryDataListener
 
     @Override
     public void onPermissionsGranted(){
+        initializer(this, null, null, null, null, null);
         // Initalizes various objects in parent class.
         MicrophoneData microphoneData = new MicrophoneData();
-        ImageData imageData = new ImageData(null, this);
-        ArrayList<AbcvlibInput> inputArrayList = new ArrayList<>();
-        inputArrayList.add(microphoneData);
-        inputArrayList.add(imageData);
-        initializer(this, null, null, null, inputArrayList, null);
+        ImageData imageData = new ImageData(null, findViewById(R.id.camera_x_preview), null);
+        imageData.setDefaultImageAnalysis(null, this);
+        imageData.startCamera(this, this);
+        getInputs().setImageData(imageData);
+        getInputs().setMicrophoneData(microphoneData);
         getInputs().getBatteryData().setBatteryDataListener(this);
         getInputs().getOrientationData().setOrientationDataListener(this);
         getInputs().getWheelData().setWheelDataListener(this);
         getInputs().getMicrophoneData().setMicrophoneDataListener(this);
-        getInputs().getImageData().setImageDataListenerTest(this);
+        getInputs().getImageData().setImageDataListener(this);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package jp.oist.abcvlib.core.inputs.phone;
 
 import android.Manifest;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.media.Image;
 import android.util.Size;
@@ -14,6 +15,7 @@ import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -22,10 +24,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.core.R;
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
+import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.ImageOps;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
@@ -34,11 +35,10 @@ import jp.oist.abcvlib.util.YuvToRgbConverter;
 public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
 
     private ImageAnalysis imageAnalysis;
-    private final ExecutorService imageExecutor;
-    private final YuvToRgbConverter yuvToRgbConverter;
+    private YuvToRgbConverter yuvToRgbConverter;
     private TimeStepDataBuffer timeStepDataBuffer;
     private boolean isRecording = false;
-    private PreviewView mPreviewView;
+    private PreviewView previewView;
     private static final int REQUEST_CODE_PERMISSIONS = 10;
     private static final String[] REQUIRED_PERMISSIONS = { Manifest.permission.CAMERA };
 
@@ -49,25 +49,30 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
     private Camera camera;
     private ProcessCameraProvider cameraProvider;
     private ImageDataListener imageDataListener = null;
+    private final String TAG = getClass().getName();
 
-    public ImageData(TimeStepDataBuffer timeStepDataBuffer, AbcvlibActivity abcvlibActivity){
+    /**
+     * You can construct this with a PreviewView and or ImageAnalysis, but they can also be null and
+     * set later with {@link #setPreviewView(PreviewView)} and
+     * {@link #setImageAnalysis(ImageAnalysis, TimeStepDataBuffer, ImageDataListener)}. Note you
+     * can also use {@link #setDefaultImageAnalysis(TimeStepDataBuffer, ImageDataListener)} if you
+     * have no preference as to how the ImageAnalysis instance is built.
+     * After you have set either or both, call the {@link #startCamera(Context, LifecycleOwner)} to
+     * start one or both. The startCamera method will initialize only those that have been setup
+     * prior to calling the startCamera method.
+     * @param timeStepDataBuffer
+     * @param previewView
+     * @param imageAnalysis
+     */
+    public ImageData(TimeStepDataBuffer timeStepDataBuffer, PreviewView previewView,
+                     ImageAnalysis imageAnalysis){
 
-        imageExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "imageAnalysis"));
-
-        imageAnalysis =
-                new ImageAnalysis.Builder()
-                        .setTargetResolution(new Size(10, 10))
-                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        .setImageQueueDepth(20)
-                        .build();
-        imageAnalysis.setAnalyzer(imageExecutor, this);
-
-        mPreviewView = abcvlibActivity.findViewById(R.id.camera_x_preview);
-        mPreviewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
-
-        startCamera(abcvlibActivity);
-
-        yuvToRgbConverter = new YuvToRgbConverter(abcvlibActivity.getApplicationContext());
+        if (previewView != null){
+            setPreviewView(previewView);
+        }
+        if (imageAnalysis != null){
+            setImageAnalysis(imageAnalysis, timeStepDataBuffer, null);
+        }
         this.timeStepDataBuffer = timeStepDataBuffer;
     }
 
@@ -108,24 +113,68 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
         imageProxy.close();
     }
 
-    public void startCamera(AbcvlibActivity abcvlibActivity) {
-        if (mPreviewView != null){
-            mPreviewView.post(() -> {
-                mCameraProviderFuture = ProcessCameraProvider.getInstance(abcvlibActivity);
+    public void setPreviewView(PreviewView previewView) {
+        this.previewView = previewView;
+    }
+
+    public synchronized void setDefaultImageAnalysis(TimeStepDataBuffer timeStepDataBuffer,
+                                                     ImageDataListener imageDataListener){
+        imageAnalysis =
+                new ImageAnalysis.Builder()
+                        .setTargetResolution(new Size(10, 10))
+                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                        .setImageQueueDepth(20)
+                        .build();
+        setImageAnalysis(imageAnalysis, timeStepDataBuffer, imageDataListener);
+    }
+
+    /**
+     * As there is no point in wasting system resources on an ImageAnalysis unless you set an output,
+     * you must set either or both the TimeStepDataBuffer or ImageDataListener. One or the other can
+     * remain null if unnecessary.
+     * @param imageAnalysis
+     * @param timeStepDataBuffer
+     * @param imageDataListener
+     */
+    public void setImageAnalysis(ImageAnalysis imageAnalysis, TimeStepDataBuffer timeStepDataBuffer,
+                                 ImageDataListener imageDataListener) {
+        if (timeStepDataBuffer == null && imageDataListener == null){
+            throw new UnsupportedOperationException("As there is no point in wasting system " +
+                    "resources on an ImageAnalysis unless you set an output, you must set either or " +
+                    "both the TimeStepDataBuffer or ImageDataListener. One or the other can remain " +
+                    "null if unnecessary.");
+        }
+        this.timeStepDataBuffer = timeStepDataBuffer;
+        this.imageDataListener = imageDataListener;
+        this.imageAnalysis = imageAnalysis;
+    }
+
+    public void startCamera(Context context, LifecycleOwner lifecycleOwner) {
+        if (imageAnalysis == null && previewView == null){
+            throw new UnsupportedOperationException("Either setImageAnalysis or setPreviewView must be called prior to calling the startCamera method");
+        }
+        if (imageAnalysis != null && (timeStepDataBuffer != null || imageDataListener != null)){
+            yuvToRgbConverter = new YuvToRgbConverter(context);
+            ExecutorService imageExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "imageAnalysis"));
+            imageAnalysis.setAnalyzer(imageExecutor, this);
+        }
+        if (previewView != null){
+            previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
+            previewView.post(() -> {
+                mCameraProviderFuture = ProcessCameraProvider.getInstance(context);
                 mCameraProviderFuture.addListener(() -> {
                     try {
                         cameraProvider = mCameraProviderFuture.get();
-                        bindAll(cameraProvider, abcvlibActivity);
+                        bindAll(cameraProvider, lifecycleOwner);
                     } catch (ExecutionException | InterruptedException e) {
-                        // No errors need to be handled for this Future.
-                        // This should never be reached.
+                        ErrorHandler.eLog(TAG, "Unexpected Error", e, true);
                     }
-                }, ContextCompat.getMainExecutor(abcvlibActivity));
+                }, ContextCompat.getMainExecutor(context));
             });
         }
     }
 
-    private void bindAll(@NonNull ProcessCameraProvider cameraProvider, AbcvlibActivity abcvlibActivity) {
+    private void bindAll(@NonNull ProcessCameraProvider cameraProvider, LifecycleOwner lifecycleOwner) {
         preview = new Preview.Builder()
                 .build();
         cameraSelector = new CameraSelector.Builder()
@@ -133,11 +182,11 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
                 .build();
 
         if (imageAnalysis != null){
-            camera = cameraProvider.bindToLifecycle(abcvlibActivity, cameraSelector, preview, imageAnalysis);
+            camera = cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, preview, imageAnalysis);
         }else{
-            camera = cameraProvider.bindToLifecycle(abcvlibActivity, cameraSelector, preview);
+            camera = cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, preview);
         }
-        preview.setSurfaceProvider(mPreviewView.getSurfaceProvider());
+        preview.setSurfaceProvider(previewView.getSurfaceProvider());
     }
 
     public synchronized void setRecording(boolean recording) throws RecordingWithoutTimeStepBufferException {
@@ -157,7 +206,7 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
         this.timeStepDataBuffer = timeStepDataBuffer;
     }
 
-    public void setImageDataListenerTest(ImageDataListener imageDataListener) {
+    public void setImageDataListener(ImageDataListener imageDataListener) {
         this.imageDataListener = imageDataListener;
     }
 

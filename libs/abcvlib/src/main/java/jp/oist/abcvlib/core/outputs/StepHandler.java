@@ -35,7 +35,7 @@ public class StepHandler {
 
         public StepHandlerBuilder(){}
 
-        public StepHandler buildStepHandler(){
+        public StepHandler build(){
             return new StepHandler(maxTimeStepCount, maxReward, maxEpisodeCount,
                     commActionSet, motionActionSet);
         }

@@ -113,7 +113,7 @@ public abstract class AbcvlibActivity extends IOIOActivity {
             this.timeStepDataAssembler = timeStepDataAssembler;
         }
 
-        inputs = new Inputs(getApplicationContext(), timeStepDataBuffer, inputArrayList);
+        inputs = new Inputs(getApplicationContext(), timeStepDataBuffer);
         outputs = new Outputs(abcvlibActivity, controller, outputArrayList);
 
         if (timeStepDataAssembler != null){
