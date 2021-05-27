@@ -25,12 +25,7 @@ public class Outputs implements OutputsInterface {
     private ScheduledThreadPoolExecutor threadPoolExecutor;
 
     public Outputs(AbcvlibActivity abcvlibActivity,
-                   AbcvlibController customController,
-                   ArrayList<AbcvlibOutput> outputArrayList){
-
-        if (outputArrayList == null){
-            outputArrayList = new ArrayList<>();
-        }
+                   AbcvlibController customController){
 
         // Determine number of necessary threads.
         int threadCount = 1; // At least one for the GrandController

@@ -103,9 +103,7 @@ public abstract class AbcvlibActivity extends IOIOActivity {
     protected void initializer(AbcvlibActivity abcvlibActivity,
                                AbcvlibController controller,
                                TimeStepDataAssembler timeStepDataAssembler,
-                               TimeStepDataBuffer timeStepDataBuffer,
-                               ArrayList<AbcvlibInput> inputArrayList,
-                               ArrayList<AbcvlibOutput> outputArrayList) {
+                               TimeStepDataBuffer timeStepDataBuffer) {
 
         Log.i(TAG, "Start of AbcvlibActivity.initializer");
 
@@ -114,7 +112,7 @@ public abstract class AbcvlibActivity extends IOIOActivity {
         }
 
         inputs = new Inputs(getApplicationContext(), timeStepDataBuffer);
-        outputs = new Outputs(abcvlibActivity, controller, outputArrayList);
+        outputs = new Outputs(abcvlibActivity, controller);
 
         if (timeStepDataAssembler != null){
             try {
@@ -135,7 +133,7 @@ public abstract class AbcvlibActivity extends IOIOActivity {
      * null initializer for basic module or those not interacting with anything other than itself
      */
     protected void initializer(AbcvlibActivity abcvlibActivity) {
-        initializer(abcvlibActivity, null, null, null, null, null);
+        initializer(abcvlibActivity, null, null, null);
 
     }
 
