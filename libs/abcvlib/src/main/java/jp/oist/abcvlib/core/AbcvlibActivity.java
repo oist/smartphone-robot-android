@@ -161,21 +161,6 @@ public abstract class AbcvlibActivity extends IOIOActivity {
       */
     @Override
     protected IOIOLooper createIOIOLooper() {
-        /*
-         This wait loop prevents the creation of AbcvlibLooper before we can assign the values of
-         loggerOn and wheelPolaritySwap. Since we have no access to this call within IOIOActivity,
-         this is the only way I found possible. Though this may have a better workaround, it should
-         only potentially add a few hundred milliseconds to the startup of the app, and have no
-         performance degredation while up and running.
-         */
-//        while (!appRunning){
-//            try {
-//                Thread.yield();
-//                Thread.sleep(500);
-//            } catch (InterruptedException e) {
-//                Log.e(TAG,"Error", e);
-//            }
-//        }
         this.abcvlibLooper = new AbcvlibLooper(this);
         Log.d("abcvlib", "createIOIOLooper Finished");
         return this.abcvlibLooper;
