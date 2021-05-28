@@ -72,7 +72,7 @@ public class MainActivity extends AbcvlibActivity implements ActionSelector, Soc
         microphoneData.start();
         inputs.add(microphoneData);
 
-        TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler(inputs, myStepHandler, inetSocketAddress, this);
+        TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler(inputs, myStepHandler, inetSocketAddress, this, getInputs().getTimeStepDataBuffer());
         try {
             timeStepDataAssembler.startGatherers();
         } catch (RecordingWithoutTimeStepBufferException e) {

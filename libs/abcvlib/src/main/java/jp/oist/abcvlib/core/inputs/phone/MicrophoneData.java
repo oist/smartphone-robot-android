@@ -179,6 +179,11 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
 
     protected void onNewAudioData(float[] audioData, int numSamples){
         if (isRecording) {
+            android.media.AudioTimestamp startTime = getStartTime();
+            android.media.AudioTimestamp endTime = getEndTime();
+            int sampleRate = getSampleRate();
+            timeStepDataBuffer.getWriteData().getSoundData().setMetaData(sampleRate, startTime, endTime);
+            setStartTime();
             timeStepDataBuffer.getWriteData().getSoundData().add(audioData, numSamples);
         }
         if (microphoneDataListener != null){

@@ -179,7 +179,8 @@ public class TimeStepDataBuffer {
             private AudioTimestamp endTime = new AudioTimestamp();
             private double totalTime;
             private int sampleRate;
-            private long totalSamples;
+            private long totalSamples = 0;
+            private long totalSamplesCalculatedViaTime;
             private final ArrayList<Float> levels = new ArrayList<>();
 
             public SoundData(){
@@ -193,11 +194,16 @@ public class TimeStepDataBuffer {
             }
 
             public void setMetaData(int sampleRate, AudioTimestamp startTime, AudioTimestamp endTime){
-                this.startTime = startTime;
+//                Log.i("audioFrame", (this.endTime.nanoTime - startTime.nanoTime) + " missing nanoseconds between last frames");
+
+                if (startTime.framePosition != 0){
+                    this.startTime = startTime;
+                }
+                //todo add logic to test if timestamps overlap or have gaps.
                 this.endTime = endTime;
                 this.totalTime = (endTime.nanoTime - startTime.nanoTime) * 10e-10;
                 this.sampleRate = sampleRate;
-                this.totalSamples = endTime.framePosition - startTime.framePosition;
+                this.totalSamplesCalculatedViaTime = endTime.framePosition - startTime.framePosition;
             }
 
             public float[] getLevels(){
@@ -227,6 +233,10 @@ public class TimeStepDataBuffer {
 
             public int getSampleRate() {
                 return sampleRate;
+            }
+
+            public long getTotalSamplesCalculatedViaTime() {
+                return totalSamplesCalculatedViaTime;
             }
         }
 

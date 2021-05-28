@@ -45,27 +45,24 @@ public class TimeStepDataAssembler implements Runnable {
     private int episodeCount = 0;
     private TimeStepDataBuffer timeStepDataBuffer;
     private String TAG = getClass().toString();
-    private MicrophoneData microphoneData;
     private boolean pauseRecording = false;
     private ScheduledFuture<?> timeStepDataAssemblerFuture;
     private final ScheduledExecutorServiceWithException executor;
     private final InetSocketAddress inetSocketAddress;
     private final SocketListener socketListener;
-    private BatteryData batteryData;
-    private WheelData wheelData;
-    private ImageData imageData;
     private ArrayList<AbcvlibInput> inputs = new ArrayList<>();
 
     public TimeStepDataAssembler(ArrayList<AbcvlibInput> inputs,
                                  StepHandler myStepHandler,
                                  InetSocketAddress inetSocketAddress,
-                                 SocketListener socketListener){
+                                 SocketListener socketListener,
+                                 TimeStepDataBuffer timeStepDataBuffer){
         this.inputs = inputs;
         this.socketListener = socketListener;
 
         this.inetSocketAddress = inetSocketAddress;
 
-        timeStepDataBuffer = new TimeStepDataBuffer(10);
+        this.timeStepDataBuffer = timeStepDataBuffer;
 
         int threads = 5;
         executor = new ScheduledExecutorServiceWithException(threads, new ProcessPriorityThreadFactory(1, "dataGatherer"));
@@ -166,6 +163,8 @@ public class TimeStepDataAssembler implements Runnable {
 
         Log.v("flatbuff", "Sound Data TotalSamples: " +
                 soundData.getTotalSamples());
+        Log.v("flatbuff", "Sound Data totalSamplesCalculatedViaTime: " +
+                soundData.getTotalSamplesCalculatedViaTime());
 
         int _startTime = AudioTimestamp.createAudioTimestamp(builder,
                 soundData.getStartTime().framePosition,
@@ -241,10 +240,6 @@ public class TimeStepDataAssembler implements Runnable {
 
         Log.v("SocketConnection", "Running TimeStepAssembler Run Method");
 
-        if (microphoneData != null){
-            assembleAudio();
-        }
-
         // Moves timeStepDataBuffer.writeData to readData and nulls out the writeData for new data
         timeStepDataBuffer.nextTimeStep();
 
@@ -264,17 +259,6 @@ public class TimeStepDataAssembler implements Runnable {
                 ErrorHandler.eLog(TAG, "Error when trying to end episode or trail", e, true);
             }
         }
-    }
-
-    public void assembleAudio(){
-        // Don't put these inline, else you will pass by reference rather than value and references will continue to update
-        // todo between episodes the startTime is larger than the end time somehow.
-        android.media.AudioTimestamp startTime = microphoneData.getStartTime();
-        android.media.AudioTimestamp endTime = microphoneData.getEndTime();
-        int sampleRate = microphoneData.getSampleRate();
-        timeStepDataBuffer.getWriteData().getSoundData().setMetaData(sampleRate, startTime, endTime);
-
-        microphoneData.setStartTime();
     }
 
     public void stopRecordingData() throws RecordingWithoutTimeStepBufferException {
@@ -376,7 +360,7 @@ public class TimeStepDataAssembler implements Runnable {
         Log.i(TAG, "Need to handle end of trail here");
         episodeCount = 0;
         stopRecordingData();
-        microphoneData.close();
+//        microphoneData.close();
     }
 
     private void sendToServer(ByteBuffer episode, CyclicBarrier doneSignal) throws IOException {

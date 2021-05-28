@@ -30,6 +30,10 @@ public class Inputs {
         imageData = new ImageData(this.timeStepDataBuffer, null, null);
     }
 
+    public TimeStepDataBuffer getTimeStepDataBuffer() {
+        return timeStepDataBuffer;
+    }
+
     public BatteryData getBatteryData() {
         return batteryData;
     }
