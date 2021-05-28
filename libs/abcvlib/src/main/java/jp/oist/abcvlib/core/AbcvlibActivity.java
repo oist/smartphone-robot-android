@@ -4,27 +4,19 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.WindowManager;
-import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.content.ContextCompat;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 
+import ioio.lib.api.exception.ConnectionLostException;
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
-import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.Inputs;
-import jp.oist.abcvlib.core.learning.TimeStepDataAssembler;
-import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
-import jp.oist.abcvlib.core.outputs.AbcvlibController;
-import jp.oist.abcvlib.core.outputs.AbcvlibOutput;
 import jp.oist.abcvlib.core.outputs.Outputs;
-import jp.oist.abcvlib.util.ErrorHandler;
-import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
 
 /**
  * AbcvlibActivity is where all of the other classes are initialized into objects. The objects
@@ -43,13 +35,8 @@ public abstract class AbcvlibActivity extends IOIOActivity {
     private Inputs inputs;
     public Outputs outputs;
     public Switches switches = new Switches();
-    private TimeStepDataAssembler timeStepDataAssembler;
     private AbcvlibLooper abcvlibLooper;
-
-    // Other generics
     protected static final String TAG = "abcvlib";
-
-    private static final String[] REQUIRED_PERMISSIONS = new String[0];
 
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -65,20 +52,14 @@ public abstract class AbcvlibActivity extends IOIOActivity {
         Log.i(TAG, "End of AbcvlibActivity.onCreate");
     }
 
-
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Log.i(TAG, "End of AbcvlibActivity.onStart");
-    }
-
     @Override
     protected void onStop() {
         super.onStop();
-        outputs.motion.setWheelOutput(0, 0);
-        Toast.makeText(this, "In onStop", Toast.LENGTH_LONG).show();
-        Log.i(TAG, "onStop Log");
+        try {
+            abcvlibLooper.setDutyCycle(0, 0);
+        } catch (ConnectionLostException e) {
+            e.printStackTrace();
+        }
         Log.i(TAG, "End of AbcvlibActivity.onStop");
     }
 
@@ -86,21 +67,11 @@ public abstract class AbcvlibActivity extends IOIOActivity {
     public void onPause()
     {
         super.onPause();
-        outputs.motion.setWheelOutput(0, 0);
-        Log.i(TAG, "End of AbcvlibActivity.onPause");
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.i(TAG, "End of AbcvlibActivity.onDestroy");
-    }
-
-    @Override
-    public void onResume()
-    {
-        super.onResume();
-        Log.i(TAG, "End of AbcvlibActivity.onResume");
+        try {
+            abcvlibLooper.setDutyCycle(0, 0);
+        } catch (ConnectionLostException e) {
+            e.printStackTrace();
+        }        Log.i(TAG, "End of AbcvlibActivity.onPause");
     }
 
     public Inputs getInputs() {
@@ -146,13 +117,5 @@ public abstract class AbcvlibActivity extends IOIOActivity {
         this.abcvlibLooper = new AbcvlibLooper(this);
         Log.d("abcvlib", "createIOIOLooper Finished");
         return this.abcvlibLooper;
-    }
-
-    public TimeStepDataAssembler getTimeStepDataAssembler() {
-        return timeStepDataAssembler;
-    }
-
-    public void setTimeStepDataAssembler(TimeStepDataAssembler timeStepDataAssembler) {
-        this.timeStepDataAssembler = timeStepDataAssembler;
     }
 }
