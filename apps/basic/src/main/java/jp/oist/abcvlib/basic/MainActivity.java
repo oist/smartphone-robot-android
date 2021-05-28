@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.Locale;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.PermissionsListener;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataListener;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataListener;
 import jp.oist.abcvlib.core.inputs.phone.ImageDataListener;
@@ -23,7 +24,7 @@ import jp.oist.abcvlib.core.inputs.phone.OrientationDataListener;
  * theta and angular velocity via Logcat using onboard Android sensors.
  * @author Christopher Buckley https://github.com/topherbuckley
  */
-public class MainActivity extends AbcvlibActivity implements BatteryDataListener,
+public class MainActivity extends AbcvlibActivity implements PermissionsListener, BatteryDataListener,
         OrientationDataListener, WheelDataListener, MicrophoneDataListener, ImageDataListener {
 
     TextView voltageBatt;
