@@ -23,7 +23,7 @@ public class ScheduledExecutorServiceWithException {
                                                   long delay, TimeUnit unit){
 
         ScheduledFuture<?> scheduledFuture = executor
-                .scheduleWithFixedDelay(command, initialDelay, delay, unit);
+                .scheduleAtFixedRate(command, initialDelay, delay, unit);
 
         catchErrors(scheduledFuture);
 
