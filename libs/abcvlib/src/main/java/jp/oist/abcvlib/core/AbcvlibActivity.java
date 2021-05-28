@@ -107,7 +107,7 @@ public abstract class AbcvlibActivity extends IOIOActivity {
         return inputs;
     }
 
-    protected void checkPermissions(AbcvlibActivity abcvlibActivity, String[] permissions){
+    protected void checkPermissions(PermissionsListener permissionsListener, String[] permissions){
         boolean permissionsGranted = true;
         for (String permission:permissions){
             if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_DENIED){
@@ -115,7 +115,7 @@ public abstract class AbcvlibActivity extends IOIOActivity {
             }
         }
         if (permissionsGranted) {
-            abcvlibActivity.onPermissionsGranted();
+            permissionsListener.onPermissionsGranted();
         } else {
             ActivityResultLauncher<String[]> requestPermissionLauncher =
                     registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), isGranted -> {
@@ -127,7 +127,7 @@ public abstract class AbcvlibActivity extends IOIOActivity {
                         }
                         if (allGranted) {
                             Log.i(TAG, "Permissions granted");
-                            abcvlibActivity.onPermissionsGranted();
+                            permissionsListener.onPermissionsGranted();
                         } else {
                             throw new RuntimeException("You did not approve required permissions");
                         }
@@ -135,8 +135,6 @@ public abstract class AbcvlibActivity extends IOIOActivity {
             requestPermissionLauncher.launch(permissions);
         }
     }
-
-    protected void onPermissionsGranted(){}
 
     /**
      Overriding here passes the initialized AbcvlibLooper object to the IOIOLooper class which

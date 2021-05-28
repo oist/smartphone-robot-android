@@ -13,7 +13,9 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.PermissionsListener;
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
+import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 import jp.oist.abcvlib.core.inputs.phone.ImageData;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
 import jp.oist.abcvlib.core.learning.ActionSet;
@@ -22,7 +24,6 @@ import jp.oist.abcvlib.core.learning.CommActionSet;
 import jp.oist.abcvlib.core.learning.MotionAction;
 import jp.oist.abcvlib.core.learning.MotionActionSet;
 import jp.oist.abcvlib.core.learning.TimeStepDataAssembler;
-import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 import jp.oist.abcvlib.core.outputs.ActionSelector;
 import jp.oist.abcvlib.core.outputs.StepHandler;
 import jp.oist.abcvlib.util.ErrorHandler;
@@ -30,7 +31,8 @@ import jp.oist.abcvlib.util.FileOps;
 import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
 import jp.oist.abcvlib.util.SocketListener;
 
-public class MainActivity extends AbcvlibActivity implements ActionSelector, SocketListener {
+public class MainActivity extends AbcvlibActivity implements PermissionsListener, ActionSelector,
+        SocketListener {
 
     InetSocketAddress inetSocketAddress = new InetSocketAddress("192.168.27.226", 3000);
     private StepHandler myStepHandler;
@@ -38,7 +40,6 @@ public class MainActivity extends AbcvlibActivity implements ActionSelector, Soc
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         // Setup a live preview of camera feed to the display. Remove if unwanted.
         setContentView(jp.oist.abcvlib.core.R.layout.camera_x_preview);
 
@@ -51,7 +52,7 @@ public class MainActivity extends AbcvlibActivity implements ActionSelector, Soc
     }
 
     @Override
-    protected void onPermissionsGranted() {
+    public void onPermissionsGranted() {
         CommActionSet commActionSet = new CommActionSet(3);
         commActionSet.addCommAction("action1", (byte) 0); // I'm just overwriting an existing to show how
         MotionActionSet motionActionSet = new MotionActionSet(5);
