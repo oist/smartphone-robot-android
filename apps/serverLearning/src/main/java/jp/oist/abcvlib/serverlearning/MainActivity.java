@@ -74,9 +74,8 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
                 .setMaxReward(100000)
                 .setMotionActionSet(motionActionSet)
                 .setCommActionSet(commActionSet)
+                .setActionSelector(this)
                 .build();
-
-        myStepHandler.setActionSelector(this);
 
         ArrayList<AbcvlibInput> inputs = new ArrayList<>();
         MicrophoneData microphoneData = getInputs().getMicrophoneData();

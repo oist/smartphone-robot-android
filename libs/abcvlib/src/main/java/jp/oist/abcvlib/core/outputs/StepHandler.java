@@ -18,12 +18,14 @@ public class StepHandler {
     private ActionSelector actionSelector;
 
     public StepHandler(int maxTimeStepCount, int maxReward, int maxEpisodeCount,
-                       CommActionSet commActionSet, MotionActionSet motionActionSet){
+                       CommActionSet commActionSet, MotionActionSet motionActionSet,
+                       ActionSelector actionSelector){
         this.maxTimeStepCount = maxTimeStepCount;
         this.maxReward = maxReward;
         this.maxEpisodecount = maxEpisodeCount;
         this.motionActionSet = motionActionSet;
         this.commActionSet = commActionSet;
+        this.actionSelector = actionSelector;
     }
 
     public static class StepHandlerBuilder {
@@ -32,12 +34,13 @@ public class StepHandler {
         private int maxEpisodeCount = 3;
         private CommActionSet commActionSet = new CommActionSet();
         private MotionActionSet motionActionSet = new MotionActionSet();
+        private ActionSelector actionSelector;
 
         public StepHandlerBuilder(){}
 
         public StepHandler build(){
             return new StepHandler(maxTimeStepCount, maxReward, maxEpisodeCount,
-                    commActionSet, motionActionSet);
+                    commActionSet, motionActionSet, actionSelector);
         }
 
         public StepHandlerBuilder setMaxTimeStepCount(int maxTimeStepCount){
@@ -64,10 +67,11 @@ public class StepHandler {
             this.motionActionSet = moctionActionSet;
             return this;
         }
-    }
 
-    public void setActionSelector(ActionSelector actionSelector){
-        this.actionSelector = actionSelector;
+        public StepHandlerBuilder setActionSelector(ActionSelector actionSelector){
+            this.actionSelector = actionSelector;
+            return this;
+        }
     }
 
     public ActionSet forward(TimeStepDataBuffer.TimeStepData data, int timeStepCount){
