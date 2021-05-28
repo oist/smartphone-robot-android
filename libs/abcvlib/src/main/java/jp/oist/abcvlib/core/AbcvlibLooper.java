@@ -222,7 +222,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     <ul>
      <li>openPwmOutput(pinNum, freq) to start the PWM on pinNum at freq</li>
 
-     <li>pwm.setPulseWidth(pw) to change the freq directly by modifying the pulse width</li>
+     <li>pwm.setDutyCycle(dutycycle) to change the freq directly by modifying the pulse width</li>
      </ul>
 
      More info <a href="https://github.com/ytai/ioio/wiki/PWM-Output">here</a>
@@ -511,11 +511,6 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
     private void getDutyCycle() {
 
-        //Log.i("abcvlib", "Start AbcvlibLooper.getDutyCycle" + dutyCycleLeftWheelCurrent + "," + dutyCycleRightWheelCurrent);
-
-        dutyCycleRightWheelCurrent = abcvlibActivity.outputs.motion.getDutyCycleRight();
-        dutyCycleLeftWheelCurrent = abcvlibActivity.outputs.motion.getDutyCycleLeft();
-
         dutyCycleRightWheelNew = dutyCycleLimiter(dutyCycleRightWheelCurrent);
         dutyCycleLeftWheelNew = dutyCycleLimiter(dutyCycleLeftWheelCurrent);
 
@@ -605,10 +600,10 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             // Write all calculated values to the IOIO Board pins
             input1RightWheelController.write(input1RightWheelState);
             input2RightWheelController.write(input2RightWheelState);
-            pwmControllerRightWheel.setPulseWidth(dutyCycleRightWheelNew * DUTY_CYCLE_CONST); //converting from duty cycle to pulse width
+            pwmControllerRightWheel.setDutyCycle(dutyCycleRightWheelNew); //converting from duty cycle to pulse width
             input1LeftWheelController.write(input1LeftWheelState);
             input2LeftWheelController.write(input2LeftWheelState);
-            pwmControllerLeftWheel.setPulseWidth(dutyCycleLeftWheelNew * DUTY_CYCLE_CONST);//converting from duty cycle to pulse width
+            pwmControllerLeftWheel.setDutyCycle(dutyCycleLeftWheelNew);//converting from duty cycle to pulse width
 
         } catch (ConnectionLostException e){
             Log.i("abcvlib", "AbcvlibLooper.loop threw an ConnectionLostException");
@@ -806,6 +801,11 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         indexCurrent = loopCount % buffer;
         indexPrevious = (loopCount - 1) % buffer;
         loopCount++;
+    }
+
+    public void setDutyCycle(int left, int right) throws ConnectionLostException {
+        dutyCycleLeftWheelCurrent = left;
+        dutyCycleRightWheelCurrent = right;
     }
 
 }

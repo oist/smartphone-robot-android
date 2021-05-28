@@ -24,8 +24,8 @@ public class Outputs implements OutputsInterface {
     private ProcessPriorityThreadFactory processPriorityThreadFactory;
     private ScheduledThreadPoolExecutor threadPoolExecutor;
 
-    public Outputs(AbcvlibActivity abcvlibActivity,
-                   AbcvlibController customController){
+
+    public Outputs(Switches switches, AbcvlibLooper abcvlibLooper){
 
         // Determine number of necessary threads.
         int threadCount = 1; // At least one for the GrandController
@@ -54,7 +54,7 @@ public class Outputs implements OutputsInterface {
         }
 
         if (!controllers.isEmpty()){
-            grandController = new GrandController(abcvlibActivity, controllers);
+            grandController = new GrandController(switches, abcvlibLooper);
             threadPoolExecutor.scheduleAtFixedRate(grandController, 0, 1, TimeUnit.MILLISECONDS);
         }
     }

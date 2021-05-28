@@ -11,12 +11,13 @@ public class GrandController extends AbcvlibController{
 
     private final String TAG = this.getClass().getName();
 
-    private AbcvlibActivity abcvlibActivity;
-    private ArrayList<AbcvlibController> controllers = new ArrayList<>();
+    private Switches switches;
+    private ArrayList<AbcvlibController> controllers;
+    private AbcvlibLooper abcvlibLooper;
 
-    GrandController(AbcvlibActivity abcvlibActivity, ArrayList<AbcvlibController> controllers){
-        this.abcvlibActivity = abcvlibActivity;
-        this.controllers = controllers;
+    GrandController(Switches switches, AbcvlibLooper abcvlibLooper){
+        this.switches = switches;
+        this.abcvlibLooper = abcvlibLooper;
     }
 
     @Override
@@ -43,8 +44,15 @@ public class GrandController extends AbcvlibController{
                 setOutput((output.left + controllerOutput.left), (output.right + controllerOutput.right));
             }
 
-        if (abcvlibActivity.switches.loggerOn){
-            Log.v("abcvlib", "grandController output:" + output.left);
+            if (switches.loggerOn){
+                Log.v("abcvlib", "grandController output:" + output.left);
+            }
+
+            try {
+                abcvlibLooper.setDutyCycle((int) output.left, (int) output.right);
+            } catch (ConnectionLostException e) {
+                e.printStackTrace();
+            }
         }
         abcvlibActivity.outputs.motion.setWheelOutput((int) output.left, (int) output.right);
     }
