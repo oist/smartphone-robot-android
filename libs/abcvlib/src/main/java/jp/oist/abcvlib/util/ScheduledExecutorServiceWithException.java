@@ -60,7 +60,7 @@ public class ScheduledExecutorServiceWithException {
                     executor.shutdown();
                     throw new RuntimeException(e);
                 } catch (InterruptedException | CancellationException e){
-                    Log.d(TAG, "Executor Interrupted or Cancelled", e);
+//                    Log.d(TAG, "Executor Interrupted or Cancelled", e);
                 }
             }
         });
