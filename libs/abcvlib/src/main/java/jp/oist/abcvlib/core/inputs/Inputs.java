@@ -27,6 +27,7 @@ public class Inputs {
         wheelData = new WheelData(this.timeStepDataBuffer);
         orientationData = new OrientationData(this.timeStepDataBuffer, context);
         microphoneData = new MicrophoneData(this.timeStepDataBuffer);
+        imageData = new ImageData(this.timeStepDataBuffer, null, null);
     }
 
     public BatteryData getBatteryData() {

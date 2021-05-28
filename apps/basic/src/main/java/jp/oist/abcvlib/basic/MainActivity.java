@@ -44,7 +44,7 @@ public class MainActivity extends AbcvlibActivity implements BatteryDataListener
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        // Setup Android GUI. Point this method to your main activity xml file or corresponding int
+        // Setup Android GUI object references such that we can write data to them later.
         setContentView(R.layout.activity_main);
         voltageBatt = findViewById(R.id.voltageBattLevel);
         voltageCharger = findViewById(R.id.voltageChargerLevel);
@@ -65,16 +65,25 @@ public class MainActivity extends AbcvlibActivity implements BatteryDataListener
 
     @Override
     public void onPermissionsGranted(){
-        // Initalizes various objects in parent class.
-        ImageData imageData = new ImageData(null, findViewById(R.id.camera_x_preview), null);
-        imageData.setDefaultImageAnalysis(null, this);
-        imageData.startCamera(this, this);
-        getInputs().setImageData(imageData);
+        /*
+         * The various setXXXListener classes set this class as a subscriber to the XXX publisher
+         * Battery, Orientation, and WheelData are publishing by default as they are computationally
+         * cheap. Image and Microphone data are "lazy start" such that you must call their respective
+         * start() methods before they will begin publishing data. ImageData requires that you pass
+         * a reference to this class' layout object via the setPreviewView in order to publish the
+         * image stream to the GUI. If you don't need a preview on the GUI you don't need to attach
+         * this.
+         */
         getInputs().getBatteryData().setBatteryDataListener(this);
         getInputs().getOrientationData().setOrientationDataListener(this);
         getInputs().getWheelData().setWheelDataListener(this);
-        getInputs().getMicrophoneData().setMicrophoneDataListener(this);
+
         getInputs().getImageData().setImageDataListener(this);
+        getInputs().getImageData().setPreviewView(findViewById(R.id.camera_x_preview));
+        getInputs().getImageData().startCamera(this, this);
+
+        getInputs().getMicrophoneData().setMicrophoneDataListener(this);
+        getInputs().getMicrophoneData().start();
     }
 
     @Override

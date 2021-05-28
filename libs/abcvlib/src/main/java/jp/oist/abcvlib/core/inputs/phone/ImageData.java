@@ -72,6 +72,8 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
         }
         if (imageAnalysis != null){
             setImageAnalysis(imageAnalysis, timeStepDataBuffer, null);
+        }else {
+            setDefaultImageAnalysis(this.timeStepDataBuffer, null);
         }
         this.timeStepDataBuffer = timeStepDataBuffer;
     }
@@ -138,12 +140,6 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
      */
     public void setImageAnalysis(ImageAnalysis imageAnalysis, TimeStepDataBuffer timeStepDataBuffer,
                                  ImageDataListener imageDataListener) {
-        if (timeStepDataBuffer == null && imageDataListener == null){
-            throw new UnsupportedOperationException("As there is no point in wasting system " +
-                    "resources on an ImageAnalysis unless you set an output, you must set either or " +
-                    "both the TimeStepDataBuffer or ImageDataListener. One or the other can remain " +
-                    "null if unnecessary.");
-        }
         this.timeStepDataBuffer = timeStepDataBuffer;
         this.imageDataListener = imageDataListener;
         this.imageAnalysis = imageAnalysis;
