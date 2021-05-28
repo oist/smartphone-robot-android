@@ -9,6 +9,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.AbcvlibLooper;
+import jp.oist.abcvlib.core.Switches;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 
 public class Outputs implements OutputsInterface {
@@ -29,25 +31,19 @@ public class Outputs implements OutputsInterface {
 
         // Determine number of necessary threads.
         int threadCount = 1; // At least one for the GrandController
-        threadCount += (abcvlibActivity.switches.pythonControlledPIDBalancer) ? 1 : 0;
-        threadCount += (abcvlibActivity.switches.balanceApp) ? 1 : 0;
-        threadCount += (abcvlibActivity.switches.centerBlobApp) ? 1 : 0;
+        threadCount += (switches.pythonControlledPIDBalancer) ? 1 : 0;
+        threadCount += (switches.balanceApp) ? 1 : 0;
+        threadCount += (switches.centerBlobApp) ? 1 : 0;
         processPriorityThreadFactory = new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "Outputs");
         threadPoolExecutor = new ScheduledThreadPoolExecutor(threadCount, processPriorityThreadFactory);
 
-        // Add custom controller if specified
-        if (customController != null){
-            threadPoolExecutor.scheduleAtFixedRate(customController, 0, 1, TimeUnit.MILLISECONDS);
-            controllers.add(customController);
-        }
-
         //BalancePIDController Controller
-        motion = new Motion(abcvlibActivity);
+        motion = new Motion(switches);
         Log.v("abcvlib", "motion object created");
 
 
-        if (abcvlibActivity.switches.balanceApp){
-            balancePIDController = new BalancePIDController(abcvlibActivity);
+        if (switches.balanceApp){
+            balancePIDController = new BalancePIDController(switches);
             threadPoolExecutor.scheduleAtFixedRate(balancePIDController, 0, 1, TimeUnit.MILLISECONDS);
             controllers.add(balancePIDController);
             Log.i("abcvlib", "BalanceApp Started");

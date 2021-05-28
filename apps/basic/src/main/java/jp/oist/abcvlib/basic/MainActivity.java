@@ -56,11 +56,11 @@ public class MainActivity extends AbcvlibActivity implements BatteryDataListener
         frameRateText = findViewById(R.id.frameRate);
         lastFrameTime = System.nanoTime();
 
-        String[] permissions = new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
-        checkPermissions(this, permissions);
-
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
+
+        String[] permissions = new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
+        checkPermissions(this, permissions);
     }
 
     @Override
@@ -107,7 +107,7 @@ public class MainActivity extends AbcvlibActivity implements BatteryDataListener
     }
 
     @Override
-    public void onWheelDataUpdate(long timestamp, int countLeft, int countRight) {
+    public void onWheelDataUpdate(long timestamp, int countLeft, int countRight, double speedL, double speedR) {
 //        Log.i(TAG, "Wheel Data Update: Timestamp=" + timestamp + " countLeft=" + countLeft +
 //                " countRight=" + countRight);
 //        double distanceLeft = WheelData.countsToDistance(countLeft);

@@ -44,6 +44,7 @@ public abstract class AbcvlibActivity extends IOIOActivity {
     public Outputs outputs;
     public Switches switches = new Switches();
     private TimeStepDataAssembler timeStepDataAssembler;
+    private AbcvlibLooper abcvlibLooper;
 
     /**
      * Lets various loops know its time to wrap things up when false, and prevents other loops from
@@ -57,11 +58,27 @@ public abstract class AbcvlibActivity extends IOIOActivity {
     private static final String[] REQUIRED_PERMISSIONS = new String[0];
 
     protected void onCreate(Bundle savedInstanceState) {
+
+        inputs = new Inputs(getApplicationContext());
+
+        if (timeStepDataAssembler != null){
+            try {
+                this.timeStepDataAssembler.startGatherers();
+            } catch (RecordingWithoutTimeStepBufferException e) {
+                ErrorHandler.eLog(TAG, "Make sure to initialize a TimeStepDataBuffer object prior " +
+                        "to setting isRecording to true", e, true);
+            }
+        }
+
         super.onCreate(savedInstanceState);
+        outputs = new Outputs(switches, abcvlibLooper); //todo need to remove dependence on abcvlibActivty here
+
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         Log.i(TAG, "End of AbcvlibActivity.onCreate");
     }
+
+
 
     @Override
     protected void onStart() {
@@ -151,20 +168,24 @@ public abstract class AbcvlibActivity extends IOIOActivity {
          only potentially add a few hundred milliseconds to the startup of the app, and have no
          performance degredation while up and running.
          */
-        while (!appRunning){
-            try {
-                Thread.yield();
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                Log.e(TAG,"Error", e);
-            }
-        }
+//        while (!appRunning){
+//            try {
+//                Thread.yield();
+//                Thread.sleep(500);
+//            } catch (InterruptedException e) {
+//                Log.e(TAG,"Error", e);
+//            }
+//        }
+        this.abcvlibLooper = new AbcvlibLooper(this);
         Log.d("abcvlib", "createIOIOLooper Finished");
-        return new AbcvlibLooper(this);
+        return this.abcvlibLooper;
     }
 
     public TimeStepDataAssembler getTimeStepDataAssembler() {
         return timeStepDataAssembler;
     }
 
+    public void setTimeStepDataAssembler(TimeStepDataAssembler timeStepDataAssembler) {
+        this.timeStepDataAssembler = timeStepDataAssembler;
+    }
 }

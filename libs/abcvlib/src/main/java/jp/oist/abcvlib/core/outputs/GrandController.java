@@ -4,7 +4,10 @@ import android.util.Log;
 
 import java.util.ArrayList;
 
+import ioio.lib.api.exception.ConnectionLostException;
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.AbcvlibLooper;
+import jp.oist.abcvlib.core.Switches;
 import jp.oist.abcvlib.util.ErrorHandler;
 
 public class GrandController extends AbcvlibController{
@@ -23,21 +26,13 @@ public class GrandController extends AbcvlibController{
     @Override
     public void run() {
 
-        while (!abcvlibActivity.appRunning){
-            try {
-                Log.i("abcvlib", this.toString() + "Waiting for appRunning to be true");
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                ErrorHandler.eLog(TAG, "Interupted while waiting for appRunning to be true", e, true);
-            }
-        }
+        if (controllers != null){
+            setOutput(0, 0);
+            for (AbcvlibController controller : controllers){
 
-        setOutput(0, 0);
-        for (AbcvlibController controller : controllers){
+                Output controllerOutput = controller.getOutput();
 
-            Output controllerOutput = controller.getOutput();
-
-                if (abcvlibActivity.switches.loggerOn){
+                if (switches.loggerOn){
                     Log.v("grandcontroller", controller.toString() + "output:" + controllerOutput.left);
                 }
 
@@ -54,7 +49,6 @@ public class GrandController extends AbcvlibController{
                 e.printStackTrace();
             }
         }
-        abcvlibActivity.outputs.motion.setWheelOutput((int) output.left, (int) output.right);
     }
 
 

@@ -67,12 +67,7 @@ public class WheelData implements AbcvlibInput {
      * class is responsible for constantly reading the encoder values from the IOIOBoard.
      */
     public void onWheelDataUpdate(long timestamp, int countLeft, int countRight) {
-        if (isRecording){
-            timeStepDataBuffer.getWriteData().getWheelCounts().put(timestamp, countLeft, countRight);
-        }
-        if (wheelDataListener != null){
-            wheelDataListener.onWheelDataUpdate(timestamp, countLeft, countRight);
-        }
+
         int indexCurrent = (quadCount) % windowLength;
         int indexPrevious = (quadCount - 1) % windowLength;
 
@@ -84,6 +79,14 @@ public class WheelData implements AbcvlibInput {
         setDistanceR();
         setWheelSpeedL();
         setWheelSpeedR();
+
+        if (isRecording){
+            timeStepDataBuffer.getWriteData().getWheelCounts().put(timestamp, countLeft, countRight);
+        }
+        if (wheelDataListener != null){
+            wheelDataListener.onWheelDataUpdate(timestamp, countLeft, countRight,
+                    speedLeftWheelLP, speedRightWheelLP);
+        }
 
         quadCount++;
     }
@@ -196,7 +199,7 @@ public class WheelData implements AbcvlibInput {
         }
     }
 
-    private double calcDistance(int count){
+    public static double calcDistance(int count){
         double distance;
         double mmPerCount = (2 * Math.PI * 30) / 128;
         distance = count * mmPerCount;
@@ -211,7 +214,7 @@ public class WheelData implements AbcvlibInput {
         expWeight = weight;
     }
 
-    private double exponentialAvg(double sample, double expAvg, double weighting){
+    public static double exponentialAvg(double sample, double expAvg, double weighting){
         expAvg = (1.0 - weighting) * expAvg + (weighting * sample);
         return expAvg;
     }

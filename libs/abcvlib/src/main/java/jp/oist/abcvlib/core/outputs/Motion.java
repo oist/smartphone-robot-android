@@ -2,6 +2,7 @@ package jp.oist.abcvlib.core.outputs;
 
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.Switches;
 import jp.oist.abcvlib.core.inputs.phone.OrientationData;
 
 /**
@@ -36,16 +37,14 @@ public class Motion {
      * @see #dutyCycleRightWheel
      */
     private int dutyCycleLeftWheel = 0;
-
-    private OrientationData orientationData;
-    private AbcvlibActivity abcvlibActivity;
+    
+    private Switches switches;
 
     /**
      * Constructor to pass other module objects in. Keep public.
       */
-    public Motion(AbcvlibActivity abcvlibActivity){
-        this.abcvlibActivity = abcvlibActivity;
-        this.orientationData = abcvlibActivity.getInputs().getOrientationData();
+    public Motion(Switches switches){
+        this.switches = switches;
     }
 
     /**
@@ -71,7 +70,7 @@ public class Motion {
             left = -100;
         }
 
-        if (abcvlibActivity.switches.wheelPolaritySwap){
+        if (switches.wheelPolaritySwap){
             dutyCycleRightWheel = -right;
             // Wheels must be opposite polarity to turn in same direction
             dutyCycleLeftWheel = left;

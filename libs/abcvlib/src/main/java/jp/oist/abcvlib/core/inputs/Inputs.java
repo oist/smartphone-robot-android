@@ -20,12 +20,8 @@ public class Inputs {
     private OrientationData orientationData = null;
     private ArrayList<AbcvlibInput> inputsList;
 
-    public Inputs(Context context, TimeStepDataBuffer timeStepDataBuffer){
-        this.timeStepDataBuffer = timeStepDataBuffer;
-
-        if (timeStepDataBuffer == null){
-            this.timeStepDataBuffer = new TimeStepDataBuffer(10);
-        }
+    public Inputs(Context context){
+        this.timeStepDataBuffer = new TimeStepDataBuffer(10);
         // Set default input data instances
         batteryData = new BatteryData(this.timeStepDataBuffer);
         wheelData = new WheelData(this.timeStepDataBuffer);
