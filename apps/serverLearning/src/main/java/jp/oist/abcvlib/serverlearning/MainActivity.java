@@ -27,6 +27,7 @@ import jp.oist.abcvlib.core.outputs.ActionSelector;
 import jp.oist.abcvlib.core.outputs.StepHandler;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.FileOps;
+import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
 import jp.oist.abcvlib.util.SocketListener;
 
 public class MainActivity extends AbcvlibActivity implements ActionSelector, SocketListener {
@@ -38,10 +39,15 @@ public class MainActivity extends AbcvlibActivity implements ActionSelector, Soc
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        String[] permissions = new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
-        checkPermissions(this, permissions);
+        // Setup a live preview of camera feed to the display. Remove if unwanted.
+        setContentView(jp.oist.abcvlib.core.R.layout.camera_x_preview);
+
+        FileOps.copyAssets(getApplicationContext(), "models/");
 
         super.onCreate(savedInstanceState);
+
+        String[] permissions = new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
+        checkPermissions(this, permissions);
     }
 
     @Override
@@ -61,20 +67,18 @@ public class MainActivity extends AbcvlibActivity implements ActionSelector, Soc
 
         myStepHandler.setActionSelector(this);
 
-        FileOps.copyAssets(getApplicationContext(), "models/");
+        ArrayList<AbcvlibInput> inputs = new ArrayList<>();
+        MicrophoneData microphoneData = getInputs().getMicrophoneData();
+        microphoneData.start();
+        inputs.add(microphoneData);
 
-        // Setup a live preview of camera feed to the display. Remove if unwanted.
-        setContentView(jp.oist.abcvlib.core.R.layout.camera_x_preview);
-
-        TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler(this, myStepHandler, inetSocketAddress, this);
-
-        ArrayList<AbcvlibInput> inputArrayList = new ArrayList<>();
-        ImageData imageData = new ImageData(this);
-        MicrophoneData microphoneData = new MicrophoneData(this);
-        inputArrayList.add(imageData);
-        inputArrayList.add(microphoneData);
-
-        initializer(this, null, timeStepDataAssembler, inputArrayList, null);
+        TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler(inputs, myStepHandler, inetSocketAddress, this);
+        try {
+            timeStepDataAssembler.startGatherers();
+        } catch (RecordingWithoutTimeStepBufferException e) {
+            ErrorHandler.eLog(TAG, "Make sure to initialize a TimeStepDataBuffer object prior " +
+                    "to setting isRecording to true", e, true);
+        }
     }
 
     @Override
