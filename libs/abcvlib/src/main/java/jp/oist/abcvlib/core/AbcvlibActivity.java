@@ -117,11 +117,9 @@ public abstract class AbcvlibActivity extends IOIOActivity {
     }
 
     protected void checkPermissions(AbcvlibActivity abcvlibActivity, String[] permissions){
-        boolean permissionsGranted = false;
+        boolean permissionsGranted = true;
         for (String permission:permissions){
-            if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED){
-                permissionsGranted = true;
-            }else{
+            if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_DENIED){
                 permissionsGranted = false;
             }
         }
