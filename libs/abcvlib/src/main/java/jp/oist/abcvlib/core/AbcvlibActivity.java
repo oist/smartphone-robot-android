@@ -46,12 +46,6 @@ public abstract class AbcvlibActivity extends IOIOActivity {
     private TimeStepDataAssembler timeStepDataAssembler;
     private AbcvlibLooper abcvlibLooper;
 
-    /**
-     * Lets various loops know its time to wrap things up when false, and prevents other loops from
-     * starting until true. Set to true after AbcvlibActivity.initializer() finishes.
-     */
-    public boolean appRunning = false;
-
     // Other generics
     protected static final String TAG = "abcvlib";
 
@@ -60,7 +54,6 @@ public abstract class AbcvlibActivity extends IOIOActivity {
     protected void onCreate(Bundle savedInstanceState) {
 
         inputs = new Inputs(getApplicationContext());
-
         /*
         This much be called prior to initializing outputs as this is what triggers the creation
         of the abcvlibLooper instance passed to the Outputs constructor
@@ -69,7 +62,6 @@ public abstract class AbcvlibActivity extends IOIOActivity {
         outputs = new Outputs(switches, abcvlibLooper); //todo need to remove dependence on abcvlibActivty here
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
         Log.i(TAG, "End of AbcvlibActivity.onCreate");
     }
 
@@ -83,7 +75,6 @@ public abstract class AbcvlibActivity extends IOIOActivity {
 
     @Override
     protected void onStop() {
-        appRunning = false;
         super.onStop();
         outputs.motion.setWheelOutput(0, 0);
         Toast.makeText(this, "In onStop", Toast.LENGTH_LONG).show();
