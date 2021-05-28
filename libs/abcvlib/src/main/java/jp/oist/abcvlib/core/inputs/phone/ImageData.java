@@ -1,6 +1,5 @@
 package jp.oist.abcvlib.core.inputs.phone;
 
-import android.Manifest;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.media.Image;
@@ -39,14 +38,9 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
     private TimeStepDataBuffer timeStepDataBuffer;
     private boolean isRecording = false;
     private PreviewView previewView;
-    private static final int REQUEST_CODE_PERMISSIONS = 10;
-    private static final String[] REQUIRED_PERMISSIONS = { Manifest.permission.CAMERA };
 
     private ListenableFuture<ProcessCameraProvider> mCameraProviderFuture;
 
-    private CameraSelector cameraSelector;
-    private Preview preview;
-    private Camera camera;
     private ProcessCameraProvider cameraProvider;
     private ImageDataListener imageDataListener = null;
     private final String TAG = getClass().getName();
@@ -119,7 +113,7 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
         this.previewView = previewView;
     }
 
-    public synchronized void setDefaultImageAnalysis(TimeStepDataBuffer timeStepDataBuffer,
+    private void setDefaultImageAnalysis(TimeStepDataBuffer timeStepDataBuffer,
                                                      ImageDataListener imageDataListener){
         imageAnalysis =
                 new ImageAnalysis.Builder()
@@ -131,9 +125,6 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
     }
 
     /**
-     * As there is no point in wasting system resources on an ImageAnalysis unless you set an output,
-     * you must set either or both the TimeStepDataBuffer or ImageDataListener. One or the other can
-     * remain null if unnecessary.
      * @param imageAnalysis
      * @param timeStepDataBuffer
      * @param imageDataListener
@@ -171,12 +162,13 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
     }
 
     private void bindAll(@NonNull ProcessCameraProvider cameraProvider, LifecycleOwner lifecycleOwner) {
-        preview = new Preview.Builder()
+        Preview preview = new Preview.Builder()
                 .build();
-        cameraSelector = new CameraSelector.Builder()
+        CameraSelector cameraSelector = new CameraSelector.Builder()
                 .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
                 .build();
 
+        Camera camera;
         if (imageAnalysis != null){
             camera = cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, preview, imageAnalysis);
         }else{
