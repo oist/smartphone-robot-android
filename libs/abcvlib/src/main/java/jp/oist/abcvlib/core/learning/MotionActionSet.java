@@ -4,10 +4,19 @@ public class MotionActionSet {
 
     private MotionAction[] motionActions;
 
+    /**
+     * Initialize an object with actionCount number of discrete actions. Add actions via the
+     * {@link #addMotionAction(String, byte, int, int)} method. Alternatively, you can use the default actions
+     * by calling this method without any arguments. See {@link #MotionActionSet()}.
+     * @param actionCount Number of possible discrete actions
+     */
     public MotionActionSet(int actionCount){
         motionActions = new MotionAction[actionCount];
     }
 
+    /**
+     * Creates default motion action set with stop, forward, backward, left, and right as actions.
+     */
     public MotionActionSet(){
         motionActions = new MotionAction[5];
         addDefaultActions();

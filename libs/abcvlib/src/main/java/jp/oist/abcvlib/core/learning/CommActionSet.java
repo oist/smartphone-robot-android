@@ -4,10 +4,20 @@ public class CommActionSet {
 
     private final CommAction[] commActions;
 
+    /**
+     * Initialize an object with actionCount number of discrete actions. Add actions via the
+     * {@link #addCommAction(String, byte)} method. Alternatively, you can use the default actions
+     * by calling this method without any arguments. See {@link #CommActionSet()}.
+     * @param actionCount Number of possible discrete actions
+     */
     public CommActionSet(int actionCount){
         commActions = new CommAction[actionCount];
     }
 
+    /**
+     * Creates 3 default actions called action1, action2, and action3 with bytes 0 to 2 assigned
+     * respectively.
+     */
     public CommActionSet(){
         commActions = new CommAction[3];
         addDefaultActions();

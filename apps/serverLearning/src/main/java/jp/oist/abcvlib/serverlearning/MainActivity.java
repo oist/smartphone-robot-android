@@ -43,6 +43,7 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
         // Setup a live preview of camera feed to the display. Remove if unwanted.
         setContentView(jp.oist.abcvlib.core.R.layout.camera_x_preview);
 
+        // Copies all files from assets/models to local storage
         FileOps.copyAssets(getApplicationContext(), "models/");
 
         super.onCreate(savedInstanceState);
@@ -53,10 +54,19 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
 
     @Override
     public void onPermissionsGranted() {
+
+        // Defining custom actions
         CommActionSet commActionSet = new CommActionSet(3);
         commActionSet.addCommAction("action1", (byte) 0); // I'm just overwriting an existing to show how
+        commActionSet.addCommAction("action2", (byte) 1);
+        commActionSet.addCommAction("action3", (byte) 2);
+
         MotionActionSet motionActionSet = new MotionActionSet(5);
         motionActionSet.addMotionAction("stop", (byte) 0, 0, 0); // I'm just overwriting an existing to show how
+        motionActionSet.addMotionAction("forward", (byte) 1, 100, 100);
+        motionActionSet.addMotionAction("backward", (byte) 2, -100, 100);
+        motionActionSet.addMotionAction("left", (byte) 3, -100, 100);
+        motionActionSet.addMotionAction("right", (byte) 4, 100, -100);
 
         myStepHandler = new StepHandler.StepHandlerBuilder()
                 .setMaxTimeStepCount(20)
