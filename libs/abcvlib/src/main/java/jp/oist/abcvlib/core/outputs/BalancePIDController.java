@@ -8,6 +8,7 @@ import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.Switches;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataListener;
+import jp.oist.abcvlib.core.inputs.phone.OrientationData;
 import jp.oist.abcvlib.core.inputs.phone.OrientationDataListener;
 import jp.oist.abcvlib.util.ErrorHandler;
 
@@ -237,6 +238,14 @@ public class BalancePIDController extends AbcvlibController implements WheelData
         this.speedR = speedR;
     }
 
+    public void setThetaDeg(double thetaDeg) {
+        this.thetaDeg = thetaDeg;
+    }
+
+    public void setAngularVelocityDeg(double angularVelocityDeg) {
+        this.angularVelocityDeg = angularVelocityDeg;
+    }
+
     @Override
     public void onWheelDataUpdate(long timestamp, int countLeft, int countRight, double speedL, double speedR) {
         setWheelCountL(countLeft);
@@ -247,6 +256,7 @@ public class BalancePIDController extends AbcvlibController implements WheelData
 
     @Override
     public void onOrientationUpdate(long timestamp, double thetaRad, double angularVelocityRad) {
-
+        setThetaDeg(OrientationData.getThetaDeg(thetaRad));
+        setAngularVelocityDeg(OrientationData.getAngularVelocityDeg(angularVelocityRad));
     }
 }
