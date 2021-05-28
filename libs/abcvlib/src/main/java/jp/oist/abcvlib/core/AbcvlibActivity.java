@@ -100,43 +100,6 @@ public abstract class AbcvlibActivity extends IOIOActivity {
         Log.i(TAG, "End of AbcvlibActivity.onResume");
     }
 
-    protected void initializer(AbcvlibActivity abcvlibActivity,
-                               AbcvlibController controller,
-                               TimeStepDataAssembler timeStepDataAssembler,
-                               TimeStepDataBuffer timeStepDataBuffer) {
-
-        Log.i(TAG, "Start of AbcvlibActivity.initializer");
-
-        if (timeStepDataAssembler != null){
-            this.timeStepDataAssembler = timeStepDataAssembler;
-        }
-
-        inputs = new Inputs(getApplicationContext(), timeStepDataBuffer);
-        outputs = new Outputs(abcvlibActivity, controller);
-
-        if (timeStepDataAssembler != null){
-            try {
-                this.timeStepDataAssembler.startGatherers();
-            } catch (RecordingWithoutTimeStepBufferException e) {
-                ErrorHandler.eLog(TAG, "Make sure to initialize a TimeStepDataBuffer object prior " +
-                        "to setting isRecording to true", e, true);
-            }
-        }
-
-        // Tell all child classes it is ok to proceed.
-        this.appRunning = true;
-
-        Log.i(TAG, "End of AbcvlibActivity.initializer");
-    }
-
-    /**
-     * null initializer for basic module or those not interacting with anything other than itself
-     */
-    protected void initializer(AbcvlibActivity abcvlibActivity) {
-        initializer(abcvlibActivity, null, null, null);
-
-    }
-
     public Inputs getInputs() {
         return inputs;
     }

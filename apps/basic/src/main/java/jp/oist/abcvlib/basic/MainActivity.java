@@ -65,7 +65,6 @@ public class MainActivity extends AbcvlibActivity implements BatteryDataListener
 
     @Override
     public void onPermissionsGranted(){
-        initializer(this, null, null, null);
         // Initalizes various objects in parent class.
         MicrophoneData microphoneData = new MicrophoneData();
         ImageData imageData = new ImageData(null, findViewById(R.id.camera_x_preview), null);
