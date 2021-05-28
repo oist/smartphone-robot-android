@@ -77,9 +77,13 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
                 .setActionSelector(this)
                 .build();
 
+        // Initialize an ArrayList of AbcvlibInputs that you want the TimeStepDataAssembler to gather data for
         ArrayList<AbcvlibInput> inputs = new ArrayList<>();
+
+        // Get local reference to MicrophoneData and start the record buffer (within MicrophoneData Class)
         MicrophoneData microphoneData = getInputs().getMicrophoneData();
         microphoneData.start();
+        // Add the reference to your ArrayList
         inputs.add(microphoneData);
 
         ImageData imageData = getInputs().getImageData();
@@ -87,6 +91,7 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
         imageData.startCamera(this, this);
         inputs.add(imageData);
 
+        // Pass your inputs list to a new instance of TimeStepDataAssember along with all other references
         TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler(inputs, myStepHandler, inetSocketAddress, this, getInputs().getTimeStepDataBuffer());
         try {
             timeStepDataAssembler.startGatherers();
