@@ -61,15 +61,19 @@ public abstract class AbcvlibActivity extends IOIOActivity {
 
         inputs = new Inputs(getApplicationContext());
 
-        if (timeStepDataAssembler != null){
-            try {
-                this.timeStepDataAssembler.startGatherers();
-            } catch (RecordingWithoutTimeStepBufferException e) {
-                ErrorHandler.eLog(TAG, "Make sure to initialize a TimeStepDataBuffer object prior " +
-                        "to setting isRecording to true", e, true);
-            }
-        }
+//        if (timeStepDataAssembler != null){
+//            try {
+//                this.timeStepDataAssembler.startGatherers();
+//            } catch (RecordingWithoutTimeStepBufferException e) {
+//                ErrorHandler.eLog(TAG, "Make sure to initialize a TimeStepDataBuffer object prior " +
+//                        "to setting isRecording to true", e, true);
+//            }
+//        }
 
+        /*
+        This much be called prior to initializing outputs as this is what triggers the creation
+        of the abcvlibLooper instance passed to the Outputs constructor
+        */
         super.onCreate(savedInstanceState);
         outputs = new Outputs(switches, abcvlibLooper); //todo need to remove dependence on abcvlibActivty here
 
