@@ -10,11 +10,7 @@ import com.google.android.material.slider.Slider;
 import java.util.ArrayList;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.core.learning.TimeStepDataAssembler;
 import jp.oist.abcvlib.util.ErrorHandler;
-
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 
 /**
  * Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors
@@ -30,6 +26,7 @@ public class MainActivity extends AbcvlibActivity {
     Slider p_wheel_;
     Slider expWeight_;
     Slider maxAbsTilt_;
+    private String TAG = getClass().getName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,13 +56,9 @@ public class MainActivity extends AbcvlibActivity {
         }
 
         // Various switches are available to turn on/off core functionality.
-        switches.balanceApp = true;
-        switches.pythonControlledPIDBalancer = true;
-        switches.wheelPolaritySwap = false;
-
-        // todo shouldn't require myStepHandler? or the BalancePIDContoller class could BE a myStepHandler via extension or implementation. myStepHandler is at odds with AbcvlibController
-        // todo TimeStepDataAssembler should accept a List of Objects and parse on constructor.
-        TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler(this, null, null);
+        getSwitches().balanceApp = true;
+        getSwitches().pythonControlledPIDBalancer = true;
+        getSwitches().wheelPolaritySwap = false;
 
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
@@ -75,7 +68,7 @@ public class MainActivity extends AbcvlibActivity {
         @Override
         public void onValueChange(@NonNull Slider slider, float value, boolean fromUser) {
             try {
-                outputs.balancePIDController.setPID(p_tilt_.getValue(),
+                getOutputs().getBalancePIDController().setPID(p_tilt_.getValue(),
                         0,
                         d_tilt_.getValue(),
                         setPoint_.getValue(),

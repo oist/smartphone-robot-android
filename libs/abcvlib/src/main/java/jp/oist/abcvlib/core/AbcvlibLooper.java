@@ -315,8 +315,8 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     // despite what Android Studio says
     public AbcvlibLooper(AbcvlibActivity abcvlibActivity){
         this.abcvlibActivity = abcvlibActivity;
-        this.loggerOn = abcvlibActivity.switches.loggerOn;
-        this.wheelPolaritySwap = abcvlibActivity.switches.wheelPolaritySwap;
+        this.loggerOn = abcvlibActivity.getSwitches().loggerOn;
+        this.wheelPolaritySwap = abcvlibActivity.getSwitches().wheelPolaritySwap;
         if (abcvlibActivity != null){
             this.batteryData = abcvlibActivity.getInputs().getBatteryData();
             this.wheelData = abcvlibActivity.getInputs().getWheelData();

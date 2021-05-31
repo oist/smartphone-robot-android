@@ -6,6 +6,7 @@ import java.util.Arrays;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.Switches;
+import jp.oist.abcvlib.core.inputs.Inputs;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataListener;
 import jp.oist.abcvlib.core.inputs.phone.OrientationData;
@@ -25,7 +26,7 @@ public class BalancePIDController extends AbcvlibController implements WheelData
     private double expWeight = 0.25;
 
     // BalancePIDController Setup
-    private double thetaDeg; // tilt of phone with vertical being 0.
+    private volatile double thetaDeg; // tilt of phone with vertical being 0.
     private double angularVelocityDeg; // derivative of tilt (angular velocity)
     private int wheelCountL; // encoder count on left wheel
     private int wheelCountR; // encoder count on right wheel
@@ -60,8 +61,9 @@ public class BalancePIDController extends AbcvlibController implements WheelData
     // loop steps between turning on and off wheels.
     private int bouncePulseWidth = 100;
 
-    public BalancePIDController(Switches switches){
+    public BalancePIDController(Switches switches, Inputs inputs){
         this.switches = switches;
+        inputs.getOrientationData().setOrientationDataListener(this);
         Log.i("abcvlib", "BalanceApp Created");
     }
 
@@ -79,8 +81,6 @@ public class BalancePIDController extends AbcvlibController implements WheelData
             }
         }
 
-        thetaDeg = getThetaDeg();
-        angularVelocityDeg = getAngularVelocityDeg();
         double distanceLPrev = distanceL;
         double distanceRPrev = distanceR;
         wheelCountL = getWheelCountL();
@@ -149,7 +149,6 @@ public class BalancePIDController extends AbcvlibController implements WheelData
                 p_wheel = p_wheel_;
                 expWeight = expWeight_;
                 maxAbsTilt = maxAbsTilt_;
-                Log.v("abcvlib", "linearConroller updated values from local");
         } catch (NullPointerException e){
             Log.e(TAG,"Error", e);
             Thread.sleep(1000);
@@ -238,10 +237,6 @@ public class BalancePIDController extends AbcvlibController implements WheelData
         this.speedR = speedR;
     }
 
-    public void setThetaDeg(double thetaDeg) {
-        this.thetaDeg = thetaDeg;
-    }
-
     public void setAngularVelocityDeg(double angularVelocityDeg) {
         this.angularVelocityDeg = angularVelocityDeg;
     }
@@ -256,7 +251,7 @@ public class BalancePIDController extends AbcvlibController implements WheelData
 
     @Override
     public void onOrientationUpdate(long timestamp, double thetaRad, double angularVelocityRad) {
-        setThetaDeg(OrientationData.getThetaDeg(thetaRad));
-        setAngularVelocityDeg(OrientationData.getAngularVelocityDeg(angularVelocityRad));
+        thetaDeg = OrientationData.getThetaDeg(thetaRad);
+        angularVelocityDeg = OrientationData.getAngularVelocityDeg(angularVelocityRad);
     }
 }

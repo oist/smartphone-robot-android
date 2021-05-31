@@ -4,11 +4,11 @@ public abstract class AbcvlibController implements Runnable{
 
     public Output output = new Output();
 
-    Output getOutput(){
+    synchronized Output getOutput(){
         return output;
     };
 
-    protected void setOutput(double left, double right){
+    protected synchronized void setOutput(double left, double right){
         output.left = left;
         output.right = right;
     };

@@ -11,7 +11,9 @@ import java.util.concurrent.TimeUnit;
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.AbcvlibLooper;
 import jp.oist.abcvlib.core.Switches;
+import jp.oist.abcvlib.core.inputs.Inputs;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
+import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 
 public class Outputs implements OutputsInterface {
 
@@ -19,23 +21,23 @@ public class Outputs implements OutputsInterface {
     protected Thread pidControllerThread;
     public Motion motion;
     private Thread socketClientThread;
-    public BalancePIDController balancePIDController;
+    private volatile BalancePIDController balancePIDController;
     private GrandController grandController;
     private Thread grandControllerThread;
     private ArrayList<AbcvlibController> controllers = new ArrayList<>();
     private ProcessPriorityThreadFactory processPriorityThreadFactory;
-    private ScheduledThreadPoolExecutor threadPoolExecutor;
+    private ScheduledExecutorServiceWithException threadPoolExecutor;
 
 
-    public Outputs(Switches switches, AbcvlibLooper abcvlibLooper){
+    public Outputs(Switches switches, AbcvlibLooper abcvlibLooper, Inputs inputs){
 
         // Determine number of necessary threads.
         int threadCount = 1; // At least one for the GrandController
-        threadCount += (switches.pythonControlledPIDBalancer) ? 1 : 0;
-        threadCount += (switches.balanceApp) ? 1 : 0;
-        threadCount += (switches.centerBlobApp) ? 1 : 0;
+//        threadCount += (switches.pythonControlledPIDBalancer) ? 1 : 0;
+//        threadCount += (switches.balanceApp) ? 1 : 0;
+//        threadCount += (switches.centerBlobApp) ? 1 : 0;
         processPriorityThreadFactory = new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "Outputs");
-        threadPoolExecutor = new ScheduledThreadPoolExecutor(threadCount, processPriorityThreadFactory);
+        threadPoolExecutor = new ScheduledExecutorServiceWithException(threadCount, processPriorityThreadFactory);
 
         //BalancePIDController Controller
         motion = new Motion(switches);
@@ -43,15 +45,18 @@ public class Outputs implements OutputsInterface {
 
 
         if (switches.balanceApp){
-            balancePIDController = new BalancePIDController(switches);
-            threadPoolExecutor.scheduleAtFixedRate(balancePIDController, 0, 1, TimeUnit.MILLISECONDS);
+            balancePIDController = new BalancePIDController(switches, inputs);
+            threadPoolExecutor.scheduleWithFixedDelay(balancePIDController, 0, 2000, TimeUnit.MILLISECONDS);
             controllers.add(balancePIDController);
             Log.i("abcvlib", "BalanceApp Started");
         }
 
         if (!controllers.isEmpty()){
             grandController = new GrandController(switches, abcvlibLooper);
-            threadPoolExecutor.scheduleAtFixedRate(grandController, 0, 1, TimeUnit.MILLISECONDS);
+            for (AbcvlibController controller: controllers){
+                grandController.addController(controller);
+            }
+            threadPoolExecutor.scheduleWithFixedDelay(grandController, 0, 4000, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -75,4 +80,7 @@ public class Outputs implements OutputsInterface {
 
     }
 
+    public synchronized BalancePIDController getBalancePIDController() {
+        return balancePIDController;
+    }
 }

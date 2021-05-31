@@ -33,10 +33,10 @@ public abstract class AbcvlibActivity extends IOIOActivity {
 
     // Publically accessible objects that encapsulate a lot other core functionality
     private Inputs inputs;
-    public Outputs outputs;
-    public Switches switches = new Switches();
+    private Outputs outputs;
+    private Switches switches = new Switches();
     private AbcvlibLooper abcvlibLooper;
-    protected static final String TAG = "abcvlib";
+    private static final String TAG = "abcvlib";
 
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -46,7 +46,6 @@ public abstract class AbcvlibActivity extends IOIOActivity {
         of the abcvlibLooper instance passed to the Outputs constructor
         */
         super.onCreate(savedInstanceState);
-        outputs = new Outputs(switches, abcvlibLooper); //todo need to remove dependence on abcvlibActivty here
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         Log.i(TAG, "End of AbcvlibActivity.onCreate");
@@ -76,6 +75,18 @@ public abstract class AbcvlibActivity extends IOIOActivity {
 
     public Inputs getInputs() {
         return inputs;
+    }
+
+    public Switches getSwitches() {
+        return switches;
+    }
+
+    public Outputs getOutputs() {
+        return outputs;
+    }
+
+    private void initializeOutputs(){
+        outputs = new Outputs(switches, abcvlibLooper, inputs); //todo need to remove dependence on abcvlibActivty here
     }
 
     protected void checkPermissions(PermissionsListener permissionsListener, String[] permissions){
@@ -114,8 +125,11 @@ public abstract class AbcvlibActivity extends IOIOActivity {
       */
     @Override
     protected IOIOLooper createIOIOLooper() {
-        this.abcvlibLooper = new AbcvlibLooper(this);
-        Log.d("abcvlib", "createIOIOLooper Finished");
+        if (this.abcvlibLooper == null){
+            this.abcvlibLooper = new AbcvlibLooper(this);
+            initializeOutputs();
+            Log.d("abcvlib", "createIOIOLooper Finished");
+        }
         return this.abcvlibLooper;
     }
 }
