@@ -46,7 +46,7 @@ public class Outputs implements OutputsInterface {
 
         if (switches.balanceApp){
             balancePIDController = new BalancePIDController(switches, inputs);
-            threadPoolExecutor.scheduleWithFixedDelay(balancePIDController, 0, 2000, TimeUnit.MILLISECONDS);
+            threadPoolExecutor.scheduleWithFixedDelay(balancePIDController, 0, 1, TimeUnit.MILLISECONDS);
             controllers.add(balancePIDController);
             Log.i("abcvlib", "BalanceApp Started");
         }
@@ -56,7 +56,7 @@ public class Outputs implements OutputsInterface {
             for (AbcvlibController controller: controllers){
                 grandController.addController(controller);
             }
-            threadPoolExecutor.scheduleWithFixedDelay(grandController, 0, 4000, TimeUnit.MILLISECONDS);
+            threadPoolExecutor.scheduleWithFixedDelay(grandController, 0, 1, TimeUnit.MILLISECONDS);
         }
     }
 

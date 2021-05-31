@@ -57,8 +57,8 @@ public class MainActivity extends AbcvlibActivity {
 
         // Various switches are available to turn on/off core functionality.
         getSwitches().balanceApp = true;
-        getSwitches().pythonControlledPIDBalancer = true;
-        getSwitches().wheelPolaritySwap = false;
+//        getSwitches().pythonControlledPIDBalancer = true;
+//        getSwitches().wheelPolaritySwap = false;
 
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);

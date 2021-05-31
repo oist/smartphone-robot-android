@@ -370,6 +370,8 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         final int CHARGER_VOLTAGE=33;
         final int BATTERY_VOLTAGE=34;
 
+        Log.v(TAG, "ioio_ state = " + ioio_.getState().toString());
+
         /* Initializing all wheel controller values to low would result in both wheels being in
          the "Stop-NoBrake" mode according to the Hubee control table. Not sure if this state
          is required for some reason or just what was defaulted to. **/
@@ -419,7 +421,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      */
     @Override
     public void loop() throws ConnectionLostException, InterruptedException{
-
+        
         try {
 
             timeStampUpdate();
@@ -514,7 +516,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         dutyCycleRightWheelNew = dutyCycleLimiter(dutyCycleRightWheelCurrent);
         dutyCycleLeftWheelNew = dutyCycleLimiter(dutyCycleLeftWheelCurrent);
 
-        //Log.i("abcvlib", "End AbcvlibLooper.getDutyCycle" + dutyCycleLeftWheelCurrent + "," + dutyCycleRightWheelCurrent);
+        Log.i("abcvlib", "End AbcvlibLooper.getDutyCycle" + dutyCycleLeftWheelCurrent + "," + dutyCycleRightWheelCurrent);
 
     }
 
@@ -604,7 +606,6 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             input1LeftWheelController.write(input1LeftWheelState);
             input2LeftWheelController.write(input2LeftWheelState);
             pwmControllerLeftWheel.setDutyCycle(dutyCycleLeftWheelNew);//converting from duty cycle to pulse width
-
         } catch (ConnectionLostException e){
             Log.i("abcvlib", "AbcvlibLooper.loop threw an ConnectionLostException");
             throw e;
@@ -618,7 +619,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
     private int dutyCycleLimiter(Integer dutyCycleOld){
 
-        final int MAX_DUTY_CYCLE = 100;
+        final int MAX_DUTY_CYCLE = 1;
 
         /*
         The following two logical statements simply hard limit the dutyCycle to be less than
