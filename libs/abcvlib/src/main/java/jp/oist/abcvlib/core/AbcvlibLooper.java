@@ -273,19 +273,19 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     /**
      * Duty cycle of PWM pulse width tracking variable. Values range from 0 to 100
      */
-    private int dutyCycleRightWheelNew;
+    private float dutyCycleRightWheelNew;
     /**
      * @see #dutyCycleRightWheelNew
      */
-    private int dutyCycleRightWheelCurrent;
+    private float dutyCycleRightWheelCurrent;
     /**
      * @see #dutyCycleRightWheelNew
      */
-    private int dutyCycleLeftWheelNew;
+    private float dutyCycleLeftWheelNew;
     /**
      * @see #dutyCycleRightWheelNew
      */
-    private int dutyCycleLeftWheelCurrent;
+    private float dutyCycleLeftWheelCurrent;
 
     // Encoder counters
     /**
@@ -421,7 +421,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      */
     @Override
     public void loop() throws ConnectionLostException, InterruptedException{
-        
+
         try {
 
             timeStampUpdate();
@@ -512,12 +512,8 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     }
 
     private void getDutyCycle() {
-
         dutyCycleRightWheelNew = dutyCycleLimiter(dutyCycleRightWheelCurrent);
         dutyCycleLeftWheelNew = dutyCycleLimiter(dutyCycleLeftWheelCurrent);
-
-        Log.i("abcvlib", "End AbcvlibLooper.getDutyCycle" + dutyCycleLeftWheelCurrent + "," + dutyCycleRightWheelCurrent);
-
     }
 
     /**
@@ -617,7 +613,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         encoderBLeftWheelStatePrevious = encoderBLeftWheelState;
     }
 
-    private int dutyCycleLimiter(Integer dutyCycleOld){
+    private float dutyCycleLimiter(float dutyCycleOld){
 
         final int MAX_DUTY_CYCLE = 1;
 
@@ -625,7 +621,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         The following two logical statements simply hard limit the dutyCycle to be less than
         MAX_DUTY_CYCLE which represents the highest value it can be.
          */
-        int dutyCycleNew;
+        float dutyCycleNew;
 
         if(Math.abs(dutyCycleOld) < MAX_DUTY_CYCLE){
             dutyCycleNew = Math.abs(dutyCycleOld);
@@ -698,8 +694,8 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      * @return wheelCounts
      */
     private int encoderAddSubtractCount(Boolean input1WheelStateIo, Boolean input2WheelStateIo,
-                                        Integer dutyCycleRightWheelNew,
-                                        Integer dutyCycleLeftWheelNew, Boolean encoderAWheelState,
+                                        float dutyCycleRightWheelNew,
+                                        float dutyCycleLeftWheelNew, Boolean encoderAWheelState,
                                         Boolean encoderBWheelState,
                                         Boolean encoderAWheelStatePrevious,
                                         Boolean encoderBWheelStatePrevious){
@@ -804,7 +800,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         loopCount++;
     }
 
-    public void setDutyCycle(int left, int right) throws ConnectionLostException {
+    public void setDutyCycle(float left, float right) throws ConnectionLostException {
         dutyCycleLeftWheelCurrent = left;
         dutyCycleRightWheelCurrent = right;
     }

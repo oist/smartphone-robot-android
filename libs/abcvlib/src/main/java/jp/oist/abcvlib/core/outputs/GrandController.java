@@ -39,7 +39,7 @@ public class GrandController extends AbcvlibController{
         }
 
         try {
-            abcvlibLooper.setDutyCycle((int) output.left, (int) output.right);
+            abcvlibLooper.setDutyCycle(output.left, output.right);
         } catch (ConnectionLostException e) {
             e.printStackTrace();
         }

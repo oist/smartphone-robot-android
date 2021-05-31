@@ -123,8 +123,8 @@ public class WheelData implements AbcvlibInput {
      * This does not account for slippage/lifting/etc. so use with a grain of salt
      * @return distance in mm
      */
-    public static double countsToDistance(int count){
-        double mmPerCount = (2 * Math.PI * 30) / 128;
+    public static float countsToDistance(int count){
+        float mmPerCount = (2f * (float) Math.PI * 30f) / 128f;
         return count * mmPerCount;
     }
 

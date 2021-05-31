@@ -156,22 +156,22 @@ public class BalancePIDController extends AbcvlibController implements WheelData
     }
 
     private void bounce(boolean forward) {
-        int speed = 100;
+        int speed = 1;
         if (bounceLoopCount < bouncePulseWidth * 0.1){
             setOutput(0,0);
         }else if (bounceLoopCount < bouncePulseWidth * 1.1){
             if (forward){
-                setOutput(speed,speed);
+                setOutput(speed,-speed);
             }else{
-                setOutput(-speed,-speed);
+                setOutput(-speed,speed);
             }
         }else if (bounceLoopCount < bouncePulseWidth * 1.2){
             setOutput(0,0);
         }else if (bounceLoopCount < bouncePulseWidth * 2.2) {
             if (forward){
-                setOutput(-speed,-speed);
+                setOutput(-speed,speed);
             }else{
-                setOutput(speed,speed);
+                setOutput(speed,-speed);
             }
         }else {
             bounceLoopCount = 0;
@@ -187,12 +187,13 @@ public class BalancePIDController extends AbcvlibController implements WheelData
         int_e_t = int_e_t + e_t;
         e_t = setPoint - thetaDeg;
         e_w = 0.0 - speedL;
+        Log.v(TAG, "speedL:" + speedL);
 
         double p_out = (p_tilt * e_t) + (p_wheel * e_w);
         double i_out = i_tilt * int_e_t;
         double d_out = d_tilt * angularVelocityDeg;
 
-        setOutput((p_out + i_out + d_out), (p_out + i_out + d_out));
+        setOutput((float)-(p_out + i_out + d_out), (float)(p_out + i_out + d_out));
 
         Output testOutput = getOutput();
     }

@@ -19,7 +19,7 @@
         android:valueFrom="-10.0"
         android:valueTo="10.0"
         android:stepSize="0.1"
-        android:value="4.8"
+        android:value="3.0"
         android:layout_height="50dp"
         android:layout_width="match_parent"/>
 
@@ -32,10 +32,10 @@
 
     <com.google.android.material.slider.Slider
         android:id="@+id/seekBarTiltP"
-        android:valueFrom="-80.0"
+        android:valueFrom="-1.0"
         android:valueTo="0.0"
-        android:stepSize="0.1"
-        android:value="-35.0"
+        android:stepSize="0.001"
+        android:value="-0.475"
         android:layout_width="match_parent"
         android:layout_height="50dp" />
 
@@ -49,9 +49,9 @@
     <com.google.android.material.slider.Slider
         android:id="@+id/seekBarTiltD"
         android:valueFrom="0.0"
-        android:valueTo="1.2"
-        android:stepSize="0.01"
-        android:value="1.00"
+        android:valueTo="0.012"
+        android:stepSize="0.0001"
+        android:value="0.007"
         android:layout_width="match_parent"
         android:layout_height="50dp"/>
 
@@ -64,10 +64,10 @@
 
     <com.google.android.material.slider.Slider
         android:id="@+id/seekBarWheelSpeedP"
-        android:valueFrom="-1.0"
-        android:valueTo="1.0"
-        android:stepSize="0.01"
-        android:value="-0.40"
+        android:valueFrom="-10.0"
+        android:valueTo="10.0"
+        android:stepSize="0.0001"
+        android:value="0.000"
         android:layout_width="match_parent"
         android:layout_height="50dp"/>
 
@@ -99,7 +99,7 @@
         android:valueFrom="-90.0"
         android:valueTo="90.0"
         android:stepSize="0.1"
-        android:value="6.5"
+        android:value="7.0"
         android:layout_width="match_parent"
         android:layout_height="50dp"/>
 

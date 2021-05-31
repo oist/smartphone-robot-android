@@ -8,14 +8,14 @@ public abstract class AbcvlibController implements Runnable{
         return output;
     };
 
-    protected synchronized void setOutput(double left, double right){
+    protected synchronized void setOutput(float left, float right){
         output.left = left;
         output.right = right;
     };
 
     public class Output{
-        public double left;
-        public double right;
+        public float left;
+        public float right;
     }
 
 }
