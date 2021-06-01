@@ -2,7 +2,6 @@ package jp.oist.abcvlib.core.inputs;
 
 import android.graphics.Bitmap;
 import android.media.AudioTimestamp;
-import android.util.Log;
 
 import java.util.ArrayList;
 
@@ -20,15 +19,16 @@ public class TimeStepDataBuffer {
 
     public TimeStepDataBuffer(int bufferLength){
         if (bufferLength <= 1){
-            Log.e("TimeStampDataBuffer", "bufferLength must be larger than 1");
+            throw new RuntimeException("bufferLength must be larger than 1. " +
+                    "bufferLength of " + bufferLength + " provided.");
         }
-
         this.bufferLength = bufferLength;
         buffer =  new TimeStepData[bufferLength];
 
         writeIndex = 1;
         readIndex = 0;
 
+        // populate buffer with TimeStepData instances
         for(int i = 0 ; i < bufferLength; i++){
             buffer[i] = new TimeStepData();
         }
@@ -342,5 +342,4 @@ public class TimeStepDataBuffer {
             }
         }
     }
-
 }
