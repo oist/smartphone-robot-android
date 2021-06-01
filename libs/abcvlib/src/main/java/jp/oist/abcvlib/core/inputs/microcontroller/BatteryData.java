@@ -39,11 +39,12 @@ public class BatteryData implements AbcvlibInput {
         this.timeStepDataBuffer = timeStepDataBuffer;
     }
 
+    public void setBatteryDataListener(BatteryDataListener batteryDataListener) {
+        this.batteryDataListener = batteryDataListener;
+    }
+
     public TimeStepDataBuffer getTimeStepDataBuffer() {
         return timeStepDataBuffer;
     }
 
-    public void setBatteryDataListener(BatteryDataListener batteryDataListener) {
-        this.batteryDataListener = batteryDataListener;
-    }
 }
