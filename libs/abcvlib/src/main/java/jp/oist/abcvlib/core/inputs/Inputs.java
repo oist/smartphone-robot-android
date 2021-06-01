@@ -12,12 +12,12 @@ import jp.oist.abcvlib.core.inputs.phone.OrientationData;
 
 public class Inputs {
 
-    private TimeStepDataBuffer timeStepDataBuffer = null;
-    private BatteryData batteryData = null;
-    private WheelData wheelData = null;
-    private ImageData imageData = null;
-    private MicrophoneData microphoneData = null;
-    private OrientationData orientationData = null;
+    private TimeStepDataBuffer timeStepDataBuffer;
+    private BatteryData batteryData;
+    private WheelData wheelData;
+    private ImageData imageData;
+    private MicrophoneData microphoneData;
+    private OrientationData orientationData;
     private ArrayList<AbcvlibInput> inputsList;
 
     public Inputs(Context context){
@@ -33,7 +33,6 @@ public class Inputs {
     public TimeStepDataBuffer getTimeStepDataBuffer() {
         return timeStepDataBuffer;
     }
-
     public BatteryData getBatteryData() {
         return batteryData;
     }
