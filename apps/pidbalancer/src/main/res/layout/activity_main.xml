@@ -49,7 +49,7 @@
     <com.google.android.material.slider.Slider
         android:id="@+id/seekBarTiltD"
         android:valueFrom="0.0"
-        android:valueTo="0.012"
+        android:valueTo="0.1"
         android:stepSize="0.0001"
         android:value="0.007"
         android:layout_width="match_parent"
@@ -64,9 +64,9 @@
 
     <com.google.android.material.slider.Slider
         android:id="@+id/seekBarWheelSpeedP"
-        android:valueFrom="-10.0"
-        android:valueTo="10.0"
-        android:stepSize="0.0001"
+        android:valueFrom="0.00"
+        android:valueTo="0.01"
+        android:stepSize="0.00001"
         android:value="0.000"
         android:layout_width="match_parent"
         android:layout_height="50dp"/>

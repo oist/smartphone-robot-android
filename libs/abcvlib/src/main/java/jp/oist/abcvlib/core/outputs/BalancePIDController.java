@@ -24,73 +24,42 @@ public class BalancePIDController extends AbcvlibController implements WheelData
     private double setPoint = 2.8;
     private double p_wheel = 0.4;
     private double expWeight = 0.25;
-
-    // BalancePIDController Setup
-    private volatile double thetaDeg; // tilt of phone with vertical being 0.
-    private double angularVelocityDeg; // derivative of tilt (angular velocity)
-    private int wheelCountL; // encoder count on left wheel
-    private int wheelCountR; // encoder count on right wheel
-    private double distanceL; // distances traveled by left wheel from start point (mm)
-    private double distanceR; // distances traveled by right wheel from start point (mm)
-    private double speedL; // Current speed on left wheel in mm/s
-    private double speedR; // Current speed on right wheel in mm/s
-
     private double e_t = 0; // e(t) of wikipedia
-    private double e_w = 0; // error betweeen actual and desired wheel speed (default 0)
-
     private double int_e_t; // integral of e(t) from wikipedia. Discrete, so just a sum here.
 
     private double maxAbsTilt = 6.5; // in Degrees
-    private double maxTiltAngle = setPoint + maxAbsTilt; // in Degrees
-    private double minTiltAngle = setPoint - maxAbsTilt; // in Degrees
 
-    private long[] PIDTimer = new long[3];
-    private long[] PIDTimeSteps = new long[4];
+    private final long[] PIDTimer = new long[3];
+    private final long[] PIDTimeSteps = new long[4];
     private int timerCount = 1;
-    private double thetaDiff;
     private long lastUpdateTime;
-    private long updateTimeStep;
 
-    private boolean socketLock = false;
+    private double speedL;
+    private double speedR;
+    private double thetaDeg;
+    private double angularVelocityDeg;
 
-    private Switches switches;
+    private final boolean socketLock = false;
 
-    private int avgCount = 1000;
+    private final Switches switches;
 
     private int bounceLoopCount = 0;
-    // loop steps between turning on and off wheels.
-    private int bouncePulseWidth = 100;
+    private long timestamp;
 
     public BalancePIDController(Switches switches, Inputs inputs){
         this.switches = switches;
         inputs.getOrientationData().setOrientationDataListener(this);
+        inputs.getWheelData().setWheelDataListener(this);
         Log.i("abcvlib", "BalanceApp Created");
     }
 
     public void run(){
 
         PIDTimer[0] = System.nanoTime();
-
-        thetaDiff = thetaDeg - getThetaDeg();
-
-        if (thetaDiff !=0){
-            updateTimeStep = PIDTimer[0]- lastUpdateTime;
-            lastUpdateTime = PIDTimer[0];
-            if (switches.loggerOn){
-                Log.v("theta", "theta was updated in " + (updateTimeStep / 1000000) + " ms");
-            }
-        }
-
-        double distanceLPrev = distanceL;
-        double distanceRPrev = distanceR;
-        wheelCountL = getWheelCountL();
-        wheelCountR = getWheelCountR();
-        distanceL = WheelData.countsToDistance(wheelCountL);
-        distanceR = WheelData.countsToDistance(wheelCountR);
-        speedL = getSpeedL();
-        speedR = getSpeedR();
-        maxTiltAngle = setPoint + maxAbsTilt;
-        minTiltAngle = setPoint - maxAbsTilt;
+        // in Degrees
+        double maxTiltAngle = setPoint + maxAbsTilt;
+        // in Degrees
+        double minTiltAngle = setPoint - maxAbsTilt;
 
         PIDTimer[1] = System.nanoTime();
 
@@ -116,6 +85,7 @@ public class BalancePIDController extends AbcvlibController implements WheelData
         PIDTimeSteps[0] = PIDTimer[0];
 
         // Take basic stats of every 1000 time step lengths rather than pushing all.
+        int avgCount = 1000;
         if (timerCount % avgCount == 0){
 
             for (int i=1; i < PIDTimeSteps.length; i++){
@@ -157,6 +127,8 @@ public class BalancePIDController extends AbcvlibController implements WheelData
 
     private void bounce(boolean forward) {
         int speed = 1;
+        // loop steps between turning on and off wheels.
+        int bouncePulseWidth = 100;
         if (bounceLoopCount < bouncePulseWidth * 0.1){
             setOutput(0,0);
         }else if (bounceLoopCount < bouncePulseWidth * 1.1){
@@ -186,7 +158,8 @@ public class BalancePIDController extends AbcvlibController implements WheelData
         // TODO this needs to account for length of time on each interval, or overall time length. Here this just assumes a width of 1 for all intervals.
         int_e_t = int_e_t + e_t;
         e_t = setPoint - thetaDeg;
-        e_w = 0.0 - speedL;
+        // error betweeen actual and desired wheel speed (default 0)
+        double e_w = 0.0 - speedL;
         Log.v(TAG, "speedL:" + speedL);
 
         double p_out = (p_tilt * e_t) + (p_wheel * e_w);
@@ -198,56 +171,17 @@ public class BalancePIDController extends AbcvlibController implements WheelData
         Output testOutput = getOutput();
     }
 
-    public synchronized int getWheelCountL() {
-        return wheelCountL;
-    }
-
-    public synchronized int getWheelCountR() {
-        return wheelCountR;
-    }
-
-    public synchronized double getThetaDeg() {
-        return thetaDeg;
-    }
-
-    public synchronized double getAngularVelocityDeg() {
-        return angularVelocityDeg;
-    }
-
-    public synchronized double getSpeedL() {
-        return speedL;
-    }
-
-    public synchronized double getSpeedR() {
-        return speedR;
-    }
-
-    public synchronized void setWheelCountL(int wheelCountL) {
-        this.wheelCountL = wheelCountL;
-    }
-
-    public synchronized void setWheelCountR(int wheelCountR) {
-        this.wheelCountR = wheelCountR;
-    }
-
-    public synchronized void setSpeedL(double speedL) {
-        this.speedL = speedL;
-    }
-
-    public synchronized void setSpeedR(double speedR) {
-        this.speedR = speedR;
-    }
-
     public void setAngularVelocityDeg(double angularVelocityDeg) {
         this.angularVelocityDeg = angularVelocityDeg;
     }
 
+
     @Override
     public void onWheelDataUpdate(long timestamp, WheelData wheelData) {
-        setWheelCountL(wheelData.getWheelCountL());
-        setWheelCountR(wheelData.getWheelCountR());
-        setSpeedL(wheelData.getWheelSpeedL_LP());
-        setSpeedR(wheelData.getWheelSpeedR_LP());
+        this.timestamp = timestamp;
+        speedL = wheelData.getWheelSpeedL_LP();
+        speedR = wheelData.getWheelSpeedR_LP();
+        wheelData.setExpWeight(expWeight);
     }
 
     @Override
