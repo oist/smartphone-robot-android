@@ -17,6 +17,7 @@ import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
 import jp.oist.abcvlib.core.inputs.Inputs;
 import jp.oist.abcvlib.core.outputs.Outputs;
+import jp.oist.abcvlib.util.ErrorHandler;
 
 /**
  * AbcvlibActivity is where all of the other classes are initialized into objects. The objects
@@ -34,12 +35,11 @@ public abstract class AbcvlibActivity extends IOIOActivity {
     // Publically accessible objects that encapsulate a lot other core functionality
     private Inputs inputs;
     private Outputs outputs;
-    private Switches switches = new Switches();
+    private final Switches switches = new Switches();
     private AbcvlibLooper abcvlibLooper;
     private static final String TAG = "abcvlib";
 
     protected void onCreate(Bundle savedInstanceState) {
-
         inputs = new Inputs(getApplicationContext());
         /*
         This much be called prior to initializing outputs as this is what triggers the creation
@@ -48,7 +48,7 @@ public abstract class AbcvlibActivity extends IOIOActivity {
         super.onCreate(savedInstanceState);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        Log.i(TAG, "End of AbcvlibActivity.onCreate");
+        Log.v(TAG, "End of AbcvlibActivity.onCreate");
     }
 
     @Override
@@ -57,9 +57,9 @@ public abstract class AbcvlibActivity extends IOIOActivity {
         try {
             abcvlibLooper.setDutyCycle(0, 0);
         } catch (ConnectionLostException e) {
-            e.printStackTrace();
+            ErrorHandler.eLog(TAG, "IOIO Connection Lost while turning it off", e, true);
         }
-        Log.i(TAG, "End of AbcvlibActivity.onStop");
+        Log.v(TAG, "End of AbcvlibActivity.onStop");
     }
 
     @Override
@@ -69,7 +69,7 @@ public abstract class AbcvlibActivity extends IOIOActivity {
         try {
             abcvlibLooper.setDutyCycle(0, 0);
         } catch (ConnectionLostException e) {
-            e.printStackTrace();
+            ErrorHandler.eLog(TAG, "IOIO Connection Lost while turning it off", e, true);
         }        Log.i(TAG, "End of AbcvlibActivity.onPause");
     }
 
@@ -86,9 +86,16 @@ public abstract class AbcvlibActivity extends IOIOActivity {
     }
 
     private void initializeOutputs(){
-        outputs = new Outputs(switches, abcvlibLooper, inputs); //todo need to remove dependence on abcvlibActivty here
+        outputs = new Outputs(switches, abcvlibLooper, inputs);
     }
 
+    /**
+     * Take an array of permissions and check if they've all been granted. If not, request them. If
+     * denied close app.
+     * @param permissionsListener: Typically your main activity, where you'd implement this interface
+     *                           and put all your main code into the {@link PermissionsListener#onPermissionsGranted()}
+     * @param permissions: list of {@link android.Manifest.permission} strings your app requires.
+     */
     protected void checkPermissions(PermissionsListener permissionsListener, String[] permissions){
         boolean permissionsGranted = true;
         for (String permission:permissions){
