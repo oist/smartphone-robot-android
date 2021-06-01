@@ -117,12 +117,14 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
 //                " countRight=" + countRight);
 //        double distanceLeft = WheelData.countsToDistance(countLeft);
         runOnUiThread(() -> {
-            leftWheel.setText(df.format(wheelData.getWheelCountL()) + " : " +
+            String left = df.format(wheelData.getWheelCountL()) + " : " +
                     df.format(wheelData.getDistanceL()) + " : " +
-                    df.format(wheelData.getWheelSpeedL_LP()));
-            rightWheel.setText(df.format(wheelData.getWheelCountR()) + " : " +
+                    df.format(wheelData.getWheelSpeedL_LP());
+            String right = df.format(wheelData.getWheelCountR()) + " : " +
                     df.format(wheelData.getDistanceR()) + " : " +
-                    df.format(wheelData.getWheelSpeedR_LP()));
+                    df.format(wheelData.getWheelSpeedR_LP());
+            leftWheel.setText(left);
+            rightWheel.setText(right);
         });
     }
 

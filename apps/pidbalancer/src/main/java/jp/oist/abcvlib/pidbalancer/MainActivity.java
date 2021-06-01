@@ -8,6 +8,7 @@ import com.google.android.material.slider.LabelFormatter;
 import com.google.android.material.slider.Slider;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.util.ErrorHandler;
@@ -26,7 +27,7 @@ public class MainActivity extends AbcvlibActivity {
     Slider p_wheel_;
     Slider expWeight_;
     Slider maxAbsTilt_;
-    private String TAG = getClass().getName();
+    private final String TAG = getClass().getName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +36,7 @@ public class MainActivity extends AbcvlibActivity {
         // ID within the R class
         setContentView(R.layout.activity_main);
 
-        ArrayList<Slider> controls = new ArrayList<Slider>();
+        ArrayList<Slider> controls = new ArrayList<>();
 
         controls.add(setPoint_ = findViewById(R.id.seekBarSetPoint));
         controls.add(p_tilt_ = findViewById(R.id.seekBarTiltP));
@@ -46,13 +47,7 @@ public class MainActivity extends AbcvlibActivity {
 
         for (Slider slider: controls) {
             slider.addOnChangeListener(sliderChangeListener);
-            slider.setLabelFormatter(new LabelFormatter(){
-                @NonNull
-                @Override
-                public String getFormattedValue(float value) {
-                    return String.format("%.3f", value);
-                }
-            });
+            slider.setLabelFormatter(value -> String.format(Locale.JAPAN, "%.3f", value));
         }
 
         // Various switches are available to turn on/off core functionality.
