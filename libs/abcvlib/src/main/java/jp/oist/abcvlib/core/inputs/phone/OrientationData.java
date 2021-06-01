@@ -33,8 +33,7 @@ import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
  */
 public class OrientationData implements SensorEventListener, AbcvlibInput {
 
-    //----------------------------------------- Counters -------------------------------------------
-    /**
+    /*
      * Keeps track of current history index.
      * indexCurrent calculates the correct index within the time history arrays in order to
      * continuously loop through and rewrite the encoderCountHistoryLength indexes.
@@ -43,87 +42,46 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
      * sensorChangeCount exceeds 30 at which point it will loop to 0 again, so on and so forth.
      */
     private int indexCurrentRotation = 1;
-    private int indexPreviousRotation = 0;
-    /**
-     * Keeps track of current history index.
-     * indexCurrent calculates the correct index within the time history arrays in order to
-     * continuously loop through and rewrite the encoderCountHistoryLength indexes.
-     * E.g. if sensorChangeCount is 15 and encoderCountHistoryLength is 15, then indexCurrent
-     * will resolve to 0 and the values for each history array will be updated from index 0 until
-     * sensorChangeCount exceeds 30 at which point it will loop to 0 again, so on and so forth.
-     */
-    private int indexCurrentGyro = 1;
-    private int indexPreviousGyro = 0;
     /**
      * Length of past timestamps and encoder values you keep in memory. 15 is not significant,
      * just what was deemed appropriate previously.
      */
     private int windowLength = 3;
-    /**
-     * Low Pass Filter cutoff freq
-     */
-    private double lp_freq_theta = 1000;
-    private double lp_freq_thetaDot = 1000;
-    /**
-     * Total number of times the sensors have changed data
-     */
-    private int sensorChangeCountGyro = 1;
+
+    //Total number of times the sensors have changed data
     private int sensorChangeCountRotation = 1;
-    //----------------------------------------------------------------------------------------------
 
-    //----------------------------------------------------------------------------------------------
-
-    // Android Sensor objects
-    private SensorManager sensorManager;
-    private Sensor gyroscope;
-    private Sensor rotation_sensor;
-    private Sensor accelerometer;
+    private final SensorManager sensorManager;
+    private final Sensor gyroscope;
+    private final Sensor rotation_sensor;
+    private final Sensor accelerometer;
     private Sensor accelerometer_uncalibrated;
 
-    //----------------------------------------------------------------------------------------------
     /**
      * orientation vector See link below for android doc
      * https://developer.android.com/reference/android/hardware/SensorManager.html#getOrientation(float%5B%5D,%2520float%5B%5D)
      */
-    private float[] orientation = new float[3];
+    private final float[] orientation = new float[3];
     /**
      * thetaRad calculated from rotation vector
      */
-    private double[] thetaRad = new double[windowLength];
-    /**
-     * thetaRad converted to degrees.
-     */
-    private double[] thetaDeg = new double[windowLength];
+    private final double[] thetaRad = new double[windowLength];
     /**
      * rotation matrix
      */
-    private float[] rotationMatrix = new float[16];
+    private final float[] rotationMatrix = new float[16];
     /**
      * rotation matrix remapped
      */
-    private float[] rotationMatrixRemap = new float[16];
+    private final float[] rotationMatrixRemap = new float[16];
     /**
      * angularVelocity calculated from RotationMatrix.
      */
-    private double[] angularVelocityRad = new double[windowLength];
-    /**
-     * angularVelocityRad converted to degrees.
-     */
-    private double[] angularVelocityDeg = new double[windowLength];
-    private double[] thetaDotGyro = new double[windowLength];
-    private double[] timeStampsGyro = new double[windowLength];
-    private double[] thetaDotGyroDeg = new double[windowLength];
-    private double dtGyro = 0;
-    private long[] delayTimers = new long[5];
-    private long[] delayTimeSteps = new long[5];
-    private float[] theta_uncalibrated = new float[6];
+    private final double[] angularVelocityRad = new double[windowLength];
 
-    float[] pythonSensorTimer = new float[3];
-    float[] pythonSensorTimeSteps = new float[3];
     int timerCount = 1;
-    private int avgCount = 1000;
     private boolean isRecording = false;
-    private TimeStepDataBuffer timeStepDataBuffer = null;
+    private TimeStepDataBuffer timeStepDataBuffer;
     private OrientationDataListener orientationDataListener = null;
 
     //----------------------------------------------------------------------------------------------
@@ -132,7 +90,7 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
     /**
      * Keeps track of both gyro and accelerometer sensor timestamps
      */
-    private long timeStamps[] = new long[windowLength];
+    private final long[] timeStamps = new long[windowLength];
     /**
     indexHistoryOldest calculates the index for the oldest encoder count still within
     the history. Using the most recent historical point could lead to speed calculations of zero
@@ -141,8 +99,6 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
      */
     int indexHistoryOldest = 0; // Keeps track of oldest history index.
     double dt = 0;
-
-    //----------------------------------------------------------------------------------------------
 
     /**
      * Constructor that sets up Android Sensor Service and creates Sensor objects for both
@@ -159,18 +115,6 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
             accelerometer_uncalibrated = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED);
         }
         register();
-    }
-
-    public void setTimeStepDataBuffer(TimeStepDataBuffer timeStepDataBuffer) {
-        this.timeStepDataBuffer = timeStepDataBuffer;
-    }
-
-    public void setOrientationDataListener(OrientationDataListener orientationDataListener) {
-        this.orientationDataListener = orientationDataListener;
-    }
-
-    public TimeStepDataBuffer getTimeStepDataBuffer() {
-        return timeStepDataBuffer;
     }
 
     /**
@@ -193,13 +137,8 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
     public void onSensorChanged(SensorEvent event){
 
         Sensor sensor = event.sensor;
-
-        // Timer for how often ANY sensor changes
-        pythonSensorTimeSteps[0] += System.nanoTime() - pythonSensorTimer[0];
-
-
+        
 //        if(sensor.getType()==Sensor.TYPE_GYROSCOPE){
-//
 //            indexCurrentGyro = sensorChangeCountGyro % windowLength;
 //            indexPreviousGyro = (sensorChangeCountGyro - 1) % windowLength;
 //            // Rotation around x-axis
@@ -212,15 +151,11 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
 //            if (loggerOn){
 //                sendToLog();
 //            }
-//
 //        }
         if(sensor.getType()==Sensor.TYPE_ROTATION_VECTOR){
-
             // Timer for only TYPE_ROTATION_VECTOR sensor change
-            pythonSensorTimeSteps[1] += System.nanoTime() - pythonSensorTimer[1];
-
             indexCurrentRotation = sensorChangeCountRotation % windowLength;
-            indexPreviousRotation = (sensorChangeCountRotation - 1) % windowLength;
+            int indexPreviousRotation = (sensorChangeCountRotation - 1) % windowLength;
             indexHistoryOldest = (sensorChangeCountRotation + 1) % windowLength;
             timeStamps[indexCurrentRotation] = event.timestamp;
             dt = (timeStamps[indexCurrentRotation] - timeStamps[indexPreviousRotation]) / 1000000000f;
@@ -233,35 +168,6 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
 
             // Update all previous variables with current ones
             sensorChangeCountRotation++;
-
-            pythonSensorTimer[1] = System.nanoTime();
-        }
-
-        else if (sensor.getType()==Sensor.TYPE_ACCELEROMETER){
-
-            // Timer for only TYPE_ACCELEROMETER sensor change
-            pythonSensorTimeSteps[2] += System.nanoTime() - pythonSensorTimer[2];
-
-            delayTimeSteps[3] = (System.nanoTime() - delayTimers[3]) / 1000000;
-            delayTimers[3] = System.nanoTime();
-
-            pythonSensorTimer[2] = System.nanoTime();
-
-        }
-
-        pythonSensorTimer[0] = System.nanoTime();
-
-        // Take basic stats of every 1000 time step lengths rather than pushing all.
-        if (timerCount % avgCount == 0){
-
-            for (int i=0; i < pythonSensorTimeSteps.length; i++){
-
-                pythonSensorTimeSteps[i] = (pythonSensorTimeSteps[i] / avgCount) / 1000000;
-
-            }
-
-//            Log.i("timers", "PythonSensorTimer Averages = " + Arrays.toString(pythonSensorTimeSteps) + "(ms)");
-
         }
 
         timerCount ++;
@@ -279,13 +185,6 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
 
         // Todo: does this sleep the main thread or is this running on something else at this point?
         Thread.yield();
-
-
-//        Log.i("Sensor Delay Timer", "Time between last sensor changes: " + Arrays.toString(delayTimeSteps));
-    }
-
-    public void setRecording(boolean recording) {
-        isRecording = recording;
     }
 
     /**
@@ -342,6 +241,26 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
 
     }
 
+    public void setRecording(boolean recording) {
+        isRecording = recording;
+    }
+
+    public void setTimeStepDataBuffer(TimeStepDataBuffer timeStepDataBuffer) {
+        this.timeStepDataBuffer = timeStepDataBuffer;
+    }
+
+    public void setOrientationDataListener(OrientationDataListener orientationDataListener) {
+        this.orientationDataListener = orientationDataListener;
+    }
+
+    /**
+     * Sets the history length for which to base the derivative functions off of (angular velocity,
+     * linear velocity).
+     * @param len length of array for keeping history
+     */
+    public void setWindowLength(int len) {
+        windowLength = len; }
+
     /**
      * @return utility function converting radians to degrees
      */
@@ -356,25 +275,20 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
         return getThetaDeg(radPerSec);
     }
 
-    /**
-     * Sets the history length for which to base the derivative functions off of (angular velocity,
-     * linear velocity).
-     * @param len length of array for keeping history
-     */
-    public void setWindowLength(int len) {
-        windowLength = len; }
+    public TimeStepDataBuffer getTimeStepDataBuffer() {
+        return timeStepDataBuffer;
+    }
 
     /**
      * This seems to be a very convoluted way to do this, but it seems to work just fine
      * @param angle Tilt angle in radians
      * @return Wrapped angle in radians from -Pi to Pi
      */
-    private float wrapAngle(float angle){
+    private static float wrapAngle(float angle){
         while(angle<-Math.PI)
             angle+=2*Math.PI;
         while(angle>Math.PI)
             angle-=2*Math.PI;
         return angle;
     }
-
 }
