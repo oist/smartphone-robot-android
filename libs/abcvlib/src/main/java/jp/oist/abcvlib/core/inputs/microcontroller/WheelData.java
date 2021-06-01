@@ -20,12 +20,12 @@ public class WheelData implements AbcvlibInput {
      * Compounding negative wheel count set in AbcvlibLooper. Right is negative while left is
      * positive since wheels are mirrored on physical body and thus one runs cw and the other ccw.
      */
-    private double encoderCountRightWheel = 0;
+    private int encoderCountRightWheel = 0;
     /**
      * Compounding positive wheel count set in AbcvlibLooper. Right is negative while left is
      * positive since wheels are mirrored on physical body and thus one runs cw and the other ccw.
      */
-    private double encoderCountLeftWheel = 0;
+    private int encoderCountLeftWheel = 0;
     /**
      * Right Wheel Speed in quadrature encoder counts per second.
      */
@@ -84,8 +84,7 @@ public class WheelData implements AbcvlibInput {
             timeStepDataBuffer.getWriteData().getWheelCounts().put(timestamp, countLeft, countRight);
         }
         if (wheelDataListener != null){
-            wheelDataListener.onWheelDataUpdate(timestamp, countLeft, countRight,
-                    speedLeftWheelLP, speedRightWheelLP);
+            wheelDataListener.onWheelDataUpdate(timestamp, this);
         }
 
         quadCount++;
@@ -111,12 +110,20 @@ public class WheelData implements AbcvlibInput {
     /**
      * @return Current encoder count for the right wheel
      */
-    public double getWheelCountR(){ return encoderCountRightWheel; }
+    public int getWheelCountR(){ return encoderCountRightWheel; }
 
     /**
      * @return Current encoder count for the left wheel
      */
-    public double getWheelCountL(){ return encoderCountLeftWheel; }
+    public int getWheelCountL(){ return encoderCountLeftWheel; }
+
+    public double getDistanceL() {
+        return distanceL;
+    }
+
+    public double getDistanceR() {
+        return distanceR;
+    }
 
     /**
      * Convert quadrature encoder counts to distance traveled by wheel from start point.

@@ -243,11 +243,11 @@ public class BalancePIDController extends AbcvlibController implements WheelData
     }
 
     @Override
-    public void onWheelDataUpdate(long timestamp, int countLeft, int countRight, double speedL, double speedR) {
-        setWheelCountL(countLeft);
-        setWheelCountR(countRight);
-        setSpeedL(speedL);
-        setSpeedR(speedR);
+    public void onWheelDataUpdate(long timestamp, WheelData wheelData) {
+        setWheelCountL(wheelData.getWheelCountL());
+        setWheelCountR(wheelData.getWheelCountR());
+        setSpeedL(wheelData.getWheelSpeedL_LP());
+        setSpeedR(wheelData.getWheelSpeedR_LP());
     }
 
     @Override

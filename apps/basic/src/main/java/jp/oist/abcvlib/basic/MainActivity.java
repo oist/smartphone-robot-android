@@ -12,6 +12,7 @@ import java.util.Locale;
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.PermissionsListener;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataListener;
+import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataListener;
 import jp.oist.abcvlib.core.inputs.phone.ImageDataListener;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneDataListener;
@@ -111,13 +112,17 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
     }
 
     @Override
-    public void onWheelDataUpdate(long timestamp, int countLeft, int countRight, double speedL, double speedR) {
+    public void onWheelDataUpdate(long timestamp, WheelData wheelData) {
 //        Log.i(TAG, "Wheel Data Update: Timestamp=" + timestamp + " countLeft=" + countLeft +
 //                " countRight=" + countRight);
 //        double distanceLeft = WheelData.countsToDistance(countLeft);
         runOnUiThread(() -> {
-            leftWheel.setText(df.format(countLeft));
-            rightWheel.setText(df.format(countRight));
+            leftWheel.setText(df.format(wheelData.getWheelCountL()) + " : " +
+                    df.format(wheelData.getDistanceL()) + " : " +
+                    df.format(wheelData.getWheelSpeedL_LP()));
+            rightWheel.setText(df.format(wheelData.getWheelCountR()) + " : " +
+                    df.format(wheelData.getDistanceR()) + " : " +
+                    df.format(wheelData.getWheelSpeedR_LP()));
         });
     }
 
