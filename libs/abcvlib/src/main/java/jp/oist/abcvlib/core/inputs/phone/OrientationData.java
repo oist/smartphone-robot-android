@@ -6,10 +6,15 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Message;
 import android.util.Log;
 
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
+import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
+import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 
 /**
  * MotionSensors reads and processes the data from the Android phone gryoscope and
@@ -99,6 +104,7 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
      */
     int indexHistoryOldest = 0; // Keeps track of oldest history index.
     double dt = 0;
+    ScheduledExecutorServiceWithException executor;
 
     /**
      * Constructor that sets up Android Sensor Service and creates Sensor objects for both
@@ -114,7 +120,10 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             accelerometer_uncalibrated = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED);
         }
-        register();
+        HandlerThread mHandlerThread = new HandlerThread("sensorThread");
+        mHandlerThread.start();
+        Handler handler = new Handler(mHandlerThread.getLooper());
+        register(handler);
     }
 
     /**
@@ -135,9 +144,8 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
      */
     @Override
     public void onSensorChanged(SensorEvent event){
-
         Sensor sensor = event.sensor;
-        
+
 //        if(sensor.getType()==Sensor.TYPE_GYROSCOPE){
 //            indexCurrentGyro = sensorChangeCountGyro % windowLength;
 //            indexPreviousGyro = (sensorChangeCountGyro - 1) % windowLength;
@@ -182,36 +190,33 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
                     thetaRad[indexCurrentRotation],
                     angularVelocityRad[indexCurrentRotation]);
         }
-
-        // Todo: does this sleep the main thread or is this running on something else at this point?
-        Thread.yield();
     }
 
     /**
      Registering sensorEventListeners for accelerometer and gyroscope only.
      */
-    public void register(){
+    public void register(Handler handler){
         // Check if rotation_sensor exists before trying to turn on the listener
         if (rotation_sensor != null){
-            sensorManager.registerListener(this, rotation_sensor, SensorManager.SENSOR_DELAY_FASTEST);
+            sensorManager.registerListener(this, rotation_sensor, SensorManager.SENSOR_DELAY_FASTEST, handler);
         } else {
             Log.e("SensorTesting", "No Default rotation_sensor Available.");
         }
         // Check if gyro exists before trying to turn on the listener
         if (gyroscope != null){
-            sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_FASTEST);
+            sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_FASTEST, handler);
         } else {
             Log.e("SensorTesting", "No Default gyroscope Available.");
         }
         // Check if rotation_sensor exists before trying to turn on the listener
         if (accelerometer != null){
-            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST, handler);
         } else {
             Log.e("SensorTesting", "No Default accelerometer Available.");
         }
         // Check if rotation_sensor exists before trying to turn on the listener
         if (accelerometer_uncalibrated != null){
-            sensorManager.registerListener(this, accelerometer_uncalibrated, SensorManager.SENSOR_DELAY_FASTEST);
+            sensorManager.registerListener(this, accelerometer_uncalibrated, SensorManager.SENSOR_DELAY_FASTEST, handler);
         } else {
             Log.e("SensorTesting", "No Default accelerometer_uncalibrated Available.");
         }
