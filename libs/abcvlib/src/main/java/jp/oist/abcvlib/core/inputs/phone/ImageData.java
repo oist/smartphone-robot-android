@@ -99,7 +99,7 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
             byte[] webpBytes = webpByteArrayOutputStream.toByteArray();
             Bitmap webpBitMap = ImageOps.generateBitmap(webpBytes);
 
-            if (timeStepDataBuffer != null){
+            if (isRecording()){
                 timeStepDataBuffer.getWriteData().getImageData().add(timestamp, width, height, webpBitMap, webpBytes);
             }
             if (imageDataListener != null){
