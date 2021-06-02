@@ -1,5 +1,7 @@
 package jp.oist.abcvlib.core.inputs.microcontroller;
 
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.util.Log;
 
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
@@ -44,9 +46,13 @@ public class WheelData implements AbcvlibInput {
 
     private final long[] timeStamps = new long[windowLength];
     private WheelDataListener wheelDataListener = null;
+    private final Handler handler;
 
     public WheelData(TimeStepDataBuffer timeStepDataBuffer){
         this.timeStepDataBuffer = timeStepDataBuffer;
+        HandlerThread mHandlerThread = new HandlerThread("wheelDataThread");
+        mHandlerThread.start();
+        handler = new Handler(mHandlerThread.getLooper());
     }
 
     /**
@@ -55,27 +61,29 @@ public class WheelData implements AbcvlibInput {
      * class is responsible for constantly reading the encoder values from the IOIOBoard.
      */
     public void onWheelDataUpdate(long timestamp, int countLeft, int countRight) {
+        WheelData wheelData = this;
+        handler.post(() -> {
+            int indexCurrent = (quadCount) % windowLength;
+            int indexPrevious = (quadCount - 1) % windowLength;
 
-        int indexCurrent = (quadCount) % windowLength;
-        int indexPrevious = (quadCount - 1) % windowLength;
+            encoderCountLeftWheel = countLeft;
+            encoderCountRightWheel = countRight;
+            timeStamps[indexCurrent] = timestamp;
+            dt_sample = (timeStamps[indexCurrent] - timeStamps[indexPrevious]) / 1000000000f;
+            setDistanceL();
+            setDistanceR();
+            setWheelSpeedL();
+            setWheelSpeedR();
 
-        encoderCountLeftWheel = countLeft;
-        encoderCountRightWheel = countRight;
-        timeStamps[indexCurrent] = timestamp;
-        dt_sample = (timeStamps[indexCurrent] - timeStamps[indexPrevious]) / 1000000000f;
-        setDistanceL();
-        setDistanceR();
-        setWheelSpeedL();
-        setWheelSpeedR();
+            if (isRecording){
+                timeStepDataBuffer.getWriteData().getWheelCounts().put(timestamp, countLeft, countRight);
+            }
+            if (wheelDataListener != null){
+                wheelDataListener.onWheelDataUpdate(timestamp, wheelData);
+            }
 
-        if (isRecording){
-            timeStepDataBuffer.getWriteData().getWheelCounts().put(timestamp, countLeft, countRight);
-        }
-        if (wheelDataListener != null){
-            wheelDataListener.onWheelDataUpdate(timestamp, this);
-        }
-
-        quadCount++;
+            quadCount++;
+        });
     }
 
     public void setWheelDataListener(WheelDataListener wheelDataListener) {
