@@ -13,5 +13,5 @@ public interface BatteryDataListener {
     /**
      * See {@link #onBatteryVoltageUpdate(double, long)} ()}
      */
-    void onChargerVoltageUpdate(double voltage, long timestamp);
+    void onChargerVoltageUpdate(double chargerVoltage, double coilVoltage, long timestamp);
 }

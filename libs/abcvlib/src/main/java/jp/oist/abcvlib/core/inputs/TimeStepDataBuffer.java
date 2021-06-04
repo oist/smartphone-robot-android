@@ -126,10 +126,12 @@ public class TimeStepDataBuffer {
 
         public static class ChargerData{
             ArrayList<Long> timestamps = new ArrayList<>();
-            ArrayList<Double> voltage = new ArrayList<>();
-            public void put(double _voltage){
+            ArrayList<Double> chargerVoltage = new ArrayList<>();
+            ArrayList<Double> coilVoltage = new ArrayList<>();
+            public void put(double _chargerVoltage, double _coilVoltage){
                 timestamps.add(System.nanoTime());
-                voltage.add(_voltage);
+                chargerVoltage.add(_chargerVoltage);
+                coilVoltage.add(_coilVoltage);
             }
             public long[] getTimeStamps(){
                 int size = timestamps.size();
@@ -139,11 +141,19 @@ public class TimeStepDataBuffer {
                 }
                 return timestampslong;
             }
-            public double[] getVoltage(){
-                int size = voltage.size();
+            public double[] getChargerVoltage(){
+                int size = chargerVoltage.size();
                 double[] voltageLong = new double[size];
                 for (int i=0 ; i < size ; i++){
-                    voltageLong[i] = voltage.get(i);
+                    voltageLong[i] = chargerVoltage.get(i);
+                }
+                return voltageLong;
+            }
+            public double[] getCoilVoltage(){
+                int size = coilVoltage.size();
+                double[] voltageLong = new double[size];
+                for (int i=0 ; i < size ; i++){
+                    voltageLong[i] = coilVoltage.get(i);
                 }
                 return voltageLong;
             }

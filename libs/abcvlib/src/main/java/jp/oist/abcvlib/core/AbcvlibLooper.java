@@ -215,6 +215,10 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      * Monitors external charger (usb or wirelss coil) voltage. Use this to detect on charge puck or not. (H/L)
      */
     private AnalogInput chargerVoltageMonitor;
+    /**
+     * Monitors wireless receiver coil voltage at coil (not after Qi regulator). Use this to detect on charge puck or not. (H/L)
+     */
+    private AnalogInput coilVoltageMonitor;
 
     //     --------------Pulse Width Modulation (PWM)----------------
     /**
@@ -367,8 +371,9 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         final int ENCODER_A_LEFT_WHEEL_PIN=15;
         final int ENCODER_B_LEFT_WHEEL_PIN=16;
         
-        final int CHARGER_VOLTAGE=33;
-        final int BATTERY_VOLTAGE=34;
+        final int CHARGER_VOLTAGE = 33;
+        final int BATTERY_VOLTAGE = 34;
+        final int COIL_VOLTAGE = 35;
 
         Log.v(TAG, "ioio_ state = " + ioio_.getState().toString());
 
@@ -382,6 +387,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
         batteryVoltageMonitor = ioio_.openAnalogInput(BATTERY_VOLTAGE);
         chargerVoltageMonitor = ioio_.openAnalogInput(CHARGER_VOLTAGE);
+        coilVoltageMonitor = ioio_.openAnalogInput(COIL_VOLTAGE);
 
         // This try-catch statement should likely be refined to handle common errors/exceptions
         try{
@@ -639,15 +645,17 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     private void updateChargerVoltage(){
 
         double chargerVoltage = 0;
+        double coilVoltage = 0;
 
         try {
             chargerVoltage = chargerVoltageMonitor.getVoltage();
+            coilVoltage = coilVoltageMonitor.getVoltage();
         } catch (InterruptedException e) {
             Log.e(TAG,"Error", e);
         } catch (ConnectionLostException e) {
             Log.e(TAG,"Error", e);
         }
-        batteryData.onChargerVoltageUpdate(chargerVoltage, timeStamp[indexCurrent]);
+        batteryData.onChargerVoltageUpdate(chargerVoltage, coilVoltage, timeStamp[indexCurrent]);
     }
 
     private void updateBatteryVoltage(){

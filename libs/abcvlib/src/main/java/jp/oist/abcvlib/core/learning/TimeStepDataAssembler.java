@@ -16,10 +16,6 @@ import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
-import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
-import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
-import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
-import jp.oist.abcvlib.core.inputs.phone.ImageData;
 import jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp;
 import jp.oist.abcvlib.core.learning.fbclasses.ChargerData;
 import jp.oist.abcvlib.core.learning.fbclasses.Episode;
@@ -143,7 +139,7 @@ public class TimeStepDataAssembler implements Runnable {
         int ts = WheelCounts.createTimestampsVector(builder,
                 timeStepDataBuffer.getReadData().getChargerData().getTimeStamps());
         int voltage = WheelCounts.createLeftVector(builder,
-                timeStepDataBuffer.getReadData().getChargerData().getVoltage());
+                timeStepDataBuffer.getReadData().getChargerData().getChargerVoltage());
         return ChargerData.createChargerData(builder, ts, voltage);
     }
 

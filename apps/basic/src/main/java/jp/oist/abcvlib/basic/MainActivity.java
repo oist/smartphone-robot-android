@@ -8,6 +8,7 @@ import android.widget.TextView;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.PermissionsListener;
@@ -18,6 +19,8 @@ import jp.oist.abcvlib.core.inputs.phone.ImageDataListener;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneDataListener;
 import jp.oist.abcvlib.core.inputs.phone.OrientationData;
 import jp.oist.abcvlib.core.inputs.phone.OrientationDataListener;
+import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
+import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 
 /**
  * Most basic Android application showing connection to IOIOBoard and Android Sensors
@@ -28,31 +31,14 @@ import jp.oist.abcvlib.core.inputs.phone.OrientationDataListener;
 public class MainActivity extends AbcvlibActivity implements PermissionsListener, BatteryDataListener,
         OrientationDataListener, WheelDataListener, MicrophoneDataListener, ImageDataListener {
 
-    TextView voltageBatt;
-    TextView voltageCharger;
-    TextView tiltAngle;
-    TextView angularVelocity;
-    TextView leftWheel;
-    TextView rightWheel;
-    TextView soundData;
-    TextView frameRateText;
-    long lastFrameTime;
-    DecimalFormat df = new DecimalFormat("#.00");
+    private long lastFrameTime = System.nanoTime();
+    private GuiUpdater guiUpdater;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         // Setup Android GUI object references such that we can write data to them later.
         setContentView(R.layout.activity_main);
-        voltageBatt = findViewById(R.id.voltageBattLevel);
-        voltageCharger = findViewById(R.id.voltageChargerLevel);
-        tiltAngle = findViewById(R.id.tiltAngle);
-        angularVelocity = findViewById(R.id.angularVelcoity);
-        leftWheel = findViewById(R.id.leftWheelCount);
-        rightWheel = findViewById(R.id.rightWheelCount);
-        soundData = findViewById(R.id.soundData);
-        frameRateText = findViewById(R.id.frameRate);
-        lastFrameTime = System.nanoTime();
 
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
@@ -82,18 +68,21 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
 
         getInputs().getMicrophoneData().setMicrophoneDataListener(this);
         getInputs().getMicrophoneData().start();
+        ScheduledExecutorServiceWithException executor = new ScheduledExecutorServiceWithException(1, new ProcessPriorityThreadFactory(Thread.MIN_PRIORITY, "GuiUpdates"));
+        guiUpdater = new GuiUpdater(this);
+        executor.scheduleAtFixedRate(guiUpdater, 0, 100, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public void onBatteryVoltageUpdate(double voltage, long timestamp) {
 //        Log.i(TAG, "Battery Update: Voltage=" + voltage + " Timestemp=" + timestamp);
-        runOnUiThread(() -> voltageBatt.setText(df.format(voltage)));
+        guiUpdater.batteryVoltage = voltage; // make volitile
+
     }
 
     @Override
-    public void onChargerVoltageUpdate(double voltage, long timestamp) {
+    public void onChargerVoltageUpdate(double chargerVoltage, double coilVoltage, long timestamp) {
 //        Log.i(TAG, "Charger Update: Voltage=" + voltage + " Timestemp=" + timestamp);
-        runOnUiThread(() -> voltageCharger.setText(df.format(voltage)));
     }
 
     @Override
@@ -104,11 +93,6 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
         // You can also convert them to degrees using the following static utility methods.
         double thetaDeg = OrientationData.getThetaDeg(thetaRad);
         double angularVelocityDeg = OrientationData.getAngularVelocityDeg(angularVelocityRad);
-        runOnUiThread(() -> {
-                    tiltAngle.setText(df.format(thetaDeg));
-                    angularVelocity.setText(df.format(angularVelocityDeg));
-                }
-        );
     }
 
     @Override
@@ -116,25 +100,14 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
 //        Log.i(TAG, "Wheel Data Update: Timestamp=" + timestamp + " countLeft=" + countLeft +
 //                " countRight=" + countRight);
 //        double distanceLeft = WheelData.countsToDistance(countLeft);
-        runOnUiThread(() -> {
-            String left = df.format(wheelData.getWheelCountL()) + " : " +
-                    df.format(wheelData.getDistanceL()) + " : " +
-                    df.format(wheelData.getWheelSpeedL_LP());
-            String right = df.format(wheelData.getWheelCountR()) + " : " +
-                    df.format(wheelData.getDistanceR()) + " : " +
-                    df.format(wheelData.getWheelSpeedR_LP());
-            leftWheel.setText(left);
-            rightWheel.setText(right);
-        });
     }
 
     @Override
     public void onMicrophoneDataUpdate(float[] audioData, int numSamples) {
         float[] arraySlice = Arrays.copyOfRange(audioData, 0, 9);
         String audioDataString = Arrays.toString(arraySlice);
-//        Log.i(TAG, "Microphone Data Update: First 10 Samples=" + audioDataString +
-//                 " of " + numSamples + " total samples");
-        runOnUiThread(() -> soundData.setText(audioDataString));
+////        Log.i(TAG, "Microphone Data Update: First 10 Samples=" + audioDataString +
+////                 " of " + numSamples + " total samples");
     }
 
     @Override
@@ -145,7 +118,6 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
         lastFrameTime = System.nanoTime();
         frameRate = Math.round(frameRate);
         String frameRateString = String.format(Locale.JAPAN,"%.0f", frameRate);
-        runOnUiThread(() -> frameRateText.setText(frameRateString));
     }
 }
 

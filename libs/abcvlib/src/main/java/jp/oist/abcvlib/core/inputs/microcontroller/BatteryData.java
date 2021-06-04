@@ -32,15 +32,15 @@ public class BatteryData implements AbcvlibInput {
         });
     }
 
-    public void onChargerVoltageUpdate(double voltage, long timestamp) {
+    public void onChargerVoltageUpdate(double chargerVoltage, double coilVoltage, long timestamp) {
         handler.post(new Runnable() {
             @Override
             public void run() {
                 if (isRecording){
-                    timeStepDataBuffer.getWriteData().getChargerData().put(voltage);
+                    timeStepDataBuffer.getWriteData().getChargerData().put(chargerVoltage, coilVoltage);
                 }
                 if (batteryDataListener != null){
-                    batteryDataListener.onChargerVoltageUpdate(voltage, timestamp);
+                    batteryDataListener.onChargerVoltageUpdate(chargerVoltage, coilVoltage, timestamp);
                 }
             }
         });
