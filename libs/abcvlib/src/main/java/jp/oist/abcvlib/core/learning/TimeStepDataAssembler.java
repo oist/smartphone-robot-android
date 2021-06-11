@@ -361,7 +361,7 @@ public class TimeStepDataAssembler implements Runnable {
 
     private void sendToServer(ByteBuffer episode, CyclicBarrier doneSignal) throws IOException {
         Log.d("SocketConnection", "New executor deployed creating new SocketConnectionManager");
-        if (inetSocketAddress != null){
+        if (inetSocketAddress != null && socketListener != null){
             executor.execute(new SocketConnectionManager(socketListener, inetSocketAddress, episode, doneSignal));
         }
     }
