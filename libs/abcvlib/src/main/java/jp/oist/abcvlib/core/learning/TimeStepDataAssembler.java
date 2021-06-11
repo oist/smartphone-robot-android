@@ -17,12 +17,14 @@ import java.util.concurrent.TimeUnit;
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 import jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp;
+import jp.oist.abcvlib.core.learning.fbclasses.BatteryData;
 import jp.oist.abcvlib.core.learning.fbclasses.ChargerData;
 import jp.oist.abcvlib.core.learning.fbclasses.Episode;
+import jp.oist.abcvlib.core.learning.fbclasses.IndividualWheelData;
 import jp.oist.abcvlib.core.learning.fbclasses.RobotAction;
 import jp.oist.abcvlib.core.learning.fbclasses.SoundData;
 import jp.oist.abcvlib.core.learning.fbclasses.TimeStep;
-import jp.oist.abcvlib.core.learning.fbclasses.WheelCounts;
+import jp.oist.abcvlib.core.learning.fbclasses.WheelData;
 import jp.oist.abcvlib.core.outputs.StepHandler;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
@@ -103,7 +105,7 @@ public class TimeStepDataAssembler implements Runnable {
 
     public void addTimeStep(){
 
-        int _wheelCounts = addWheelCounts();
+        int _wheelData = addWheelData();
         int _chargerData = addChargerData();
         int _batteryData = addBatteryData();
         int _soundData = addSoundData();
@@ -111,7 +113,7 @@ public class TimeStepDataAssembler implements Runnable {
         int _actionData = addActionData();
 
         TimeStep.startTimeStep(builder);
-        TimeStep.addWheelCounts(builder, _wheelCounts);
+        TimeStep.addWheelData(builder, _wheelData);
         TimeStep.addChargerData(builder, _chargerData);
         TimeStep.addBatteryData(builder, _batteryData);
         TimeStep.addSoundData(builder, _soundData);
@@ -121,24 +123,46 @@ public class TimeStepDataAssembler implements Runnable {
         timeStepVector[timeStepCount]  = ts;
     }
 
-    private int addWheelCounts(){
+    private int addWheelData(){
+        TimeStepDataBuffer.TimeStepData.WheelData.IndividualWheelData leftData =
+        timeStepDataBuffer.getReadData().getWheelData().getLeft();
         Log.v("flatbuff", "STEP wheelCount TimeStamps Length: " +
-                timeStepDataBuffer.getReadData().getWheelCounts().getTimeStamps().length);
-        int ts = WheelCounts.createTimestampsVector(builder,
-                timeStepDataBuffer.getReadData().getWheelCounts().getTimeStamps());
-        int left = WheelCounts.createLeftVector(builder,
-                timeStepDataBuffer.getReadData().getWheelCounts().getLeft());
-        int right = WheelCounts.createLeftVector(builder,
-                timeStepDataBuffer.getReadData().getWheelCounts().getRight());
-        return WheelCounts.createWheelCounts(builder, ts, left, right);
+                leftData.getTimeStamps().length);
+        int timeStampsLeft = IndividualWheelData.createTimestampsVector(builder,
+                leftData.getTimeStamps());
+        int countsLeft = IndividualWheelData.createCountsVector(builder,
+                leftData.getCounts());
+        int distancesLeft = IndividualWheelData.createDistancesVector(builder,
+                leftData.getDistances());
+        int speedsLeft = IndividualWheelData.createSpeedsVector(builder,
+                leftData.getSpeeds());
+        int leftOffset = IndividualWheelData.createIndividualWheelData(builder, timeStampsLeft,
+                countsLeft, distancesLeft, speedsLeft);
+
+        TimeStepDataBuffer.TimeStepData.WheelData.IndividualWheelData rightData =
+                timeStepDataBuffer.getReadData().getWheelData().getRight();
+        Log.v("flatbuff", "STEP wheelCount TimeStamps Length: " +
+                rightData.getTimeStamps().length);
+        int timeStampsRight = IndividualWheelData.createTimestampsVector(builder,
+                rightData.getTimeStamps());
+        int countsRight = IndividualWheelData.createCountsVector(builder,
+                rightData.getCounts());
+        int distancesRight = IndividualWheelData.createDistancesVector(builder,
+                rightData.getDistances());
+        int speedsRight = IndividualWheelData.createSpeedsVector(builder,
+                rightData.getSpeeds());
+        int rightOffset = IndividualWheelData.createIndividualWheelData(builder, timeStampsRight,
+                countsRight, distancesRight, speedsRight);
+
+        return WheelData.createWheelData(builder, leftOffset, rightOffset);
     }
 
     private int addChargerData(){
         Log.v("flatbuff", "STEP chargerData TimeStamps Length: " +
                 timeStepDataBuffer.getReadData().getChargerData().getTimeStamps().length);
-        int ts = WheelCounts.createTimestampsVector(builder,
+        int ts = ChargerData.createTimestampsVector(builder,
                 timeStepDataBuffer.getReadData().getChargerData().getTimeStamps());
-        int voltage = WheelCounts.createLeftVector(builder,
+        int voltage = ChargerData.createVoltageVector(builder,
                 timeStepDataBuffer.getReadData().getChargerData().getChargerVoltage());
         return ChargerData.createChargerData(builder, ts, voltage);
     }
@@ -146,9 +170,9 @@ public class TimeStepDataAssembler implements Runnable {
     private int addBatteryData(){
         Log.v("flatbuff", "STEP batteryData TimeStamps Length: " +
                 timeStepDataBuffer.getReadData().getBatteryData().getTimeStamps().length);
-        int ts = WheelCounts.createTimestampsVector(builder,
+        int ts = BatteryData.createTimestampsVector(builder,
                 timeStepDataBuffer.getReadData().getBatteryData().getTimeStamps());
-        int voltage = WheelCounts.createLeftVector(builder,
+        int voltage = BatteryData.createVoltageVector(builder,
                 timeStepDataBuffer.getReadData().getBatteryData().getVoltage());
         return ChargerData.createChargerData(builder, ts, voltage);
     }

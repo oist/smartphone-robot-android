@@ -15,8 +15,8 @@ public final class TimeStep extends Table {
   public void __init(int _i, ByteBuffer _bb) { __reset(_i, _bb); }
   public TimeStep __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
-  public jp.oist.abcvlib.core.learning.fbclasses.WheelCounts wheelCounts() { return wheelCounts(new jp.oist.abcvlib.core.learning.fbclasses.WheelCounts()); }
-  public jp.oist.abcvlib.core.learning.fbclasses.WheelCounts wheelCounts(jp.oist.abcvlib.core.learning.fbclasses.WheelCounts obj) { int o = __offset(4); return o != 0 ? obj.__assign(__indirect(o + bb_pos), bb) : null; }
+  public jp.oist.abcvlib.core.learning.fbclasses.WheelData wheelData() { return wheelData(new jp.oist.abcvlib.core.learning.fbclasses.WheelData()); }
+  public jp.oist.abcvlib.core.learning.fbclasses.WheelData wheelData(jp.oist.abcvlib.core.learning.fbclasses.WheelData obj) { int o = __offset(4); return o != 0 ? obj.__assign(__indirect(o + bb_pos), bb) : null; }
   public jp.oist.abcvlib.core.learning.fbclasses.ChargerData chargerData() { return chargerData(new jp.oist.abcvlib.core.learning.fbclasses.ChargerData()); }
   public jp.oist.abcvlib.core.learning.fbclasses.ChargerData chargerData(jp.oist.abcvlib.core.learning.fbclasses.ChargerData obj) { int o = __offset(6); return o != 0 ? obj.__assign(__indirect(o + bb_pos), bb) : null; }
   public jp.oist.abcvlib.core.learning.fbclasses.BatteryData batteryData() { return batteryData(new jp.oist.abcvlib.core.learning.fbclasses.BatteryData()); }
@@ -29,7 +29,7 @@ public final class TimeStep extends Table {
   public jp.oist.abcvlib.core.learning.fbclasses.RobotAction actions(jp.oist.abcvlib.core.learning.fbclasses.RobotAction obj) { int o = __offset(14); return o != 0 ? obj.__assign(__indirect(o + bb_pos), bb) : null; }
 
   public static int createTimeStep(FlatBufferBuilder builder,
-      int wheel_countsOffset,
+      int wheel_dataOffset,
       int charger_dataOffset,
       int battery_dataOffset,
       int image_dataOffset,
@@ -41,12 +41,12 @@ public final class TimeStep extends Table {
     TimeStep.addImageData(builder, image_dataOffset);
     TimeStep.addBatteryData(builder, battery_dataOffset);
     TimeStep.addChargerData(builder, charger_dataOffset);
-    TimeStep.addWheelCounts(builder, wheel_countsOffset);
+    TimeStep.addWheelData(builder, wheel_dataOffset);
     return TimeStep.endTimeStep(builder);
   }
 
   public static void startTimeStep(FlatBufferBuilder builder) { builder.startTable(6); }
-  public static void addWheelCounts(FlatBufferBuilder builder, int wheelCountsOffset) { builder.addOffset(0, wheelCountsOffset, 0); }
+  public static void addWheelData(FlatBufferBuilder builder, int wheelDataOffset) { builder.addOffset(0, wheelDataOffset, 0); }
   public static void addChargerData(FlatBufferBuilder builder, int chargerDataOffset) { builder.addOffset(1, chargerDataOffset, 0); }
   public static void addBatteryData(FlatBufferBuilder builder, int batteryDataOffset) { builder.addOffset(2, batteryDataOffset, 0); }
   public static void addImageData(FlatBufferBuilder builder, int imageDataOffset) { builder.addOffset(3, imageDataOffset, 0); }
