@@ -76,7 +76,8 @@ public class WheelData implements AbcvlibInput {
             setWheelSpeedR();
 
             if (isRecording){
-                timeStepDataBuffer.getWriteData().getWheelCounts().put(timestamp, countLeft, countRight);
+                timeStepDataBuffer.getWriteData().getWheelData().getLeft().put(timestamp, countLeft, distanceL, speedLeftWheelLP);
+                timeStepDataBuffer.getWriteData().getWheelData().getRight().put(timestamp, countRight, distanceR, speedRightWheelLP);
             }
             if (wheelDataListener != null){
                 wheelDataListener.onWheelDataUpdate(timestamp, countLeft, countRight,

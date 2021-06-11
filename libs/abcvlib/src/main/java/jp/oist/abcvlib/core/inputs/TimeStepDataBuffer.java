@@ -54,7 +54,7 @@ public class TimeStepDataBuffer {
     public TimeStepData getReadData(){return readData;}
 
     public static class TimeStepData{
-        private WheelCounts wheelCounts;
+        private WheelData wheelData;
         private ChargerData chargerData;
         private BatteryData batteryData;
         private ImageData imageData;
@@ -63,7 +63,7 @@ public class TimeStepDataBuffer {
         private OrientationData orientationData;
 
         public TimeStepData(){
-            wheelCounts = new WheelCounts();
+            wheelData = new WheelData();
             chargerData = new ChargerData();
             batteryData = new BatteryData();
             imageData = new ImageData();
@@ -72,7 +72,7 @@ public class TimeStepDataBuffer {
             orientationData = new OrientationData();
         }
 
-        public WheelCounts getWheelCounts(){return wheelCounts;}
+        public WheelData getWheelData(){return wheelData;}
         public ChargerData getChargerData(){return chargerData;}
         public BatteryData getBatteryData(){return batteryData;}
         public ImageData getImageData(){return imageData;}
@@ -81,7 +81,7 @@ public class TimeStepDataBuffer {
         public OrientationData getOrientationData(){return orientationData;}
 
         public void clear(){
-            wheelCounts = new WheelCounts();
+            wheelData = new WheelData();
             chargerData = new ChargerData();
             batteryData = new BatteryData();
             imageData = new ImageData();
@@ -89,38 +89,65 @@ public class TimeStepDataBuffer {
             actions = new RobotAction();
         }
 
-        public static class WheelCounts{
-            ArrayList<Long> timestamps = new ArrayList<>();
-            ArrayList<Double> left = new ArrayList<>();
-            ArrayList<Double> right = new ArrayList<>();
-            public void put(long timestamp, double _left, double _right){
-                timestamps.add(timestamp);
-                left.add(_left);
-                right.add(_right);
-            }
-            public long[] getTimeStamps(){
-                int size = timestamps.size();
-                long[] timestampslong = new long[size];
-                for (int i=0 ; i < size ; i++){
-                    timestampslong[i] = timestamps.get(i);
+        public static class WheelData {
+            IndividualWheelData left = new IndividualWheelData();
+            IndividualWheelData right = new IndividualWheelData();
+
+            public static class IndividualWheelData {
+                ArrayList<Long> timestamps = new ArrayList<>();
+                ArrayList<Integer> counts = new ArrayList<>();
+                ArrayList<Double> distances = new ArrayList<>();
+                ArrayList<Double> speeds = new ArrayList<>();
+
+                public void put(long timestamp, int count, double distance, double speed){
+                    timestamps.add(timestamp);
+                    counts.add(count);
+                    distances.add(distance);
+                    speeds.add(speed);
                 }
-                return timestampslong;
-            }
-            public double[] getLeft(){
-                int size = left.size();
-                double[] leftLong = new double[size];
-                for (int i=0 ; i < size ; i++){
-                    leftLong[i] = left.get(i);
+                public long[] getTimeStamps(){
+                    int size = timestamps.size();
+                    long[] timestampslong = new long[size];
+                    for (int i=0 ; i < size ; i++){
+                        timestampslong[i] = timestamps.get(i);
+                    }
+                    return timestampslong;
                 }
-                return leftLong;
-            }
-            public double[] getRight(){
-                int size = right.size();
-                double[] rightLong = new double[size];
-                for (int i=0 ; i < size ; i++){
-                    rightLong[i] = right.get(i);
+
+                public int[] getCounts(){
+                    int size = counts.size();
+                    int[] countsArray = new int[size];
+                    for (int i=0 ; i < size ; i++){
+                        countsArray[i] = counts.get(i);
+                    }
+                    return countsArray;
                 }
-                return rightLong;
+
+                public double[] getDistances(){
+                    int size = distances.size();
+                    double[] distancesArray = new double[size];
+                    for (int i=0 ; i < size ; i++){
+                        distancesArray[i] = distances.get(i);
+                    }
+                    return distancesArray;
+                }
+
+                public double[] getSpeeds(){
+                    int size = speeds.size();
+                    double[] speedsArray = new double[size];
+                    for (int i=0 ; i < size ; i++){
+                        speedsArray[i] = speeds.get(i);
+                    }
+                    return speedsArray;
+                }
+            }
+
+            public IndividualWheelData getLeft() {
+                return left;
+            }
+
+            public IndividualWheelData getRight() {
+                return right;
             }
         }
 
