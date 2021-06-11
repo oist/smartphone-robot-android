@@ -79,7 +79,8 @@ public class WheelData implements AbcvlibInput {
                 timeStepDataBuffer.getWriteData().getWheelCounts().put(timestamp, countLeft, countRight);
             }
             if (wheelDataListener != null){
-                wheelDataListener.onWheelDataUpdate(timestamp, wheelData);
+                wheelDataListener.onWheelDataUpdate(timestamp, countLeft, countRight,
+                distanceL, distanceR, speedLeftWheelLP, speedRightWheelLP);
             }
 
             quadCount++;

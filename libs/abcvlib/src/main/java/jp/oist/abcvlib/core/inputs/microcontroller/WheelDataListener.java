@@ -9,5 +9,7 @@ public interface WheelDataListener {
      * for details on looper}
      * @param timestamp in nanoseconds see {@link java.lang.System#nanoTime()}
      */
-    void onWheelDataUpdate(long timestamp, WheelData wheelData);
+    void onWheelDataUpdate(long timestamp, int wheelCountL, int wheelCountR,
+                           double wheelDistanceL, double wheelDistanceR,
+                           double wheelSpeedL, double wheelSpeedR);
 }

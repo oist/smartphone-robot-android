@@ -177,11 +177,13 @@ public class BalancePIDController extends AbcvlibController implements WheelData
 
 
     @Override
-    public void onWheelDataUpdate(long timestamp, WheelData wheelData) {
+    public void onWheelDataUpdate(long timestamp, int wheelCountL, int wheelCountR,
+                                  double wheelDistanceL, double wheelDistanceR,
+                                  double wheelSpeedL, double wheelSpeedR) {
         this.timestamp = timestamp;
-        speedL = wheelData.getWheelSpeedL_LP();
-        speedR = wheelData.getWheelSpeedR_LP();
-        wheelData.setExpWeight(expWeight);
+        speedL = wheelSpeedL;
+        speedR = wheelSpeedR;
+//        wheelData.setExpWeight(expWeight); // todo enable access to this in GUI somehow
     }
 
     @Override

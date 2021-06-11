@@ -5,7 +5,7 @@ android {
     compileSdkVersion 30
 
     defaultConfig {
-        applicationId "jp.oist.abcvlib.basic"
+        applicationId "jp.oist.abcvlib.basicsubscriber"
         minSdkVersion 24
         targetSdkVersion 30
         versionCode 1

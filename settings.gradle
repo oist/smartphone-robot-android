@@ -5,7 +5,7 @@ def androidLibs = [
 gradle.ext.androidLibs = androidLibs
 
 def apps = [
-        'basic',
+        'basicSubscriber',
         'camera',
         'backAndForth',
         'pidbalancer',
