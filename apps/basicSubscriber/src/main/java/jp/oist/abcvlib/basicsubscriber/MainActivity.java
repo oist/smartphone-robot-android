@@ -3,7 +3,9 @@ package jp.oist.abcvlib.basicsubscriber;
 import android.Manifest;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.util.Log;
 
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -129,10 +131,15 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
      */
     @Override
     public void onMicrophoneDataUpdate(float[] audioData, int numSamples) {
-        float[] arraySlice = Arrays.copyOfRange(audioData, 0, 9);
-        ////        Log.i(TAG, "Microphone Data Update: First 10 Samples=" + audioDataString +
-////                 " of " + numSamples + " total samples");
-        guiUpdater.audioDataString = Arrays.toString(arraySlice);
+        float[] arraySlice = Arrays.copyOfRange(audioData, 0, 5);
+        DecimalFormat df = new DecimalFormat("0.#E0");
+        String arraySliceString = "";
+        for (double v : arraySlice) {
+            arraySliceString = arraySliceString.concat(df.format(v)) + ", ";
+        }
+//        Log.i("MainActivity", "Microphone Data Update: First 10 Samples=" + arraySliceString +
+//                " of " + numSamples + " total samples");
+        guiUpdater.audioDataString = arraySliceString;
     }
 
     /**

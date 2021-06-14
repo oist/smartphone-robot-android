@@ -4,6 +4,7 @@ import android.Manifest;
 import android.os.Bundle;
 import android.util.Log;
 
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -80,77 +81,74 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
 
     @Override
     public void onPermissionsGranted(){
-        ScheduledExecutorServiceWithException executor = new ScheduledExecutorServiceWithException(1, new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "AssemblerInit"));
+// Defining custom actions
+        CommActionSet commActionSet = new CommActionSet(3);
+        commActionSet.addCommAction("action1", (byte) 0); // I'm just overwriting an existing to show how
+        commActionSet.addCommAction("action2", (byte) 1);
+        commActionSet.addCommAction("action3", (byte) 2);
 
-        executor.execute(() -> {
-            // Defining custom actions
-            CommActionSet commActionSet = new CommActionSet(3);
-            commActionSet.addCommAction("action1", (byte) 0); // I'm just overwriting an existing to show how
-            commActionSet.addCommAction("action2", (byte) 1);
-            commActionSet.addCommAction("action3", (byte) 2);
+        MotionActionSet motionActionSet = new MotionActionSet(5);
+        motionActionSet.addMotionAction("stop", (byte) 0, 0, 0); // I'm just overwriting an existing to show how
+        motionActionSet.addMotionAction("forward", (byte) 1, 100, 100);
+        motionActionSet.addMotionAction("backward", (byte) 2, -100, 100);
+        motionActionSet.addMotionAction("left", (byte) 3, -100, 100);
+        motionActionSet.addMotionAction("right", (byte) 4, 100, -100);
 
-            MotionActionSet motionActionSet = new MotionActionSet(5);
-            motionActionSet.addMotionAction("stop", (byte) 0, 0, 0); // I'm just overwriting an existing to show how
-            motionActionSet.addMotionAction("forward", (byte) 1, 100, 100);
-            motionActionSet.addMotionAction("backward", (byte) 2, -100, 100);
-            motionActionSet.addMotionAction("left", (byte) 3, -100, 100);
-            motionActionSet.addMotionAction("right", (byte) 4, 100, -100);
+        maxTimeStepCount = 30;
+        maxEpisodeCount = 3;
 
-            maxTimeStepCount = 30;
-            maxEpisodeCount = 3;
+        myStepHandler = new StepHandler.StepHandlerBuilder()
+                .setTimeStepLength(100)
+                .setMaxTimeStepCount(maxTimeStepCount)
+                .setMaxEpisodeCount(maxEpisodeCount)
+                .setMaxReward(100000)
+                .setMotionActionSet(motionActionSet)
+                .setCommActionSet(commActionSet)
+                .setActionSelector(this)
+                .build();
 
-            myStepHandler = new StepHandler.StepHandlerBuilder()
-                    .setTimeStepLength(100)
-                    .setMaxTimeStepCount(maxTimeStepCount)
-                    .setMaxEpisodeCount(maxEpisodeCount)
-                    .setMaxReward(100000)
-                    .setMotionActionSet(motionActionSet)
-                    .setCommActionSet(commActionSet)
-                    .setActionSelector(this)
-                    .build();
+        // Initialize an ArrayList of AbcvlibInputs that you want the TimeStepDataAssembler to gather data for
+        ArrayList<AbcvlibInput> inputs = new ArrayList<>();
 
-            // Initialize an ArrayList of AbcvlibInputs that you want the TimeStepDataAssembler to gather data for
-            ArrayList<AbcvlibInput> inputs = new ArrayList<>();
+        // reusing the same timeStepDataBuffer shared by all. You could alternatively create a new
+        // one or extend it in another class.
+        BatteryData batteryData = new BatteryData(this.getInputs().getTimeStepDataBuffer());
+        WheelData wheelData = new WheelData(this.getInputs().getTimeStepDataBuffer());
+        OrientationData orientationData = new OrientationData(
+                this.getInputs().getTimeStepDataBuffer(), this);
 
-            // reusing the same timeStepDataBuffer shared by all. You could alternatively create a new
-            // one or extend it in another class.
-            BatteryData batteryData = new BatteryData(this.getInputs().getTimeStepDataBuffer());
-            WheelData wheelData = new WheelData(this.getInputs().getTimeStepDataBuffer());
-            OrientationData orientationData = new OrientationData(
-                    this.getInputs().getTimeStepDataBuffer(), this);
+        // Get local reference to MicrophoneData and start the record buffer (within MicrophoneData Class)
+        MicrophoneData microphoneData = getInputs().getMicrophoneData();
+        microphoneData.start();
 
-            // Get local reference to MicrophoneData and start the record buffer (within MicrophoneData Class)
-            MicrophoneData microphoneData = getInputs().getMicrophoneData();
-            microphoneData.start();
+        ImageData imageData = getInputs().getImageData();
+        imageData.setPreviewView(findViewById(R.id.camera_x_preview));
+        imageData.startCamera(this, this);
 
-            ImageData imageData = getInputs().getImageData();
-            imageData.setPreviewView(findViewById(R.id.camera_x_preview));
-            CountDownLatch latch = new CountDownLatch(1);
-            runOnUiThread(() -> {
-                imageData.startCamera(this, this, latch);
-            });
+        // Add all data inputs to the array list
+        inputs.add(batteryData);
+        inputs.add(wheelData);
+        inputs.add(orientationData);
+        inputs.add(microphoneData);
+        inputs.add(imageData);
 
-            try {
-                latch.await();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        /* Overwrites the default instances used by the subscriber architecture. If you don't do
+         * this AbcvlibLooper will not refer to the correct instance and IOIO sensor data will not
+         * be updated
+        */
+        try {
+            getInputs().overwriteDefaults(inputs);
+        } catch (ClassNotFoundException e) {
+            ErrorHandler.eLog(TAG, "", e, true);
+        }
 
-            // Add all data inputs to the array list
-            inputs.add(batteryData);
-            inputs.add(wheelData);
-            inputs.add(orientationData);
-            inputs.add(microphoneData);
-            inputs.add(imageData);
-
-            // Pass your inputs list to a new instance of TimeStepDataAssember along with all other references
-            TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler(inputs, myStepHandler, null, null, getInputs().getTimeStepDataBuffer());
-            try {
-                timeStepDataAssembler.startGatherers();
-            } catch (RecordingWithoutTimeStepBufferException e) {
-                ErrorHandler.eLog(TAG, "", e, true);
-            }
-        });
+        // Pass your inputs list to a new instance of TimeStepDataAssember along with all other references
+        TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler(inputs, myStepHandler, null, null, getInputs().getTimeStepDataBuffer());
+        try {
+            timeStepDataAssembler.startGatherers();
+        } catch (RecordingWithoutTimeStepBufferException e) {
+            ErrorHandler.eLog(TAG, "", e, true);
+        }
     }
 
     @Override
@@ -215,10 +213,10 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
             guiUpdater.audioDataString = arraySliceString;
         }
         if (data.getImageData().getImages().size() > 1){
-            double frameRate = (data.getImageData().getImages().get(1).getTimestamp() -
-                    data.getImageData().getImages().get(0).getTimestamp()) / 1000000000.0 ; // just taking difference between two but one could do an average over all differences
-            frameRate = Math.round(frameRate);
-            guiUpdater.frameRateString = String.format(Locale.JAPAN,"%.0f", frameRate);
+            double frameRate = 1.0 / ((data.getImageData().getImages().get(1).getTimestamp() -
+                    data.getImageData().getImages().get(0).getTimestamp()) / 1000000000.0) ; // just taking difference between two but one could do an average over all differences
+            DecimalFormat df = new DecimalFormat("#.0000000000000");
+            guiUpdater.frameRateString = df.format(frameRate);
         }
     }
 }

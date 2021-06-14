@@ -9,6 +9,7 @@ import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.phone.ImageData;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
 import jp.oist.abcvlib.core.inputs.phone.OrientationData;
+import jp.oist.abcvlib.util.ErrorHandler;
 
 public class Inputs {
 
@@ -83,5 +84,25 @@ public class Inputs {
 
     public void setWheelData(WheelData wheelData) {
         this.wheelData = wheelData;
+    }
+
+    public void overwriteDefaults(ArrayList<AbcvlibInput> inputs) throws ClassNotFoundException {
+        for (AbcvlibInput input : inputs){
+            if (input.getClass() == BatteryData.class){
+                setBatteryData((BatteryData) input);
+            }else if (input.getClass() == WheelData.class){
+                setWheelData((WheelData) input);
+            }else if (input.getClass() == OrientationData.class){
+                setOrientationData((OrientationData) input);
+            }else if (input.getClass() == MicrophoneData.class){
+                setMicrophoneData((MicrophoneData) input);
+            }else if (input.getClass() == ImageData.class){
+                setImageData((ImageData) input);
+            }else{
+                throw new ClassNotFoundException("Unrecognized input type in ArrayList. " +
+                        "Must be of type BatteryData, WheelData, OrientationData, MicrophoneData, " +
+                        "or ImageData. A ");
+            }
+        }
     }
 }

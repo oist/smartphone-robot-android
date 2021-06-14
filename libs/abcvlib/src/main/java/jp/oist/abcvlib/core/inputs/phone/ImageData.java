@@ -138,7 +138,7 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
         this.imageAnalysis = imageAnalysis;
     }
 
-    public void startCamera(Context context, LifecycleOwner lifecycleOwner, CountDownLatch latch) {
+    public void startCamera(Context context, LifecycleOwner lifecycleOwner) {
         ExecutorService imageExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "imageAnalysis"));
         if (imageAnalysis == null && previewView == null){
             throw new UnsupportedOperationException("Either setImageAnalysis or setPreviewView must be called prior to calling the startCamera method");
@@ -154,7 +154,7 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
                 mCameraProviderFuture.addListener(() -> {
                     try {
                         cameraProvider = mCameraProviderFuture.get();
-                        bindAll(cameraProvider, lifecycleOwner, latch);
+                        bindAll(cameraProvider, lifecycleOwner);
                     } catch (ExecutionException | InterruptedException e) {
                         ErrorHandler.eLog(TAG, "Unexpected Error", e, true);
                     }
@@ -163,8 +163,7 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
         }
     }
 
-    private void bindAll(@NonNull ProcessCameraProvider cameraProvider, LifecycleOwner lifecycleOwner,
-                         CountDownLatch latch) {
+    private void bindAll(@NonNull ProcessCameraProvider cameraProvider, LifecycleOwner lifecycleOwner) {
         Preview preview = new Preview.Builder()
                 .build();
         CameraSelector cameraSelector = new CameraSelector.Builder()
@@ -178,7 +177,6 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
             camera = cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, preview);
         }
         preview.setSurfaceProvider(previewView.getSurfaceProvider());
-        latch.countDown();
     }
 
     public synchronized void setRecording(boolean recording) throws RecordingWithoutTimeStepBufferException {

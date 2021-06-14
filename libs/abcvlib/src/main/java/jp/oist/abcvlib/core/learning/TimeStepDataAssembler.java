@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 import jp.oist.abcvlib.core.inputs.phone.ImageData;
+import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
 import jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp;
 import jp.oist.abcvlib.core.learning.fbclasses.BatteryData;
 import jp.oist.abcvlib.core.learning.fbclasses.ChargerData;
@@ -287,9 +288,6 @@ public class TimeStepDataAssembler implements Runnable {
         for (AbcvlibInput input:inputs){
             if (input != null){
                 input.setRecording(false);
-                if (input.getClass() == ImageData.class){
-                    ((ImageData) input).getImageAnalysis().clearAnalyzer();
-                }
             }
         }
         myStepHandler.setTimeStep(0);
@@ -380,7 +378,13 @@ public class TimeStepDataAssembler implements Runnable {
     private void endTrail() throws RecordingWithoutTimeStepBufferException {
         Log.i(TAG, "Need to handle end of trail here");
         stopRecordingData();
-//        microphoneData.close();
+        for (AbcvlibInput input:inputs){
+            if (input.getClass() == ImageData.class){
+                ((ImageData) input).getImageAnalysis().clearAnalyzer();
+            }else if (input.getClass() == MicrophoneData.class){
+                ((MicrophoneData) input).close();
+            }
+        }
     }
 
     private void sendToServer(ByteBuffer episode, CyclicBarrier doneSignal) throws IOException, BrokenBarrierException, InterruptedException {
