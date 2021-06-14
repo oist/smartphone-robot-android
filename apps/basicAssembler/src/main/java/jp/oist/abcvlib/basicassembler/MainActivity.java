@@ -201,7 +201,7 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
             guiUpdater.wheelDistanceL = data.getWheelData().getLeft().getDistances()[0];
             guiUpdater.wheelDistanceR = data.getWheelData().getRight().getDistances()[0];
             guiUpdater.wheelSpeedL = data.getWheelData().getLeft().getSpeeds()[0];
-            guiUpdater.wheelSpeedR = data.getWheelData().getLeft().getSpeeds()[0];
+            guiUpdater.wheelSpeedR = data.getWheelData().getRight().getSpeeds()[0];
         }
         if (data.getSoundData().getLevels().length > 0){
             float[] arraySlice = Arrays.copyOfRange(data.getSoundData().getLevels(), 0, 5);
