@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
+import jp.oist.abcvlib.core.inputs.phone.ImageData;
 import jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp;
 import jp.oist.abcvlib.core.learning.fbclasses.BatteryData;
 import jp.oist.abcvlib.core.learning.fbclasses.ChargerData;
@@ -35,12 +36,9 @@ import jp.oist.abcvlib.util.SocketListener;
 
 public class TimeStepDataAssembler implements Runnable {
 
-    private int timeStepCount = 0;
-    private final int maxTimeStepCount;
     private FlatBufferBuilder builder;
     private int[] timeStepVector;
     private StepHandler myStepHandler;
-    private int episodeCount = 0;
     private TimeStepDataBuffer timeStepDataBuffer;
     private String TAG = getClass().toString();
     private boolean pauseRecording = false;
@@ -66,8 +64,7 @@ public class TimeStepDataAssembler implements Runnable {
         executor = new ScheduledExecutorServiceWithException(threads, new ProcessPriorityThreadFactory(1, "dataGatherer"));
 
         this.myStepHandler = myStepHandler;
-        this.maxTimeStepCount = myStepHandler.getMaxTimeStepCount();
-        timeStepVector = new int[maxTimeStepCount + 1];
+        timeStepVector = new int[myStepHandler.getMaxTimeStepCount() + 1];
 
         startEpisode();
     }
@@ -122,7 +119,7 @@ public class TimeStepDataAssembler implements Runnable {
         TimeStep.addImageData(builder, _imageData);
         TimeStep.addActions(builder, _actionData);
         int ts = TimeStep.endTimeStep(builder);
-        timeStepVector[timeStepCount]  = ts;
+        timeStepVector[myStepHandler.getTimeStep()]  = ts;
     }
 
     private int addWheelData(){
@@ -217,7 +214,7 @@ public class TimeStepDataAssembler implements Runnable {
         int numOfImages = imageData.getImages().size();
 
         Log.v("flatbuff", numOfImages + " images gathered");
-        Log.v("flatbuff", "Step:" + timeStepCount);
+        Log.v("flatbuff", "Step:" + myStepHandler.getTimeStep());
 
         int[] _images = new int[numOfImages];
 
@@ -257,7 +254,7 @@ public class TimeStepDataAssembler implements Runnable {
 
         // Choose action wte based on current timestep data
         if (myStepHandler != null){
-            ActionSet actionSet = myStepHandler.forward(timeStepDataBuffer.getWriteData(), timeStepCount);
+            ActionSet actionSet = myStepHandler.forward(timeStepDataBuffer.getWriteData());
         }
 
         Log.v("SocketConnection", "Running TimeStepAssembler Run Method");
@@ -268,7 +265,7 @@ public class TimeStepDataAssembler implements Runnable {
         // Add timestep and return int representing offset in flatbuffer
         addTimeStep();
 
-        timeStepCount++;
+        myStepHandler.incrementTimeStep();
 
         // If some criteria met, end episode.
         if (myStepHandler.isLastTimestep()){
@@ -290,9 +287,12 @@ public class TimeStepDataAssembler implements Runnable {
         for (AbcvlibInput input:inputs){
             if (input != null){
                 input.setRecording(false);
+                if (input.getClass() == ImageData.class){
+                    ((ImageData) input).getImageAnalysis().clearAnalyzer();
+                }
             }
         }
-        timeStepCount = 0;
+        myStepHandler.setTimeStep(0);
         if (myStepHandler != null) {
             myStepHandler.setLastTimestep(false);
         }
@@ -302,7 +302,7 @@ public class TimeStepDataAssembler implements Runnable {
     // End episode after some reward has been acheived or maxtimesteps has been reached
     public void endEpisode() throws BrokenBarrierException, InterruptedException, IOException, RecordingWithoutTimeStepBufferException {
 
-        Log.d("SocketConnections", "End of episode:" + episodeCount);
+        Log.d("SocketConnections", "End of episode:" + myStepHandler.getEpisodeCount());
 
         int ts = Episode.createTimestepsVector(builder, timeStepVector); //todo I think I need to add each timestep when it is generated rather than all at once? Is this the leak?
         Episode.startEpisode(builder);
@@ -315,6 +315,7 @@ public class TimeStepDataAssembler implements Runnable {
 
         // Stop all gathering threads momentarily.
         stopRecordingData();
+        myStepHandler.incrementEpisodeCount();
         timeStepDataBuffer.nextTimeStep();
 
 //             The following is just to check the contents of the flatbuffer prior to sending to the server.
@@ -353,8 +354,6 @@ public class TimeStepDataAssembler implements Runnable {
 
         startGatherers();
 
-        episodeCount++;
-
         // Wait for transfer to server and return message received
 
 //            Log.i("flatbuff", "prior to getting msg from server");
@@ -380,15 +379,22 @@ public class TimeStepDataAssembler implements Runnable {
 
     private void endTrail() throws RecordingWithoutTimeStepBufferException {
         Log.i(TAG, "Need to handle end of trail here");
-        episodeCount = 0;
         stopRecordingData();
 //        microphoneData.close();
     }
 
-    private void sendToServer(ByteBuffer episode, CyclicBarrier doneSignal) throws IOException {
+    private void sendToServer(ByteBuffer episode, CyclicBarrier doneSignal) throws IOException, BrokenBarrierException, InterruptedException {
         Log.d("SocketConnection", "New executor deployed creating new SocketConnectionManager");
         if (inetSocketAddress != null && socketListener != null){
             executor.execute(new SocketConnectionManager(socketListener, inetSocketAddress, episode, doneSignal));
+        }else {
+            executor.execute(() -> {
+                try {
+                    doneSignal.await();
+                } catch (BrokenBarrierException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
         }
     }
 }

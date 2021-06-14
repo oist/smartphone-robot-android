@@ -8,6 +8,7 @@ import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 public class StepHandler {
     private final int timeStepLength;
     private final int maxTimeStepCount;
+    private int timeStep = 0;
     private boolean lastEpisode = false; // Use to trigger MainActivity to stop generating episodes
     private boolean lastTimestep = false; // Use to trigger MainActivity to stop generating timesteps for a single episode
     private int reward = 0;
@@ -82,8 +83,8 @@ public class StepHandler {
         }
     }
 
-    public ActionSet forward(TimeStepDataBuffer.TimeStepData data, int timeStepCount){
-        return this.actionSelector.forward(data, timeStepCount);
+    public ActionSet forward(TimeStepDataBuffer.TimeStepData data){
+        return this.actionSelector.forward(data);
     }
 
     public int getTimeStepLength() {
@@ -94,12 +95,16 @@ public class StepHandler {
         return episodeCount;
     }
 
+    public int getTimeStep() {
+        return timeStep;
+    }
+
     public boolean isLastEpisode() {
-        return lastEpisode;
+        return (episodeCount >= maxEpisodecount) | lastEpisode;
     }
 
     public boolean isLastTimestep() {
-        return lastTimestep;
+        return (timeStep >= maxTimeStepCount) | lastTimestep;
     }
 
     public int getMaxEpisodecount() {
@@ -119,7 +124,13 @@ public class StepHandler {
     }
 
     public void incrementEpisodeCount() {
-        this.episodeCount = episodeCount++;
+        episodeCount++;
+    }
+
+    public void incrementTimeStep(){timeStep++;}
+
+    public void setTimeStep(int timeStep) {
+        this.timeStep = timeStep;
     }
 
     public void setLastEpisode(boolean lastEpisode) {

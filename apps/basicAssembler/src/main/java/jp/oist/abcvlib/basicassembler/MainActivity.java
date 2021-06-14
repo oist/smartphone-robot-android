@@ -8,6 +8,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
@@ -57,6 +58,7 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
     private String TAG = getClass().getName();
     private int reward = 0;
     private int maxTimeStepCount;
+    private int maxEpisodeCount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,67 +80,81 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
 
     @Override
     public void onPermissionsGranted(){
-        // Defining custom actions
-        CommActionSet commActionSet = new CommActionSet(3);
-        commActionSet.addCommAction("action1", (byte) 0); // I'm just overwriting an existing to show how
-        commActionSet.addCommAction("action2", (byte) 1);
-        commActionSet.addCommAction("action3", (byte) 2);
+        ScheduledExecutorServiceWithException executor = new ScheduledExecutorServiceWithException(1, new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "AssemblerInit"));
 
-        MotionActionSet motionActionSet = new MotionActionSet(5);
-        motionActionSet.addMotionAction("stop", (byte) 0, 0, 0); // I'm just overwriting an existing to show how
-        motionActionSet.addMotionAction("forward", (byte) 1, 100, 100);
-        motionActionSet.addMotionAction("backward", (byte) 2, -100, 100);
-        motionActionSet.addMotionAction("left", (byte) 3, -100, 100);
-        motionActionSet.addMotionAction("right", (byte) 4, 100, -100);
+        executor.execute(() -> {
+            // Defining custom actions
+            CommActionSet commActionSet = new CommActionSet(3);
+            commActionSet.addCommAction("action1", (byte) 0); // I'm just overwriting an existing to show how
+            commActionSet.addCommAction("action2", (byte) 1);
+            commActionSet.addCommAction("action3", (byte) 2);
 
-        maxTimeStepCount = 1000;
+            MotionActionSet motionActionSet = new MotionActionSet(5);
+            motionActionSet.addMotionAction("stop", (byte) 0, 0, 0); // I'm just overwriting an existing to show how
+            motionActionSet.addMotionAction("forward", (byte) 1, 100, 100);
+            motionActionSet.addMotionAction("backward", (byte) 2, -100, 100);
+            motionActionSet.addMotionAction("left", (byte) 3, -100, 100);
+            motionActionSet.addMotionAction("right", (byte) 4, 100, -100);
 
-        myStepHandler = new StepHandler.StepHandlerBuilder()
-                .setTimeStepLength(100)
-                .setMaxTimeStepCount(maxTimeStepCount)
-                .setMaxEpisodeCount(3)
-                .setMaxReward(100000)
-                .setMotionActionSet(motionActionSet)
-                .setCommActionSet(commActionSet)
-                .setActionSelector(this)
-                .build();
+            maxTimeStepCount = 30;
+            maxEpisodeCount = 3;
 
-        // Initialize an ArrayList of AbcvlibInputs that you want the TimeStepDataAssembler to gather data for
-        ArrayList<AbcvlibInput> inputs = new ArrayList<>();
+            myStepHandler = new StepHandler.StepHandlerBuilder()
+                    .setTimeStepLength(100)
+                    .setMaxTimeStepCount(maxTimeStepCount)
+                    .setMaxEpisodeCount(maxEpisodeCount)
+                    .setMaxReward(100000)
+                    .setMotionActionSet(motionActionSet)
+                    .setCommActionSet(commActionSet)
+                    .setActionSelector(this)
+                    .build();
 
-        // reusing the same timeStepDataBuffer shared by all. You could alternatively create a new
-        // one or extend it in another class.
-        BatteryData batteryData = new BatteryData(this.getInputs().getTimeStepDataBuffer());
-        WheelData wheelData = new WheelData(this.getInputs().getTimeStepDataBuffer());
-        OrientationData orientationData = new OrientationData(
-                this.getInputs().getTimeStepDataBuffer(), this);
+            // Initialize an ArrayList of AbcvlibInputs that you want the TimeStepDataAssembler to gather data for
+            ArrayList<AbcvlibInput> inputs = new ArrayList<>();
 
-        // Get local reference to MicrophoneData and start the record buffer (within MicrophoneData Class)
-        MicrophoneData microphoneData = getInputs().getMicrophoneData();
-        microphoneData.start();
+            // reusing the same timeStepDataBuffer shared by all. You could alternatively create a new
+            // one or extend it in another class.
+            BatteryData batteryData = new BatteryData(this.getInputs().getTimeStepDataBuffer());
+            WheelData wheelData = new WheelData(this.getInputs().getTimeStepDataBuffer());
+            OrientationData orientationData = new OrientationData(
+                    this.getInputs().getTimeStepDataBuffer(), this);
 
-        ImageData imageData = getInputs().getImageData();
-        imageData.setPreviewView(findViewById(R.id.camera_x_preview));
-        imageData.startCamera(this, this);
+            // Get local reference to MicrophoneData and start the record buffer (within MicrophoneData Class)
+            MicrophoneData microphoneData = getInputs().getMicrophoneData();
+            microphoneData.start();
 
-        // Add all data inputs to the array list
-        inputs.add(batteryData);
-        inputs.add(wheelData);
-        inputs.add(orientationData);
-        inputs.add(microphoneData);
-        inputs.add(imageData);
+            ImageData imageData = getInputs().getImageData();
+            imageData.setPreviewView(findViewById(R.id.camera_x_preview));
+            CountDownLatch latch = new CountDownLatch(1);
+            runOnUiThread(() -> {
+                imageData.startCamera(this, this, latch);
+            });
 
-        // Pass your inputs list to a new instance of TimeStepDataAssember along with all other references
-        TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler(inputs, myStepHandler, null, null, getInputs().getTimeStepDataBuffer());
-        try {
-            timeStepDataAssembler.startGatherers();
-        } catch (RecordingWithoutTimeStepBufferException e) {
-            ErrorHandler.eLog(TAG, "", e, true);
-        }
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            // Add all data inputs to the array list
+            inputs.add(batteryData);
+            inputs.add(wheelData);
+            inputs.add(orientationData);
+            inputs.add(microphoneData);
+            inputs.add(imageData);
+
+            // Pass your inputs list to a new instance of TimeStepDataAssember along with all other references
+            TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler(inputs, myStepHandler, null, null, getInputs().getTimeStepDataBuffer());
+            try {
+                timeStepDataAssembler.startGatherers();
+            } catch (RecordingWithoutTimeStepBufferException e) {
+                ErrorHandler.eLog(TAG, "", e, true);
+            }
+        });
     }
 
     @Override
-    public ActionSet forward(TimeStepDataBuffer.TimeStepData data, int timeStepCount) {
+    public ActionSet forward(TimeStepDataBuffer.TimeStepData data) {
         ActionSet actionSet;
         MotionAction motionAction;
         CommAction commAction;
@@ -153,24 +169,21 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
         // set your action to some ints
         data.getActions().add(motionAction, commAction);
 
-        if (timeStepCount >= myStepHandler.getMaxTimeStepCount() || (reward >= myStepHandler.getMaxReward())){
+        if (reward >= myStepHandler.getMaxReward()){
             myStepHandler.setLastTimestep(true);
-            myStepHandler.incrementEpisodeCount();
             // reseting reward after each episode
             reward = 0;
         }
 
-        if (myStepHandler.getEpisodeCount() >= myStepHandler.getMaxEpisodecount()){
-            myStepHandler.setLastTimestep(true);
-        }
-
-        updateGUIValues(data, timeStepCount);
+        // Note this will never be called when the myStepHandler.getTimeStep() >= myStepHandler.getMaxTimeStep() as the forward method will no longer be called
+        updateGUIValues(data, myStepHandler.getTimeStep(), myStepHandler.getEpisodeCount());
 
         return actionSet;
     }
 
-    private void updateGUIValues(TimeStepDataBuffer.TimeStepData data, int timeStepCount){
+    private void updateGUIValues(TimeStepDataBuffer.TimeStepData data, int timeStepCount, int episodeCount){
         guiUpdater.timeStep = timeStepCount + " of " + maxTimeStepCount;
+        guiUpdater.episodeCount = episodeCount + " of " + maxEpisodeCount;
         if (data.getBatteryData().getVoltage().length > 0){
             guiUpdater.batteryVoltage = data.getBatteryData().getVoltage()[0]; // just taking the first recorded one
         }

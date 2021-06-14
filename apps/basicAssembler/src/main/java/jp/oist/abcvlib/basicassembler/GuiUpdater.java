@@ -8,6 +8,7 @@ import java.text.DecimalFormat;
 public class GuiUpdater implements Runnable{
     private final Activity activity;
     private final TextView timeStepText;
+    private final TextView episodeText;
     private final TextView voltageBattText;
     private final TextView voltageChargerText;
     private final TextView coilVoltageText;
@@ -19,6 +20,7 @@ public class GuiUpdater implements Runnable{
     private final TextView frameRateText;
     private final DecimalFormat df = new DecimalFormat("#.00");
     volatile String timeStep = "";
+    volatile String episodeCount = "";
     volatile double batteryVoltage = 0.0;
     volatile double chargerVoltage = 0.0;
     volatile double coilVoltage = 0.0;
@@ -37,6 +39,7 @@ public class GuiUpdater implements Runnable{
     public GuiUpdater(Activity activity){
         this.activity = activity;
         timeStepText = activity.findViewById(R.id.timeStep);
+        episodeText = activity.findViewById(R.id.episodeCount);
         voltageBattText = activity.findViewById(R.id.voltageBattLevel);
         voltageChargerText = activity.findViewById(R.id.voltageChargerLevel);
         coilVoltageText = activity.findViewById(R.id.coilVoltageText);
@@ -52,6 +55,7 @@ public class GuiUpdater implements Runnable{
     public void run() {
         activity.runOnUiThread(() -> {
             timeStepText.setText(timeStep);
+            episodeText.setText(episodeCount);
             voltageBattText.setText(df.format(batteryVoltage));
             voltageChargerText.setText(df.format(chargerVoltage));
             coilVoltageText.setText(df.format(coilVoltage));

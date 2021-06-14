@@ -118,14 +118,10 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
         data.getActions().add(motionAction, commAction);
 
         if (timeStepCount >= myStepHandler.getMaxTimeStepCount() || (reward >= myStepHandler.getMaxReward())){
-            myStepHandler.setLastTimestep(true);
-            myStepHandler.incrementEpisodeCount();
+            // Do anything you need to wrap up an episode here. The episode count and timeStep counts will automatically be incremented or set to zero as necessary.
+
             // reseting reward after each episode
             reward = 0;
-        }
-
-        if (myStepHandler.getEpisodeCount() >= myStepHandler.getMaxEpisodecount()){
-            myStepHandler.setLastTimestep(true);
         }
 
         return actionSet;
