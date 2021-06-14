@@ -2,7 +2,9 @@ package jp.oist.abcvlib.basicassembler;
 
 import android.Manifest;
 import android.os.Bundle;
+import android.util.Log;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Locale;
@@ -12,6 +14,8 @@ import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.PermissionsListener;
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
+import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
+import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.phone.ImageData;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
 import jp.oist.abcvlib.core.inputs.phone.OrientationData;
@@ -87,7 +91,8 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
         motionActionSet.addMotionAction("right", (byte) 4, 100, -100);
 
         myStepHandler = new StepHandler.StepHandlerBuilder()
-                .setMaxTimeStepCount(20)
+                .setTimeStepLength(100)
+                .setMaxTimeStepCount(1000)
                 .setMaxEpisodeCount(3)
                 .setMaxReward(100000)
                 .setMotionActionSet(motionActionSet)
@@ -98,15 +103,26 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
         // Initialize an ArrayList of AbcvlibInputs that you want the TimeStepDataAssembler to gather data for
         ArrayList<AbcvlibInput> inputs = new ArrayList<>();
 
+        // reusing the same timeStepDataBuffer shared by all. You could alternatively create a new
+        // one or extend it in another class.
+        BatteryData batteryData = new BatteryData(this.getInputs().getTimeStepDataBuffer());
+        WheelData wheelData = new WheelData(this.getInputs().getTimeStepDataBuffer());
+        OrientationData orientationData = new OrientationData(
+                this.getInputs().getTimeStepDataBuffer(), this);
+
         // Get local reference to MicrophoneData and start the record buffer (within MicrophoneData Class)
         MicrophoneData microphoneData = getInputs().getMicrophoneData();
         microphoneData.start();
-        // Add the reference to your ArrayList
-        inputs.add(microphoneData);
 
         ImageData imageData = getInputs().getImageData();
         imageData.setPreviewView(findViewById(R.id.camera_x_preview));
         imageData.startCamera(this, this);
+
+        // Add all data inputs to the array list
+        inputs.add(batteryData);
+        inputs.add(wheelData);
+        inputs.add(orientationData);
+        inputs.add(microphoneData);
         inputs.add(imageData);
 
         // Pass your inputs list to a new instance of TimeStepDataAssember along with all other references
@@ -151,26 +167,37 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
     }
 
     private void updateGUIValues(TimeStepDataBuffer.TimeStepData data, int timeStepCount){
-        guiUpdater.batteryVoltage = data.getBatteryData().getVoltage()[0]; // just taking the first recorded one
-        guiUpdater.chargerVoltage = data.getChargerData().getChargerVoltage()[0];
-        guiUpdater.coilVoltage = data.getChargerData().getCoilVoltage()[0];
-        double thetaDeg = OrientationData.getThetaDeg(thetaRad);
-        double angularVelocityDeg = OrientationData.getAngularVelocityDeg(angularVelocityRad);
-        guiUpdater.thetaDeg = thetaDeg;
-        guiUpdater.angularVelocityDeg = angularVelocityDeg;
-        guiUpdater.wheelCountL = data.getWheelData().getLeft().getCounts()[0];
-        guiUpdater.wheelCountR = data.getWheelData().getRight().getCounts()[0];
-        guiUpdater.wheelDistanceL = data.getWheelData().getLeft().getDistances()[0];
-        guiUpdater.wheelDistanceR = data.getWheelData().getRight().getDistances()[0];
-        guiUpdater.wheelSpeedL = data.getWheelData().getLeft().getSpeeds()[0];
-        guiUpdater.wheelSpeedR = data.getWheelData().getLeft().getSpeeds()[0];
-        float[] arraySlice = Arrays.copyOfRange(data.getSoundData().getLevels(), 0, 9);
-        guiUpdater.audioDataString = Arrays.toString(arraySlice);
-        double frameRate = (data.getImageData().getImages().get(1).getTimestamp() -
-                data.getImageData().getImages().get(0).getTimestamp()) / 1000000000.0 ; // just taking difference between two but one could do an average over all differences
-        frameRate = Math.round(frameRate);
-        guiUpdater.frameRateString = String.format(Locale.JAPAN,"%.0f", frameRate);
-
+        if (data.getBatteryData().getVoltage().length > 0){
+            guiUpdater.batteryVoltage = data.getBatteryData().getVoltage()[0]; // just taking the first recorded one
+        }
+        if (data.getChargerData().getChargerVoltage().length > 0){
+            guiUpdater.chargerVoltage = data.getChargerData().getChargerVoltage()[0];
+            guiUpdater.coilVoltage = data.getChargerData().getCoilVoltage()[0];
+        }
+        if (data.getOrientationData().getTiltAngle().length > 20){
+            double thetaDeg = OrientationData.getThetaDeg(data.getOrientationData().getTiltAngle()[0]);
+            double angularVelocityDeg = OrientationData.getAngularVelocityDeg(data.getOrientationData().getAngularVelocity()[0]);
+            guiUpdater.thetaDeg = thetaDeg;
+            guiUpdater.angularVelocityDeg = angularVelocityDeg;
+        }
+        if (data.getWheelData().getLeft().getCounts().length > 0){
+            guiUpdater.wheelCountL = data.getWheelData().getLeft().getCounts()[0];
+            guiUpdater.wheelCountR = data.getWheelData().getRight().getCounts()[0];
+            guiUpdater.wheelDistanceL = data.getWheelData().getLeft().getDistances()[0];
+            guiUpdater.wheelDistanceR = data.getWheelData().getRight().getDistances()[0];
+            guiUpdater.wheelSpeedL = data.getWheelData().getLeft().getSpeeds()[0];
+            guiUpdater.wheelSpeedR = data.getWheelData().getLeft().getSpeeds()[0];
+        }
+        if (data.getSoundData().getLevels().length > 0){
+            float[] arraySlice = Arrays.copyOfRange(data.getSoundData().getLevels(), 0, 9);
+            guiUpdater.audioDataString = Arrays.toString(arraySlice);
+        }
+        if (data.getImageData().getImages().size() > 1){
+            double frameRate = (data.getImageData().getImages().get(1).getTimestamp() -
+                    data.getImageData().getImages().get(0).getTimestamp()) / 1000000000.0 ; // just taking difference between two but one could do an average over all differences
+            frameRate = Math.round(frameRate);
+            guiUpdater.frameRateString = String.format(Locale.JAPAN,"%.0f", frameRate);
+        }
     }
 }
 

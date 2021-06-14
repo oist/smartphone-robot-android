@@ -6,6 +6,7 @@ import jp.oist.abcvlib.core.learning.MotionActionSet;
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 
 public class StepHandler {
+    private final int timeStepLength;
     private final int maxTimeStepCount;
     private boolean lastEpisode = false; // Use to trigger MainActivity to stop generating episodes
     private boolean lastTimestep = false; // Use to trigger MainActivity to stop generating timesteps for a single episode
@@ -17,9 +18,10 @@ public class StepHandler {
     private final MotionActionSet motionActionSet;
     private ActionSelector actionSelector;
 
-    public StepHandler(int maxTimeStepCount, int maxReward, int maxEpisodeCount,
+    public StepHandler(int timeStepLength, int maxTimeStepCount, int maxReward, int maxEpisodeCount,
                        CommActionSet commActionSet, MotionActionSet motionActionSet,
                        ActionSelector actionSelector){
+        this.timeStepLength = timeStepLength;
         this.maxTimeStepCount = maxTimeStepCount;
         this.maxReward = maxReward;
         this.maxEpisodecount = maxEpisodeCount;
@@ -29,6 +31,7 @@ public class StepHandler {
     }
 
     public static class StepHandlerBuilder {
+        private int timeStepLength = 50;
         private int maxTimeStepCount = 100;
         private int maxReward = 100;
         private int maxEpisodeCount = 3;
@@ -39,12 +42,17 @@ public class StepHandler {
         public StepHandlerBuilder(){}
 
         public StepHandler build(){
-            return new StepHandler(maxTimeStepCount, maxReward, maxEpisodeCount,
+            return new StepHandler(timeStepLength, maxTimeStepCount, maxReward, maxEpisodeCount,
                     commActionSet, motionActionSet, actionSelector);
         }
 
+        public StepHandlerBuilder setTimeStepLength(int timeStepLength){
+            this.timeStepLength = timeStepLength;
+            return this;
+        }
+
         public StepHandlerBuilder setMaxTimeStepCount(int maxTimeStepCount){
-            this.maxEpisodeCount = maxTimeStepCount;
+            this.maxTimeStepCount = maxTimeStepCount;
             return this;
         }
 
@@ -76,6 +84,10 @@ public class StepHandler {
 
     public ActionSet forward(TimeStepDataBuffer.TimeStepData data, int timeStepCount){
         return this.actionSelector.forward(data, timeStepCount);
+    }
+
+    public int getTimeStepLength() {
+        return timeStepLength;
     }
 
     public int getEpisodeCount() {

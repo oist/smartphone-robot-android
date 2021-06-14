@@ -11,6 +11,9 @@ import android.os.HandlerThread;
 import android.os.Message;
 import android.util.Log;
 
+import java.text.DecimalFormat;
+import java.util.Arrays;
+
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;

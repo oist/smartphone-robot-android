@@ -49,9 +49,9 @@ public class TimeStepDataBuffer {
         readData = buffer[readIndex];
     }
 
-    public TimeStepData getWriteData(){return writeData;}
+    public synchronized TimeStepData getWriteData(){return writeData;}
 
-    public TimeStepData getReadData(){return readData;}
+    public synchronized TimeStepData getReadData(){return readData;}
 
     public static class TimeStepData{
         private WheelData wheelData;
@@ -72,13 +72,13 @@ public class TimeStepDataBuffer {
             orientationData = new OrientationData();
         }
 
-        public WheelData getWheelData(){return wheelData;}
-        public ChargerData getChargerData(){return chargerData;}
-        public BatteryData getBatteryData(){return batteryData;}
-        public ImageData getImageData(){return imageData;}
-        public SoundData getSoundData(){return soundData;}
-        public RobotAction getActions(){return actions;}
-        public OrientationData getOrientationData(){return orientationData;}
+        public synchronized WheelData getWheelData(){return wheelData;}
+        public synchronized ChargerData getChargerData(){return chargerData;}
+        public synchronized BatteryData getBatteryData(){return batteryData;}
+        public synchronized ImageData getImageData(){return imageData;}
+        public synchronized SoundData getSoundData(){return soundData;}
+        public synchronized RobotAction getActions(){return actions;}
+        public synchronized OrientationData getOrientationData(){return orientationData;}
 
         public void clear(){
             wheelData = new WheelData();
@@ -87,6 +87,7 @@ public class TimeStepDataBuffer {
             imageData = new ImageData();
             soundData = new SoundData();
             actions = new RobotAction();
+            orientationData = new OrientationData();
         }
 
         public static class WheelData {
@@ -348,6 +349,12 @@ public class TimeStepDataBuffer {
             ArrayList<Long> timestamps = new ArrayList<>();
             ArrayList<Double> tiltAngle = new ArrayList<>();
             ArrayList<Double> angularVelocity = new ArrayList<>();
+
+            /**
+             * @param timestamp long nanotime
+             * @param _tiltAngle in radians
+             * @param _angularVelocity in radians per second
+             */
             public void put(long timestamp, double _tiltAngle, double _angularVelocity){
                 timestamps.add(timestamp);
                 tiltAngle.add(_tiltAngle);

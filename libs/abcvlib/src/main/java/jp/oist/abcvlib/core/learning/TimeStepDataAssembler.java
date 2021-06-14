@@ -36,9 +36,9 @@ import jp.oist.abcvlib.util.SocketListener;
 public class TimeStepDataAssembler implements Runnable {
 
     private int timeStepCount = 0;
-    private final int maxTimeStep = 100;
+    private final int maxTimeStepCount;
     private FlatBufferBuilder builder;
-    private int[] timeStepVector = new int[maxTimeStep + 1];
+    private int[] timeStepVector;
     private StepHandler myStepHandler;
     private int episodeCount = 0;
     private TimeStepDataBuffer timeStepDataBuffer;
@@ -66,6 +66,8 @@ public class TimeStepDataAssembler implements Runnable {
         executor = new ScheduledExecutorServiceWithException(threads, new ProcessPriorityThreadFactory(1, "dataGatherer"));
 
         this.myStepHandler = myStepHandler;
+        this.maxTimeStepCount = myStepHandler.getMaxTimeStepCount();
+        timeStepVector = new int[maxTimeStepCount + 1];
 
         startEpisode();
     }
@@ -92,7 +94,7 @@ public class TimeStepDataAssembler implements Runnable {
             }
         }
 
-        timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(this, 50,50, TimeUnit.MILLISECONDS);
+        timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(this, 50, myStepHandler.getTimeStepLength(), TimeUnit.MILLISECONDS);
         gatherersReady.countDown();
         Log.d("SocketConnection", "Waiting for gatherers to finish");
         try {
