@@ -189,8 +189,13 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
             guiUpdater.wheelSpeedR = data.getWheelData().getLeft().getSpeeds()[0];
         }
         if (data.getSoundData().getLevels().length > 0){
-            float[] arraySlice = Arrays.copyOfRange(data.getSoundData().getLevels(), 0, 9);
-            guiUpdater.audioDataString = Arrays.toString(arraySlice);
+            float[] arraySlice = Arrays.copyOfRange(data.getSoundData().getLevels(), 0, 5);
+            DecimalFormat df = new DecimalFormat("0.#E0");
+            String arraySliceString = "";
+            for (double v : arraySlice) {
+                arraySliceString = arraySliceString.concat(df.format(v)) + ", ";
+            }
+            guiUpdater.audioDataString = arraySliceString;
         }
         if (data.getImageData().getImages().size() > 1){
             double frameRate = (data.getImageData().getImages().get(1).getTimestamp() -
