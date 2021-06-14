@@ -9,12 +9,30 @@
 
 
     <TextView
+        android:id="@+id/timeStepHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/timeStepHeaderText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/timeStep"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAlignment="viewStart"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/timeStepHeader"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintHorizontal_bias="0.05"/>
+
+    <TextView
         android:id="@+id/voltageChargerHeader"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/voltageChargerHeader"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/timeStepHeader" />
 
     <TextView
         android:id="@+id/voltageChargerLevel"
@@ -23,7 +41,7 @@
         android:textAlignment="viewStart"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/voltageChargerHeader"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/timeStep"
         app:layout_constraintHorizontal_bias="0.05"/>
 
     <TextView

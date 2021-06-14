@@ -56,6 +56,7 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
     private StepHandler myStepHandler;
     private String TAG = getClass().getName();
     private int reward = 0;
+    private int maxTimeStepCount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,9 +91,11 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
         motionActionSet.addMotionAction("left", (byte) 3, -100, 100);
         motionActionSet.addMotionAction("right", (byte) 4, 100, -100);
 
+        maxTimeStepCount = 1000;
+
         myStepHandler = new StepHandler.StepHandlerBuilder()
                 .setTimeStepLength(100)
-                .setMaxTimeStepCount(1000)
+                .setMaxTimeStepCount(maxTimeStepCount)
                 .setMaxEpisodeCount(3)
                 .setMaxReward(100000)
                 .setMotionActionSet(motionActionSet)
@@ -167,6 +170,7 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
     }
 
     private void updateGUIValues(TimeStepDataBuffer.TimeStepData data, int timeStepCount){
+        guiUpdater.timeStep = timeStepCount + " of " + maxTimeStepCount;
         if (data.getBatteryData().getVoltage().length > 0){
             guiUpdater.batteryVoltage = data.getBatteryData().getVoltage()[0]; // just taking the first recorded one
         }
