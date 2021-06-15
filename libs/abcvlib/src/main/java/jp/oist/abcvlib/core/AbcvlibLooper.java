@@ -267,11 +267,11 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      *
      * @see #loop()
      */
-    private final int[] encoderCountRightWheel = new int[buffer];
+    private int encoderCountRightWheel = 0;
     /**
      * @see #encoderCountRightWheel
      */
-    private final int[] encoderCountLeftWheel = new int[buffer];
+    private int encoderCountLeftWheel = 0;
 
     private BatteryData batteryData = null;
     private WheelData wheelData = null;
@@ -524,14 +524,14 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     private void getEncoderCounts(){
         // Right is negative and left is positive since the wheels are physically mirrored so
         // while moving forward one wheel is moving ccw while the other is rotating cw.
-        encoderCountRightWheel[indexCurrent] = encoderCountRightWheel[indexPrevious] -
+        encoderCountRightWheel = encoderCountRightWheel -
                 encoderAddSubtractCount(
                         encoderARightWheelState,
                         encoderBRightWheelState, encoderARightWheelStatePrevious,
                         encoderBRightWheelStatePrevious
                 );
 
-        encoderCountLeftWheel[indexCurrent] = encoderCountLeftWheel[indexPrevious] +
+        encoderCountLeftWheel = encoderCountLeftWheel +
                 encoderAddSubtractCount(
                         encoderALeftWheelState,
                         encoderBLeftWheelState, encoderALeftWheelStatePrevious,
@@ -590,7 +590,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      * Writes timestamps and counts of each wheel to an external listener interface called {@link #wheelData}
      */
     private void updateQuadEncoders(){
-        wheelData.onWheelDataUpdate(timeStamp[indexCurrent], encoderCountLeftWheel[indexCurrent], encoderCountRightWheel[indexCurrent]);
+        wheelData.onWheelDataUpdate(timeStamp[indexCurrent], encoderCountLeftWheel, encoderCountRightWheel);
     }
 
     /**
