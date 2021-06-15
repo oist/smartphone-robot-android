@@ -22,12 +22,12 @@ public class WheelData implements AbcvlibInput {
      * Compounding negative wheel count set in AbcvlibLooper. Right is negative while left is
      * positive since wheels are mirrored on physical body and thus one runs cw and the other ccw.
      */
-    private int encoderCountRightWheel = 0;
+    private EncoderCounter encoderCountRightWheel = new EncoderCounter();
     /**
      * Compounding positive wheel count set in AbcvlibLooper. Right is negative while left is
      * positive since wheels are mirrored on physical body and thus one runs cw and the other ccw.
      */
-    private int encoderCountLeftWheel = 0;
+    private EncoderCounter encoderCountLeftWheel = new EncoderCounter();
     /**
      * distance in mm that the right wheel has traveled from start point
      * This assumes no slippage/lifting/etc. Use with a grain of salt.
@@ -60,14 +60,22 @@ public class WheelData implements AbcvlibInput {
      * method exists for the AbcvlibLooper class to get/set encoder counts as the AbcvlibLooper
      * class is responsible for constantly reading the encoder values from the IOIOBoard.
      */
-    public void onWheelDataUpdate(long timestamp, int countLeft, int countRight) {
+    public void onWheelDataUpdate(long timestamp, boolean encoderARightWheelState,
+                                  boolean encoderBRightWheelState, boolean encoderALeftWheelState,
+                                  boolean encoderBLeftWheelState) {
         WheelData wheelData = this;
         handler.post(() -> {
+
+            /*
+            Right is negative and left is positive since the wheels are physically mirrored so
+            while moving forward one wheel is moving ccw while the other is rotating cw.
+            */
+            encoderCountRightWheel.updateCount(encoderARightWheelState, encoderBRightWheelState);
+            encoderCountLeftWheel.updateCount(encoderALeftWheelState, encoderBLeftWheelState);
+
             int indexCurrent = (quadCount) % windowLength;
             int indexPrevious = (quadCount - 1) % windowLength;
 
-            encoderCountLeftWheel = countLeft;
-            encoderCountRightWheel = countRight;
             timeStamps[indexCurrent] = timestamp;
             dt_sample = (timeStamps[indexCurrent] - timeStamps[indexPrevious]) / 1000000000f;
             setDistanceL();
@@ -76,17 +84,118 @@ public class WheelData implements AbcvlibInput {
             setWheelSpeedR();
 
             if (isRecording){
-                timeStepDataBuffer.getWriteData().getWheelData().getLeft().put(timestamp, countLeft, distanceL, speedLeftWheelLP);
-                timeStepDataBuffer.getWriteData().getWheelData().getRight().put(timestamp, countRight, distanceR, speedRightWheelLP);
+                timeStepDataBuffer.getWriteData().getWheelData().getLeft().put(timestamp, encoderCountLeftWheel.getCount(), distanceL, speedLeftWheelLP);
+                timeStepDataBuffer.getWriteData().getWheelData().getRight().put(timestamp, encoderCountRightWheel.getCount(), distanceR, speedRightWheelLP);
             }
             if (wheelDataListener != null){
-                wheelDataListener.onWheelDataUpdate(timestamp, countLeft, countRight,
+                wheelDataListener.onWheelDataUpdate(timestamp, encoderCountLeftWheel.getCount(), encoderCountRightWheel.getCount(),
                 distanceL, distanceR, speedLeftWheelLP, speedRightWheelLP);
             }
 
             quadCount++;
         });
     }
+
+    private static class EncoderCounter {
+        boolean encoderAStatePrevious;
+        boolean encoderBStatePrevious;
+        int count = 0;
+
+        public EncoderCounter(){
+        }
+
+        /**
+         Input all IO values from Hubee Wheel and output either +1, or -1 to add or subtract one wheel
+         count.<br><br>
+
+         The combined values of input1WheelStateIo and input2WheelStateIo control the direction of the
+         Hubee wheels.<br><br>
+
+         encoderAState and encoderBState are the direct current IO reading (high or low) of
+         the quadrature encoders on the Hubee wheels. See Hubee wheel documentation regarding which IO
+         corresponds to the A and B IO.<br><br>
+
+         <img src="../../../../../../../../../../media/images/hubeeWheel.gif" />
+         <br><br>
+
+         encoderAWheelStatePrevious and encoderBWheelStatePrevious are previous state of their
+         corresponding variables.<br><br>
+
+         IN1  IN2 PWM Standby Result<br>
+         H    H   H/L H   Stop-Brake<br>
+         L    H   H   H   Turn Forwards<br>
+         L    H   L   H   Stop-Brake<br>
+         H    L   H   H   Turn Backwards<br>
+         H    L   L   H   Stop-Brake<br>
+         L    L   H/L H   Stop-NoBrake<br>
+         H/L  H/L H/L L   Standby<br><br>
+
+         See: <a href="http://www.creative-robotics.com/quadrature-intro">http://www.creative-robotics.com/quadrature-intro</a>
+
+         * @return wheelCounts
+         */
+        private void updateCount(Boolean encoderAState, Boolean encoderBState){
+            // Channel A goes from Low to High
+            if (!encoderAStatePrevious && encoderAState){
+                // Channel B is Low = Clockwise
+                if (!encoderBState){
+                    count++;
+                }
+                // Channel B is High = CounterClockwise
+                else {
+                    count--;
+                }
+            }
+
+            // Channel A goes from High to Low
+            else if (encoderAStatePrevious && !encoderAState){
+                // Channel B is Low = CounterClockwise
+                if (!encoderBState){
+                    count--;
+                }
+                // Channel B is High = Clockwise
+                else {
+                    count++;
+                }
+            }
+
+            // Channel B goes from Low to High
+            else if (!encoderBStatePrevious && encoderBState){
+                // Channel A is Low = CounterClockwise
+                if (!encoderAState){
+                    count--;
+                }
+                // Channel A is High = Clockwise
+                else {
+                    count++;
+                }
+            }
+
+            // Channel B goes from High to Low
+            else if (encoderBStatePrevious && !encoderBState){
+                // Channel A is Low = Clockwise
+                if (!encoderAState){
+                    count++;
+                }
+                // Channel A is High = CounterClockwise
+                else {
+                    count--;
+                }
+            }
+
+            // Else both the current and previous state of A is HIGH or LOW, meaning no transition has
+            // occurred thus no need to add or subtract from wheelCounts
+
+            encoderAStatePrevious = encoderAState;
+            encoderBStatePrevious = encoderBState;
+        }
+
+        public int getCount() {
+            return count;
+        }
+    }
+
+
 
     public void setWheelDataListener(WheelDataListener wheelDataListener) {
         this.wheelDataListener = wheelDataListener;
@@ -107,12 +216,12 @@ public class WheelData implements AbcvlibInput {
     /**
      * @return Current encoder count for the right wheel
      */
-    public int getWheelCountR(){ return encoderCountRightWheel; }
+    public int getWheelCountR(){ return encoderCountRightWheel.getCount(); }
 
     /**
      * @return Current encoder count for the left wheel
      */
-    public int getWheelCountL(){ return encoderCountLeftWheel; }
+    public int getWheelCountL(){ return encoderCountLeftWheel.getCount(); }
 
     public double getDistanceL() {
         return distanceL;
@@ -144,7 +253,7 @@ public class WheelData implements AbcvlibInput {
     private void setDistanceL(){
         double mmPerCount = (2 * Math.PI * 30) / 128;
         distanceLPrevious = distanceL;
-        distanceL = encoderCountLeftWheel * mmPerCount;
+        distanceL = encoderCountLeftWheel.getCount() * mmPerCount;
 
     }
 
@@ -156,7 +265,7 @@ public class WheelData implements AbcvlibInput {
     private void setDistanceR(){
         double mmPerCount = (2 * Math.PI * 30) / 128;
         distanceRPrevious = distanceR;
-        distanceR = encoderCountRightWheel * mmPerCount;
+        distanceR = encoderCountRightWheel.getCount() * mmPerCount;
     }
 
     private void setWheelSpeedL() {
@@ -201,4 +310,6 @@ public class WheelData implements AbcvlibInput {
         distance = count * mmPerCount;
         return distance;
     }
+
+
 }

@@ -30,8 +30,6 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
     private final String TAG = this.getClass().getName();
 
-    private long timeStamp = 0;
-
     //      --------------Quadrature Encoders----------------
     /**
      Creates IOIO Board object that read the quadrature encoders of the Hubee Wheels.
@@ -63,22 +61,6 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      * @see #encoderARightWheel
      */
     private DigitalInput encoderBLeftWheel;
-    /**
-     * @see #encoderARightWheel
-     */
-    private boolean encoderARightWheelStatePrevious;
-    /**
-     * @see #encoderARightWheel
-     */
-    private boolean encoderBRightWheelStatePrevious;
-    /**
-     * @see #encoderARightWheel
-     */
-    private boolean encoderALeftWheelStatePrevious;
-    /**
-     * @see #encoderARightWheel
-     */
-    private boolean encoderBLeftWheelStatePrevious;
 
     //     --------------Wheel Direction Controllers----------------
     /**
@@ -219,38 +201,11 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     /**
      * Duty cycle of PWM pulse width tracking variable. Values range from 0 to 100
      */
-    private float dutyCycleRightWheelNew;
+    private float dutyCycleRightWheel;
     /**
-     * @see #dutyCycleRightWheelNew
+     * @see #dutyCycleRightWheel
      */
-    private float dutyCycleRightWheelCurrent;
-    /**
-     * @see #dutyCycleRightWheelNew
-     */
-    private float dutyCycleLeftWheelNew;
-    /**
-     * @see #dutyCycleRightWheelNew
-     */
-    private float dutyCycleLeftWheelCurrent;
-
-    // Encoder counters
-    /**
-     * Note encoderCountRightWheel accumulates counts at the AbcvlibLooper thread loop rate of 1ms
-     * and then fills in the encoder counter value within
-     * QuadEncoders.encoderCountRightWheel[indexHistoryCurrent]. The value of indexHistoryCurrent
-     * changes only every 5ms or so, so the single
-     * QuadEncoders.encoderCountRightWheel[indexHistoryCurrent] value represents a summation of
-     * approximately 5 loops of counting through the AbcvlibLooper thread loop. The timing of the
-     * threads may vary a bit, but this doesn't undermine the general idea of summing up counts
-     * then dumping them into the array within QuadEncoders.
-     *
-     * @see #loop()
-     */
-    private int encoderCountRightWheel = 0;
-    /**
-     * @see #encoderCountRightWheel
-     */
-    private int encoderCountLeftWheel = 0;
+    private float dutyCycleLeftWheel;
 
     private BatteryData batteryData = null;
     private WheelData wheelData = null;
@@ -375,7 +330,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     public void loop() {
 
         try {
-            timeStamp = System.nanoTime();
+            long timeStamp = System.nanoTime();
 
             // Read IOIO Input pins
             float chargerVoltage = chargerVoltageMonitor.getVoltage();
@@ -386,53 +341,23 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             boolean encoderALeftWheelState = encoderALeftWheel.read();
             boolean encoderBLeftWheelState = encoderBLeftWheel.read();
 
-            /*
-            Right is negative and left is positive since the wheels are physically mirrored so
-            while moving forward one wheel is moving ccw while the other is rotating cw.
-            */
-            encoderCountRightWheel = encoderCountRightWheel - encoderAddSubtractCount(
-                    encoderARightWheelState, encoderBRightWheelState,
-                    encoderARightWheelStatePrevious, encoderBRightWheelStatePrevious);
-
-            encoderCountLeftWheel = encoderCountLeftWheel + encoderAddSubtractCount(
-                    encoderALeftWheelState, encoderBLeftWheelState,
-                    encoderALeftWheelStatePrevious, encoderBLeftWheelStatePrevious);
-
-            // Set all current values to previous ones for next loop
-            encoderARightWheelStatePrevious = encoderARightWheelState;
-            encoderBRightWheelStatePrevious = encoderBRightWheelState;
-            encoderALeftWheelStatePrevious = encoderALeftWheelState;
-            encoderBLeftWheelStatePrevious = encoderBLeftWheelState;
-
             // Update any subscribers/listeners
-            wheelData.onWheelDataUpdate(timeStamp, encoderCountLeftWheel, encoderCountRightWheel);
-            batteryData.onChargerVoltageUpdate(chargerVoltage, coilVoltage, timeStamp);
-            batteryData.onBatteryVoltageUpdate(batteryVoltage, timeStamp);
-
-            // Determine how to set the ioio input pins based on currently set dutyCycle
-            if(dutyCycleRightWheelCurrent >= 0){
-                input1RightWheelState = false;
-                input2RightWheelState = true;
-            }else{
-                input1RightWheelState = true;
-                input2RightWheelState = false;
+            if (wheelData != null){
+                wheelData.onWheelDataUpdate(timeStamp, encoderARightWheelState, encoderBRightWheelState,
+                        encoderALeftWheelState, encoderBLeftWheelState);
             }
-
-            if(dutyCycleLeftWheelCurrent >= 0){
-                input1LeftWheelState = false;
-                input2LeftWheelState = true;
-            }else{
-                input1LeftWheelState = true;
-                input2LeftWheelState = false;
+            if (batteryData != null){
+                batteryData.onChargerVoltageUpdate(chargerVoltage, coilVoltage, timeStamp);
+                batteryData.onBatteryVoltageUpdate(batteryVoltage, timeStamp);
             }
 
             // Write all calculated values to the IOIO Board pins
             input1RightWheelController.write(input1RightWheelState);
             input2RightWheelController.write(input2RightWheelState);
-            pwmControllerRightWheel.setDutyCycle(dutyCycleRightWheelNew); //converting from duty cycle to pulse width
+            pwmControllerRightWheel.setDutyCycle(dutyCycleRightWheel); //converting from duty cycle to pulse width
             input1LeftWheelController.write(input1LeftWheelState);
             input2LeftWheelController.write(input2LeftWheelState);
-            pwmControllerLeftWheel.setDutyCycle(dutyCycleLeftWheelNew);//converting from duty cycle to pulse width
+            pwmControllerLeftWheel.setDutyCycle(dutyCycleLeftWheel);//converting from duty cycle to pulse width
         }
         catch (ConnectionLostException | InterruptedException e){
             Log.e("abcvlib", "connection lost in AbcvlibLooper.loop");
@@ -478,98 +403,26 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         return dutyCycleNew;
     }
 
-    /**
-     Input all IO values from Hubee Wheel and output either +1, or -1 to add or subtract one wheel
-     count.<br><br>
-
-     The combined values of input1WheelStateIo and input2WheelStateIo control the direction of the
-     Hubee wheels.<br><br>
-
-     encoderAWheelState and encoderBWheelState are the direct current IO reading (high or low) of
-     the quadrature encoders on the Hubee wheels. See Hubee wheel documentation regarding which IO
-     corresponds to the A and B IO.<br><br>
-
-     <img src="../../../../../../../../../../media/images/hubeeWheel.gif" />
-     <br><br>
-
-     encoderAWheelStatePrevious and encoderBWheelStatePrevious are previous state of their
-     corresponding variables.<br><br>
-
-     IN1  IN2 PWM Standby Result<br>
-     H    H   H/L H   Stop-Brake<br>
-     L    H   H   H   Turn Forwards<br>
-     L    H   L   H   Stop-Brake<br>
-     H    L   H   H   Turn Backwards<br>
-     H    L   L   H   Stop-Brake<br>
-     L    L   H/L H   Stop-NoBrake<br>
-     H/L  H/L H/L L   Standby<br><br>
-
-     See: <a href="http://www.creative-robotics.com/quadrature-intro">http://www.creative-robotics.com/quadrature-intro</a>
-
-     * @return wheelCounts
-     */
-    private int encoderAddSubtractCount(Boolean encoderAWheelState,
-                                        Boolean encoderBWheelState,
-                                        Boolean encoderAWheelStatePrevious,
-                                        Boolean encoderBWheelStatePrevious){
-        int wheelCounts = 0;
-
-        // Channel A goes from Low to High
-        if (!encoderAWheelStatePrevious && encoderAWheelState){
-            // Channel B is Low = Clockwise
-            if (!encoderBWheelState){
-                wheelCounts++;
-            }
-            // Channel B is High = CounterClockwise
-            else {
-                wheelCounts--;
-            }
-        }
-
-        // Channel A goes from High to Low
-        else if (encoderAWheelStatePrevious && !encoderAWheelState){
-            // Channel B is Low = CounterClockwise
-            if (!encoderBWheelState){
-                wheelCounts--;
-            }
-            // Channel B is High = Clockwise
-            else {
-                wheelCounts++;
-            }
-        }
-
-        // Channel B goes from Low to High
-        else if (!encoderBWheelStatePrevious && encoderBWheelState){
-            // Channel A is Low = CounterClockwise
-            if (!encoderAWheelState){
-                wheelCounts--;
-            }
-            // Channel A is High = Clockwise
-            else {
-                wheelCounts++;
-            }
-        }
-
-        // Channel B goes from High to Low
-        else if (encoderBWheelStatePrevious && !encoderBWheelState){
-            // Channel A is Low = Clockwise
-            if (!encoderAWheelState){
-                wheelCounts++;
-            }
-            // Channel A is High = CounterClockwise
-            else {
-                wheelCounts--;
-            }
-        }
-
-        // Else both the current and previous state of A is HIGH or LOW, meaning no transition has
-        // occurred thus no need to add or subtract from wheelCounts
-
-        return wheelCounts;
-    }
-
     public void setDutyCycle(float left, float right) {
-        dutyCycleRightWheelNew = dutyCycleLimiter(right);
-        dutyCycleLeftWheelNew = dutyCycleLimiter(left);
+        // Determine how to set the ioio input pins which in turn set the direction of the wheel
+        if(right >= 0){
+            input1RightWheelState = false;
+            input2RightWheelState = true;
+        }else{
+            input1RightWheelState = true;
+            input2RightWheelState = false;
+        }
+
+        if(left >= 0){
+            input1LeftWheelState = false;
+            input2LeftWheelState = true;
+        }else{
+            input1LeftWheelState = true;
+            input2LeftWheelState = false;
+        }
+
+        // Limit the duty cycle to be from 0 to 1
+        dutyCycleRightWheel = dutyCycleLimiter(right);
+        dutyCycleLeftWheel = dutyCycleLimiter(left);
     }
 }
