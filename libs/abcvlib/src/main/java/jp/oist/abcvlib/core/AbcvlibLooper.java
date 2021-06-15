@@ -691,30 +691,31 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
     /**
      Input all IO values from Hubee Wheel and output either +1, or -1 to add or subtract one wheel
-     count.
+     count.<br><br>
 
      The combined values of input1WheelStateIo and input2WheelStateIo control the direction of the
-     Hubee wheels.
+     Hubee wheels.<br><br>
 
      encoderAWheelState and encoderBWheelState are the direct current IO reading (high or low) of
      the quadrature encoders on the Hubee wheels. See Hubee wheel documentation regarding which IO
-     corresponds to the A and B IO.
+     corresponds to the A and B IO.<br><br>
 
-     <br><br>
      <img src="../../../../../../../../../../media/images/hubeeWheel.gif" />
      <br><br>
 
      encoderAWheelStatePrevious and encoderBWheelStatePrevious are previous state of their
-     corresponding variables.
+     corresponding variables.<br><br>
 
-     IN1  IN2 PWM Standby Result
-     H    H   H/L H   Stop-Brake
-     L    H   H   H   Turn Forwards
-     L    H   L   H   Stop-Brake
-     H    L   H   H   Turn Backwards
-     H    L   L   H   Stop-Brake
-     L    L   H/L H   Stop-NoBrake
-     H/L  H/L H/L L   Standby
+     IN1  IN2 PWM Standby Result<br>
+     H    H   H/L H   Stop-Brake<br>
+     L    H   H   H   Turn Forwards<br>
+     L    H   L   H   Stop-Brake<br>
+     H    L   H   H   Turn Backwards<br>
+     H    L   L   H   Stop-Brake<br>
+     L    L   H/L H   Stop-NoBrake<br>
+     H/L  H/L H/L L   Standby<br><br>
+
+     See: <a href="http://www.creative-robotics.com/quadrature-intro">http://www.creative-robotics.com/quadrature-intro</a>
 
      * @return wheelCounts
      */
@@ -722,23 +723,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
                                         Boolean encoderBWheelState,
                                         Boolean encoderAWheelStatePrevious,
                                         Boolean encoderBWheelStatePrevious){
-
         int wheelCounts = 0;
-        /*
-        Java exclusive OR logic ^. I.e. only calculate if one and only one WheelState is true (H).
-        Additionally both PWM and Standby must be H, but Standby is always H by default in its
-        unconnected state. This ensures that you are only modifying the wheel counts when the wheel
-        is moving either forward or backward (as opposed to being stopped/braked). Additionally
-        the PWM pin will alter between H and L during normal operation, so checking if the
-        dutyCycleRightWheelNew values are above 0 will ensure only moving wheels are counted.
-        The else statements can then differentiate between a stopped wheel and
-        a misread from the quadrature encoders. This allows you to calculate the drift/error of the
-        quadrature sensors to some degree, though you wouldn't be able to tell whether the drift is
-        positive or negative or evens out over time. I guess you could use this to calculate an
-        appropriate sampling frequency for the IOIOBoard. If you are getting too many of these errors
-        maybe decreasing the sampling rate will remove the number of times the encoders are read
-        precisely at the wrong moment (both H or both L). Will this happen?
-         */
 
         // Channel A goes from Low to High
         if (!encoderAWheelStatePrevious && encoderAWheelState){
@@ -789,7 +774,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         }
 
         // Else both the current and previous state of A is HIGH or LOW, meaning no transition has
-        // occured thus no need to add or subtract from wheelCounts
+        // occurred thus no need to add or subtract from wheelCounts
 
         return wheelCounts;
     }
