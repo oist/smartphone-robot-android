@@ -512,11 +512,18 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         return dt;
     }
 
+    /**
+     * Call {@link System#nanoTime()} and compare with previous timestep to get dt
+     */
     private void timeStampUpdate(){
         timeStamp[indexCurrent] = System.nanoTime();
-        dt = (timeStamp[indexCurrent] - timeStamp[indexPrevious]) / 1000000000;
+        dt = (timeStamp[indexCurrent] - timeStamp[indexPrevious]) / 1000000000.0;
     }
 
+    /**
+     * Calculates dutyCycle{Right,Left}WheelNew by limiting the current value of
+     * dutyCycle{Right,Left}WheelCurrent to the inclusive range of 0 and 1.
+     */
     private void getDutyCycle() {
         dutyCycleRightWheelNew = dutyCycleLimiter(dutyCycleRightWheelCurrent);
         dutyCycleLeftWheelNew = dutyCycleLimiter(dutyCycleLeftWheelCurrent);
@@ -524,7 +531,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
     /**
      * Tests the sign of dutyCycle then determines how to set the input variables (IN1 and IN2)
-     * to control the Hubee Wheel direction. See input1RightWheelController doc for control table.
+     * to control the Hubee Wheel direction. See {@link #input1RightWheelController} doc for control table.
      * If you wanted to inverse polarity, just reverse the > signs to < in each if statement.
      */
     private void getIn1In2(){
@@ -547,6 +554,11 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
     }
 
+    /**
+     * Reads the high/low value of the quadrature encoders (two pairs) directly off the ioioboard
+     * digital pins.
+     * @throws ConnectionLostException
+     */
     private void getEncoderStates() throws ConnectionLostException{
 
         try {
@@ -567,13 +579,17 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         }
     }
 
+    /**
+     * Adds or subtracts counts to/from encoderCountRightWheel[indexPrevious] and sets this as the
+     * value for encoderCountRightWheel[indexCurrent]
+     */
     private void getEncoderCounts(){
 
         // Right is negative and left is positive since the wheels are physically mirrored so
         // while moving forward one wheel is moving ccw while the other is rotating cw.
         encoderCountRightWheel[indexCurrent] = encoderCountRightWheel[indexPrevious] -
-                encoderAddSubtractCount(input1RightWheelState, input2RightWheelState,
-                        dutyCycleRightWheelNew, dutyCycleLeftWheelNew, encoderARightWheelState,
+                encoderAddSubtractCount(
+                        encoderARightWheelState,
                         encoderBRightWheelState, encoderARightWheelStatePrevious,
                         encoderBRightWheelStatePrevious);
 
@@ -585,8 +601,8 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         }
 
         encoderCountLeftWheel[indexCurrent] = encoderCountLeftWheel[indexPrevious] +
-                encoderAddSubtractCount(input1LeftWheelState, input2LeftWheelState,
-                        dutyCycleRightWheelNew, dutyCycleLeftWheelNew, encoderALeftWheelState,
+                encoderAddSubtractCount(
+                        encoderALeftWheelState,
                         encoderBLeftWheelState, encoderALeftWheelStatePrevious,
                         encoderBLeftWheelStatePrevious);
 
@@ -598,6 +614,12 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         }
     }
 
+    /**
+     * Write the high/low values on the wheel In1In2 pins and set the duty cycle on the PWM pins.
+     * This sets the wheel direction and speed. After this is done, set the  encoderARightWheelStatePrevious
+     * and other "Previous" values to current values to prepare for next loop.
+     * @throws ConnectionLostException
+     */
     private void writeIoUpdates() throws ConnectionLostException{
 
         try {
@@ -619,14 +641,15 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         encoderBLeftWheelStatePrevious = encoderBLeftWheelState;
     }
 
+    /**
+     * Returns a hard limited value for the dutyCycle to be within the inclusive range of [0,1].
+     * @param dutyCycleOld un-limited duty cycle
+     * @return limited duty cycle
+     */
     private float dutyCycleLimiter(float dutyCycleOld){
 
         final int MAX_DUTY_CYCLE = 1;
 
-        /*
-        The following two logical statements simply hard limit the dutyCycle to be less than
-        MAX_DUTY_CYCLE which represents the highest value it can be.
-         */
         float dutyCycleNew;
 
         if(Math.abs(dutyCycleOld) < MAX_DUTY_CYCLE){
@@ -638,10 +661,17 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         return dutyCycleNew;
     }
 
+    /**
+     * Writes timestamps and counts of each wheel to an external listener interface called {@link #wheelData}
+     */
     private void updateQuadEncoders(){
         wheelData.onWheelDataUpdate(timeStamp[indexCurrent], encoderCountLeftWheel[indexCurrent], encoderCountRightWheel[indexCurrent]);
     }
 
+    /**
+     * Reads analog voltage value off charger and coil monitoring pins then writes timestamp and
+     * voltages to an external listener interface called {@link #batteryData}
+     */
     private void updateChargerVoltage(){
 
         double chargerVoltage = 0;
@@ -658,6 +688,10 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         batteryData.onChargerVoltageUpdate(chargerVoltage, coilVoltage, timeStamp[indexCurrent]);
     }
 
+    /**
+     * Reads analog voltage value off battery monitoring pin then writes timestamp and
+     * voltage to an external listener interface called {@link #batteryData}
+     */
     private void updateBatteryVoltage(){
 
         double batteryVoltage = 0;
@@ -701,9 +735,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
      * @return wheelCounts
      */
-    private int encoderAddSubtractCount(Boolean input1WheelStateIo, Boolean input2WheelStateIo,
-                                        float dutyCycleRightWheelNew,
-                                        float dutyCycleLeftWheelNew, Boolean encoderAWheelState,
+    private int encoderAddSubtractCount(Boolean encoderAWheelState,
                                         Boolean encoderBWheelState,
                                         Boolean encoderAWheelStatePrevious,
                                         Boolean encoderBWheelStatePrevious){
@@ -802,6 +834,11 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         return wheelCounts;
     }
 
+    /**
+     * Calculates and sets the {@link #indexCurrent} and {@link #indexPrevious} values based on
+     * current value of {@link #loopCount} and {@link #buffer} size. After this it increments the
+     * {@link #loopCount} by 1.
+     */
     private void indexUpdate(){
         indexCurrent = loopCount % buffer;
         indexPrevious = (loopCount - 1) % buffer;
