@@ -30,11 +30,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
     private final String TAG = this.getClass().getName();
 
-    private int indexCurrent = 1;
-    private int indexPrevious = 0;
-    private int loopCount = 1;
-    private final int buffer = 5;
-    private final long[] timeStamp = new long[buffer];
+    private long timeStamp = 0;
 
     //      --------------Quadrature Encoders----------------
     /**
@@ -413,8 +409,6 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             updateBatteryVoltage();
 
             updateChargerVoltage();
-
-            indexUpdate();
         }
         catch (ConnectionLostException e){
             Log.e("abcvlib", "connection lost in AbcvlibLooper.loop");
@@ -443,11 +437,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         Log.e("abcvlib", "Incompatible IOIO firmware version!");
     }
 
-    public int getBuffer(){
-        return buffer;
-    }
-
-    public long[] getTimeStamp() {
+    public long getTimeStamp() {
         return timeStamp;
     }
 
@@ -455,7 +445,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      * Call {@link System#nanoTime()}
      */
     private void timeStampUpdate(){
-        timeStamp[indexCurrent] = System.nanoTime();
+        timeStamp = System.nanoTime();
     }
 
     /**
@@ -590,7 +580,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      * Writes timestamps and counts of each wheel to an external listener interface called {@link #wheelData}
      */
     private void updateQuadEncoders(){
-        wheelData.onWheelDataUpdate(timeStamp[indexCurrent], encoderCountLeftWheel, encoderCountRightWheel);
+        wheelData.onWheelDataUpdate(timeStamp, encoderCountLeftWheel, encoderCountRightWheel);
     }
 
     /**
@@ -608,7 +598,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         } catch (InterruptedException | ConnectionLostException e) {
             Log.e(TAG,"Error", e);
         }
-        batteryData.onChargerVoltageUpdate(chargerVoltage, coilVoltage, timeStamp[indexCurrent]);
+        batteryData.onChargerVoltageUpdate(chargerVoltage, coilVoltage, timeStamp);
     }
 
     /**
@@ -624,7 +614,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         } catch (InterruptedException | ConnectionLostException e) {
             Log.e(TAG,"Error", e);
         }
-        batteryData.onBatteryVoltageUpdate(batteryVoltage, timeStamp[indexCurrent]);
+        batteryData.onBatteryVoltageUpdate(batteryVoltage, timeStamp);
     }
 
     /**
@@ -715,17 +705,6 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         // occurred thus no need to add or subtract from wheelCounts
 
         return wheelCounts;
-    }
-
-    /**
-     * Calculates and sets the {@link #indexCurrent} and {@link #indexPrevious} values based on
-     * current value of {@link #loopCount} and {@link #buffer} size. After this it increments the
-     * {@link #loopCount} by 1.
-     */
-    private void indexUpdate(){
-        indexCurrent = loopCount % buffer;
-        indexPrevious = (loopCount - 1) % buffer;
-        loopCount++;
     }
 
     public void setDutyCycle(float left, float right) {
