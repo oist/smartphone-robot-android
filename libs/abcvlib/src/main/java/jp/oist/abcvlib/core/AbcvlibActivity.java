@@ -54,11 +54,7 @@ public abstract class AbcvlibActivity extends IOIOActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        try {
-            abcvlibLooper.setDutyCycle(0, 0);
-        } catch (ConnectionLostException e) {
-            ErrorHandler.eLog(TAG, "IOIO Connection Lost while turning it off", e, true);
-        }
+        abcvlibLooper.setDutyCycle(0, 0);
         Log.v(TAG, "End of AbcvlibActivity.onStop");
     }
 
@@ -66,11 +62,8 @@ public abstract class AbcvlibActivity extends IOIOActivity {
     public void onPause()
     {
         super.onPause();
-        try {
-            abcvlibLooper.setDutyCycle(0, 0);
-        } catch (ConnectionLostException e) {
-            ErrorHandler.eLog(TAG, "IOIO Connection Lost while turning it off", e, true);
-        }        Log.i(TAG, "End of AbcvlibActivity.onPause");
+        abcvlibLooper.setDutyCycle(0, 0);
+        Log.i(TAG, "End of AbcvlibActivity.onPause");
     }
 
     public Inputs getInputs() {

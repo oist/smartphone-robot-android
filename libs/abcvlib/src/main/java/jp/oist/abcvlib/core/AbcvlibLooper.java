@@ -30,45 +30,12 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
     private final String TAG = this.getClass().getName();
 
-    /**
-     * Boolean to switch on and off logger functions. On by default but can be set to false via
-     */
-    private boolean loggerOn;
-
-    private AbcvlibActivity abcvlibActivity;
-
     private int indexCurrent = 1;
     private int indexPrevious = 0;
     private int loopCount = 1;
-    private int buffer = 5;
-    private long[] timeStamp = new long[buffer];
-    private double dt = 0;
-    private double lp_freq = 100.0; // Low Pass Cutoff Freq
+    private final int buffer = 5;
+    private final long[] timeStamp = new long[buffer];
 
-    /**
-     * PWM frequency. Do not modify locally. Modify at AbcvlibActivity level if necessary
-     *  Not sure why initial PWM_FREQ is 1000, but assume this can be modified as necessary.
-     *  This may depend on the motor or microcontroller requirements/specs. <br><br>
-     *
-     *  If motor is just a DC motor, I guess this does not matter much, but for servos, this would
-     *  be the control function, so would have to match the baud rate of the microcontroller. Note
-     *  this library is not set up to control servos at this time. <br><br>
-     *
-     *  The microcontroller likely has a maximum frequency which it can turn ON/OFF the IO, so
-     *  setting PWM_FREQ too high may cause issues for certain microcontrollers.
-     */
-    private final int PWM_FREQ = 1000;
-    /**
-     * A constant to convert between PWM_FREQ and Duty Cycle.
-     */
-    private final int DUTY_CYCLE_CONST = PWM_FREQ / 100;
-
-
-    /**
-     * Enable/disable this to swap the polarity of the wheels such that the default forward
-     * direction will be swapped (i.e. wheels will move cw vs ccw as forward).
-     */
-    private boolean wheelPolaritySwap;
     //      --------------Quadrature Encoders----------------
     /**
      Creates IOIO Board object that read the quadrature encoders of the Hubee Wheels.
@@ -300,23 +267,18 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      *
      * @see #loop()
      */
-    private int[] encoderCountRightWheel = new int[buffer];
+    private final int[] encoderCountRightWheel = new int[buffer];
     /**
      * @see #encoderCountRightWheel
      */
-    private int[] encoderCountLeftWheel = new int[buffer];
+    private final int[] encoderCountLeftWheel = new int[buffer];
 
-    private int[] encoderCountLeftWheelLP = new int[buffer];
-    private int[] encoderCountRightWheelLP = new int[buffer];
     private BatteryData batteryData = null;
     private WheelData wheelData = null;
 
     // Constructor to pass other module objects in. No default loggerOn. Needs to remain public
     // despite what Android Studio says
     public AbcvlibLooper(AbcvlibActivity abcvlibActivity){
-        this.abcvlibActivity = abcvlibActivity;
-        this.loggerOn = abcvlibActivity.getSwitches().loggerOn;
-        this.wheelPolaritySwap = abcvlibActivity.getSwitches().wheelPolaritySwap;
         if (abcvlibActivity != null){
             this.batteryData = abcvlibActivity.getInputs().getBatteryData();
             this.wheelData = abcvlibActivity.getInputs().getWheelData();
@@ -373,9 +335,11 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
         Log.v(TAG, "ioio_ state = " + ioio_.getState().toString());
 
-        /* Initializing all wheel controller values to low would result in both wheels being in
-         the "Stop-NoBrake" mode according to the Hubee control table. Not sure if this state
-         is required for some reason or just what was defaulted to. **/
+        /*
+        Initializing all wheel controller values to low would result in both wheels being in
+        the "Stop-NoBrake" mode according to the Hubee control table. Not sure if this state
+        is required for some reason or just what was defaulted to.
+        */
         input1RightWheelController = ioio_.openDigitalOutput(INPUT1_RIGHT_WHEEL_PIN,false);
         input2RightWheelController = ioio_.openDigitalOutput(INPUT2_RIGHT_WHEEL_PIN,false);
         input1LeftWheelController = ioio_.openDigitalOutput(INPUT1_LEFT_WHEEL_PIN,false);
@@ -387,11 +351,26 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
         // This try-catch statement should likely be refined to handle common errors/exceptions
         try{
-            pwmControllerRightWheel = ioio_.openPwmOutput(PWM_RIGHT_WHEEL_PIN,PWM_FREQ);
-            pwmControllerLeftWheel = ioio_.openPwmOutput(PWM_LEFT_WHEEL_PIN,PWM_FREQ);
+            /*
+             * PWM frequency. Do not modify locally. Modify at AbcvlibActivity level if necessary
+             *  Not sure why initial PWM_FREQ is 1000, but assume this can be modified as necessary.
+             *  This may depend on the motor or microcontroller requirements/specs. <br><br>
+             *
+             *  If motor is just a DC motor, I guess this does not matter much, but for servos, this would
+             *  be the control function, so would have to match the baud rate of the microcontroller. Note
+             *  this library is not set up to control servos at this time. <br><br>
+             *
+             *  The microcontroller likely has a maximum frequency which it can turn ON/OFF the IO, so
+             *  setting PWM_FREQ too high may cause issues for certain microcontrollers.
+             */
+            int PWM_FREQ = 1000;
+            pwmControllerRightWheel = ioio_.openPwmOutput(PWM_RIGHT_WHEEL_PIN, PWM_FREQ);
+            pwmControllerLeftWheel = ioio_.openPwmOutput(PWM_LEFT_WHEEL_PIN, PWM_FREQ);
 
-            /* Note openDigitalInput() can also accept DigitalInput.Spec.Mode.OPEN_DRAIN if motor
-            circuit requires */
+            /*
+            Note openDigitalInput() can also accept DigitalInput.Spec.Mode.OPEN_DRAIN if motor
+            circuit requires
+            */
             encoderARightWheel = ioio_.openDigitalInput(ENCODER_A_RIGHT_WHEEL_PIN,
                     DigitalInput.Spec.Mode.PULL_UP);
             encoderBRightWheel = ioio_.openDigitalInput(ENCODER_B_RIGHT_WHEEL_PIN,
@@ -405,27 +384,18 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             Log.e("abcvlib", "ConnectionLostException at AbcvlibLooper.setup()");
             throw e;
         }
-
         Log.d("abcvlib", "AbcvlibLooper setup() finished");
-
-
     }
 
     /**
      * Called repetitively while the IOIO is connected.
      *
-     * @throws ConnectionLostException
-     *             When IOIO connection is lost.
-     * @throws InterruptedException
-     * 				When the IOIO thread has been interrupted.
-     *
      * @see ioio.lib.util.IOIOLooper#loop()
      */
     @Override
-    public void loop() throws ConnectionLostException, InterruptedException{
+    public void loop() {
 
         try {
-
             timeStampUpdate();
 
             getDutyCycle();
@@ -445,17 +415,6 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             updateChargerVoltage();
 
             indexUpdate();
-
-//            if (newDataLeft || newDataRight) {
-//                if (loggerOn) {
-//                    // Log stuff
-//                }
-//                indexUpdate();
-//            }
-//            else {
-////                Log.i("abcvlibLooper", "No new data");
-//            }
-
         }
         catch (ConnectionLostException e){
             Log.e("abcvlib", "connection lost in AbcvlibLooper.loop");
@@ -484,18 +443,6 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         Log.e("abcvlib", "Incompatible IOIO firmware version!");
     }
 
-    public int getIndexCurrent(){
-        return indexCurrent;
-    }
-
-    public int getIndexPrevious(){
-        return indexPrevious;
-    }
-
-    public int getLoopCount(){
-        return loopCount;
-    }
-
     public int getBuffer(){
         return buffer;
     }
@@ -504,16 +451,11 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         return timeStamp;
     }
 
-    public double getDt(){
-        return dt;
-    }
-
     /**
-     * Call {@link System#nanoTime()} and compare with previous timestep to get dt
+     * Call {@link System#nanoTime()}
      */
     private void timeStampUpdate(){
         timeStamp[indexCurrent] = System.nanoTime();
-        dt = (timeStamp[indexCurrent] - timeStamp[indexPrevious]) / 1000000000.0;
     }
 
     /**
@@ -553,7 +495,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     /**
      * Reads the high/low value of the quadrature encoders (two pairs) directly off the ioioboard
      * digital pins.
-     * @throws ConnectionLostException
+     * @throws ConnectionLostException called when connection lost while trying to read ioio pins.
      */
     private void getEncoderStates() throws ConnectionLostException{
 
@@ -601,7 +543,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      * Write the high/low values on the wheel In1In2 pins and set the duty cycle on the PWM pins.
      * This sets the wheel direction and speed. After this is done, set the  encoderARightWheelStatePrevious
      * and other "Previous" values to current values to prepare for next loop.
-     * @throws ConnectionLostException
+     * @throws ConnectionLostException called when connection lost while trying to read ioio pins.
      */
     private void writeIoUpdates() throws ConnectionLostException{
 
@@ -663,9 +605,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         try {
             chargerVoltage = chargerVoltageMonitor.getVoltage();
             coilVoltage = coilVoltageMonitor.getVoltage();
-        } catch (InterruptedException e) {
-            Log.e(TAG,"Error", e);
-        } catch (ConnectionLostException e) {
+        } catch (InterruptedException | ConnectionLostException e) {
             Log.e(TAG,"Error", e);
         }
         batteryData.onChargerVoltageUpdate(chargerVoltage, coilVoltage, timeStamp[indexCurrent]);
@@ -681,9 +621,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
         try {
             batteryVoltage = batteryVoltageMonitor.getVoltage();
-        } catch (InterruptedException e) {
-            Log.e(TAG,"Error", e);
-        } catch (ConnectionLostException e) {
+        } catch (InterruptedException | ConnectionLostException e) {
             Log.e(TAG,"Error", e);
         }
         batteryData.onBatteryVoltageUpdate(batteryVoltage, timeStamp[indexCurrent]);
@@ -790,9 +728,8 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         loopCount++;
     }
 
-    public void setDutyCycle(float left, float right) throws ConnectionLostException {
+    public void setDutyCycle(float left, float right) {
         dutyCycleLeftWheelCurrent = left;
         dutyCycleRightWheelCurrent = right;
     }
-
 }

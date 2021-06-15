@@ -38,11 +38,7 @@ public class GrandController extends AbcvlibController{
             Log.v("abcvlib", "grandController output:" + output.left);
         }
 
-        try {
-            abcvlibLooper.setDutyCycle(output.left, output.right);
-        } catch (ConnectionLostException e) {
-            e.printStackTrace();
-        }
+        abcvlibLooper.setDutyCycle(output.left, output.right);
     }
 
     public void addController(AbcvlibController controller){
