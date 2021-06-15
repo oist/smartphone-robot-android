@@ -44,10 +44,6 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     private long[] timeStamp = new long[buffer];
     private double dt = 0;
     private double lp_freq = 100.0; // Low Pass Cutoff Freq
-    private int quadZeroCount = 0;
-    private boolean newData = true;
-    private boolean newDataLeft = true;
-    private boolean newDataRight = true;
 
     /**
      * PWM frequency. Do not modify locally. Modify at AbcvlibActivity level if necessary
@@ -584,34 +580,21 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      * value for encoderCountRightWheel[indexCurrent]
      */
     private void getEncoderCounts(){
-
         // Right is negative and left is positive since the wheels are physically mirrored so
         // while moving forward one wheel is moving ccw while the other is rotating cw.
         encoderCountRightWheel[indexCurrent] = encoderCountRightWheel[indexPrevious] -
                 encoderAddSubtractCount(
                         encoderARightWheelState,
                         encoderBRightWheelState, encoderARightWheelStatePrevious,
-                        encoderBRightWheelStatePrevious);
-
-        if (newData){
-            newDataRight = true;
-        }
-        else {
-            newDataRight = false;
-        }
+                        encoderBRightWheelStatePrevious
+                );
 
         encoderCountLeftWheel[indexCurrent] = encoderCountLeftWheel[indexPrevious] +
                 encoderAddSubtractCount(
                         encoderALeftWheelState,
                         encoderBLeftWheelState, encoderALeftWheelStatePrevious,
-                        encoderBLeftWheelStatePrevious);
-
-        if (newData){
-            newDataLeft = true;
-        }
-        else{
-            newDataLeft = false;
-        }
+                        encoderBLeftWheelStatePrevious
+                );
     }
 
     /**
@@ -756,80 +739,57 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         maybe decreasing the sampling rate will remove the number of times the encoders are read
         precisely at the wrong moment (both H or both L). Will this happen?
          */
-        // Previous Encoder A HIGH, B HIGH
-        if(encoderAWheelStatePrevious && encoderBWheelStatePrevious){
-            // Current Encoder A LOW, B HIGH
-            if(!encoderAWheelState && encoderBWheelState){
+
+        // Channel A goes from Low to High
+        if (!encoderAWheelStatePrevious && encoderAWheelState){
+            // Channel B is Low = Clockwise
+            if (!encoderBWheelState){
                 wheelCounts++;
             }
-            // Current Encoder A HIGH, B LOW
-            else if(encoderAWheelState && !encoderBWheelState){
+            // Channel B is High = CounterClockwise
+            else {
                 wheelCounts--;
-            }
-            else{
-//                    Log.w("abcvlibEncoder", "quadErrorCount = " + quadErrorCount + " Quadrature encoders read H/H or L/L when they " +
-//                            "should have read H/L or L/H");
-                quadZeroCount++;
-                newData = false;
-            }
-        }
-        // Previous Encoder A LOW, B HIGH
-        else if(!encoderAWheelStatePrevious && encoderBWheelStatePrevious){
-            // Current Encoder A LOW, B LOW
-            if(!encoderAWheelState && !encoderBWheelState){
-                wheelCounts++;
-            }
-            // Current Encoder A HIGH, B HIGH
-            else if(encoderAWheelState && encoderBWheelState){
-                wheelCounts--;
-            }
-            else{
-//                    Log.w("abcvlibEncoder", "quadErrorCount = " + quadErrorCount + " Quadrature encoders read H/L or L/H when they " +
-//                            "should have read H/H or L/L");
-                quadZeroCount++;
-                newData = false;
-            }
-        }
-        // Previous Encoder A LOW, B LOW. Leave "always true" warning from Android Studio for
-        // readability.
-        else if(!encoderAWheelStatePrevious && !encoderBWheelStatePrevious){
-            // Current Encoder A HIGH, B LOW
-            if(encoderAWheelState && !encoderBWheelState){
-                wheelCounts++;
-            }
-            // Current Encoder A LOW, B HIGH
-            else if(!encoderAWheelState && encoderBWheelState){
-                wheelCounts--;
-            }
-            else{
-//                    Log.w("abcvlibEncoder", "quadErrorCount = " + quadErrorCount + " Quadrature encoders read H/H or L/L when they " +
-//                            "should have read H/L or L/H");
-                quadZeroCount++;
-                newData = false;
-            }
-        }
-        // Previous Encoder A HIGH, B LOW. Leave "always true" warning from Android Studio for
-        // readability.
-        else if(encoderAWheelStatePrevious &&! encoderBWheelStatePrevious){
-            // Current Encoder A HIGH, B HIGH
-            if(encoderAWheelState && encoderBWheelState){
-                wheelCounts++;
-            }
-            // Current Encoder A LOW, B LOW
-            else if(!encoderAWheelState && !encoderBWheelState){
-                wheelCounts--;
-            }
-            else{
-//                    Log.w("abcvlibEncoder", "quadErrorCount = " + quadErrorCount + " Quadrature encoders read H/L or L/H when they " +
-//                            "should have read H/H or L/L");
-                quadZeroCount++;
-                newData = false;
             }
         }
 
-        if (wheelCounts != 0){
-            newData = true;
+        // Channel A goes from High to Low
+        else if (encoderAWheelStatePrevious && !encoderAWheelState){
+            // Channel B is Low = CounterClockwise
+            if (!encoderBWheelState){
+                wheelCounts--;
+            }
+            // Channel B is High = Clockwise
+            else {
+                wheelCounts++;
+            }
         }
+
+        // Channel B goes from Low to High
+        else if (!encoderBWheelStatePrevious && encoderBWheelState){
+            // Channel A is Low = CounterClockwise
+            if (!encoderAWheelState){
+                wheelCounts--;
+            }
+            // Channel A is High = Clockwise
+            else {
+                wheelCounts++;
+            }
+        }
+
+        // Channel B goes from High to Low
+        else if (encoderBWheelStatePrevious && !encoderBWheelState){
+            // Channel A is Low = Clockwise
+            if (!encoderAWheelState){
+                wheelCounts++;
+            }
+            // Channel A is High = CounterClockwise
+            else {
+                wheelCounts--;
+            }
+        }
+
+        // Else both the current and previous state of A is HIGH or LOW, meaning no transition has
+        // occured thus no need to add or subtract from wheelCounts
 
         return wheelCounts;
     }
