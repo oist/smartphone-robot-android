@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
 
+import jp.oist.abcvlib.core.AbcvlibLooper;
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 
@@ -56,9 +57,34 @@ public class WheelData implements AbcvlibInput {
     }
 
     /**
-     * Sets the encoder count for the right wheel. This shouldn't normally be used by the user. This
-     * method exists for the AbcvlibLooper class to get/set encoder counts as the AbcvlibLooper
-     * class is responsible for constantly reading the encoder values from the IOIOBoard.
+     * Listens for updates on the ioio pins monitoring the quadrature encoders.
+     * Note these updates are not interupts, so they do not necessarily represent changes in
+     * value, simply a loop that regularly checks the status of the pin (high/low). This method is
+     * called from the publisher located in {@link AbcvlibLooper#loop()}. <br><br>
+     *
+     * After receiving data this then calculates various metics like encoderCounts, distance,
+     * and speed of each wheel. As the quadrature encoder pin states is updated FAR more frequently
+     * than their the frequency in which they change value, the speed calculation will result in
+     * values of mostly zero if calculated between single updates. Therefore the calculation of speed
+     * provides three different calculations for speed. <br><br>
+     * 1.) {@link SingleWheelData#speedInstantaneous} is the speed between single timesteps
+     *     (and therefore usually zero in value)<br><br>
+     * 2.) {@link SingleWheelData#speedBuffered} is the speed as measured from the beginning to the end
+     * of a fixed length buffer. The default length is 50, but this can be set via the
+     * {@link WheelData#WheelData(TimeStepDataBuffer, int, double)} constructor or via the
+     * {@link WheelData.Builder#setBufferLength(int)} builder method when creating an instance of
+     * WheelData.<br><br>
+     * 3.) {@link SingleWheelData#speedExponentialAvg} is a running exponential average of
+     * {@link SingleWheelData#speedBuffered}. The default weight of the average is 0.01, but this
+     * can be set via the {@link WheelData#WheelData(TimeStepDataBuffer, int, double)} constructor or via the
+     * {@link WheelData.Builder#setExpWeight(double)} builder method when creating an instance of
+     * WheelData.<br><br>
+     *
+     * Finally, this method then acts as
+     * a publisher to any subscribers/listeners that implement the {@link WheelDataListener}
+     * interface and passes this quadrature encoder pin state to <br><br>
+     * See the jp.oist.abcvlib.basicsubscriber.MainActivity for an example of this subscription
+     * framework
      */
     public void onWheelDataUpdate(long timestamp, boolean encoderARightWheelState,
                                   boolean encoderBRightWheelState, boolean encoderALeftWheelState,
