@@ -11,5 +11,7 @@ public interface WheelDataListener {
      */
     void onWheelDataUpdate(long timestamp, int wheelCountL, int wheelCountR,
                            double wheelDistanceL, double wheelDistanceR,
-                           double wheelSpeedL, double wheelSpeedR);
+                           double wheelSpeedInstantL, double wheelSpeedInstantR,
+                           double wheelSpeedBufferedL, double wheelSpeedBufferedR,
+                           double wheelSpeedExpAvgL, double wheelSpeedExpAvgR);
 }

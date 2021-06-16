@@ -25,9 +25,6 @@ public class MainActivity extends AbcvlibActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        // Initalizes various objects in parent class.
-        initializer(this);
-
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
 
@@ -35,11 +32,8 @@ public class MainActivity extends AbcvlibActivity {
         // ID within the R class
         setContentView(R.layout.activity_main);
 
-        Log.i(TAG, "Step 0");
-
         int[][] speedProfile = {{100, 0, -100, 0}, {100, 0, -100, 0}, {2000, 1000, 2000, 1000}};
         BackAndForth backAndForth = new BackAndForth(speedProfile);
-
     }
 
     class BackAndForth {

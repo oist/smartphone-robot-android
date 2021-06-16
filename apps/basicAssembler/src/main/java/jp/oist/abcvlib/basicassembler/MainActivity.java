@@ -2,14 +2,10 @@ package jp.oist.abcvlib.basicassembler;
 
 import android.Manifest;
 import android.os.Bundle;
-import android.util.Log;
 
-import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Locale;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
@@ -200,8 +196,8 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
             guiUpdater.wheelCountR = data.getWheelData().getRight().getCounts()[0];
             guiUpdater.wheelDistanceL = data.getWheelData().getLeft().getDistances()[0];
             guiUpdater.wheelDistanceR = data.getWheelData().getRight().getDistances()[0];
-            guiUpdater.wheelSpeedL = data.getWheelData().getLeft().getSpeeds()[0];
-            guiUpdater.wheelSpeedR = data.getWheelData().getRight().getSpeeds()[0];
+            guiUpdater.wheelSpeedL = data.getWheelData().getLeft().getSpeedsInstantaneous()[0];
+            guiUpdater.wheelSpeedR = data.getWheelData().getRight().getSpeedsInstantaneous()[0];
         }
         if (data.getSoundData().getLevels().length > 0){
             float[] arraySlice = Arrays.copyOfRange(data.getSoundData().getLevels(), 0, 5);

@@ -7,44 +7,17 @@ import android.util.Log;
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 
+import static jp.oist.abcvlib.util.DSP.exponentialAvg;
+
 public class WheelData implements AbcvlibInput {
 
     private TimeStepDataBuffer timeStepDataBuffer;
     private boolean isRecording = false;
 
-    private final int windowLength = 5;
-    private int quadCount = windowLength;
-    private double dt_sample = 0;
-    private double expWeight = 0.1;
-
     //----------------------------------- Wheel speed metrics --------------------------------------
-    /**
-     * Compounding negative wheel count set in AbcvlibLooper. Right is negative while left is
-     * positive since wheels are mirrored on physical body and thus one runs cw and the other ccw.
-     */
-    private EncoderCounter encoderCountRightWheel = new EncoderCounter();
-    /**
-     * Compounding positive wheel count set in AbcvlibLooper. Right is negative while left is
-     * positive since wheels are mirrored on physical body and thus one runs cw and the other ccw.
-     */
-    private EncoderCounter encoderCountLeftWheel = new EncoderCounter();
-    /**
-     * distance in mm that the right wheel has traveled from start point
-     * This assumes no slippage/lifting/etc. Use with a grain of salt.
-     */
-    private double distanceR = 0;
-    private double distanceRPrevious = 0;
-    /**
-     * distance in mm that the left wheel has traveled from start point
-     * This assumes no slippage/lifting/etc. Use with a grain of salt.
-     */
-    private double distanceL = 0;
-    private double distanceLPrevious = 0;
+    private final SingleWheelData rightWheel = new SingleWheelData();
+    private final SingleWheelData leftWheel = new SingleWheelData();
 
-    private double speedRightWheelLP = 0;
-    private double speedLeftWheelLP = 0;
-
-    private final long[] timeStamps = new long[windowLength];
     private WheelDataListener wheelDataListener = null;
     private final Handler handler;
 
@@ -65,43 +38,62 @@ public class WheelData implements AbcvlibInput {
                                   boolean encoderBLeftWheelState) {
         WheelData wheelData = this;
         handler.post(() -> {
-
-            /*
-            Right is negative and left is positive since the wheels are physically mirrored so
-            while moving forward one wheel is moving ccw while the other is rotating cw.
-            */
-            encoderCountRightWheel.updateCount(encoderARightWheelState, encoderBRightWheelState);
-            encoderCountLeftWheel.updateCount(encoderALeftWheelState, encoderBLeftWheelState);
-
-            int indexCurrent = (quadCount) % windowLength;
-            int indexPrevious = (quadCount - 1) % windowLength;
-
-            timeStamps[indexCurrent] = timestamp;
-            dt_sample = (timeStamps[indexCurrent] - timeStamps[indexPrevious]) / 1000000000f;
-            setDistanceL();
-            setDistanceR();
-            setWheelSpeedL();
-            setWheelSpeedR();
+            rightWheel.update(timestamp, encoderARightWheelState, encoderBRightWheelState);
+            leftWheel.update(timestamp, encoderALeftWheelState, encoderBLeftWheelState);
 
             if (isRecording){
-                timeStepDataBuffer.getWriteData().getWheelData().getLeft().put(timestamp, encoderCountLeftWheel.getCount(), distanceL, speedLeftWheelLP);
-                timeStepDataBuffer.getWriteData().getWheelData().getRight().put(timestamp, encoderCountRightWheel.getCount(), distanceR, speedRightWheelLP);
+                timeStepDataBuffer.getWriteData().getWheelData().getLeft().put(timestamp,
+                        leftWheel.getLatestEncoderCount(), leftWheel.getLatestDistance(),
+                        leftWheel.getSpeedInstantaneous(), leftWheel.getSpeedBuffered(),
+                        leftWheel.getSpeedExponentialAvg());
+                timeStepDataBuffer.getWriteData().getWheelData().getRight().put(timestamp,
+                        rightWheel.getLatestEncoderCount(), rightWheel.getLatestDistance(),
+                        rightWheel.getSpeedInstantaneous(), rightWheel.getSpeedBuffered(),
+                        rightWheel.getSpeedExponentialAvg());
             }
             if (wheelDataListener != null){
-                wheelDataListener.onWheelDataUpdate(timestamp, encoderCountLeftWheel.getCount(), encoderCountRightWheel.getCount(),
-                distanceL, distanceR, speedLeftWheelLP, speedRightWheelLP);
+                wheelDataListener.onWheelDataUpdate(timestamp, leftWheel.getLatestEncoderCount(),
+                        rightWheel.getLatestEncoderCount(), leftWheel.getLatestDistance(),
+                        rightWheel.getLatestDistance(), leftWheel.getSpeedInstantaneous(),
+                        rightWheel.getSpeedInstantaneous(), leftWheel.getSpeedBuffered(),
+                        rightWheel.getSpeedBuffered(), leftWheel.getSpeedExponentialAvg(),
+                        rightWheel.getSpeedExponentialAvg());
             }
-
-            quadCount++;
+            rightWheel.updateIndex();
+            leftWheel.updateIndex();
         });
     }
 
-    private static class EncoderCounter {
-        boolean encoderAStatePrevious;
-        boolean encoderBStatePrevious;
-        int count = 0;
+    /**
+     * Holds all wheel metrics such as quadrature encoder state, quadrature encoder counts,
+     * distance traveled, and current speed. All metrics other than quadrature encoder state are
+     * stored in circular buffers in order to avoid rapid shifts in speed measurements due to
+     * several identical readings even when moving at full speed. This is due to a very fast sampling
+     * rate compared to the rate of change on the quadrature encoders.
+     */
+    private static class SingleWheelData {
+        // High/Low state of pins monitoring quadrature encoders
+        private boolean encoderAStatePrevious;
+        private boolean encoderBStatePrevious;
+        private final int bufferLength = 50; //todo should be user-changeable
+        private int idxHead = bufferLength - 1;
+        private int idxHeadPrev = idxHead - 1;
+        private int idxTail = 0;
+        // Total number of counts since start of activity
+        private int[] encoderCount = new int[bufferLength];
+        // distance in mm that the wheel has traveled from start point. his assumes no slippage/lifting/etc.
+        private double[] distance = new double[bufferLength];
+        // speed in mm/s that the wheel is currently traveling at. Calculated by taking the difference between the first and last index in the distance buffer over the difference in timestamps
+        private double speedBuffered = 0;
+        // speed as measured between two consecutive quadrature code samples (VERY NOISY due to reading zero for any repeated quadrature encoder readings which happen VERY often)
+        private double speedInstantaneous = 0;
+        // running exponential average of speedBuffered.
+        private double speedExponentialAvg = 0;
+        private long[] timestamps = new long[bufferLength];
+        private double expWeight = 0.01; //todo should be user-changeable
+        double mmPerCount = (2 * Math.PI * 30) / 128;
 
-        public EncoderCounter(){
+        public SingleWheelData(){
         }
 
         /**
@@ -134,16 +126,22 @@ public class WheelData implements AbcvlibInput {
 
          * @return wheelCounts
          */
-        private void updateCount(Boolean encoderAState, Boolean encoderBState){
+        private synchronized void update(long timestamp, Boolean encoderAState, Boolean encoderBState){
+            updateCount(encoderAState, encoderBState);
+            updateDistance();
+            updateWheelSpeed(timestamp);
+        }
+
+        private synchronized void updateCount(Boolean encoderAState, Boolean encoderBState){
             // Channel A goes from Low to High
             if (!encoderAStatePrevious && encoderAState){
                 // Channel B is Low = Clockwise
                 if (!encoderBState){
-                    count++;
+                    encoderCount[idxHead] = encoderCount[idxHeadPrev] + 1;
                 }
                 // Channel B is High = CounterClockwise
                 else {
-                    count--;
+                    encoderCount[idxHead] = encoderCount[idxHeadPrev] - 1;
                 }
             }
 
@@ -151,11 +149,11 @@ public class WheelData implements AbcvlibInput {
             else if (encoderAStatePrevious && !encoderAState){
                 // Channel B is Low = CounterClockwise
                 if (!encoderBState){
-                    count--;
+                    encoderCount[idxHead] = encoderCount[idxHeadPrev] - 1;
                 }
                 // Channel B is High = Clockwise
                 else {
-                    count++;
+                    encoderCount[idxHead] = encoderCount[idxHeadPrev] + 1;
                 }
             }
 
@@ -163,11 +161,11 @@ public class WheelData implements AbcvlibInput {
             else if (!encoderBStatePrevious && encoderBState){
                 // Channel A is Low = CounterClockwise
                 if (!encoderAState){
-                    count--;
+                    encoderCount[idxHead] = encoderCount[idxHeadPrev] - 1;
                 }
                 // Channel A is High = Clockwise
                 else {
-                    count++;
+                    encoderCount[idxHead] = encoderCount[idxHeadPrev] + 1;
                 }
             }
 
@@ -175,27 +173,71 @@ public class WheelData implements AbcvlibInput {
             else if (encoderBStatePrevious && !encoderBState){
                 // Channel A is Low = Clockwise
                 if (!encoderAState){
-                    count++;
+                    encoderCount[idxHead] = encoderCount[idxHeadPrev] + 1;
                 }
                 // Channel A is High = CounterClockwise
                 else {
-                    count--;
+                    encoderCount[idxHead] = encoderCount[idxHeadPrev] - 1;
                 }
             }
 
             // Else both the current and previous state of A is HIGH or LOW, meaning no transition has
             // occurred thus no need to add or subtract from wheelCounts
+            else {
+                encoderCount[idxHead] = encoderCount[idxHeadPrev];
+            }
 
             encoderAStatePrevious = encoderAState;
             encoderBStatePrevious = encoderBState;
         }
 
-        public int getCount() {
-            return count;
+        private synchronized void updateDistance(){
+            distance[idxHead] = encoderCount[idxHead] * mmPerCount;
+        }
+
+        private synchronized void updateWheelSpeed(long timestamp) {
+            timestamps[idxHead] = timestamp;
+            double dt_buffer = (timestamps[idxHead] - timestamps[idxTail]) / 1000000000f;
+
+            if (dt_buffer != 0) {
+                // Calculate the speed of each wheel in mm/s.
+                speedInstantaneous = (distance[idxHead] - distance[idxHeadPrev]) / 1000000000f;
+                speedBuffered = (distance[idxHead] - distance[idxTail]) / dt_buffer;
+                speedExponentialAvg = exponentialAvg(speedBuffered, speedExponentialAvg, expWeight);
+            }
+            else{
+                Log.i("sensorDebugging", "dt_buffer == 0");
+            }
+        }
+
+        private synchronized void updateIndex(){
+            idxHeadPrev = idxHead;
+            idxHead++;
+            idxTail++;
+            idxHead = idxHead % bufferLength;
+            idxTail = idxTail % bufferLength;
+        }
+
+        public synchronized int getLatestEncoderCount() {
+            return encoderCount[idxHead];
+        }
+
+        public synchronized double getLatestDistance() {
+            return distance[idxHead];
+        }
+
+        public synchronized double getSpeedBuffered() {
+            return speedBuffered;
+        }
+
+        public synchronized double getSpeedExponentialAvg() {
+            return speedExponentialAvg;
+        }
+
+        public synchronized double getSpeedInstantaneous() {
+            return speedInstantaneous;
         }
     }
-
-
 
     public void setWheelDataListener(WheelDataListener wheelDataListener) {
         this.wheelDataListener = wheelDataListener;
@@ -211,92 +253,6 @@ public class WheelData implements AbcvlibInput {
 
     public void setRecording(boolean recording) {
         isRecording = recording;
-    }
-
-    /**
-     * @return Current encoder count for the right wheel
-     */
-    public int getWheelCountR(){ return encoderCountRightWheel.getCount(); }
-
-    /**
-     * @return Current encoder count for the left wheel
-     */
-    public int getWheelCountL(){ return encoderCountLeftWheel.getCount(); }
-
-    public double getDistanceL() {
-        return distanceL;
-    }
-
-    public double getDistanceR() {
-        return distanceR;
-    }
-
-    /**
-     * @return Current speed of left wheel in encoder counts per second with a Low Pass filter.
-     * May want to convert to rotations per second if the encoder resolution (counts per revolution)
-     * is known.
-     */
-    public double getWheelSpeedL_LP() {return speedLeftWheelLP;}
-
-    /**
-     * @return Current speed of left wheel in encoder counts per second with a Low Pass filter.
-     * May want to convert to rotations per second if the encoder resolution (counts per revolution)
-     * is known.
-     */
-    public double getWheelSpeedR_LP() { return speedRightWheelLP;}
-
-    /**
-     * Get distances traveled by left wheel from start point.
-     * This does not account for slippage/lifting/etc. so
-     * use with a grain of salt
-     */
-    private void setDistanceL(){
-        double mmPerCount = (2 * Math.PI * 30) / 128;
-        distanceLPrevious = distanceL;
-        distanceL = encoderCountLeftWheel.getCount() * mmPerCount;
-
-    }
-
-    /**
-     * Get distances traveled by right wheel from start point.
-     * This does not account for slippage/lifting/etc. so
-     * use with a grain of salt
-     */
-    private void setDistanceR(){
-        double mmPerCount = (2 * Math.PI * 30) / 128;
-        distanceRPrevious = distanceR;
-        distanceR = encoderCountRightWheel.getCount() * mmPerCount;
-    }
-
-    private void setWheelSpeedL() {
-        if (dt_sample != 0) {
-            // Calculate the speed of each wheel in mm/s.
-            double speedLeftWheel = (distanceL - distanceLPrevious) / dt_sample;
-            speedLeftWheelLP = exponentialAvg(speedLeftWheel, speedLeftWheelLP, expWeight);
-        }
-        else{
-            Log.i("sensorDebugging", "dt_sample == 0");
-        }
-    }
-
-    private void setWheelSpeedR() {
-        if (dt_sample != 0) {
-            // Calculate the speed of each wheel in mm/s.
-            double speedRightWheel = (distanceR - distanceRPrevious) / dt_sample;
-            speedRightWheelLP = exponentialAvg(speedRightWheel, speedRightWheelLP, expWeight);
-        }
-        else{
-            Log.i("sensorDebugging", "dt_sample == 0");
-        }
-    }
-
-    public void setExpWeight(double weight){
-        expWeight = weight;
-    }
-
-    public static double exponentialAvg(double sample, double expAvg, double weighting){
-        expAvg = (1.0 - weighting) * expAvg + (weighting * sample);
-        return expAvg;
     }
 
     /**

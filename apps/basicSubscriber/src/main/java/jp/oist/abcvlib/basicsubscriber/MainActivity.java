@@ -112,7 +112,9 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
     @Override
     public void onWheelDataUpdate(long timestamp, int wheelCountL, int wheelCountR,
                                   double wheelDistanceL, double wheelDistanceR,
-                                  double wheelSpeedL, double wheelSpeedR) {
+                                  double wheelSpeedInstantL, double wheelSpeedInstantR,
+                                  double wheelSpeedBufferedL, double wheelSpeedBufferedR,
+                                  double wheelSpeedExpAvgL, double wheelSpeedExpAvgR) {
 //        Log.i(TAG, "Wheel Data Update: Timestamp=" + timestamp + " countLeft=" + countLeft +
 //                " countRight=" + countRight);
 //        double distanceLeft = WheelData.countsToDistance(countLeft);
@@ -120,8 +122,12 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
         guiUpdater.wheelCountR = wheelCountR;
         guiUpdater.wheelDistanceL = wheelDistanceL;
         guiUpdater.wheelDistanceR = wheelDistanceR;
-        guiUpdater.wheelSpeedL = wheelSpeedL;
-        guiUpdater.wheelSpeedR = wheelSpeedR;
+        guiUpdater.wheelSpeedInstantL = wheelSpeedInstantL;
+        guiUpdater.wheelSpeedInstantR = wheelSpeedInstantR;
+        guiUpdater.wheelSpeedBufferedL = wheelSpeedBufferedL;
+        guiUpdater.wheelSpeedBufferedR = wheelSpeedBufferedR;
+        guiUpdater.wheelSpeedExpAvgL = wheelSpeedExpAvgL;
+        guiUpdater.wheelSpeedExpAvgR = wheelSpeedExpAvgR;
     }
 
     /**

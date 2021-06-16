@@ -106,7 +106,7 @@
         app:layout_constraintTop_toBottomOf="@+id/angularVelcoityHeader" />
 
     <TextView
-        android:id="@+id/leftWheelCount"
+        android:id="@+id/leftWheelData"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
@@ -123,12 +123,12 @@
         app:layout_constraintTop_toBottomOf="@+id/leftWheelHeader"/>
 
     <TextView
-        android:id="@+id/rightWheelCount"
+        android:id="@+id/rightWheelData"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/rightWheelHeader"
-        app:layout_constraintTop_toBottomOf="@+id/leftWheelCount"
+        app:layout_constraintTop_toBottomOf="@+id/leftWheelData"
         app:layout_constraintHorizontal_bias="0.05"/>
 
     <TextView
@@ -145,7 +145,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/soundDataHeader"
-        app:layout_constraintTop_toBottomOf="@+id/rightWheelCount"
+        app:layout_constraintTop_toBottomOf="@+id/rightWheelData"
         app:layout_constraintHorizontal_bias="0.05"/>
 
     <FrameLayout

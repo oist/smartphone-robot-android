@@ -98,13 +98,20 @@ public class TimeStepDataBuffer {
                 ArrayList<Long> timestamps = new ArrayList<>();
                 ArrayList<Integer> counts = new ArrayList<>();
                 ArrayList<Double> distances = new ArrayList<>();
-                ArrayList<Double> speeds = new ArrayList<>();
+                ArrayList<Double> speedsInstantaneous = new ArrayList<>();
+                ArrayList<Double> speedsBuffered = new ArrayList<>();
+                ArrayList<Double> speedsExpAvg = new ArrayList<>();
 
-                public void put(long timestamp, int count, double distance, double speed){
+
+                public void put(long timestamp, int count, double distance, double speedInstantaneous,
+                                double speedBuffered, double speedExpAvg){
                     timestamps.add(timestamp);
                     counts.add(count);
                     distances.add(distance);
-                    speeds.add(speed);
+                    speedsInstantaneous.add(speedInstantaneous);
+                    speedsBuffered.add(speedBuffered);
+                    speedsExpAvg.add(speedExpAvg);
+
                 }
                 public long[] getTimeStamps(){
                     int size = timestamps.size();
@@ -133,11 +140,29 @@ public class TimeStepDataBuffer {
                     return distancesArray;
                 }
 
-                public double[] getSpeeds(){
-                    int size = speeds.size();
+                public double[] getSpeedsInstantaneous(){
+                    int size = speedsInstantaneous.size();
                     double[] speedsArray = new double[size];
                     for (int i=0 ; i < size ; i++){
-                        speedsArray[i] = speeds.get(i);
+                        speedsArray[i] = speedsInstantaneous.get(i);
+                    }
+                    return speedsArray;
+                }
+
+                public double[] getSpeedsBuffered(){
+                    int size = speedsBuffered.size();
+                    double[] speedsArray = new double[size];
+                    for (int i=0 ; i < size ; i++){
+                        speedsArray[i] = speedsBuffered.get(i);
+                    }
+                    return speedsArray;
+                }
+
+                public double[] getSpeedsExpAvg(){
+                    int size = speedsExpAvg.size();
+                    double[] speedsArray = new double[size];
+                    for (int i=0 ; i < size ; i++){
+                        speedsArray[i] = speedsExpAvg.get(i);
                     }
                     return speedsArray;
                 }

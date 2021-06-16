@@ -26,8 +26,12 @@ public class GuiUpdater implements Runnable{
     volatile int wheelCountR;
     volatile double wheelDistanceL = 0.0;
     volatile double wheelDistanceR = 0.0;
-    volatile double wheelSpeedL = 0.0;
-    volatile double wheelSpeedR = 0.0;
+    volatile double wheelSpeedInstantL = 0.0;
+    volatile double wheelSpeedInstantR = 0.0;
+    volatile double wheelSpeedBufferedL = 0.0;
+    volatile double wheelSpeedBufferedR = 0.0;
+    volatile double wheelSpeedExpAvgL = 0.0;
+    volatile double wheelSpeedExpAvgR = 0.0;
 
     volatile String audioDataString = "";
     volatile String frameRateString = "";
@@ -39,8 +43,8 @@ public class GuiUpdater implements Runnable{
         coilVoltageText = activity.findViewById(R.id.coilVoltageText);
         tiltAngleText = activity.findViewById(R.id.tiltAngle);
         angularVelocityText = activity.findViewById(R.id.angularVelcoity);
-        leftWheelText = activity.findViewById(R.id.leftWheelCount);
-        rightWheelText = activity.findViewById(R.id.rightWheelCount);
+        leftWheelText = activity.findViewById(R.id.leftWheelData);
+        rightWheelText = activity.findViewById(R.id.rightWheelData);
         soundDataText = activity.findViewById(R.id.soundData);
         frameRateText = activity.findViewById(R.id.frameRate);
     }
@@ -55,10 +59,14 @@ public class GuiUpdater implements Runnable{
             angularVelocityText.setText(df.format(angularVelocityDeg));
             String left = df.format(wheelCountL) + " : " +
                     df.format(wheelDistanceL) + " : " +
-                    df.format(wheelSpeedL);
+                    df.format(wheelSpeedInstantL) + " : " +
+                    df.format(wheelSpeedBufferedL) + " : " +
+                    df.format(wheelSpeedExpAvgL);;
             String right = df.format(wheelCountR) + " : " +
                     df.format(wheelDistanceR) + " : " +
-                    df.format(wheelSpeedR);
+                    df.format(wheelSpeedInstantR) + " : " +
+                    df.format(wheelSpeedBufferedR) + " : " +
+                    df.format(wheelSpeedExpAvgR);
             leftWheelText.setText(left);
             rightWheelText.setText(right);
             soundDataText.setText(audioDataString);

@@ -8,8 +8,8 @@
     <string name="rightWheelHeader">Right Wheel Count: </string>
     <string name="soundDataHeader">Sound Data: </string>
     <string name="frameRateHeader">Frame Rate: </string>
-    <string name="leftWheelHeaderText">Left Wheel Count : Distance : Speed : </string>
-    <string name="rightWheelHeaderText">Right Wheel Count : Distance : Speed : </string>
+    <string name="leftWheelHeaderText">Left Wheel C:D:SI:SB:SE</string>
+    <string name="rightWheelHeaderText">Right Wheel C:D:SI:SB:SE</string>
     <string name="coilVoltageTextValue">0.00</string>
     <string name="coilVoltageHeaderValue">Coil Voltage: </string>
 </resources>

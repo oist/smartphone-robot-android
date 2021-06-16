@@ -135,7 +135,7 @@ public class TimeStepDataAssembler implements Runnable {
         int distancesLeft = IndividualWheelData.createDistancesVector(builder,
                 leftData.getDistances());
         int speedsLeft = IndividualWheelData.createSpeedsVector(builder,
-                leftData.getSpeeds());
+                leftData.getSpeedsInstantaneous());
         int leftOffset = IndividualWheelData.createIndividualWheelData(builder, timeStampsLeft,
                 countsLeft, distancesLeft, speedsLeft);
 
@@ -150,7 +150,7 @@ public class TimeStepDataAssembler implements Runnable {
         int distancesRight = IndividualWheelData.createDistancesVector(builder,
                 rightData.getDistances());
         int speedsRight = IndividualWheelData.createSpeedsVector(builder,
-                rightData.getSpeeds());
+                rightData.getSpeedsInstantaneous());
         int rightOffset = IndividualWheelData.createIndividualWheelData(builder, timeStampsRight,
                 countsRight, distancesRight, speedsRight);
 
