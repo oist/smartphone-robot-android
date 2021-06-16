@@ -109,7 +109,8 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
         // reusing the same timeStepDataBuffer shared by all. You could alternatively create a new
         // one or extend it in another class.
         BatteryData batteryData = new BatteryData(this.getInputs().getTimeStepDataBuffer());
-        WheelData wheelData = new WheelData(this.getInputs().getTimeStepDataBuffer());
+        // bufferLength and exptWeight set how the speed is calculated.
+        WheelData wheelData = new WheelData(this.getInputs().getTimeStepDataBuffer(), 50, 0.01);
         OrientationData orientationData = new OrientationData(
                 this.getInputs().getTimeStepDataBuffer(), this);
 
@@ -196,8 +197,12 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
             guiUpdater.wheelCountR = data.getWheelData().getRight().getCounts()[0];
             guiUpdater.wheelDistanceL = data.getWheelData().getLeft().getDistances()[0];
             guiUpdater.wheelDistanceR = data.getWheelData().getRight().getDistances()[0];
-            guiUpdater.wheelSpeedL = data.getWheelData().getLeft().getSpeedsInstantaneous()[0];
-            guiUpdater.wheelSpeedR = data.getWheelData().getRight().getSpeedsInstantaneous()[0];
+            guiUpdater.wheelSpeedInstantL = data.getWheelData().getLeft().getSpeedsInstantaneous()[0];;
+            guiUpdater.wheelSpeedInstantR = data.getWheelData().getRight().getSpeedsInstantaneous()[0];;
+            guiUpdater.wheelSpeedBufferedL = data.getWheelData().getLeft().getSpeedsBuffered()[0];
+            guiUpdater.wheelSpeedBufferedR = data.getWheelData().getRight().getSpeedsBuffered()[0];
+            guiUpdater.wheelSpeedExpAvgL = data.getWheelData().getLeft().getSpeedsExpAvg()[0];
+            guiUpdater.wheelSpeedExpAvgR = data.getWheelData().getRight().getSpeedsExpAvg()[0];
         }
         if (data.getSoundData().getLevels().length > 0){
             float[] arraySlice = Arrays.copyOfRange(data.getSoundData().getLevels(), 0, 5);

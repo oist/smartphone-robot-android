@@ -15,17 +15,44 @@ public class WheelData implements AbcvlibInput {
     private boolean isRecording = false;
 
     //----------------------------------- Wheel speed metrics --------------------------------------
-    private final SingleWheelData rightWheel = new SingleWheelData();
-    private final SingleWheelData leftWheel = new SingleWheelData();
+    private SingleWheelData rightWheel;
+    private SingleWheelData leftWheel;
 
     private WheelDataListener wheelDataListener = null;
     private final Handler handler;
 
-    public WheelData(TimeStepDataBuffer timeStepDataBuffer){
+    public WheelData(TimeStepDataBuffer timeStepDataBuffer, int bufferLength, double expWeight){
         this.timeStepDataBuffer = timeStepDataBuffer;
+        rightWheel = new SingleWheelData(bufferLength, expWeight);
+        leftWheel = new SingleWheelData(bufferLength, expWeight);
         HandlerThread mHandlerThread = new HandlerThread("wheelDataThread");
         mHandlerThread.start();
         handler = new Handler(mHandlerThread.getLooper());
+    }
+
+    public WheelData(TimeStepDataBuffer timeStepDataBuffer){
+        this(timeStepDataBuffer, 50, 0.01);
+    }
+
+    public static class Builder{
+        TimeStepDataBuffer timeStepDataBuffer;
+        int bufferLength = 50;
+        double expWeight = 0.01;
+        public WheelData build(){
+            return new WheelData(timeStepDataBuffer, bufferLength, expWeight);
+        }
+        public Builder setTimeStepDataBuffer(TimeStepDataBuffer timeStepDataBuffer){
+            this.timeStepDataBuffer = timeStepDataBuffer;
+            return this;
+        }
+        public Builder setBufferLength(int bufferLength){
+            this.bufferLength = bufferLength;
+            return this;
+        }
+        public Builder setExpWeight(double expWeight){
+            this.expWeight = expWeight;
+            return this;
+        }
     }
 
     /**
@@ -36,7 +63,6 @@ public class WheelData implements AbcvlibInput {
     public void onWheelDataUpdate(long timestamp, boolean encoderARightWheelState,
                                   boolean encoderBRightWheelState, boolean encoderALeftWheelState,
                                   boolean encoderBLeftWheelState) {
-        WheelData wheelData = this;
         handler.post(() -> {
             rightWheel.update(timestamp, encoderARightWheelState, encoderBRightWheelState);
             leftWheel.update(timestamp, encoderALeftWheelState, encoderBLeftWheelState);
@@ -75,25 +101,27 @@ public class WheelData implements AbcvlibInput {
         // High/Low state of pins monitoring quadrature encoders
         private boolean encoderAStatePrevious;
         private boolean encoderBStatePrevious;
-        private final int bufferLength = 50; //todo should be user-changeable
+        private int bufferLength = 50; //todo should be user-changeable
         private int idxHead = bufferLength - 1;
         private int idxHeadPrev = idxHead - 1;
         private int idxTail = 0;
         // Total number of counts since start of activity
-        private int[] encoderCount = new int[bufferLength];
+        private final int[] encoderCount = new int[bufferLength];
         // distance in mm that the wheel has traveled from start point. his assumes no slippage/lifting/etc.
-        private double[] distance = new double[bufferLength];
+        private final double[] distance = new double[bufferLength];
         // speed in mm/s that the wheel is currently traveling at. Calculated by taking the difference between the first and last index in the distance buffer over the difference in timestamps
         private double speedBuffered = 0;
         // speed as measured between two consecutive quadrature code samples (VERY NOISY due to reading zero for any repeated quadrature encoder readings which happen VERY often)
         private double speedInstantaneous = 0;
         // running exponential average of speedBuffered.
         private double speedExponentialAvg = 0;
-        private long[] timestamps = new long[bufferLength];
+        private final long[] timestamps = new long[bufferLength];
         private double expWeight = 0.01; //todo should be user-changeable
         double mmPerCount = (2 * Math.PI * 30) / 128;
 
-        public SingleWheelData(){
+        public SingleWheelData(int bufferLength, double expWeight){
+            this.bufferLength = bufferLength;
+            this.expWeight = expWeight;
         }
 
         /**
@@ -123,8 +151,6 @@ public class WheelData implements AbcvlibInput {
          H/L  H/L H/L L   Standby<br><br>
 
          See: <a href="http://www.creative-robotics.com/quadrature-intro">http://www.creative-robotics.com/quadrature-intro</a>
-
-         * @return wheelCounts
          */
         private synchronized void update(long timestamp, Boolean encoderAState, Boolean encoderBState){
             updateCount(encoderAState, encoderBState);
