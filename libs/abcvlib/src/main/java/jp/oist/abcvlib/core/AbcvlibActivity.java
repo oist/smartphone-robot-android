@@ -12,12 +12,10 @@ import androidx.core.content.ContextCompat;
 import java.util.Iterator;
 import java.util.Map;
 
-import ioio.lib.api.exception.ConnectionLostException;
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
 import jp.oist.abcvlib.core.inputs.Inputs;
 import jp.oist.abcvlib.core.outputs.Outputs;
-import jp.oist.abcvlib.util.ErrorHandler;
 
 /**
  * AbcvlibActivity is where all of the other classes are initialized into objects. The objects
