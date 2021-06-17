@@ -61,11 +61,11 @@ public class WheelData implements AbcvlibInput {
 
     /**
      * Listens for updates on the ioio pins monitoring the quadrature encoders.
-     * Note these updates are not interupts, so they do not necessarily represent changes in
+     * Note these updates are not interrupts, so they do not necessarily represent changes in
      * value, simply a loop that regularly checks the status of the pin (high/low). This method is
      * called from the publisher located in {@link AbcvlibLooper#loop()}. <br><br>
      *
-     * After receiving data this then calculates various metics like encoderCounts, distance,
+     * After receiving data this then calculates various metrics like encoderCounts, distance,
      * and speed of each wheel. As the quadrature encoder pin states is updated FAR more frequently
      * than their the frequency in which they change value, the speed calculation will result in
      * values of mostly zero if calculated between single updates. Therefore the calculation of speed
@@ -119,6 +119,22 @@ public class WheelData implements AbcvlibInput {
         });
     }
 
+    public void setWheelDataListener(WheelDataListener wheelDataListener) {
+        this.wheelDataListener = wheelDataListener;
+    }
+
+    public void setTimeStepDataBuffer(TimeStepDataBuffer timeStepDataBuffer) {
+        this.timeStepDataBuffer = timeStepDataBuffer;
+    }
+
+    public TimeStepDataBuffer getTimeStepDataBuffer() {
+        return timeStepDataBuffer;
+    }
+
+    public void setRecording(boolean recording) {
+        isRecording = recording;
+    }
+
     /**
      * Holds all wheel metrics such as quadrature encoder state, quadrature encoder counts,
      * distance traveled, and current speed. All metrics other than quadrature encoder state are
@@ -130,7 +146,7 @@ public class WheelData implements AbcvlibInput {
         // High/Low state of pins monitoring quadrature encoders
         private boolean encoderAStatePrevious;
         private boolean encoderBStatePrevious;
-        private int bufferLength = 50; //todo should be user-changeable
+        private int bufferLength;
         private int idxHead = bufferLength - 1;
         private int idxHeadPrev = idxHead - 1;
         private int idxTail = 0;
@@ -145,7 +161,7 @@ public class WheelData implements AbcvlibInput {
         // running exponential average of speedBuffered.
         private double speedExponentialAvg = 0;
         private final long[] timestamps = new long[bufferLength];
-        private double expWeight = 0.01; //todo should be user-changeable
+        private double expWeight;
         double mmPerCount = (2 * Math.PI * 30) / 128;
 
         public SingleWheelData(int bufferLength, double expWeight){
@@ -292,35 +308,7 @@ public class WheelData implements AbcvlibInput {
         public synchronized double getSpeedInstantaneous() {
             return speedInstantaneous;
         }
+
+        public synchronized void setExpWeight(double expWeight){this.expWeight = expWeight;}
     }
-
-    public void setWheelDataListener(WheelDataListener wheelDataListener) {
-        this.wheelDataListener = wheelDataListener;
-    }
-
-    public void setTimeStepDataBuffer(TimeStepDataBuffer timeStepDataBuffer) {
-        this.timeStepDataBuffer = timeStepDataBuffer;
-    }
-
-    public TimeStepDataBuffer getTimeStepDataBuffer() {
-        return timeStepDataBuffer;
-    }
-
-    public void setRecording(boolean recording) {
-        isRecording = recording;
-    }
-
-    /**
-     * Convert quadrature encoder counts to distance traveled by wheel from start point.
-     * This does not account for slippage/lifting/etc. so use with a grain of salt
-     * @return distance in mm
-     */
-    public static double counts2Distance(int count){
-        double distance;
-        double mmPerCount = (2 * Math.PI * 30) / 128;
-        distance = count * mmPerCount;
-        return distance;
-    }
-
-
 }
