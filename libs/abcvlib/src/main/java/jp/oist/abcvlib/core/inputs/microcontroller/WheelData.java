@@ -16,8 +16,8 @@ public class WheelData implements AbcvlibInput {
     private boolean isRecording = false;
 
     //----------------------------------- Wheel speed metrics --------------------------------------
-    private SingleWheelData rightWheel;
-    private SingleWheelData leftWheel;
+    private final SingleWheelData rightWheel;
+    private final SingleWheelData leftWheel;
 
     private WheelDataListener wheelDataListener = null;
     private final Handler handler;
@@ -39,6 +39,9 @@ public class WheelData implements AbcvlibInput {
         TimeStepDataBuffer timeStepDataBuffer;
         int bufferLength = 50;
         double expWeight = 0.01;
+
+        public Builder(){}
+
         public WheelData build(){
             return new WheelData(timeStepDataBuffer, bufferLength, expWeight);
         }

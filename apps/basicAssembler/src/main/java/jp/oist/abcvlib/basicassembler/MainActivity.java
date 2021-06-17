@@ -110,7 +110,11 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
         // one or extend it in another class.
         BatteryData batteryData = new BatteryData(this.getInputs().getTimeStepDataBuffer());
         // bufferLength and exptWeight set how the speed is calculated.
-        WheelData wheelData = new WheelData(this.getInputs().getTimeStepDataBuffer(), 50, 0.01);
+        WheelData wheelData = new WheelData.Builder()
+                .setTimeStepDataBuffer(this.getInputs().getTimeStepDataBuffer())
+                .setBufferLength(50)
+                .setExpWeight(0.01)
+                .build();
         OrientationData orientationData = new OrientationData(
                 this.getInputs().getTimeStepDataBuffer(), this);
 
