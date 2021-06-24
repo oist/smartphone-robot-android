@@ -7,9 +7,6 @@ import android.util.Log;
 import androidx.annotation.RequiresApi;
 
 import java.util.Arrays;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
@@ -36,6 +33,7 @@ public class MainActivity extends AbcvlibActivity {
 
         int[][] speedProfile = {{100, 0, -100, 0}, {100, 0, -100, 0}, {2000, 1000, 2000, 1000}};
         BackAndForth backAndForth = new BackAndForth(speedProfile);
+        backAndForth.start();
     }
 
     class BackAndForth {
@@ -49,13 +47,15 @@ public class MainActivity extends AbcvlibActivity {
         int[][] speedProfile;
         ScheduledExecutorServiceWithException executor;
         SpeedSetter speedSetter;
-        ScheduledFuture<?> speedHandle;
 
         @RequiresApi(api = Build.VERSION_CODES.N)
         public BackAndForth(int[][] speedProfile){
             this.speedProfile = speedProfile;
             executor = new ScheduledExecutorServiceWithException(1,
                     new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY, "BackAndForth"));
+        }
+
+        public void start(){
             executor.scheduleAtFixedRate(() -> {
                 int endOfCurrentTimeSlot = 0;
                 for (int i = 0 ; i < speedProfile[0].length; i++){
@@ -70,7 +70,7 @@ public class MainActivity extends AbcvlibActivity {
     class SpeedSetter implements Runnable{
 
         private final int left;
-        private int right;
+        private final int right;
 
         public SpeedSetter(int left, int right){
             this.left = left;
@@ -79,9 +79,13 @@ public class MainActivity extends AbcvlibActivity {
 
         @Override
         public void run() {
-            getOutputs().setWheelOutput(left, right);
-            Log.i("BackAndForth", "LeftWheel = " + left + " RightWheel = " + right);
+            if (getOutputs() == null){
+                Log.d("backandforth", "Waiting for outputs to initialize");
+            }
+            else{
+                getOutputs().setWheelOutput(left, right);
+                Log.i("BackAndForth", "LeftWheel = " + left + " RightWheel = " + right);
+            }
         }
     }
-
 }

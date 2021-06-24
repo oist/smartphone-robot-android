@@ -27,6 +27,7 @@ public class Outputs implements OutputsInterface {
     private ArrayList<AbcvlibController> controllers = new ArrayList<>();
     private ProcessPriorityThreadFactory processPriorityThreadFactory;
     private ScheduledExecutorServiceWithException threadPoolExecutor;
+    private AbcvlibLooper abcvlibLooper;
 
 
     public Outputs(Switches switches, AbcvlibLooper abcvlibLooper, Inputs inputs){
@@ -36,6 +37,7 @@ public class Outputs implements OutputsInterface {
 //        threadCount += (switches.pythonControlledPIDBalancer) ? 1 : 0;
 //        threadCount += (switches.balanceApp) ? 1 : 0;
 //        threadCount += (switches.centerBlobApp) ? 1 : 0;
+        this.abcvlibLooper = abcvlibLooper;
         processPriorityThreadFactory = new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "Outputs");
         threadPoolExecutor = new ScheduledExecutorServiceWithException(threadCount, processPriorityThreadFactory);
 
@@ -72,7 +74,7 @@ public class Outputs implements OutputsInterface {
 
     @Override
     public void setWheelOutput(int left, int right) {
-
+        abcvlibLooper.setDutyCycle(left, right);
     }
 
     @Override

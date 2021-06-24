@@ -413,7 +413,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             input2RightWheelState = false;
         }
 
-        if(left >= 0){
+        if(left <= 0){
             input1LeftWheelState = false;
             input2LeftWheelState = true;
         }else{

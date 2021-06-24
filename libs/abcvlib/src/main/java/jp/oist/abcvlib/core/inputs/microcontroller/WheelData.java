@@ -147,26 +147,31 @@ public class WheelData implements AbcvlibInput {
         private boolean encoderAStatePrevious;
         private boolean encoderBStatePrevious;
         private int bufferLength;
-        private int idxHead = bufferLength - 1;
-        private int idxHeadPrev = idxHead - 1;
+        private int idxHead;
+        private int idxHeadPrev;
         private int idxTail = 0;
         // Total number of counts since start of activity
-        private final int[] encoderCount = new int[bufferLength];
+        private final int[] encoderCount;
         // distance in mm that the wheel has traveled from start point. his assumes no slippage/lifting/etc.
-        private final double[] distance = new double[bufferLength];
+        private final double[] distance;
         // speed in mm/s that the wheel is currently traveling at. Calculated by taking the difference between the first and last index in the distance buffer over the difference in timestamps
         private double speedBuffered = 0;
         // speed as measured between two consecutive quadrature code samples (VERY NOISY due to reading zero for any repeated quadrature encoder readings which happen VERY often)
         private double speedInstantaneous = 0;
         // running exponential average of speedBuffered.
         private double speedExponentialAvg = 0;
-        private final long[] timestamps = new long[bufferLength];
+        private final long[] timestamps;
         private double expWeight;
         double mmPerCount = (2 * Math.PI * 30) / 128;
 
         public SingleWheelData(int bufferLength, double expWeight){
             this.bufferLength = bufferLength;
             this.expWeight = expWeight;
+            idxHead = bufferLength - 1;
+            idxHeadPrev = idxHead - 1;
+            encoderCount = new int[bufferLength];
+            distance = new double[bufferLength];
+            timestamps = new long[bufferLength];
         }
 
         /**
@@ -204,6 +209,7 @@ public class WheelData implements AbcvlibInput {
         }
 
         private synchronized void updateCount(Boolean encoderAState, Boolean encoderBState){
+
             // Channel A goes from Low to High
             if (!encoderAStatePrevious && encoderAState){
                 // Channel B is Low = Clockwise
