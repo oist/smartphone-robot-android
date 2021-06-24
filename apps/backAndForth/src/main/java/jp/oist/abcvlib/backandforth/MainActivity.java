@@ -13,6 +13,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
+import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 
 /**
  * Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors
@@ -45,23 +47,21 @@ public class MainActivity extends AbcvlibActivity {
          * specified in milliseconds
           */
         int[][] speedProfile;
-        ScheduledExecutorService executor;
+        ScheduledExecutorServiceWithException executor;
         SpeedSetter speedSetter;
         ScheduledFuture<?> speedHandle;
 
         @RequiresApi(api = Build.VERSION_CODES.N)
         public BackAndForth(int[][] speedProfile){
             this.speedProfile = speedProfile;
-            executor = Executors.newScheduledThreadPool(1);
-            executor.scheduleAtFixedRate(new Runnable() {
-                @Override
-                public void run() {
-                    int endOfCurrentTimeSlot = 0;
-                    for (int i = 0 ; i < speedProfile[0].length; i++){
-                        speedSetter = new SpeedSetter(speedProfile[0][i], speedProfile[1][i]);
-                        executor.schedule(speedSetter, endOfCurrentTimeSlot, TimeUnit.MILLISECONDS);
-                        endOfCurrentTimeSlot+=speedProfile[2][i];
-                    }
+            executor = new ScheduledExecutorServiceWithException(1,
+                    new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY, "BackAndForth"));
+            executor.scheduleAtFixedRate(() -> {
+                int endOfCurrentTimeSlot = 0;
+                for (int i = 0 ; i < speedProfile[0].length; i++){
+                    speedSetter = new SpeedSetter(speedProfile[0][i], speedProfile[1][i]);
+                    executor.schedule(speedSetter, endOfCurrentTimeSlot, TimeUnit.MILLISECONDS);
+                    endOfCurrentTimeSlot+=speedProfile[2][i];
                 }
             }, 0, Arrays.stream(speedProfile[2]).sum(), TimeUnit.MILLISECONDS);
         }
@@ -69,7 +69,7 @@ public class MainActivity extends AbcvlibActivity {
 
     class SpeedSetter implements Runnable{
 
-        private int left;
+        private final int left;
         private int right;
 
         public SpeedSetter(int left, int right){
@@ -79,8 +79,8 @@ public class MainActivity extends AbcvlibActivity {
 
         @Override
         public void run() {
-            outputs.motion.setWheelOutput(left, right);
-            Log.i(TAG, "LeftWheel = " + left + " RightWheel = " + right);
+            getOutputs().setWheelOutput(left, right);
+            Log.i("BackAndForth", "LeftWheel = " + left + " RightWheel = " + right);
         }
     }
 

@@ -48,6 +48,13 @@ public class ScheduledExecutorServiceWithException {
         catchErrors(scheduledFuture);
     }
 
+    public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit){
+        ScheduledFuture<?> scheduledFuture = executor
+                .schedule(command, delay, unit);
+        catchErrors(scheduledFuture);
+        return scheduledFuture;
+    }
+
     private void catchErrors(ScheduledFuture<?> scheduledFuture){
         Executors.newSingleThreadExecutor().execute(new Runnable() {
             @Override
