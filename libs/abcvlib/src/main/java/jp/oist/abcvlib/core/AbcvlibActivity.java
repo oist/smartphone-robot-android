@@ -131,7 +131,9 @@ public abstract class AbcvlibActivity extends IOIOActivity {
         if (this.abcvlibLooper == null){
             this.abcvlibLooper = new AbcvlibLooper(this);
             initializeOutputs();
-            ioReadyListener.onIOReady();
+            if (ioReadyListener != null){
+                ioReadyListener.onIOReady();
+            }
             Log.d("abcvlib", "createIOIOLooper Finished");
         }
         return this.abcvlibLooper;

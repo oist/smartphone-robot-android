@@ -1,6 +1,8 @@
 package jp.oist.abcvlib.pidbalancer;
 
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 
 import androidx.annotation.NonNull;
 
@@ -11,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.IOReadyListener;
 import jp.oist.abcvlib.util.ErrorHandler;
 
 /**
@@ -50,10 +53,7 @@ public class MainActivity extends AbcvlibActivity {
             slider.setLabelFormatter(value -> String.format(Locale.JAPAN, "%.3f", value));
         }
 
-        // Various switches are available to turn on/off core functionality.
         getSwitches().balanceApp = true;
-//        getSwitches().pythonControlledPIDBalancer = true;
-//        getSwitches().wheelPolaritySwap = false;
 
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
@@ -62,17 +62,36 @@ public class MainActivity extends AbcvlibActivity {
     private Slider.OnChangeListener sliderChangeListener = new Slider.OnChangeListener() {
         @Override
         public void onValueChange(@NonNull Slider slider, float value, boolean fromUser) {
-            try {
-                getOutputs().getBalancePIDController().setPID(p_tilt_.getValue(),
-                        0,
-                        d_tilt_.getValue(),
-                        setPoint_.getValue(),
-                        p_wheel_.getValue(),
-                        expWeight_.getValue(),
-                        maxAbsTilt_.getValue());
-            } catch (InterruptedException e) {
-                ErrorHandler.eLog(TAG, "Error when getting slider gui values", e, true);
-            }
+            updatePID();
         }
     };
+
+    private void updatePID(){
+        try {
+            getOutputs().getBalancePIDController().setPID(p_tilt_.getValue(),
+                    0,
+                    d_tilt_.getValue(),
+                    setPoint_.getValue(),
+                    p_wheel_.getValue(),
+                    expWeight_.getValue(),
+                    maxAbsTilt_.getValue());
+        } catch (InterruptedException e) {
+            ErrorHandler.eLog(TAG, "Error when getting slider gui values", e, true);
+        }
+    }
+
+    public void buttonClick(View view) {
+        Button button = (Button) view;
+        if (button.getText() == "Start"){
+            // Sets initial values rather than wait for slider change
+            updatePID();
+            button.setText("Stop");
+            getOutputs().getBalancePIDController().start();
+
+        }else{
+            button.setText("Start");
+            getOutputs().getBalancePIDController().stop();
+            getOutputs().setWheelOutput(0,0);
+        }
+    }
 }

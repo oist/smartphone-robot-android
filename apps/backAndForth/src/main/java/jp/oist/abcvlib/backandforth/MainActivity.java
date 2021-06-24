@@ -36,7 +36,8 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
 
     @Override
     public void onIOReady() {
-        int[][] speedProfile = {{1, 0, -1, 0}, {1, 0, -1, 0}, {2000, 1000, 2000, 1000}};
+        float speed = 0.5f;
+        float[][] speedProfile = {{speed, 0, -speed, 0}, {speed, 0, -speed, 0}, {2000, 1000, 2000, 1000}};
         BackAndForth backAndForth = new BackAndForth(speedProfile);
         backAndForth.start();
     }
@@ -49,18 +50,23 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
          * for speed c. Speed specified as -1 to 1 representing maximum speed backward and forward.
          * Time window specified in milliseconds
           */
-        int[][] speedProfile;
+        float[][] speedProfile;
         ScheduledExecutorServiceWithException executor;
         SpeedSetter speedSetter;
 
         @RequiresApi(api = Build.VERSION_CODES.N)
-        public BackAndForth(int[][] speedProfile){
+        public BackAndForth(float[][] speedProfile){
             this.speedProfile = speedProfile;
+
             executor = new ScheduledExecutorServiceWithException(1,
                     new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY, "BackAndForth"));
         }
 
         public void start(){
+            long totalTime = 0;
+            for (float timeLen : speedProfile[2]){
+                totalTime+=timeLen;
+            }
             executor.scheduleAtFixedRate(() -> {
                 int endOfCurrentTimeSlot = 0;
                 for (int i = 0 ; i < speedProfile[0].length; i++){
@@ -68,16 +74,16 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
                     executor.schedule(speedSetter, endOfCurrentTimeSlot, TimeUnit.MILLISECONDS);
                     endOfCurrentTimeSlot+=speedProfile[2][i];
                 }
-            }, 0, Arrays.stream(speedProfile[2]).sum(), TimeUnit.MILLISECONDS);
+            }, 0, totalTime, TimeUnit.MILLISECONDS);
         }
     }
 
     class SpeedSetter implements Runnable{
 
-        private final int left;
-        private final int right;
+        private final float left;
+        private final float right;
 
-        public SpeedSetter(int left, int right){
+        public SpeedSetter(float left, float right){
             this.left = left;
             this.right = right;
         }

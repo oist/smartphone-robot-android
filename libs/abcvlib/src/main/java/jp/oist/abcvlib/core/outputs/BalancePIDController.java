@@ -45,6 +45,7 @@ public class BalancePIDController extends AbcvlibController implements WheelData
 
     private int bounceLoopCount = 0;
     private long timestamp;
+    private boolean balancing = false;
 
     public BalancePIDController(Switches switches, Inputs inputs){
         this.switches = switches;
@@ -54,52 +55,61 @@ public class BalancePIDController extends AbcvlibController implements WheelData
     }
 
     public void run(){
+        if (balancing){
+            PIDTimer[0] = System.nanoTime();
+            // in Degrees
+            double maxTiltAngle = setPoint + maxAbsTilt;
+            // in Degrees
+            double minTiltAngle = setPoint - maxAbsTilt;
 
-        PIDTimer[0] = System.nanoTime();
-        // in Degrees
-        double maxTiltAngle = setPoint + maxAbsTilt;
-        // in Degrees
-        double minTiltAngle = setPoint - maxAbsTilt;
+            PIDTimer[1] = System.nanoTime();
 
-        PIDTimer[1] = System.nanoTime();
-
-        // Bounce Up
-        if (minTiltAngle > thetaDeg){
-            bounce(false);
-        }else if(maxTiltAngle < thetaDeg){
-            bounce(true);
-        }else{
-            try {
-                bounceLoopCount = 0;
-                linearController();
-            } catch (InterruptedException e) {
-                ErrorHandler.eLog(TAG, "Interupted when trying to run linearController", e, true);
+            // Bounce Up
+            if (minTiltAngle > thetaDeg){
+                bounce(false);
+            }else if(maxTiltAngle < thetaDeg){
+                bounce(true);
+            }else{
+                try {
+                    bounceLoopCount = 0;
+                    linearController();
+                } catch (InterruptedException e) {
+                    ErrorHandler.eLog(TAG, "Interupted when trying to run linearController", e, true);
+                }
             }
+
+            PIDTimer[2] = System.nanoTime();
+
+            PIDTimeSteps[3] += System.nanoTime() - PIDTimer[2];
+            PIDTimeSteps[2] += PIDTimer[2] - PIDTimer[1];
+            PIDTimeSteps[1] += PIDTimer[1] - PIDTimer[0];
+            PIDTimeSteps[0] = PIDTimer[0];
+
+            // Take basic stats of every 1000 time step lengths rather than pushing all.
+            int avgCount = 1000;
+            if (timerCount % avgCount == 0){
+
+                for (int i=1; i < PIDTimeSteps.length; i++){
+
+                    PIDTimeSteps[i] = (PIDTimeSteps[i] / avgCount) / 1000000;
+
+                }
+
+                if (switches.loggerOn){
+                    Log.v("timers", "PIDTimer Averages = " + Arrays.toString(PIDTimeSteps));
+                }
+            }
+
+            timerCount ++;
         }
+    }
 
-        PIDTimer[2] = System.nanoTime();
+    public void start() {
+        this.balancing = true;
+    }
 
-        PIDTimeSteps[3] += System.nanoTime() - PIDTimer[2];
-        PIDTimeSteps[2] += PIDTimer[2] - PIDTimer[1];
-        PIDTimeSteps[1] += PIDTimer[1] - PIDTimer[0];
-        PIDTimeSteps[0] = PIDTimer[0];
-
-        // Take basic stats of every 1000 time step lengths rather than pushing all.
-        int avgCount = 1000;
-        if (timerCount % avgCount == 0){
-
-            for (int i=1; i < PIDTimeSteps.length; i++){
-
-                PIDTimeSteps[i] = (PIDTimeSteps[i] / avgCount) / 1000000;
-
-            }
-
-            if (switches.loggerOn){
-                Log.v("timers", "PIDTimer Averages = " + Arrays.toString(PIDTimeSteps));
-            }
-        }
-
-        timerCount ++;
+    public void stop() {
+        this.balancing = false;
     }
 
     synchronized public void setPID(double p_tilt_,
@@ -126,24 +136,24 @@ public class BalancePIDController extends AbcvlibController implements WheelData
     }
 
     private void bounce(boolean forward) {
-        int speed = 1;
+        float speed = 0.5f;
         // loop steps between turning on and off wheels.
         int bouncePulseWidth = 100;
         if (bounceLoopCount < bouncePulseWidth * 0.1){
             setOutput(0,0);
         }else if (bounceLoopCount < bouncePulseWidth * 1.1){
             if (forward){
-                setOutput(speed,-speed);
+                setOutput(speed,speed);
             }else{
-                setOutput(-speed,speed);
+                setOutput(-speed,-speed);
             }
         }else if (bounceLoopCount < bouncePulseWidth * 1.2){
             setOutput(0,0);
         }else if (bounceLoopCount < bouncePulseWidth * 2.2) {
             if (forward){
-                setOutput(-speed,speed);
+                setOutput(-speed,-speed);
             }else{
-                setOutput(speed,-speed);
+                setOutput(speed,speed);
             }
         }else {
             bounceLoopCount = 0;
@@ -166,15 +176,8 @@ public class BalancePIDController extends AbcvlibController implements WheelData
         double i_out = i_tilt * int_e_t;
         double d_out = d_tilt * angularVelocityDeg;
 
-        setOutput((float)-(p_out + i_out + d_out), (float)(p_out + i_out + d_out));
-
-        Output testOutput = getOutput();
+        setOutput((float)(p_out + i_out + d_out), (float)(p_out + i_out + d_out));
     }
-
-    public void setAngularVelocityDeg(double angularVelocityDeg) {
-        this.angularVelocityDeg = angularVelocityDeg;
-    }
-
 
     @Override
     public void onWheelDataUpdate(long timestamp, int wheelCountL, int wheelCountR,
