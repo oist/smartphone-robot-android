@@ -36,6 +36,11 @@ public abstract class AbcvlibActivity extends IOIOActivity {
     private final Switches switches = new Switches();
     private AbcvlibLooper abcvlibLooper;
     private static final String TAG = "abcvlib";
+    private IOReadyListener ioReadyListener;
+
+    public void setIoReadyListener(IOReadyListener ioReadyListener) {
+        this.ioReadyListener = ioReadyListener;
+    }
 
     protected void onCreate(Bundle savedInstanceState) {
         inputs = new Inputs(getApplicationContext());
@@ -126,6 +131,7 @@ public abstract class AbcvlibActivity extends IOIOActivity {
         if (this.abcvlibLooper == null){
             this.abcvlibLooper = new AbcvlibLooper(this);
             initializeOutputs();
+            ioReadyListener.onIOReady();
             Log.d("abcvlib", "createIOIOLooper Finished");
         }
         return this.abcvlibLooper;

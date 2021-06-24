@@ -1,9 +1,7 @@
 package jp.oist.abcvlib.core.outputs;
 
 
-import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.Switches;
-import jp.oist.abcvlib.core.inputs.phone.OrientationData;
 
 /**
  * Motion is a collection of methods that implement various predefined motions via
@@ -32,11 +30,11 @@ public class Motion {
     Represents some int value from 0 to 100 which indirectly controls the speed of the wheel.
      0 representing a 0% duty cycle (i.e. always zero) and 100 representing a 100% duty cycle.
     */
-    private int dutyCycleRightWheel = 0;
+    private double dutyCycleRightWheel = 0;
     /**
      * @see #dutyCycleRightWheel
      */
-    private int dutyCycleLeftWheel = 0;
+    private double dutyCycleLeftWheel = 0;
     
     private Switches switches;
 
@@ -55,19 +53,19 @@ public class Motion {
      * @param right pulse width of right wheel from 0 to 100
      * @param left pulse width of left wheel from 0 to 100
      */
-    public void setWheelOutput(int left, int right){
+    public void setWheelOutput(double left, double right){
 
-        if (right > 100){
-            right = 100;
+        if (right > 1){
+            right = 1;
         }
-        else if (right < -100){
-            right = -100;
+        else if (right < -1){
+            right = -1;
         }
-        if (left > 100){
-            left = 100;
+        if (left > 1){
+            left = 1;
         }
-        else if (left < -100){
-            left = -100;
+        else if (left < -1){
+            left = -1;
         }
 
         if (switches.wheelPolaritySwap){
@@ -85,14 +83,14 @@ public class Motion {
     /**
      * @return Pulse Width of right wheel
      */
-    public int getDutyCycleRight(){
+    public double getDutyCycleRight(){
         return dutyCycleRightWheel;
     }
 
     /**
      * @return Pulse Width of left wheel
      */
-    public int getDutyCycleLeft(){
+    public double getDutyCycleLeft(){
         return dutyCycleLeftWheel;
     }
 }

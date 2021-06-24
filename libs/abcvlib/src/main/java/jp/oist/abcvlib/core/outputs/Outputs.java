@@ -5,10 +5,8 @@ import android.util.Log;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.AbcvlibLooper;
 import jp.oist.abcvlib.core.Switches;
 import jp.oist.abcvlib.core.inputs.Inputs;
@@ -72,8 +70,12 @@ public class Outputs implements OutputsInterface {
 
     }
 
+    /**
+     * @param left speed from -1 to 1 (full speed backward vs full speed forward)
+     * @param right speed from -1 to 1 (full speed backward vs full speed forward)
+     */
     @Override
-    public void setWheelOutput(int left, int right) {
+    public void setWheelOutput(float left, float right) {
         abcvlibLooper.setDutyCycle(left, right);
     }
 

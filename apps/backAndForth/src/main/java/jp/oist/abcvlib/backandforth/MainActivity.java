@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.IOReadyListener;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 
@@ -18,20 +19,24 @@ import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
  * Also includes a simple controller making the robot move back and forth at a set interval and speed
  * @author Christopher Buckley https://github.com/topherbuckley
  */
-public class MainActivity extends AbcvlibActivity {
+public class MainActivity extends AbcvlibActivity implements IOReadyListener {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        setIoReadyListener(this);
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
 
         // Setup Android GUI. Point this method to your main activity xml file or corresponding int
         // ID within the R class
         setContentView(R.layout.activity_main);
+    }
 
-        int[][] speedProfile = {{100, 0, -100, 0}, {100, 0, -100, 0}, {2000, 1000, 2000, 1000}};
+    @Override
+    public void onIOReady() {
+        int[][] speedProfile = {{1, 0, -1, 0}, {1, 0, -1, 0}, {2000, 1000, 2000, 1000}};
         BackAndForth backAndForth = new BackAndForth(speedProfile);
         backAndForth.start();
     }
@@ -41,8 +46,8 @@ public class MainActivity extends AbcvlibActivity {
         /**
          * 3xn matrix with column c, row 1 representing speed of left wheel
          * row 2 representing speed of right wheel, and row 3 the time window for
-         * for speed c. Speed specified as -100 to 100 representing PWM pulse width. Time window
-         * specified in milliseconds
+         * for speed c. Speed specified as -1 to 1 representing maximum speed backward and forward.
+         * Time window specified in milliseconds
           */
         int[][] speedProfile;
         ScheduledExecutorServiceWithException executor;

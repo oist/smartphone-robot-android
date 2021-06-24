@@ -11,6 +11,6 @@ public interface OutputsInterface {
 
     void setControls(JSONObject controls);
     void setAudioFile();
-    void setWheelOutput(int left, int right);
+    void setWheelOutput(float left, float right);
     void setPID();
 }
