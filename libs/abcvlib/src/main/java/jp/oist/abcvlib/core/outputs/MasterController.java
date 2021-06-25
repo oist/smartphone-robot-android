@@ -8,7 +8,7 @@ import ioio.lib.api.exception.ConnectionLostException;
 import jp.oist.abcvlib.core.AbcvlibLooper;
 import jp.oist.abcvlib.core.Switches;
 
-public class GrandController extends AbcvlibController{
+public class MasterController extends AbcvlibController{
 
     private final String TAG = this.getClass().getName();
 
@@ -16,7 +16,7 @@ public class GrandController extends AbcvlibController{
     private final ArrayList<AbcvlibController> controllers = new ArrayList<>();
     private final AbcvlibLooper abcvlibLooper;
 
-    GrandController(Switches switches, AbcvlibLooper abcvlibLooper){
+    MasterController(Switches switches, AbcvlibLooper abcvlibLooper){
         this.switches = switches;
         this.abcvlibLooper = abcvlibLooper;
     }
@@ -28,7 +28,7 @@ public class GrandController extends AbcvlibController{
         for (AbcvlibController controller : controllers){
 
             if (switches.loggerOn){
-                Log.v("grandcontroller", controller.toString() + "output:" + controller.getOutput().left);
+                Log.v(TAG, controller.toString() + "output:" + controller.getOutput().left);
             }
 
             setOutput((output.left + controller.getOutput().left), (output.right + controller.getOutput().right));

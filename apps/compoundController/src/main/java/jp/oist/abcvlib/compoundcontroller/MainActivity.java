@@ -24,7 +24,8 @@ public class MainActivity extends AbcvlibActivity {
         // passed upward.
         CustomController customController = new CustomController();
 
-        initializer(this, customController, null);
+        // Add the custom controller to the grand controller (controller that assembles other controllers)
+        getOutputs().getMasterController().addController(customController);
 
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);

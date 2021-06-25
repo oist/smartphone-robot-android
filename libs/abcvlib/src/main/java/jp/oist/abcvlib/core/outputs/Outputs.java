@@ -2,8 +2,6 @@ package jp.oist.abcvlib.core.outputs;
 
 import android.util.Log;
 
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
@@ -20,7 +18,7 @@ public class Outputs {
     public Motion motion;
     private Thread socketClientThread;
     private volatile BalancePIDController balancePIDController;
-    private GrandController grandController;
+    private MasterController masterController;
     private Thread grandControllerThread;
     private ArrayList<AbcvlibController> controllers = new ArrayList<>();
     private ProcessPriorityThreadFactory processPriorityThreadFactory;
@@ -31,7 +29,7 @@ public class Outputs {
     public Outputs(Switches switches, AbcvlibLooper abcvlibLooper, Inputs inputs){
 
         // Determine number of necessary threads.
-        int threadCount = 1; // At least one for the GrandController
+        int threadCount = 1; // At least one for the MasterController
 //        threadCount += (switches.pythonControlledPIDBalancer) ? 1 : 0;
 //        threadCount += (switches.balanceApp) ? 1 : 0;
 //        threadCount += (switches.centerBlobApp) ? 1 : 0;
@@ -52,11 +50,11 @@ public class Outputs {
         }
 
         if (!controllers.isEmpty()){
-            grandController = new GrandController(switches, abcvlibLooper);
+            masterController = new MasterController(switches, abcvlibLooper);
             for (AbcvlibController controller: controllers){
-                grandController.addController(controller);
+                masterController.addController(controller);
             }
-            threadPoolExecutor.scheduleWithFixedDelay(grandController, 0, 1, TimeUnit.MILLISECONDS);
+            threadPoolExecutor.scheduleWithFixedDelay(masterController, 0, 1, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -70,5 +68,9 @@ public class Outputs {
 
     public synchronized BalancePIDController getBalancePIDController() {
         return balancePIDController;
+    }
+
+    public synchronized MasterController getMasterController() {
+        return masterController;
     }
 }
