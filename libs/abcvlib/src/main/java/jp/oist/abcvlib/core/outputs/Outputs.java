@@ -13,7 +13,7 @@ import jp.oist.abcvlib.core.inputs.Inputs;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 
-public class Outputs implements OutputsInterface {
+public class Outputs {
 
     private Thread centerBlobControllerThread;
     protected Thread pidControllerThread;
@@ -60,28 +60,12 @@ public class Outputs implements OutputsInterface {
         }
     }
 
-    @Override
-    public void setControls(JSONObject controls) {
-
-    }
-
-    @Override
-    public void setAudioFile() {
-
-    }
-
     /**
      * @param left speed from -1 to 1 (full speed backward vs full speed forward)
      * @param right speed from -1 to 1 (full speed backward vs full speed forward)
      */
-    @Override
     public void setWheelOutput(float left, float right) {
         abcvlibLooper.setDutyCycle(left, right);
-    }
-
-    @Override
-    public void setPID() {
-
     }
 
     public synchronized BalancePIDController getBalancePIDController() {
