@@ -36,7 +36,7 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
 
     @Override
     public void onIOReady() {
-        float speed = 0.5f;
+        float speed = 1.0f;
         float[][] speedProfile = {{speed, 0, -speed, 0}, {speed, 0, -speed, 0}, {2000, 1000, 2000, 1000}};
         BackAndForth backAndForth = new BackAndForth(speedProfile);
         backAndForth.start();
