@@ -49,13 +49,11 @@ public class Outputs {
             Log.i("abcvlib", "BalanceApp Started");
         }
 
-        if (!controllers.isEmpty()){
-            masterController = new MasterController(switches, abcvlibLooper);
-            for (AbcvlibController controller: controllers){
-                masterController.addController(controller);
-            }
-            threadPoolExecutor.scheduleWithFixedDelay(masterController, 0, 1, TimeUnit.MILLISECONDS);
+        masterController = new MasterController(switches, abcvlibLooper);
+        for (AbcvlibController controller: controllers){
+            masterController.addController(controller);
         }
+        threadPoolExecutor.scheduleWithFixedDelay(masterController, 0, 1, TimeUnit.MILLISECONDS);
     }
 
     /**

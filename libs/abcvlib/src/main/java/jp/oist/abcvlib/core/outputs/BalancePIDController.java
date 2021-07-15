@@ -22,7 +22,7 @@ public class BalancePIDController extends AbcvlibController implements WheelData
     private double i_tilt = 0;
     private double d_tilt = 1.0;
     private double setPoint = 2.8;
-    private double p_wheel = 0.4;
+    private double p_wheel = 0.0;
     private double expWeight = 0.25;
     private double e_t = 0; // e(t) of wikipedia
     private double int_e_t; // integral of e(t) from wikipedia. Discrete, so just a sum here.

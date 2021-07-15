@@ -1,17 +1,115 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:clickable="true"
+    android:onClick="buttonClick"
+    android:orientation="vertical"
     tools:context=".MainActivity">
 
     <TextView
+        android:id="@+id/textViewSetPoint"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:text="@string/set_point_deg"
+        android:textAlignment="center" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <com.google.android.material.slider.Slider
+        android:id="@+id/seekBarSetPoint"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:stepSize="0.1"
+        android:value="3.8"
+        android:valueFrom="-10.0"
+        android:valueTo="10.0" />
+
+    <TextView
+        android:id="@+id/textViewTiltP"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:text="@string/tilt_p" />
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/seekBarTiltP"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:stepSize="0.001"
+        android:value="-0.475"
+        android:valueFrom="-1.0"
+        android:valueTo="0.0" />
+
+    <TextView
+        android:id="@+id/textViewTiltD"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:text="@string/tilt_d" />
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/seekBarTiltD"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:stepSize="0.0001"
+        android:value="0.007"
+        android:valueFrom="0.0"
+        android:valueTo="0.1" />
+
+    <TextView
+        android:id="@+id/textViewWheelSpeedP"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:text="@string/speed_p" />
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/seekBarWheelSpeedP"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:stepSize="0.00001"
+        android:value="0.006"
+        android:valueFrom="0.0"
+        android:valueTo="0.01" />
+
+    <TextView
+        android:id="@+id/textViewExponentialWeight"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:text="@string/expWeight" />
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/seekBarExponentialWeight"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:stepSize="0.001"
+        android:value="0.25"
+        android:valueFrom="0.0"
+        android:valueTo="1.0" />
+
+    <TextView
+        android:id="@+id/textViewMaxAbsTilt"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:text="@string/maximum_absolute_tilt_angle" />
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/seekBarMaxAbsTilt"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:stepSize="0.1"
+        android:value="7.0"
+        android:valueFrom="-90.0"
+        android:valueTo="90.0" />
+
+    <Button
+        android:layout_width="100dp"
+        android:layout_height="50dp"
+        android:layout_gravity="center"
+        android:onClick="buttonClick"
+        android:text="Start" />
+
+</LinearLayout>

@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">compoundController</string>
+    <string name="set_point_deg" />
+    <string name="tilt_p" />
+    <string name="tilt_d" />
+    <string name="speed_p" />
+    <string name="expWeight" />
+    <string name="maximum_absolute_tilt_angle" />
 </resources>

@@ -102,17 +102,17 @@ public class WheelData implements AbcvlibInput {
                         leftWheel.getSpeedInstantaneous(), leftWheel.getSpeedBuffered(),
                         leftWheel.getSpeedExponentialAvg());
                 timeStepDataBuffer.getWriteData().getWheelData().getRight().put(timestamp,
-                        rightWheel.getLatestEncoderCount(), rightWheel.getLatestDistance(),
-                        rightWheel.getSpeedInstantaneous(), rightWheel.getSpeedBuffered(),
-                        rightWheel.getSpeedExponentialAvg());
+                        -rightWheel.getLatestEncoderCount(), -rightWheel.getLatestDistance(),
+                        -rightWheel.getSpeedInstantaneous(), -rightWheel.getSpeedBuffered(),
+                        -rightWheel.getSpeedExponentialAvg());
             }
             if (wheelDataListener != null){
                 wheelDataListener.onWheelDataUpdate(timestamp, leftWheel.getLatestEncoderCount(),
-                        rightWheel.getLatestEncoderCount(), leftWheel.getLatestDistance(),
-                        rightWheel.getLatestDistance(), leftWheel.getSpeedInstantaneous(),
-                        rightWheel.getSpeedInstantaneous(), leftWheel.getSpeedBuffered(),
-                        rightWheel.getSpeedBuffered(), leftWheel.getSpeedExponentialAvg(),
-                        rightWheel.getSpeedExponentialAvg());
+                        -rightWheel.getLatestEncoderCount(), leftWheel.getLatestDistance(),
+                        -rightWheel.getLatestDistance(), leftWheel.getSpeedInstantaneous(),
+                        -rightWheel.getSpeedInstantaneous(), leftWheel.getSpeedBuffered(),
+                        -rightWheel.getSpeedBuffered(), leftWheel.getSpeedExponentialAvg(),
+                        -rightWheel.getSpeedExponentialAvg());
             }
             rightWheel.updateIndex();
             leftWheel.updateIndex();
