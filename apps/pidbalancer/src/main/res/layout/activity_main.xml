@@ -69,9 +69,9 @@
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:stepSize="0.00001"
-        android:value="-0.006"
-        android:valueFrom="-0.01"
-        android:valueTo="0.00" />
+        android:value="0.006"
+        android:valueFrom="0.0"
+        android:valueTo="0.01" />
 
     <TextView
         android:id="@+id/textViewExponentialWeight"
