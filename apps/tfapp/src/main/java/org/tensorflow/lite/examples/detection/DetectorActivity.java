@@ -89,6 +89,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private BorderedText borderedText;
 
   private long timer = 0;
+  private String TAG = getClass().toString();
 
   @Override
   public void onPreviewSizeChosen(final Size size, final int rotation) {

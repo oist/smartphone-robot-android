@@ -96,14 +96,11 @@ public abstract class CameraActivity extends AbcvlibActivity
   private ImageView plusImageView, minusImageView;
   private SwitchCompat apiSwitchCompat;
   private TextView threadsTextView;
+  private String TAG = "CameraActivity";
 
   @Override
   protected void onCreate(final Bundle savedInstanceState) {
 
-    switches.pythonControlledPIDBalancer = true;
-
-    // Note the previously optional parameters that handle the connection to the python server
-    initializer(this);
 
     LOGGER.d("onCreate " + this);
     super.onCreate(null);
@@ -188,8 +185,8 @@ public abstract class CameraActivity extends AbcvlibActivity
     minusImageView.setOnClickListener(this);
 
     // Motion Controller
-    MotionController motionController = new MotionController();
-    new Thread(motionController).start();
+//    MotionController motionController = new MotionController();
+//    new Thread(motionController).start();
   }
 
   protected int[] getRgbBytes() {
@@ -590,65 +587,63 @@ public abstract class CameraActivity extends AbcvlibActivity
 
   protected abstract void setUseNNAPI(boolean isChecked);
 
-  private class MotionController implements Runnable{
-
-    int speedL = 0; // Duty cycle from 0 to 100.
-    int speedR = 0; // Duty cycle from 0 to 100.
-    int maxAccelleration = 35;
-    int minWheelCnt = 20;
-    int maxSpeed = 80;
-    int minSpeed = 40;
-    int sleeptime = 2000;
-    int cnt = 0;
-    ExecutorService cameraExecutor = Executors.newCachedThreadPool();
-
-    public boolean isExternalStorageWritable() {
-      String state = Environment.getExternalStorageState();
-      if (Environment.MEDIA_MOUNTED.equals(state)) {
-        return true;
-      }
-      return false;
-    }
-
-    public void run(){
-
-      Log.i("myLog", "entered RUN");
-
-      // Set Initial Speed
-      outputs.motion.setWheelOutput(speedL, speedR);
-      Log.i(TAG, "speedL= " + speedL + " speedR= " + speedR);
-
-      while( appRunning ) {
-        try {
-          // If current on some pin (current sense) is above X, assume stuck and reverse previous speeds for 1 s
-          double countL = inputs.quadEncoders.getWheelCountL();
-          double countR = inputs.quadEncoders.getWheelCountR();
-
-//                    int minL = Math.max((speedL - maxAccelleration), -100);
-//                    int maxL = Math.min((speedL + maxAccelleration), 100);
-          // Set a speed between min and max speed, then randomize the sign
-          speedL = ThreadLocalRandom.current().nextInt(minSpeed, maxSpeed + 1);
-          speedL = speedL * (ThreadLocalRandom.current().nextBoolean() ? 1 : -1);
-//                    int minR = Math.max((speedR - maxAccelleration), -100);
-//                    int maxR = Math.min((speedR + maxAccelleration), 100);
-          // Set a speed between min and max speed, then randomize the sign
-          speedR = ThreadLocalRandom.current().nextInt(minSpeed, maxSpeed + 1);
-          speedR = speedR * (ThreadLocalRandom.current().nextBoolean() ? 1 : -1);
-
-          outputs.motion.setWheelOutput(speedL, speedR);
-
-          Thread.sleep(sleeptime);
-
-          // if wheels haven't moved, assume stuck and reverse speed to unstick.
-          if ((Math.abs(inputs.quadEncoders.getWheelCountL() - countL) <= minWheelCnt) | (Math.abs(inputs.quadEncoders.getWheelCountL() - countL) <= 10)){
-            outputs.motion.setWheelOutput(-speedL, -speedR);
-            Thread.sleep(sleeptime);
-          }
-        } catch (InterruptedException e){
-          Log.e(TAG,"Error", e);
-        }
-      }
-    }
-  }
+//  private class MotionController implements Runnable{
+//
+//    int speedL = 0; // Duty cycle from 0 to 100.
+//    int speedR = 0; // Duty cycle from 0 to 100.
+//    int maxAccelleration = 35;
+//    int minWheelCnt = 20;
+//    int maxSpeed = 80;
+//    int minSpeed = 40;
+//    int sleeptime = 2000;
+//    int cnt = 0;
+//    ExecutorService cameraExecutor = Executors.newCachedThreadPool();
+//
+//    public boolean isExternalStorageWritable() {
+//      String state = Environment.getExternalStorageState();
+//      if (Environment.MEDIA_MOUNTED.equals(state)) {
+//        return true;
+//      }
+//      return false;
+//    }
+//
+//    public void run(){
+//
+//      Log.i("myLog", "entered RUN");
+//
+//      // Set Initial Speed
+//      getOutputs().setWheelOutput(speedL, speedR);
+//      Log.i(TAG, "speedL= " + speedL + " speedR= " + speedR);
+//      try {
+//        // If current on some pin (current sense) is above X, assume stuck and reverse previous speeds for 1 s
+//        double countL = inputs.quadEncoders.getWheelCountL();
+//        double countR = inputs.quadEncoders.getWheelCountR();
+//
+////                    int minL = Math.max((speedL - maxAccelleration), -100);
+////                    int maxL = Math.min((speedL + maxAccelleration), 100);
+//        // Set a speed between min and max speed, then randomize the sign
+//        speedL = ThreadLocalRandom.current().nextInt(minSpeed, maxSpeed + 1);
+//        speedL = speedL * (ThreadLocalRandom.current().nextBoolean() ? 1 : -1);
+////                    int minR = Math.max((speedR - maxAccelleration), -100);
+////                    int maxR = Math.min((speedR + maxAccelleration), 100);
+//        // Set a speed between min and max speed, then randomize the sign
+//        speedR = ThreadLocalRandom.current().nextInt(minSpeed, maxSpeed + 1);
+//        speedR = speedR * (ThreadLocalRandom.current().nextBoolean() ? 1 : -1);
+//
+//        outputs.motion.setWheelOutput(speedL, speedR);
+//
+//        Thread.sleep(sleeptime);
+//
+//        // if wheels haven't moved, assume stuck and reverse speed to unstick.
+//        if ((Math.abs(inputs.quadEncoders.getWheelCountL() - countL) <= minWheelCnt) | (Math.abs(inputs.quadEncoders.getWheelCountL() - countL) <= 10)){
+//          outputs.motion.setWheelOutput(-speedL, -speedR);
+//          Thread.sleep(sleeptime);
+//        }
+//      } catch (InterruptedException e){
+//        Log.e(TAG,"Error", e);
+//      }
+//
+//    }
+//  }
 
 }
