@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "jp.oist.abcvlib.serverLearning"
-        minSdkVersion 24
+        minSdkVersion 30
         targetSdkVersion 30
         versionCode 1
         versionName "0.0.1"
