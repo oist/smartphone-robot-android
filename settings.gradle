@@ -7,15 +7,15 @@ gradle.ext.androidLibs = androidLibs
 def apps = [
         'basicSubscriber',
         'basicAssembler',
-        'camera',
+//        'camera',
         'backAndForth',
         'pidbalancer',
         'setPath',
         'compoundController',
-        "tfapp",
-        "pidtransfer_transmitter",
-        "pidtransfer_receiver",
-        "serverLearning",
+//        "tfapp",
+//        "pidtransfer_transmitter",
+//        "pidtransfer_receiver",
+//        "serverLearning",
 ]
 
 gradle.ext.apps = apps
