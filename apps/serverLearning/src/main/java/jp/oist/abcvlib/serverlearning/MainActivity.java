@@ -34,9 +34,10 @@ import jp.oist.abcvlib.util.SocketListener;
 public class MainActivity extends AbcvlibActivity implements PermissionsListener, ActionSelector,
         SocketListener {
 
-    InetSocketAddress inetSocketAddress = new InetSocketAddress("192.168.27.226", 3000);
+    InetSocketAddress inetSocketAddress = new InetSocketAddress("192.168.27.231", 3000);
     private StepHandler myStepHandler;
     private int reward = 0;
+    private String TAG = getClass().toString();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,7 +103,7 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
     }
 
     @Override
-    public ActionSet forward(TimeStepDataBuffer.TimeStepData data, int timeStepCount) {
+    public ActionSet forward(TimeStepDataBuffer.TimeStepData data) {
         ActionSet actionSet;
         MotionAction motionAction;
         CommAction commAction;
@@ -116,13 +117,6 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
 
         // set your action to some ints
         data.getActions().add(motionAction, commAction);
-
-        if (timeStepCount >= myStepHandler.getMaxTimeStepCount() || (reward >= myStepHandler.getMaxReward())){
-            // Do anything you need to wrap up an episode here. The episode count and timeStep counts will automatically be incremented or set to zero as necessary.
-
-            // reseting reward after each episode
-            reward = 0;
-        }
 
         return actionSet;
     }

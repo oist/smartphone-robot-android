@@ -14,7 +14,7 @@ def apps = [
 //        "tfapp",
 //        "pidtransfer_transmitter",
 //        "pidtransfer_receiver",
-//        "serverLearning",
+        "serverLearning",
 ]
 
 gradle.ext.apps = apps
