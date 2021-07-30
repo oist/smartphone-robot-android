@@ -52,12 +52,16 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
         int bufferSize = 3 * AudioRecord.getMinBufferSize(mSampleRate, mChannelConfig, // needed to be 3 or more times or would internally increase it within Native lib.
                 mAudioFormat);
 
-        recorder = new AudioRecord(
-                mAudioSource,
-                mSampleRate,
-                mChannelConfig,
-                mAudioFormat,
-                bufferSize);
+        try{
+            recorder = new AudioRecord(
+                    mAudioSource,
+                    mSampleRate,
+                    mChannelConfig,
+                    mAudioFormat,
+                    bufferSize);
+        }catch (SecurityException e){
+            throw new RuntimeException("You must grant audio record access to use this app");
+        }
 
         int bytesPerSample = 32 / 8; // 32 bits per sample (Float.size), 8 bytes per bit.
         int bytesPerFrame = bytesPerSample * recorder.getChannelCount(); // Need this as setPositionNotificationPeriod takes num of frames as period and you want it to fire after each full cycle through the buffer.
