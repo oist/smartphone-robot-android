@@ -11,7 +11,6 @@ def apps = [
         'pidbalancer',
         'setPath',
         'compoundController',
-//        "tfapp",
 //        "pidtransfer_transmitter",
 //        "pidtransfer_receiver",
         "serverLearning",
