@@ -1,6 +1,3 @@
-apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
-
 buildscript {
     ext.kotlin_version = '1.5.20'
     repositories {
@@ -12,6 +9,13 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
+
+plugins {
+    id("maven-publish")
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 
 android{
     compileOptions {
@@ -49,4 +53,27 @@ dependencies {
 }
 repositories {
     mavenCentral()
+}
+
+afterEvaluate{
+    publishing {
+        repositories {
+            maven {
+                name = "GitHubPackages"
+                url = uri("https://maven.pkg.github.com/oist/smartphone-robot")
+                credentials {
+                    username = (System.getenv("GITHUB_USER"))
+                    password = (System.getenv("GITHUB_TOKEN"))
+                }
+            }
+        }
+        publications {
+            debug(MavenPublication) {
+                from(components.debug)
+                groupId = 'jp.oist.abcvlib'
+                artifactId = 'abcvlib'
+                version = '0.5.0'
+            }
+        }
+    }
 }
