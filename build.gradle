@@ -11,6 +11,12 @@ buildscript {
 }
 
 allprojects {
+    group = 'jp.oist'
+    version = "0.5.0"
+    ext.gitVersion = scmTag()
+    ext.versionNamespace = 'abcvlib'
+    ext.versionString = sprintf("%s%s", versionNamespace, version)
+
     repositories {
         mavenLocal() //Todo not sure if I need this
         maven { url 'https://jitpack.io' }
