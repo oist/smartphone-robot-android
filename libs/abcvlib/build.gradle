@@ -70,9 +70,23 @@ afterEvaluate{
         publications {
             debug(MavenPublication) {
                 from(components.debug)
-                groupId = 'jp.oist.abcvlib'
+                groupId = group
                 artifactId = 'abcvlib'
-                version = '0.5.0'
+                version = version
+                pom {
+                    description = "A library for controlling the OIST smartphone robots"
+                    developers {
+                        developer {
+                            id = "topherbuckley"
+                            name = "Christopher Buckley"
+                            email = "christopher.buckley@oist.jp"
+                        }
+                    }
+                    scm {
+                        url = "https://github.com/oist/smartphone-robot/commit/" + gitHash()
+                        tag = scmTag()
+                    }
+                }
             }
         }
     }
