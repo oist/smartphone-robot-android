@@ -55,10 +55,32 @@ subprojects {
                 versionCode = 1
                 versionName = "1.0"
             }
-
             ndkVersion = "21.0.6113669"
         }
     }
+
+}
+
+static def scmTag() {
+    def gitVersion = "$System.env.VERSION"
+    if (gitVersion == "null") {
+        def processTag = "git describe --tags --dirty".execute()
+        def processHash = "git rev-parse HEAD".execute()
+        gitVersion = processTag.text.toString().trim() + "_" + processHash.text.toString().trim()
+    } else {
+        def gitVersionToken = gitVersion.split("/")
+        if (gitVersionToken.size() > 2)
+            gitVersion = gitVersionToken[2]
+        else
+            gitVersion = gitVersionToken[0]
+    }
+    return gitVersion
+}
+
+static def gitHash() {
+    def processHash = "git rev-parse HEAD".execute()
+    def gitHash = processHash.text.toString().trim()
+    return gitHash
 }
 
 task clean(type: Delete) {
