@@ -1,16 +1,16 @@
 buildscript {
-    ext.kotlin_version = '1.4.31'
+    ext.kotlin_version = '1.5.20'
     repositories {
         google()
         jcenter()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:4.2.2'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version" // needed for YuvToRgbConverter
     }
 }
 
-allprojects {
+subprojects {
     group = 'jp.oist'
     version = "0.5.0"
     ext.gitVersion = scmTag()
@@ -18,53 +18,61 @@ allprojects {
     ext.versionString = sprintf("%s%s", versionNamespace, version)
 
     repositories {
-        mavenLocal() //Todo not sure if I need this
+        mavenCentral()
+        mavenLocal()
         maven { url 'https://jitpack.io' }
         google()
         jcenter()
     }
-    configurations {
-        all {
-            exclude module: 'commons-logging'
+
+    apply plugin: 'maven-publish'
+    apply plugin: 'signing'
+
+    if (gradle.ext.androidLibs.any{name -> name == project.name}){
+        apply plugin: 'com.android.library'
+        apply plugin: "kotlin-android" // needed for YuvToRgbConverter
+    } else if (gradle.ext.apps.any{name -> name == project.name}){
+        apply plugin: 'com.android.application'
+        dependencies {
+            implementation(project(":abcvlib"))
+
+            implementation 'com.google.code.gson:gson:2.8.6'
+
+            implementation 'androidx.annotation:annotation:1.1.0'
+            implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+
+            implementation "androidx.lifecycle:lifecycle-livedata:2.2.0"
+            implementation "androidx.lifecycle:lifecycle-viewmodel:2.2.0"
         }
     }
-}
-
-subprojects {
-    if (project.name != 'IOIOLibCore'){
-        if (gradle.ext.androidLibs.any{name -> name == project.name}){
-            apply plugin: 'com.android.library'
-        } else if (gradle.ext.apps.any{name -> name == project.name}){
-            apply plugin: 'com.android.application'
-            dependencies {
-                implementation(project(":abcvlib"))
-
-                implementation 'com.google.code.gson:gson:2.8.6'
-
-                implementation 'androidx.annotation:annotation:1.1.0'
-                implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-
-                implementation "androidx.lifecycle:lifecycle-livedata:2.2.0"
-                implementation "androidx.lifecycle:lifecycle-viewmodel:2.2.0"
-            }
+    android{
+        compileOptions {
+            sourceCompatibility(JavaVersion.VERSION_1_8)
+            targetCompatibility(JavaVersion.VERSION_1_8)
         }
-        android{
-            compileOptions {
-                sourceCompatibility(JavaVersion.VERSION_1_8)
-                targetCompatibility(JavaVersion.VERSION_1_8)
-            }
-            defaultConfig {
-                compileSdkVersion = 30
-                buildToolsVersion = '30.0.2'
-                minSdkVersion 30
-                targetSdkVersion 30
-                versionCode = 1
-                versionName = "1.0"
-            }
-            ndkVersion = "21.0.6113669"
+        defaultConfig {
+            compileSdkVersion = 30
+            buildToolsVersion = '30.0.2'
+            minSdkVersion 30
+            targetSdkVersion 30
+
+            // Fetch the version according to git latest tag and "how far are we from last tag"
+            def longVersionName = "git -C ${rootDir} describe --tags --long --dirty".execute().text.trim()
+            def (fullVersionTag, commitCount, gitSha, dirty) = longVersionName.tokenize('-')
+            def(versionMajor, versionMinor, versionPatch) = fullVersionTag.tokenize('.')
+
+            // Set the version name
+            versionName = "$versionMajor.$versionMinor.$versionPatch-$commitCount-$dirty"
+
+            // Turn the version name into a version code
+            versionCode = versionMajor.toInteger() * 100000 +
+                    versionMinor.toInteger() * 10000 +
+                    versionPatch.toInteger() * 1000 +
+                    commitCount.toInteger()
+
         }
+        ndkVersion = "21.0.6113669"
     }
-
 }
 
 static def scmTag() {
@@ -89,6 +97,7 @@ static def gitHash() {
     return gitHash
 }
 
-task clean(type: Delete) {
-    delete rootProject.buildDir
+static def isDirty() {
+    def dirtyString = "git describe --tags --dirty".execute().text.trim().tokenize("-")[-1]
+    return dirtyString.equals("dirty")
 }
