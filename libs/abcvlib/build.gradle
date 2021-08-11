@@ -17,8 +17,13 @@ dependencies {
     implementation 'androidx.activity:activity:1.2.3'
     implementation "androidx.fragment:fragment:1.3.4"
 }
-repositories {
-    mavenCentral()
+
+tasks.withType(GenerateMavenPom).all {
+    doFirst {
+        if (isDirty()){
+            throw new GradleException("Current working directory is dirty. Use git stash or commit all your local changes before publishing.")
+        }
+    }
 }
 
 afterEvaluate{
