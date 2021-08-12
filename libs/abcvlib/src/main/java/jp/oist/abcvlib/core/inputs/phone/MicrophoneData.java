@@ -33,7 +33,6 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
      * Lazy start. This constructor sets everything up, but you must call {@link #start()} for the
      * buffer to begin filling.
      */
-    @RequiresApi(api = Build.VERSION_CODES.N)
     public MicrophoneData(TimeStepDataBuffer timeStepDataBuffer) {
 
         Log.i("abcvlib", "In MicInput run method");

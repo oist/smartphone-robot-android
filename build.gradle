@@ -73,7 +73,7 @@ subprojects {
         defaultConfig {
             compileSdkVersion = 30
             buildToolsVersion = '30.0.2'
-            minSdkVersion 30
+            minSdkVersion 24
             targetSdkVersion 30
 
             // Fetch the version according to git latest tag and "how far are we from last tag"
