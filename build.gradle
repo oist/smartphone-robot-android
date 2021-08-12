@@ -11,7 +11,8 @@ buildscript {
 
 subprojects {
     group = 'jp.oist'
-    version = "0.5.0"
+    version = getGitVersion()
+    println "version = " + getGitVersion()
     ext.gitVersion = scmTag()
     ext.versionNamespace = 'abcvlib'
     ext.versionString = sprintf("%s%s", versionNamespace, version)
@@ -91,6 +92,19 @@ subprojects {
 
         }
         ndkVersion = "21.0.6113669"
+    }
+}
+
+static def getGitVersion() {
+    def longVersionName = "git describe --tags --long".execute().text.trim()
+    def (fullVersionTag, commitCount, gitSha, dirty) = longVersionName.tokenize('-')
+    // Release
+    if (commitCount.toInteger() == 0) {
+        return "$fullVersionTag"
+    }
+    // Quickfixes
+    else{
+        return "$fullVersionTag-$commitCount"
     }
 }
 
