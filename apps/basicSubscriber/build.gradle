@@ -1,5 +1,0 @@
-android {
-    defaultConfig {
-        applicationId "jp.oist.abcvlib.basicsubscriber"
-    }
-}
