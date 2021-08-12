@@ -10,6 +10,9 @@ tasks.withType(GenerateMavenPom).all {
         if (isDirty()){
             throw new GradleException("Current working directory is dirty. Use git stash or commit all your local changes before publishing.")
         }
+        if (!isTagged()){
+            throw new GradleException("You have commits after the most recent tag. Please add a new tag to capture the patch or updates after most recent tag")
+        }
     }
 }
 

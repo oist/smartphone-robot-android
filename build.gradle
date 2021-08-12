@@ -104,7 +104,7 @@ static def getGitVersion() {
     }
     // Quickfixes
     else{
-        return "$fullVersionTag-$commitCount"
+        return "$longVersionName"
     }
 }
 
@@ -133,4 +133,10 @@ static def gitHash() {
 static def isDirty() {
     def dirtyString = "git describe --tags --dirty".execute().text.trim().tokenize("-")[-1]
     return dirtyString.equals("dirty")
+}
+
+static def isTagged() {
+    def longVersionName = "git describe --tags --long".execute().text.trim()
+    def (fullVersionTag, commitCount, gitSha, dirty) = longVersionName.tokenize('-')
+    return commitCount.toInteger() == 0
 }
