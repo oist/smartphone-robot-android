@@ -77,7 +77,7 @@ subprojects {
 
 static def scmTag() {
     def gitVersion = "$System.env.VERSION"
-    if (gitVersion == "null") {
+    if (gitVersion.equals("null")) {
         def processTag = "git describe --tags --dirty".execute()
         def processHash = "git rev-parse HEAD".execute()
         gitVersion = processTag.text.toString().trim() + "_" + processHash.text.toString().trim()
