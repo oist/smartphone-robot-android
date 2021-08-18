@@ -3,8 +3,7 @@
     package="jp.oist.abcvlib.compoundcontroller">
 
     <application android:theme="@style/Theme.MaterialComponents"
-        android:label="@string/app_name"
-        android:allowBackup="false">
+        android:label="@string/app_name">
         <activity android:name="jp.oist.abcvlib.compoundcontroller.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

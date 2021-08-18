@@ -13,7 +13,7 @@
     <uses-feature android:name="android.hardware.usb.accessory" />
     <uses-feature android:name="android.hardware.camera.any" />
 
-    <application android:allowBackup="false"
+    <application
         android:supportsRtl="true">
         <uses-library android:name="com.android.future.usb.accessory" android:required="false" />
     </application>
