@@ -92,8 +92,7 @@ public abstract class AbcvlibService extends IOIOService implements AbcvlibAbstr
     }
 
     public void checkPermissions(){
-        PermissionManager permissionManager = PermissionManager.getInstance(getApplicationContext());
-        permissionManager.checkPermissions(singleton(Manifest.permission.CAMERA), new PermissionManager.PermissionRequestListener() {
+        PermissionManager.PermissionRequestListener permissionRequestListener = new PermissionManager.PermissionRequestListener() {
             @Override
             public void onPermissionGranted() {
                 Toast.makeText(getApplicationContext(), "Permissions Granted", Toast.LENGTH_SHORT).show();
@@ -110,7 +109,11 @@ public abstract class AbcvlibService extends IOIOService implements AbcvlibAbstr
                     }
                 }
             }
-        });
+        };
+
+        PermissionManager permissionManager = PermissionManager.getInstance(getApplicationContext());
+        permissionManager.checkPermissions(singleton(Manifest.permission.CAMERA), permissionRequestListener);
+        permissionManager.checkPermissions(singleton(Manifest.permission.RECORD_AUDIO), permissionRequestListener);
     }
 
     @Nullable
