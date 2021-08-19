@@ -28,7 +28,7 @@ import jp.oist.abcvlib.core.outputs.Outputs;
  * @author Christopher Buckley https://github.com/topherbuckley
  *
  */
-public abstract class AbcvlibActivity extends IOIOActivity {
+public abstract class AbcvlibActivity extends IOIOActivity implements AbcvlibAbstractObject {
 
     // Publically accessible objects that encapsulate a lot other core functionality
     private Inputs inputs;
@@ -69,6 +69,7 @@ public abstract class AbcvlibActivity extends IOIOActivity {
         Log.i(TAG, "End of AbcvlibActivity.onPause");
     }
 
+    @Override
     public Inputs getInputs() {
         return inputs;
     }

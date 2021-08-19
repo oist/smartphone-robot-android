@@ -212,10 +212,10 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
     // Constructor to pass other module objects in. No default loggerOn. Needs to remain public
     // despite what Android Studio says
-    public AbcvlibLooper(AbcvlibActivity abcvlibActivity){
-        if (abcvlibActivity != null){
-            this.batteryData = abcvlibActivity.getInputs().getBatteryData();
-            this.wheelData = abcvlibActivity.getInputs().getWheelData();
+    public AbcvlibLooper(AbcvlibAbstractObject abcvlibAbstractObject){
+        if (abcvlibAbstractObject != null){
+            this.batteryData = abcvlibAbstractObject.getInputs().getBatteryData();
+            this.wheelData = abcvlibAbstractObject.getInputs().getWheelData();
         }
         Log.d("abcvlib", "AbcvlibLooper constructor finished");
     }
