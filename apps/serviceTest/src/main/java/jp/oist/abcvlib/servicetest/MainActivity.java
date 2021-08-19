@@ -2,19 +2,7 @@ package jp.oist.abcvlib.servicetest;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
-
-import androidx.annotation.RequiresApi;
-
-import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
-
-import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.core.IOReadyListener;
-import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
-import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 
 /**
  * Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors

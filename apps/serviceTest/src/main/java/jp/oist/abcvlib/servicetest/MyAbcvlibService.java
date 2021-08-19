@@ -1,16 +1,6 @@
 package jp.oist.abcvlib.servicetest;
 
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
-import android.os.IBinder;
-import android.util.Log;
-
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.core.app.NotificationCompat;
 
 import java.util.concurrent.TimeUnit;
 
@@ -29,8 +19,7 @@ public class MyAbcvlibService extends AbcvlibService implements IOReadyListener 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         setIoReadyListener(this);
-        int result = super.onStartCommand(intent, flags, startId);
-        return result;
+        return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
