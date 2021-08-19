@@ -53,6 +53,9 @@ public class Outputs {
         for (AbcvlibController controller: controllers){
             masterController.addController(controller);
         }
+    }
+
+    public void startMasterController(){
         threadPoolExecutor.scheduleWithFixedDelay(masterController, 0, 1, TimeUnit.MILLISECONDS);
     }
 
