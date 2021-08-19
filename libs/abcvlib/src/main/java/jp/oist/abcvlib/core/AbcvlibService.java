@@ -17,10 +17,11 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 
-import com.permissioneverywhere.PermissionEverywhere;
-import com.permissioneverywhere.PermissionResponse;
-import com.permissioneverywhere.PermissionResultCallback;
+import com.intentfilter.androidpermissions.PermissionManager;
+import com.intentfilter.androidpermissions.models.DeniedPermission;
+import com.intentfilter.androidpermissions.models.DeniedPermissions;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -28,6 +29,8 @@ import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOService;
 import jp.oist.abcvlib.core.inputs.Inputs;
 import jp.oist.abcvlib.core.outputs.Outputs;
+
+import static java.util.Collections.singleton;
 
 /**
  * AbcvlibActivity is where all of the other classes are initialized into objects. The objects
@@ -81,24 +84,33 @@ public abstract class AbcvlibService extends IOIOService implements AbcvlibAbstr
             }
         }
 
+        checkPermissions();
+
         inputs = new Inputs(getApplicationContext());
         int result = super.onStartCommand(intent, flags, startId);
         return result;
     }
 
     public void checkPermissions(){
-        PermissionEverywhere.getPermission(getApplicationContext(),
-                new String[]{Manifest.permission.CAMERA},
-                1,
-                "Notification title",
-                "This app needs a camera permission",
-                R.mipmap.ic_launcher)
-                .enqueue(new PermissionResultCallback() {
-                    @Override
-                    public void onComplete(PermissionResponse permissionResponse) {
-                        Toast.makeText(AbcvlibService.this, "is Granted " + permissionResponse.isGranted(), Toast.LENGTH_SHORT).show();
+        PermissionManager permissionManager = PermissionManager.getInstance(getApplicationContext());
+        permissionManager.checkPermissions(singleton(Manifest.permission.CAMERA), new PermissionManager.PermissionRequestListener() {
+            @Override
+            public void onPermissionGranted() {
+                Toast.makeText(getApplicationContext(), "Permissions Granted", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onPermissionDenied(DeniedPermissions deniedPermissions) {
+                String deniedPermissionsText = "Denied: " + Arrays.toString(deniedPermissions.toArray());
+                Toast.makeText(getApplicationContext(), deniedPermissionsText, Toast.LENGTH_SHORT).show();
+
+                for (DeniedPermission deniedPermission : deniedPermissions) {
+                    if(deniedPermission.shouldShowRationale()) {
+                        // Display a rationale about why this permission is required
                     }
-                });
+                }
+            }
+        });
     }
 
     @Nullable
