@@ -146,42 +146,6 @@ public abstract class AbcvlibService extends IOIOService implements AbcvlibAbstr
         outputs = new Outputs(switches, abcvlibLooper, inputs);
     }
 
-//    /**
-//     * Take an array of permissions and check if they've all been granted. If not, request them. If
-//     * denied close app.
-//     * @param permissionsListener: Typically your main activity, where you'd implement this interface
-//     *                           and put all your main code into the {@link PermissionsListener#onPermissionsGranted()}
-//     * @param permissions: list of {@link android.Manifest.permission} strings your app requires.
-//     */
-//    protected void checkPermissions(PermissionsListener permissionsListener, String[] permissions){
-//        boolean permissionsGranted = true;
-//        for (String permission:permissions){
-//            if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_DENIED){
-//                permissionsGranted = false;
-//            }
-//        }
-//        if (permissionsGranted) {
-//            permissionsListener.onPermissionsGranted();
-//        } else {
-//            ActivityResultLauncher<String[]> requestPermissionLauncher =
-//                    registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), isGranted -> {
-//                        Iterator<Map.Entry<String, Boolean>> iterator = isGranted.entrySet().iterator();
-//                        boolean allGranted = false;
-//                        while(iterator.hasNext()){
-//                            Map.Entry<String, Boolean> pair = iterator.next();
-//                            allGranted = pair.getValue();
-//                        }
-//                        if (allGranted) {
-//                            Log.i(TAG, "Permissions granted");
-//                            permissionsListener.onPermissionsGranted();
-//                        } else {
-//                            throw new RuntimeException("You did not approve required permissions");
-//                        }
-//                    });
-//            requestPermissionLauncher.launch(permissions);
-//        }
-//    }
-
     /**
      Overriding here passes the initialized AbcvlibLooper object to the IOIOLooper class which
      then connects the object to the actual IOIOBoard. There is no need to start a separate thread
