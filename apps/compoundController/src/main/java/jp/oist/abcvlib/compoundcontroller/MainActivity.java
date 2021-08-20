@@ -11,7 +11,6 @@ import com.google.android.material.slider.Slider;
 
 import java.util.ArrayList;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.IOReadyListener;

@@ -6,7 +6,6 @@ import android.widget.Button;
 
 import androidx.annotation.NonNull;
 
-import com.google.android.material.slider.LabelFormatter;
 import com.google.android.material.slider.Slider;
 
 import java.util.ArrayList;
