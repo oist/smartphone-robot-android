@@ -99,7 +99,7 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
             // Sets initial values rather than wait for slider change
             updatePID();
             button.setText("Stop");
-            getOutputs().getBalancePIDController().start();
+            getOutputs().getBalancePIDController().startController();
 
         }else{
             button.setText("Start");
@@ -119,7 +119,7 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
 //        getOutputs().getMasterController().addController(customController);
 //
 //        executor.scheduleAtFixedRate(customController, 0, 100, TimeUnit.MILLISECONDS);
-        getOutputs().getBalancePIDController().start();
+        getOutputs().getBalancePIDController().startController();
     }
 
     /**

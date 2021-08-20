@@ -86,7 +86,7 @@ public class MainActivity extends AbcvlibActivity {
             // Sets initial values rather than wait for slider change
             updatePID();
             button.setText("Stop");
-            getOutputs().getBalancePIDController().start();
+            getOutputs().getBalancePIDController().startController();
 
         }else{
             button.setText("Start");

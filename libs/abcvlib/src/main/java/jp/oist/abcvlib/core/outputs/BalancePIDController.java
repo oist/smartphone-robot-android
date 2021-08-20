@@ -104,7 +104,7 @@ public class BalancePIDController extends AbcvlibController implements WheelData
         }
     }
 
-    public void start() {
+    public void startController() {
         this.balancing = true;
     }
 
