@@ -23,6 +23,7 @@ import jp.oist.abcvlib.core.learning.fbclasses.BatteryData;
 import jp.oist.abcvlib.core.learning.fbclasses.ChargerData;
 import jp.oist.abcvlib.core.learning.fbclasses.Episode;
 import jp.oist.abcvlib.core.learning.fbclasses.IndividualWheelData;
+import jp.oist.abcvlib.core.learning.fbclasses.OrientationData;
 import jp.oist.abcvlib.core.learning.fbclasses.RobotAction;
 import jp.oist.abcvlib.core.learning.fbclasses.SoundData;
 import jp.oist.abcvlib.core.learning.fbclasses.TimeStep;
@@ -106,6 +107,7 @@ public class TimeStepDataAssembler implements Runnable {
     public void addTimeStep(){
 
         int _wheelData = addWheelData();
+        int _orientationData = addOrientationData();
         int _chargerData = addChargerData();
         int _batteryData = addBatteryData();
         int _soundData = addSoundData();
@@ -155,6 +157,18 @@ public class TimeStepDataAssembler implements Runnable {
                 countsRight, distancesRight, speedsRight);
 
         return WheelData.createWheelData(builder, leftOffset, rightOffset);
+    }
+
+    private int addOrientationData(){
+        Log.v("flatbuff", "STEP orientationData TimeStamps Length: " +
+                timeStepDataBuffer.getReadData().getOrientationData().getTimeStamps().length);
+        int ts = OrientationData.createTimestampsVector(builder,
+                timeStepDataBuffer.getReadData().getOrientationData().getTimeStamps());
+        int tiltAngles = OrientationData.createTiltangleVector(builder,
+                timeStepDataBuffer.getReadData().getOrientationData().getTiltAngle());
+        int tiltVelocityAngles = OrientationData.createTiltvelocityVector(builder,
+                timeStepDataBuffer.getReadData().getOrientationData().getAngularVelocity());
+        return OrientationData.createOrientationData(builder, ts, tiltAngles, tiltVelocityAngles);
     }
 
     private int addChargerData(){
