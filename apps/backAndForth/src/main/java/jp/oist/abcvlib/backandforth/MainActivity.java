@@ -36,12 +36,19 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
     @Override
     public void onIOReady() {
         float speed = 0.5f;
-        BackAndForthController backAndForthController = new BackAndForthController(speed);
+        // Using Builder with default build params used
+        AbcvlibController backAndForthController = new AbcvlibController.AbcvlibControllerBuilder(
+                this, new BackAndForthController(speed)).build();
+        // Customizing ALL build params. You can remove any or all. This object not used, but here for reference.
+        AbcvlibController backAndForthController2 = new AbcvlibController.AbcvlibControllerBuilder(
+                this, new BackAndForthController(speed))
+                .setName("BackAndForthController").setTimestep(1).setTimeUnit(TimeUnit.SECONDS)
+                .setInitDelay(0).setThreadCount(1).setThreadPriority(Thread.MAX_PRIORITY).build();
 
-        // Add the custom controller to the grand controller (controller that assembles other controllers)
-        getOutputs().getMasterController().addController(backAndForthController);
-
-        executor.scheduleAtFixedRate(backAndForthController, 0, 1000, TimeUnit.MILLISECONDS);
+        // Start your custom controller
+        backAndForthController.startController();
+        // Start the master controller after adding any customer controllers.
+        getOutputs().startMasterController();
     }
 
     public static class BackAndForthController extends AbcvlibController {

@@ -28,8 +28,10 @@ public class MyAbcvlibService extends AbcvlibService implements IOReadyListener 
                 .setName("BackAndForthController").setTimestep(1).setTimeUnit(TimeUnit.SECONDS)
                 .setInitDelay(0).setThreadCount(1).setThreadPriority(Thread.MAX_PRIORITY).build();
 
-        // Start the controller only after IO is ready.
-        backAndForthController.start();
+        // Start your custom controller
+        backAndForthController.startController();
+        // Start the master controller after adding any customer controllers.
+        getOutputs().startMasterController();
     }
 
     public static class BackAndForthController extends AbcvlibController {
