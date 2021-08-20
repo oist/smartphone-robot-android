@@ -7,14 +7,8 @@ import java.util.concurrent.TimeUnit;
 import jp.oist.abcvlib.core.AbcvlibService;
 import jp.oist.abcvlib.core.IOReadyListener;
 import jp.oist.abcvlib.core.outputs.AbcvlibController;
-import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
-import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 
 public class MyAbcvlibService extends AbcvlibService implements IOReadyListener {
-
-    ScheduledExecutorServiceWithException executor = new ScheduledExecutorServiceWithException(
-            1, new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY,
-            "BackAndForthController"));
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -25,11 +19,17 @@ public class MyAbcvlibService extends AbcvlibService implements IOReadyListener 
     @Override
     public void onIOReady() {
         float speed = 0.5f;
-        BackAndForthController backAndForthController = new BackAndForthController(speed);
+        // Using Builder with default build params used
+        AbcvlibController backAndForthController = new AbcvlibController.AbcvlibControllerBuilder(
+                this, new BackAndForthController(speed)).build();
+        // Customizing ALL build params. You can remove any or all. This object not used, but here for reference.
+        AbcvlibController backAndForthController2 = new AbcvlibController.AbcvlibControllerBuilder(
+                this, new BackAndForthController(speed))
+                .setName("BackAndForthController").setTimestep(1).setTimeUnit(TimeUnit.SECONDS)
+                .setInitDelay(0).setThreadCount(1).setThreadPriority(Thread.MAX_PRIORITY).build();
 
-        // Add the custom controller to the grand controller (controller that assembles other controllers)
-        getOutputs().getMasterController().addController(backAndForthController);
-        executor.scheduleAtFixedRate(backAndForthController, 0, 1000, TimeUnit.MILLISECONDS);
+        // Start the controller only after IO is ready.
+        backAndForthController.start();
     }
 
     public static class BackAndForthController extends AbcvlibController {
@@ -39,6 +39,7 @@ public class MyAbcvlibService extends AbcvlibService implements IOReadyListener 
             this.speed = speed;
             this.currentSpeed = speed;
         }
+
         @Override
         public void run() {
             if (currentSpeed == speed){
