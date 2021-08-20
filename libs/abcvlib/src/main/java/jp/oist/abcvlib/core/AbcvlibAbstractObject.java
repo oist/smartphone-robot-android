@@ -1,6 +1,7 @@
 package jp.oist.abcvlib.core;
 
 import jp.oist.abcvlib.core.inputs.Inputs;
+import jp.oist.abcvlib.core.outputs.Outputs;
 
 /**
  * An interface to bundle both AbcvlibActivity and AbcvlibService into one class. Mainly used
@@ -9,4 +10,5 @@ import jp.oist.abcvlib.core.inputs.Inputs;
  */
 public interface AbcvlibAbstractObject {
     Inputs getInputs();
+    Outputs getOutputs();
 }
