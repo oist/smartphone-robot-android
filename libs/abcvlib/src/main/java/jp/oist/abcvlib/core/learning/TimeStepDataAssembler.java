@@ -136,10 +136,14 @@ public class TimeStepDataAssembler implements Runnable {
                 leftData.getCounts());
         int distancesLeft = IndividualWheelData.createDistancesVector(builder,
                 leftData.getDistances());
-        int speedsLeft = IndividualWheelData.createSpeedsVector(builder,
+        int speedsLeftInstant = IndividualWheelData.createSpeedsInstantaneousVector(builder,
                 leftData.getSpeedsInstantaneous());
+        int speedsLeftBuffered = IndividualWheelData.createSpeedsBufferedVector(builder,
+                leftData.getSpeedsBuffered());
+        int speedsLeftExpAvg = IndividualWheelData.createSpeedsExpavgVector(builder,
+                leftData.getSpeedsExpAvg());
         int leftOffset = IndividualWheelData.createIndividualWheelData(builder, timeStampsLeft,
-                countsLeft, distancesLeft, speedsLeft);
+                countsLeft, distancesLeft, speedsLeftInstant, speedsLeftBuffered, speedsLeftExpAvg);
 
         TimeStepDataBuffer.TimeStepData.WheelData.IndividualWheelData rightData =
                 timeStepDataBuffer.getReadData().getWheelData().getRight();
@@ -151,10 +155,14 @@ public class TimeStepDataAssembler implements Runnable {
                 rightData.getCounts());
         int distancesRight = IndividualWheelData.createDistancesVector(builder,
                 rightData.getDistances());
-        int speedsRight = IndividualWheelData.createSpeedsVector(builder,
+        int speedsRightInstant = IndividualWheelData.createSpeedsInstantaneousVector(builder,
                 rightData.getSpeedsInstantaneous());
+        int speedsRightBuffered = IndividualWheelData.createSpeedsBufferedVector(builder,
+                rightData.getSpeedsBuffered());
+        int speedsRightExpAvg = IndividualWheelData.createSpeedsExpavgVector(builder,
+                rightData.getSpeedsExpAvg());
         int rightOffset = IndividualWheelData.createIndividualWheelData(builder, timeStampsRight,
-                countsRight, distancesRight, speedsRight);
+                countsRight, distancesRight, speedsRightInstant, speedsRightBuffered, speedsRightExpAvg);
 
         return WheelData.createWheelData(builder, leftOffset, rightOffset);
     }

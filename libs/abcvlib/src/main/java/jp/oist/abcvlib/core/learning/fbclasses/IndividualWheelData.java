@@ -33,27 +33,43 @@ public final class IndividualWheelData extends Table {
   public DoubleVector distancesVector(DoubleVector obj) { int o = __offset(8); return o != 0 ? obj.__assign(__vector(o), bb) : null; }
   public ByteBuffer distancesAsByteBuffer() { return __vector_as_bytebuffer(8, 8); }
   public ByteBuffer distancesInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 8, 8); }
-  public double speeds(int j) { int o = __offset(10); return o != 0 ? bb.getDouble(__vector(o) + j * 8) : 0; }
-  public int speedsLength() { int o = __offset(10); return o != 0 ? __vector_len(o) : 0; }
-  public DoubleVector speedsVector() { return speedsVector(new DoubleVector()); }
-  public DoubleVector speedsVector(DoubleVector obj) { int o = __offset(10); return o != 0 ? obj.__assign(__vector(o), bb) : null; }
-  public ByteBuffer speedsAsByteBuffer() { return __vector_as_bytebuffer(10, 8); }
-  public ByteBuffer speedsInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 10, 8); }
+  public double speedsInstantaneous(int j) { int o = __offset(10); return o != 0 ? bb.getDouble(__vector(o) + j * 8) : 0; }
+  public int speedsInstantaneousLength() { int o = __offset(10); return o != 0 ? __vector_len(o) : 0; }
+  public DoubleVector speedsInstantaneousVector() { return speedsInstantaneousVector(new DoubleVector()); }
+  public DoubleVector speedsInstantaneousVector(DoubleVector obj) { int o = __offset(10); return o != 0 ? obj.__assign(__vector(o), bb) : null; }
+  public ByteBuffer speedsInstantaneousAsByteBuffer() { return __vector_as_bytebuffer(10, 8); }
+  public ByteBuffer speedsInstantaneousInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 10, 8); }
+  public double speedsBuffered(int j) { int o = __offset(12); return o != 0 ? bb.getDouble(__vector(o) + j * 8) : 0; }
+  public int speedsBufferedLength() { int o = __offset(12); return o != 0 ? __vector_len(o) : 0; }
+  public DoubleVector speedsBufferedVector() { return speedsBufferedVector(new DoubleVector()); }
+  public DoubleVector speedsBufferedVector(DoubleVector obj) { int o = __offset(12); return o != 0 ? obj.__assign(__vector(o), bb) : null; }
+  public ByteBuffer speedsBufferedAsByteBuffer() { return __vector_as_bytebuffer(12, 8); }
+  public ByteBuffer speedsBufferedInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 12, 8); }
+  public double speedsExpavg(int j) { int o = __offset(14); return o != 0 ? bb.getDouble(__vector(o) + j * 8) : 0; }
+  public int speedsExpavgLength() { int o = __offset(14); return o != 0 ? __vector_len(o) : 0; }
+  public DoubleVector speedsExpavgVector() { return speedsExpavgVector(new DoubleVector()); }
+  public DoubleVector speedsExpavgVector(DoubleVector obj) { int o = __offset(14); return o != 0 ? obj.__assign(__vector(o), bb) : null; }
+  public ByteBuffer speedsExpavgAsByteBuffer() { return __vector_as_bytebuffer(14, 8); }
+  public ByteBuffer speedsExpavgInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 14, 8); }
 
   public static int createIndividualWheelData(FlatBufferBuilder builder,
       int timestampsOffset,
       int countsOffset,
       int distancesOffset,
-      int speedsOffset) {
-    builder.startTable(4);
-    IndividualWheelData.addSpeeds(builder, speedsOffset);
+      int speeds_instantaneousOffset,
+      int speeds_bufferedOffset,
+      int speeds_expavgOffset) {
+    builder.startTable(6);
+    IndividualWheelData.addSpeedsExpavg(builder, speeds_expavgOffset);
+    IndividualWheelData.addSpeedsBuffered(builder, speeds_bufferedOffset);
+    IndividualWheelData.addSpeedsInstantaneous(builder, speeds_instantaneousOffset);
     IndividualWheelData.addDistances(builder, distancesOffset);
     IndividualWheelData.addCounts(builder, countsOffset);
     IndividualWheelData.addTimestamps(builder, timestampsOffset);
     return IndividualWheelData.endIndividualWheelData(builder);
   }
 
-  public static void startIndividualWheelData(FlatBufferBuilder builder) { builder.startTable(4); }
+  public static void startIndividualWheelData(FlatBufferBuilder builder) { builder.startTable(6); }
   public static void addTimestamps(FlatBufferBuilder builder, int timestampsOffset) { builder.addOffset(0, timestampsOffset, 0); }
   public static int createTimestampsVector(FlatBufferBuilder builder, long[] data) { builder.startVector(8, data.length, 8); for (int i = data.length - 1; i >= 0; i--) builder.addLong(data[i]); return builder.endVector(); }
   public static void startTimestampsVector(FlatBufferBuilder builder, int numElems) { builder.startVector(8, numElems, 8); }
@@ -63,9 +79,15 @@ public final class IndividualWheelData extends Table {
   public static void addDistances(FlatBufferBuilder builder, int distancesOffset) { builder.addOffset(2, distancesOffset, 0); }
   public static int createDistancesVector(FlatBufferBuilder builder, double[] data) { builder.startVector(8, data.length, 8); for (int i = data.length - 1; i >= 0; i--) builder.addDouble(data[i]); return builder.endVector(); }
   public static void startDistancesVector(FlatBufferBuilder builder, int numElems) { builder.startVector(8, numElems, 8); }
-  public static void addSpeeds(FlatBufferBuilder builder, int speedsOffset) { builder.addOffset(3, speedsOffset, 0); }
-  public static int createSpeedsVector(FlatBufferBuilder builder, double[] data) { builder.startVector(8, data.length, 8); for (int i = data.length - 1; i >= 0; i--) builder.addDouble(data[i]); return builder.endVector(); }
-  public static void startSpeedsVector(FlatBufferBuilder builder, int numElems) { builder.startVector(8, numElems, 8); }
+  public static void addSpeedsInstantaneous(FlatBufferBuilder builder, int speedsInstantaneousOffset) { builder.addOffset(3, speedsInstantaneousOffset, 0); }
+  public static int createSpeedsInstantaneousVector(FlatBufferBuilder builder, double[] data) { builder.startVector(8, data.length, 8); for (int i = data.length - 1; i >= 0; i--) builder.addDouble(data[i]); return builder.endVector(); }
+  public static void startSpeedsInstantaneousVector(FlatBufferBuilder builder, int numElems) { builder.startVector(8, numElems, 8); }
+  public static void addSpeedsBuffered(FlatBufferBuilder builder, int speedsBufferedOffset) { builder.addOffset(4, speedsBufferedOffset, 0); }
+  public static int createSpeedsBufferedVector(FlatBufferBuilder builder, double[] data) { builder.startVector(8, data.length, 8); for (int i = data.length - 1; i >= 0; i--) builder.addDouble(data[i]); return builder.endVector(); }
+  public static void startSpeedsBufferedVector(FlatBufferBuilder builder, int numElems) { builder.startVector(8, numElems, 8); }
+  public static void addSpeedsExpavg(FlatBufferBuilder builder, int speedsExpavgOffset) { builder.addOffset(5, speedsExpavgOffset, 0); }
+  public static int createSpeedsExpavgVector(FlatBufferBuilder builder, double[] data) { builder.startVector(8, data.length, 8); for (int i = data.length - 1; i >= 0; i--) builder.addDouble(data[i]); return builder.endVector(); }
+  public static void startSpeedsExpavgVector(FlatBufferBuilder builder, int numElems) { builder.startVector(8, numElems, 8); }
   public static int endIndividualWheelData(FlatBufferBuilder builder) {
     int o = builder.endTable();
     return o;
