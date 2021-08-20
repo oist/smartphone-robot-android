@@ -17,27 +17,34 @@ public class AbcvlibController implements Runnable{
     private TimeUnit timeUnit;
     private ScheduledExecutorServiceWithException executor;
     private final String TAG = getClass().getName();
+    private AbcvlibController childController;
 
     public AbcvlibController(){}
 
-    public AbcvlibController(AbcvlibController abcvlibController,
-                                    AbcvlibAbstractObject abcvlibAbstractObject, String name,
+    public AbcvlibController(AbcvlibAbstractObject abcvlibAbstractObject,
+                             AbcvlibController childController,String name,
                                     int threadCount, int threadPriority, int initDelay,
                                     int timeStep, TimeUnit timeUnit){
         // Add the custom controller to the grand controller (controller that assembles other controllers)
-        abcvlibAbstractObject.getOutputs().getMasterController().addController(abcvlibController);
+        abcvlibAbstractObject.getOutputs().getMasterController().addController(childController);
+        this.childController = childController;
         this.name = name;
         this.threadCount = threadCount;
         this.threadPriority  = threadPriority;
         this.initDelay = initDelay;
         this.timeStep = timeStep;
         this.timeUnit = timeUnit;
-    }
-
-    public void start(){
-        executor = new ScheduledExecutorServiceWithException(
+        this.executor = new ScheduledExecutorServiceWithException(
                 threadCount, new ProcessPriorityThreadFactory(threadPriority,
                 name));
+    }
+
+    public void startController(){
+        executor.scheduleAtFixedRate(childController, initDelay, timeStep, timeUnit);
+    }
+
+    public void stopController(){
+        executor.shutdownNow();
     }
 
     public Output output = new Output();
@@ -82,7 +89,7 @@ public class AbcvlibController implements Runnable{
         }
 
         public AbcvlibController build() {
-            return new AbcvlibController(abcvlibController, abcvlibAbstractObject, name,
+            return new AbcvlibController(abcvlibAbstractObject, abcvlibController, name,
             threadCount, threadPriority, initDelay, timeStep, timeUnit);
         }
 
