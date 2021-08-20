@@ -4,6 +4,8 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
 
+import java.util.Arrays;
+
 import jp.oist.abcvlib.core.AbcvlibLooper;
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
@@ -133,6 +135,11 @@ public class WheelData implements AbcvlibInput {
 
     public void setRecording(boolean recording) {
         isRecording = recording;
+    }
+
+    public void resetWheelCounts(){
+        this.rightWheel.resetCount();
+        this.leftWheel.resetCount();
     }
 
     /**
@@ -316,5 +323,9 @@ public class WheelData implements AbcvlibInput {
         }
 
         public synchronized void setExpWeight(double expWeight){this.expWeight = expWeight;}
+
+        public void resetCount(){
+            Arrays.fill(this.encoderCount, 0);
+        }
     }
 }
