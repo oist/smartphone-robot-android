@@ -1,24 +1,19 @@
 package jp.oist.abcvlib.compoundcontroller;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-
-import androidx.annotation.NonNull;
 
 import com.google.android.material.slider.Slider;
 
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.IOReadyListener;
-import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataListener;
-import jp.oist.abcvlib.core.outputs.AbcvlibController;
+import jp.oist.abcvlib.core.outputs.BalancePIDController;
 import jp.oist.abcvlib.util.ErrorHandler;
-import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
-import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 
 /**
  * Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors
@@ -29,7 +24,6 @@ import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
  */
 public class MainActivity extends AbcvlibActivity implements IOReadyListener {
 
-    ScheduledExecutorServiceWithException executor;
     private Slider setPoint_;
     private Slider p_tilt_;
     private Slider d_tilt_;
@@ -37,6 +31,8 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
     private Slider expWeight_;
     private Slider maxAbsTilt_;
     private final String TAG = getClass().getName();
+    private BalancePIDController balancePIDController;
+    private final Slider.OnChangeListener sliderChangeListener = (slider, value, fromUser) -> updatePID();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,28 +55,16 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
             slider.setLabelFormatter(value -> String.format(Locale.JAPAN, "%.3f", value));
         }
 
-        // Various switches are available to turn on/off core functionality.
-        getSwitches().balanceApp = true;
-
         // Informs AbcvlibActivity that this is the class it should call when IO is ready.
         setIoReadyListener(this);
-
-        executor = new ScheduledExecutorServiceWithException(1, new ProcessPriorityThreadFactory(Thread.MIN_PRIORITY, "compoundController"));
 
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
     }
 
-    private Slider.OnChangeListener sliderChangeListener = new Slider.OnChangeListener() {
-        @Override
-        public void onValueChange(@NonNull Slider slider, float value, boolean fromUser) {
-            updatePID();
-        }
-    };
-
     private void updatePID(){
         try {
-            getOutputs().getBalancePIDController().setPID(p_tilt_.getValue(),
+            balancePIDController.setPID(p_tilt_.getValue(),
                     0,
                     d_tilt_.getValue(),
                     setPoint_.getValue(),
@@ -94,58 +78,37 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
 
     public void buttonClick(View view) {
         Button button = (Button) view;
-        if (button.getText() == "Start"){
+        if (button.getText().equals("Start")){
             // Sets initial values rather than wait for slider change
             updatePID();
             button.setText("Stop");
-            getOutputs().getBalancePIDController().startController();
+            balancePIDController.startController();
 
         }else{
             button.setText("Start");
-            getOutputs().getBalancePIDController().stop();
-            getOutputs().setWheelOutput(0,0);
+            balancePIDController.stopController();
         }
     }
 
     @Override
     public void onIOReady() {
-//        CustomController customController = new CustomController();
-//
-//        // connect the customConroller as a subscriber to wheel data updates
-//        getInputs().getWheelData().setWheelDataListener(customController);
-//
-//        // Add the custom controller to the grand controller (controller that assembles other controllers)
-//        getOutputs().getMasterController().addController(customController);
-//
-//        executor.scheduleAtFixedRate(customController, 0, 100, TimeUnit.MILLISECONDS);
-        getOutputs().getBalancePIDController().startController();
-    }
+        balancePIDController = (BalancePIDController) new BalancePIDController(getInputs()).setInitDelay(0)
+                .setName("BalancePIDController").setThreadCount(1)
+                .setThreadPriority(Thread.NORM_PRIORITY).setTimestep(5)
+                .setTimeUnit(TimeUnit.MILLISECONDS);
 
-    /**
-     * Simple proportional controller trying to achieve some setSpeed set by python server GUI.
-     */
-    public static class CustomController extends AbcvlibController implements WheelDataListener {
+        CustomController customController = (CustomController) new CustomController(getInputs()).setInitDelay(0)
+                .setName("CustomController").setThreadCount(1)
+                .setThreadPriority(Thread.NORM_PRIORITY).setTimestep(1000)
+                .setTimeUnit(TimeUnit.MILLISECONDS);
 
-        double actualSpeed = 0;
-        double errorSpeed = 0;
-        double maxSpeed = 350; // Just spot measurede this by setOutput(1.0, 1.0) and read the log. This will surely change with battery level and wheel wear/tear.
+        // Starting and never stopping the customController to see difference between this and adding the PID controller to it via the GUI button.
+        customController.startController();
 
-        double setSpeed = 100; // mm/s.
-        double d_s = 0.1; // derivative controller for speed of wheels
-
-        public void run(){
-            errorSpeed = setSpeed - actualSpeed;
-
-            // Note the use of the same output for controlling both wheels. Due to various errors
-            // that build up over time, controling individual wheels has so far led to chaos
-            // and unstable controllers.
-            setOutput((float) ((setSpeed / maxSpeed) + ((errorSpeed * d_s) / maxSpeed)), (float) ((setSpeed / maxSpeed) + ((errorSpeed * d_s) / maxSpeed)));
-        }
-
-        @Override
-        public void onWheelDataUpdate(long timestamp, int wheelCountL, int wheelCountR, double wheelDistanceL, double wheelDistanceR, double wheelSpeedInstantL, double wheelSpeedInstantR, double wheelSpeedBufferedL, double wheelSpeedBufferedR, double wheelSpeedExpAvgL, double wheelSpeedExpAvgR) {
-            actualSpeed = wheelSpeedBufferedL;
-            Log.d("WheelUpdate", "wheelSpeedBufferedL: " + wheelSpeedBufferedL + ", wheelSpeedBufferedR: " + wheelSpeedBufferedR);
-        }
+        // Adds your custom controller to the compounding master controller.
+        getOutputs().getMasterController().addController(balancePIDController);
+        getOutputs().getMasterController().addController(customController);
+        // Start the master controller after adding and starting any customer controllers.
+        getOutputs().startMasterController();
     }
 }
