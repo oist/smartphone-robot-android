@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
+import jp.oist.abcvlib.tests.BackAndForthService;
+
 /**
  * Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors
  * Also includes a simple controller making the robot move back and forth at a set interval and speed
@@ -13,7 +15,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        startService(new Intent(this, MyAbcvlibService.class));
+        startService(new Intent(this, BackAndForthService.class));
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
         // Setup Android GUI. Point this method to your main activity xml file or corresponding int

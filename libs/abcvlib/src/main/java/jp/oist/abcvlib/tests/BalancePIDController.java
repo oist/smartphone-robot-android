@@ -1,4 +1,4 @@
-package jp.oist.abcvlib.core.outputs;
+package jp.oist.abcvlib.tests;
 
 import android.util.Log;
 
@@ -6,6 +6,7 @@ import jp.oist.abcvlib.core.inputs.Inputs;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataListener;
 import jp.oist.abcvlib.core.inputs.phone.OrientationData;
 import jp.oist.abcvlib.core.inputs.phone.OrientationDataListener;
+import jp.oist.abcvlib.core.outputs.AbcvlibController;
 import jp.oist.abcvlib.util.ErrorHandler;
 
 public class BalancePIDController extends AbcvlibController implements WheelDataListener, OrientationDataListener {

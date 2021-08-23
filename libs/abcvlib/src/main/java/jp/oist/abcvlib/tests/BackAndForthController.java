@@ -1,4 +1,6 @@
-package jp.oist.abcvlib.core.outputs;
+package jp.oist.abcvlib.tests;
+
+import jp.oist.abcvlib.core.outputs.AbcvlibController;
 
 public class BackAndForthController extends AbcvlibController {
     float speed;

@@ -1,4 +1,4 @@
-package jp.oist.abcvlib.servicetest;
+package jp.oist.abcvlib.tests;
 
 import android.content.Intent;
 
@@ -6,9 +6,9 @@ import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibService;
 import jp.oist.abcvlib.core.IOReadyListener;
-import jp.oist.abcvlib.core.outputs.BackAndForthController;
+import jp.oist.abcvlib.tests.BackAndForthController;
 
-public class MyAbcvlibService extends AbcvlibService implements IOReadyListener {
+public class BackAndForthService extends AbcvlibService implements IOReadyListener {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {

@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.IOReadyListener;
-import jp.oist.abcvlib.core.outputs.BalancePIDController;
+import jp.oist.abcvlib.tests.BalancePIDController;
 import jp.oist.abcvlib.util.ErrorHandler;
 
 /**
