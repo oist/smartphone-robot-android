@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibService;
 import jp.oist.abcvlib.core.IOReadyListener;
-import jp.oist.abcvlib.core.outputs.AbcvlibController;
+import jp.oist.abcvlib.core.outputs.BackAndForthController;
 
 public class MyAbcvlibService extends AbcvlibService implements IOReadyListener {
 
@@ -19,37 +19,17 @@ public class MyAbcvlibService extends AbcvlibService implements IOReadyListener 
     @Override
     public void onIOReady() {
         float speed = 0.5f;
-        // Using Builder with default build params used
-        AbcvlibController backAndForthController = new AbcvlibController.AbcvlibControllerBuilder(
-                this, new BackAndForthController(speed)).build();
         // Customizing ALL build params. You can remove any or all. This object not used, but here for reference.
-        AbcvlibController backAndForthController2 = new AbcvlibController.AbcvlibControllerBuilder(
-                this, new BackAndForthController(speed))
-                .setName("BackAndForthController").setTimestep(1).setTimeUnit(TimeUnit.SECONDS)
-                .setInitDelay(0).setThreadCount(1).setThreadPriority(Thread.MAX_PRIORITY).build();
+        BackAndForthController backAndForthController = (BackAndForthController) new BackAndForthController(speed).setInitDelay(0)
+                .setName("BackAndForthController").setThreadCount(1)
+                .setThreadPriority(Thread.NORM_PRIORITY).setTimestep(1000)
+                .setTimeUnit(TimeUnit.MILLISECONDS);
 
         // Start your custom controller
         backAndForthController.startController();
-        // Start the master controller after adding any customer controllers.
+        // Adds your custom controller to the compounding master controller.
+        getOutputs().getMasterController().addController(backAndForthController);
+        // Start the master controller after adding and starting any customer controllers.
         getOutputs().startMasterController();
-    }
-
-    public static class BackAndForthController extends AbcvlibController {
-        float speed;
-        float currentSpeed;
-        public BackAndForthController(float speed){
-            this.speed = speed;
-            this.currentSpeed = speed;
-        }
-
-        @Override
-        public void run() {
-            if (currentSpeed == speed){
-                currentSpeed = -speed;
-            }else {
-                currentSpeed = speed;
-            }
-            setOutput(currentSpeed, currentSpeed);
-        }
     }
 }

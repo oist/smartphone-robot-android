@@ -143,7 +143,7 @@ public abstract class AbcvlibService extends IOIOService implements AbcvlibAbstr
     }
 
     private void initializeOutputs(){
-        outputs = new Outputs(switches, abcvlibLooper, inputs);
+        outputs = new Outputs(switches, abcvlibLooper);
     }
 
     /**
