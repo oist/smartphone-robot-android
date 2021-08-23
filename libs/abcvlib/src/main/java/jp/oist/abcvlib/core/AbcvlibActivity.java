@@ -84,7 +84,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements AbcvlibAbs
     }
 
     private void initializeOutputs(){
-        outputs = new Outputs(switches, abcvlibLooper, inputs);
+        outputs = new Outputs(switches, abcvlibLooper);
     }
 
     /**
