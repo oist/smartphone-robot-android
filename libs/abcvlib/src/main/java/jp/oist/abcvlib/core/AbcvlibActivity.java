@@ -16,6 +16,7 @@ import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
 import jp.oist.abcvlib.core.inputs.Inputs;
 import jp.oist.abcvlib.core.outputs.Outputs;
+import jp.oist.abcvlib.util.ErrorHandler;
 
 /**
  * AbcvlibActivity is where all of the other classes are initialized into objects. The objects
@@ -134,6 +135,8 @@ public abstract class AbcvlibActivity extends IOIOActivity implements AbcvlibAbs
             initializeOutputs();
             if (ioReadyListener != null){
                 ioReadyListener.onIOReady();
+            }else{
+                ErrorHandler.eLog(TAG, "You must setIoReadyListener(this) within your onCreate method.", new Exception(), true);
             }
             Log.d("abcvlib", "createIOIOLooper Finished");
         }
