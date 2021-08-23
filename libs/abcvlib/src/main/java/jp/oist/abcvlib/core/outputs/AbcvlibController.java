@@ -57,6 +57,7 @@ public abstract class AbcvlibController implements Runnable{
     }
 
     public void stopController(){
+        setOutput(0,0);
         executor.shutdownNow();
     }
 
