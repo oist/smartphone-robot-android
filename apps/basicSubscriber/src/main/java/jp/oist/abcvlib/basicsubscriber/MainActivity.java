@@ -11,6 +11,7 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.IOReadyListener;
 import jp.oist.abcvlib.core.PermissionsListener;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataListener;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataListener;
@@ -37,8 +38,8 @@ import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
  * unresponsive.
  * @author Christopher Buckley https://github.com/topherbuckley
  */
-public class MainActivity extends AbcvlibActivity implements PermissionsListener, BatteryDataListener,
-        OrientationDataListener, WheelDataListener, MicrophoneDataListener, ImageDataListener {
+public class MainActivity extends AbcvlibActivity implements PermissionsListener, IOReadyListener,
+        BatteryDataListener, OrientationDataListener, WheelDataListener, MicrophoneDataListener, ImageDataListener {
 
     private long lastFrameTime = System.nanoTime();
     private GuiUpdater guiUpdater;
@@ -49,6 +50,8 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
         // Setup Android GUI object references such that we can write data to them later.
         setContentView(R.layout.activity_main);
 
+        setIoReadyListener(this);
+
         // Creates an another thread that schedules updates to the GUI every 100 ms. Updaing the GUI every 100 microseconds would bog down the CPU
         ScheduledExecutorServiceWithException executor = new ScheduledExecutorServiceWithException(1, new ProcessPriorityThreadFactory(Thread.MIN_PRIORITY, "GuiUpdates"));
         guiUpdater = new GuiUpdater(this);
@@ -56,7 +59,10 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
 
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
+    }
 
+    @Override
+    public void onIOReady() {
         String[] permissions = new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
         checkPermissions(this, permissions);
     }
