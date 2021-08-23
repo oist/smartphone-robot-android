@@ -115,6 +115,7 @@ public class TimeStepDataAssembler implements Runnable {
 
         TimeStep.startTimeStep(builder);
         TimeStep.addWheelData(builder, _wheelData);
+        TimeStep.addOrientationData(builder, _orientationData);
         TimeStep.addChargerData(builder, _chargerData);
         TimeStep.addBatteryData(builder, _batteryData);
         TimeStep.addSoundData(builder, _soundData);
