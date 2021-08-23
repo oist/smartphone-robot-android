@@ -138,7 +138,7 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
          * be updated
         */
         try {
-            getInputs().overwriteDefaults(inputs);
+            getInputs().overwriteDefaults(inputs, abcvlibLooper);
         } catch (ClassNotFoundException e) {
             ErrorHandler.eLog(TAG, "", e, true);
         }

@@ -425,4 +425,12 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         dutyCycleRightWheel = dutyCycleLimiter(right);
         dutyCycleLeftWheel = dutyCycleLimiter(left);
     }
+
+    public void setBatteryData(BatteryData batteryData) {
+        this.batteryData = batteryData;
+    }
+
+    public void setWheelData(WheelData wheelData) {
+        this.wheelData = wheelData;
+    }
 }

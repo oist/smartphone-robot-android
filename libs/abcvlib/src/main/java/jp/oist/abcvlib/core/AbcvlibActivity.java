@@ -35,7 +35,7 @@ public abstract class AbcvlibActivity extends IOIOActivity implements AbcvlibAbs
     private Inputs inputs;
     private Outputs outputs;
     private final Switches switches = new Switches();
-    private AbcvlibLooper abcvlibLooper;
+    protected AbcvlibLooper abcvlibLooper;
     private static final String TAG = "abcvlib";
     private IOReadyListener ioReadyListener;
 

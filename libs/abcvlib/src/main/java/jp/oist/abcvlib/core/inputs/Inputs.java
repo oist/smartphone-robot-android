@@ -4,6 +4,7 @@ import android.content.Context;
 
 import java.util.ArrayList;
 
+import jp.oist.abcvlib.core.AbcvlibLooper;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.phone.ImageData;
@@ -86,17 +87,25 @@ public class Inputs {
         this.wheelData = wheelData;
     }
 
-    public void overwriteDefaults(ArrayList<AbcvlibInput> inputs) throws ClassNotFoundException {
+    public void overwriteDefaults(ArrayList<AbcvlibInput> inputs, AbcvlibLooper abcvlibLooper)
+            throws ClassNotFoundException {
         for (AbcvlibInput input : inputs){
             if (input.getClass() == BatteryData.class){
+                this.batteryData = null;
                 setBatteryData((BatteryData) input);
+                abcvlibLooper.setBatteryData((BatteryData) input);
             }else if (input.getClass() == WheelData.class){
+                this.wheelData = null;
                 setWheelData((WheelData) input);
+                abcvlibLooper.setWheelData((WheelData) input);
             }else if (input.getClass() == OrientationData.class){
+                this.orientationData = null;
                 setOrientationData((OrientationData) input);
             }else if (input.getClass() == MicrophoneData.class){
+                this.microphoneData = null;
                 setMicrophoneData((MicrophoneData) input);
             }else if (input.getClass() == ImageData.class){
+                this.imageData = null;
                 setImageData((ImageData) input);
             }else{
                 throw new ClassNotFoundException("Unrecognized input type in ArrayList. " +
