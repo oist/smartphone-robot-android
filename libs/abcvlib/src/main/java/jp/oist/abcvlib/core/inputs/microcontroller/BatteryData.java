@@ -2,17 +2,16 @@ package jp.oist.abcvlib.core.inputs.microcontroller;
 
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.util.Log;
 
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 
 public class BatteryData implements AbcvlibInput {
 
-    private TimeStepDataBuffer timeStepDataBuffer = null;
+    private TimeStepDataBuffer timeStepDataBuffer;
     private boolean isRecording = false;
     private BatteryDataListener batteryDataListener = null;
-    private Handler handler;
+    private final Handler handler;
 
     public BatteryData(TimeStepDataBuffer timeStepDataBuffer){
         this.timeStepDataBuffer = timeStepDataBuffer;
@@ -33,15 +32,12 @@ public class BatteryData implements AbcvlibInput {
     }
 
     public void onChargerVoltageUpdate(double chargerVoltage, double coilVoltage, long timestamp) {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (isRecording){
-                    timeStepDataBuffer.getWriteData().getChargerData().put(chargerVoltage, coilVoltage);
-                }
-                if (batteryDataListener != null){
-                    batteryDataListener.onChargerVoltageUpdate(chargerVoltage, coilVoltage, timestamp);
-                }
+        handler.post(() -> {
+            if (isRecording){
+                timeStepDataBuffer.getWriteData().getChargerData().put(chargerVoltage, coilVoltage);
+            }
+            if (batteryDataListener != null){
+                batteryDataListener.onChargerVoltageUpdate(chargerVoltage, coilVoltage, timestamp);
             }
         });
     }

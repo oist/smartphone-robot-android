@@ -39,16 +39,15 @@ import jp.oist.abcvlib.util.SocketListener;
 public class TimeStepDataAssembler implements Runnable {
 
     private FlatBufferBuilder builder;
-    private int[] timeStepVector;
-    private StepHandler myStepHandler;
-    private TimeStepDataBuffer timeStepDataBuffer;
-    private String TAG = getClass().toString();
-    private boolean pauseRecording = false;
+    private final int[] timeStepVector;
+    private final StepHandler myStepHandler;
+    private final TimeStepDataBuffer timeStepDataBuffer;
+    private final String TAG = getClass().toString();
     private ScheduledFuture<?> timeStepDataAssemblerFuture;
     private final ScheduledExecutorServiceWithException executor;
     private final InetSocketAddress inetSocketAddress;
     private final SocketListener socketListener;
-    private ArrayList<AbcvlibInput> inputs = new ArrayList<>();
+    private final ArrayList<AbcvlibInput> inputs;
 
     public TimeStepDataAssembler(ArrayList<AbcvlibInput> inputs,
                                  StepHandler myStepHandler,
@@ -107,7 +106,7 @@ public class TimeStepDataAssembler implements Runnable {
     public void addTimeStep(){
 
         int _wheelData = addWheelData();
-        int _orientationData = addOrientationData();
+        int _orientationData = addOrientationData(); //todo add this to the actual flatbuffer
         int _chargerData = addChargerData();
         int _batteryData = addBatteryData();
         int _soundData = addSoundData();
@@ -277,7 +276,7 @@ public class TimeStepDataAssembler implements Runnable {
 
         // Choose action wte based on current timestep data
         if (myStepHandler != null){
-            ActionSet actionSet = myStepHandler.forward(timeStepDataBuffer.getWriteData());
+            myStepHandler.forward(timeStepDataBuffer.getWriteData());
         }
 
         Log.v("SocketConnection", "Running TimeStepAssembler Run Method");
@@ -305,17 +304,13 @@ public class TimeStepDataAssembler implements Runnable {
 
     public void stopRecordingData() throws RecordingWithoutTimeStepBufferException {
 
-        pauseRecording = true;
-
         for (AbcvlibInput input:inputs){
             if (input != null){
                 input.setRecording(false);
             }
         }
         myStepHandler.setTimeStep(0);
-        if (myStepHandler != null) {
-            myStepHandler.setLastTimestep(false);
-        }
+        myStepHandler.setLastTimestep(false);
         timeStepDataAssemblerFuture.cancel(false);
     }
 
@@ -383,7 +378,7 @@ public class TimeStepDataAssembler implements Runnable {
 
     private class CyclicBarrierHandler implements Runnable {
 
-        private TimeStepDataAssembler timeStepDataAssembler;
+        private final TimeStepDataAssembler timeStepDataAssembler;
 
         public CyclicBarrierHandler(TimeStepDataAssembler timeStepDataAssembler){
             this.timeStepDataAssembler = timeStepDataAssembler;
@@ -409,7 +404,7 @@ public class TimeStepDataAssembler implements Runnable {
         }
     }
 
-    private void sendToServer(ByteBuffer episode, CyclicBarrier doneSignal) throws IOException, BrokenBarrierException, InterruptedException {
+    private void sendToServer(ByteBuffer episode, CyclicBarrier doneSignal) {
         Log.d("SocketConnection", "New executor deployed creating new SocketConnectionManager");
         if (inetSocketAddress != null && socketListener != null){
             executor.execute(new SocketConnectionManager(socketListener, inetSocketAddress, episode, doneSignal));

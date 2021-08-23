@@ -51,10 +51,9 @@ import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 public class MainActivity extends AbcvlibActivity implements PermissionsListener, IOReadyListener,
         ActionSelector {
 
-    private long lastFrameTime = System.nanoTime();
     private GuiUpdater guiUpdater;
     private StepHandler myStepHandler;
-    private String TAG = getClass().getName();
+    private final String TAG = getClass().getName();
     private int reward = 0;
     private int maxTimeStepCount;
     private int maxEpisodeCount;
@@ -97,8 +96,8 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
         motionActionSet.addMotionAction("left", (byte) 3, -100, 100);
         motionActionSet.addMotionAction("right", (byte) 4, 100, -100);
 
-        maxTimeStepCount = 30;
-        maxEpisodeCount = 3;
+        maxTimeStepCount = 100;
+        maxEpisodeCount = 10;
 
         myStepHandler = new StepHandler.StepHandlerBuilder()
                 .setTimeStepLength(100)
@@ -208,8 +207,8 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
             guiUpdater.wheelCountR = data.getWheelData().getRight().getCounts()[0];
             guiUpdater.wheelDistanceL = data.getWheelData().getLeft().getDistances()[0];
             guiUpdater.wheelDistanceR = data.getWheelData().getRight().getDistances()[0];
-            guiUpdater.wheelSpeedInstantL = data.getWheelData().getLeft().getSpeedsInstantaneous()[0];;
-            guiUpdater.wheelSpeedInstantR = data.getWheelData().getRight().getSpeedsInstantaneous()[0];;
+            guiUpdater.wheelSpeedInstantL = data.getWheelData().getLeft().getSpeedsInstantaneous()[0];
+            guiUpdater.wheelSpeedInstantR = data.getWheelData().getRight().getSpeedsInstantaneous()[0];
             guiUpdater.wheelSpeedBufferedL = data.getWheelData().getLeft().getSpeedsBuffered()[0];
             guiUpdater.wheelSpeedBufferedR = data.getWheelData().getRight().getSpeedsBuffered()[0];
             guiUpdater.wheelSpeedExpAvgL = data.getWheelData().getLeft().getSpeedsExpAvg()[0];
