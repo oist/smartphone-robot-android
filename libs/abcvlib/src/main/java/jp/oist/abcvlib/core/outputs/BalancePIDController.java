@@ -2,12 +2,7 @@ package jp.oist.abcvlib.core.outputs;
 
 import android.util.Log;
 
-import java.util.Arrays;
-
-import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.core.Switches;
 import jp.oist.abcvlib.core.inputs.Inputs;
-import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataListener;
 import jp.oist.abcvlib.core.inputs.phone.OrientationData;
 import jp.oist.abcvlib.core.inputs.phone.OrientationDataListener;
@@ -29,96 +24,42 @@ public class BalancePIDController extends AbcvlibController implements WheelData
 
     private double maxAbsTilt = 6.5; // in Degrees
 
-    private final long[] PIDTimer = new long[3];
-    private final long[] PIDTimeSteps = new long[4];
-    private int timerCount = 1;
-    private long lastUpdateTime;
-
     private double speedL;
-    private double speedR;
     private double thetaDeg;
     private double angularVelocityDeg;
 
-    private final boolean socketLock = false;
-
-    private final Switches switches;
-
     private int bounceLoopCount = 0;
-    private long timestamp;
-    private boolean balancing = false;
 
-    public BalancePIDController(Switches switches, Inputs inputs){
-        this.switches = switches;
+    public BalancePIDController(Inputs inputs){
         inputs.getOrientationData().setOrientationDataListener(this);
         inputs.getWheelData().setWheelDataListener(this);
-        Log.i("abcvlib", "BalanceApp Created");
     }
 
     public void run(){
-        if (balancing){
-            PIDTimer[0] = System.nanoTime();
-            // in Degrees
-            double maxTiltAngle = setPoint + maxAbsTilt;
-            // in Degrees
-            double minTiltAngle = setPoint - maxAbsTilt;
-
-            PIDTimer[1] = System.nanoTime();
-
-            // Bounce Up
-            if (minTiltAngle > thetaDeg){
-                bounce(false);
-            }else if(maxTiltAngle < thetaDeg){
-                bounce(true);
-            }else{
-                try {
-                    bounceLoopCount = 0;
-                    linearController();
-                } catch (InterruptedException e) {
-                    ErrorHandler.eLog(TAG, "Interupted when trying to run linearController", e, true);
-                }
-            }
-
-            PIDTimer[2] = System.nanoTime();
-
-            PIDTimeSteps[3] += System.nanoTime() - PIDTimer[2];
-            PIDTimeSteps[2] += PIDTimer[2] - PIDTimer[1];
-            PIDTimeSteps[1] += PIDTimer[1] - PIDTimer[0];
-            PIDTimeSteps[0] = PIDTimer[0];
-
-            // Take basic stats of every 1000 time step lengths rather than pushing all.
-            int avgCount = 1000;
-            if (timerCount % avgCount == 0){
-
-                for (int i=1; i < PIDTimeSteps.length; i++){
-
-                    PIDTimeSteps[i] = (PIDTimeSteps[i] / avgCount) / 1000000;
-
-                }
-
-                if (switches.loggerOn){
-                    Log.v("timers", "PIDTimer Averages = " + Arrays.toString(PIDTimeSteps));
-                }
-            }
-
-            timerCount ++;
+        // If current tilt angle is over maxAbsTilt or under -maxAbsTilt --> Bounce Up
+        if ((setPoint - maxAbsTilt) > thetaDeg){
+            bounce(false); // Bounce backward first
+        }else if((setPoint + maxAbsTilt) < thetaDeg){
+            bounce(true); // Bounce forward first
+        }else{
+            bounceLoopCount = 0;
+            linearController();
         }
     }
 
-    public void startController() {
-        this.balancing = true;
-    }
-
-    public void stop() {
-        this.balancing = false;
-    }
-
-    synchronized public void setPID(double p_tilt_,
-                                    double i_tilt_,
-                                    double d_tilt_,
-                                    double setPoint_,
-                                    double p_wheel_,
-                                    double expWeight_,
-                                    double maxAbsTilt_)
+    /**
+     * A means of changing the PID values while this controller is running
+     * @param p_tilt_ proportional controller relative to the tilt angle of the phone
+     * @param i_tilt_ integral controller relative to the tilt angle of the phone
+     * @param d_tilt_ derivative controller relative to the tilt angle of the phone
+     * @param setPoint_ the assumed angle where the robot would be balanced (ideally zero but realistically nearer to 3 or 4 deg)
+     * @param p_wheel_ proportional controller relative to the wheel distance
+     * @param expWeight_ exponential filter coefficicent //todo implement this more clearly
+     * @param maxAbsTilt_ max tilt abgle (deg) at which the controller will switch between a linear and non-linear bounce controller.
+     * @throws InterruptedException thrown if shutdown while trying to read/write to the IOIO board.
+     */
+    synchronized public void setPID(double p_tilt_, double i_tilt_, double d_tilt_, double setPoint_,
+                                    double p_wheel_, double expWeight_, double maxAbsTilt_)
             throws InterruptedException {
 
         try {
@@ -134,6 +75,8 @@ public class BalancePIDController extends AbcvlibController implements WheelData
             Thread.sleep(1000);
         }
     }
+
+    // -------------- Actual Controllers ----------------------------
 
     private void bounce(boolean forward) {
         float speed = 0.5f;
@@ -161,9 +104,7 @@ public class BalancePIDController extends AbcvlibController implements WheelData
         bounceLoopCount++;
     }
 
-    private void linearController() throws InterruptedException {
-
-        setPID(p_tilt, i_tilt, d_tilt, setPoint, p_wheel, expWeight, maxAbsTilt);
+    private void linearController(){
 
         // TODO this needs to account for length of time on each interval, or overall time length. Here this just assumes a width of 1 for all intervals.
         int_e_t = int_e_t + e_t;
@@ -179,16 +120,16 @@ public class BalancePIDController extends AbcvlibController implements WheelData
         setOutput((float)(p_out + i_out + d_out), (float)(p_out + i_out + d_out));
     }
 
+    // -------------- Input Data Listeners ----------------------------
+
     @Override
     public void onWheelDataUpdate(long timestamp, int wheelCountL, int wheelCountR,
                                   double wheelDistanceL, double wheelDistanceR,
                                   double wheelSpeedInstantL, double wheelSpeedInstantR,
                                   double wheelSpeedBufferedL, double wheelSpeedBufferedR,
                                   double wheelSpeedExpAvgL, double wheelSpeedExpAvgR) {
-        this.timestamp = timestamp;
         speedL = wheelSpeedExpAvgL;
-        speedR = wheelSpeedExpAvgR;
-//        wheelData.setExpWeight(expWeight); // todo enable access to this in GUI somehow
+        //        wheelData.setExpWeight(expWeight); // todo enable access to this in GUI somehow
     }
 
     @Override
