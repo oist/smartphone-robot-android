@@ -6,9 +6,6 @@ import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.IOReadyListener;
-import jp.oist.abcvlib.core.outputs.AbcvlibController;
-import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
-import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 
 /**
  * Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors
@@ -16,8 +13,6 @@ import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
  * @author Christopher Buckley https://github.com/topherbuckley
  */
 public class MainActivity extends AbcvlibActivity implements IOReadyListener {
-
-    private ScheduledExecutorServiceWithException executor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,8 +24,6 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
         // Setup Android GUI. Point this method to your main activity xml file or corresponding int
         // ID within the R class
         setContentView(R.layout.activity_main);
-        executor = new ScheduledExecutorServiceWithException(1,
-                new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY, "BackAndForthController"));
     }
 
     @Override
