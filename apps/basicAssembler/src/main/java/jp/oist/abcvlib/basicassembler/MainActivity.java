@@ -48,15 +48,12 @@ import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
  * unresponsive.
  * @author Christopher Buckley https://github.com/topherbuckley
  */
-public class MainActivity extends AbcvlibActivity implements PermissionsListener, IOReadyListener,
-        ActionSelector {
+public class MainActivity extends AbcvlibActivity implements PermissionsListener, IOReadyListener {
 
     private GuiUpdater guiUpdater;
-    private StepHandler myStepHandler;
     private final String TAG = getClass().getName();
-    private int reward = 0;
-    private int maxTimeStepCount;
-    private int maxEpisodeCount;
+    private final int maxTimeStepCount = 100;
+    private final int maxEpisodeCount = 10;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,18 +93,13 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
         motionActionSet.addMotionAction("left", (byte) 3, -100, 100);
         motionActionSet.addMotionAction("right", (byte) 4, 100, -100);
 
-        maxTimeStepCount = 100;
-        maxEpisodeCount = 10;
-
-        myStepHandler = new StepHandler.StepHandlerBuilder()
+        MyStepHandler myStepHandler = (MyStepHandler) new MyStepHandler(this, guiUpdater)
                 .setTimeStepLength(100)
                 .setMaxTimeStepCount(maxTimeStepCount)
                 .setMaxEpisodeCount(maxEpisodeCount)
                 .setMaxReward(100000)
                 .setMotionActionSet(motionActionSet)
-                .setCommActionSet(commActionSet)
-                .setActionSelector(this)
-                .build();
+                .setCommActionSet(commActionSet);
 
         // Initialize an ArrayList of AbcvlibInputs that you want the TimeStepDataAssembler to gather data for
         ArrayList<AbcvlibInput> inputs = new ArrayList<>();
@@ -157,29 +149,6 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
             ErrorHandler.eLog(TAG, "", e, true);
         }
     }
-
-    @Override
-    public ActionSet forward(TimeStepDataBuffer.TimeStepData data) {
-        ActionSet actionSet;
-        MotionAction motionAction;
-        CommAction commAction;
-
-        // Set actions based on above results. e.g: the first index of each
-        motionAction = myStepHandler.getMotionActionSet().getMotionActions()[0];
-        commAction = myStepHandler.getCommActionSet().getCommActions()[0];
-
-        // Bundle them into ActionSet so it can return both
-        actionSet = new ActionSet(motionAction, commAction);
-
-        // set your action to some ints
-        data.getActions().add(motionAction, commAction);
-
-        if (reward >= myStepHandler.getMaxReward()){
-            myStepHandler.setLastTimestep(true);
-            // reseting reward after each episode
-            reward = 0;
-        }
-
         // Note this will never be called when the myStepHandler.getTimeStep() >= myStepHandler.getMaxTimeStep() as the forward method will no longer be called
         updateGUIValues(data, myStepHandler.getTimeStep(), myStepHandler.getEpisodeCount());
 

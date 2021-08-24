@@ -32,10 +32,10 @@ import jp.oist.abcvlib.util.FileOps;
 import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
 import jp.oist.abcvlib.util.SocketListener;
 
-public class MainActivity extends AbcvlibActivity implements IOReadyListener, PermissionsListener, ActionSelector{
+public class MainActivity extends AbcvlibActivity implements IOReadyListener, PermissionsListener{
 
     InetSocketAddress inetSocketAddress = new InetSocketAddress("192.168.27.231", 3000);
-    private StepHandler myStepHandler;
+    private MyStepHandler myStepHandler;
     private int reward = 0;
     private String TAG = getClass().toString();
     private ServerComm serverComm;
@@ -76,14 +76,12 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener, Pe
         motionActionSet.addMotionAction("left", (byte) 3, -100, 100);
         motionActionSet.addMotionAction("right", (byte) 4, 100, -100);
 
-        myStepHandler = new StepHandler.StepHandlerBuilder()
+        myStepHandler = (MyStepHandler) new MyStepHandler()
                 .setMaxTimeStepCount(20)
                 .setMaxEpisodeCount(3)
                 .setMaxReward(100000)
                 .setMotionActionSet(motionActionSet)
-                .setCommActionSet(commActionSet)
-                .setActionSelector(this)
-                .build();
+                .setCommActionSet(commActionSet);
 
         // Initialize an ArrayList of AbcvlibInputs that you want the TimeStepDataAssembler to gather data for
         ArrayList<AbcvlibInput> inputs = new ArrayList<>();
@@ -107,24 +105,5 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener, Pe
             ErrorHandler.eLog(TAG, "Make sure to initialize a TimeStepDataBuffer object prior " +
                     "to setting isRecording to true", e, true);
         }
-    }
-
-    @Override
-    public ActionSet forward(TimeStepDataBuffer.TimeStepData data) {
-        ActionSet actionSet;
-        MotionAction motionAction;
-        CommAction commAction;
-
-        // Set actions based on above results. e.g: the first index of each
-        motionAction = myStepHandler.getMotionActionSet().getMotionActions()[0];
-        commAction = myStepHandler.getCommActionSet().getCommActions()[0];
-
-        // Bundle them into ActionSet so it can return both
-        actionSet = new ActionSet(motionAction, commAction);
-
-        // set your action to some ints
-        data.getActions().add(motionAction, commAction);
-
-        return actionSet;
     }
 }
