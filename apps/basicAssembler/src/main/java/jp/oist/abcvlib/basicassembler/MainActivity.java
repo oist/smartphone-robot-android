@@ -3,28 +3,21 @@ package jp.oist.abcvlib.basicassembler;
 import android.Manifest;
 import android.os.Bundle;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.IOReadyListener;
 import jp.oist.abcvlib.core.PermissionsListener;
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
-import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.phone.ImageData;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
 import jp.oist.abcvlib.core.inputs.phone.OrientationData;
-import jp.oist.abcvlib.core.learning.ActionSet;
-import jp.oist.abcvlib.core.learning.CommAction;
 import jp.oist.abcvlib.core.learning.CommActionSet;
-import jp.oist.abcvlib.core.learning.MotionAction;
 import jp.oist.abcvlib.core.learning.MotionActionSet;
 import jp.oist.abcvlib.core.learning.TimeStepDataAssembler;
-import jp.oist.abcvlib.core.outputs.ActionSelector;
 import jp.oist.abcvlib.core.outputs.StepHandler;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
@@ -65,7 +58,7 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
 
         // Creates an another thread that schedules updates to the GUI every 100 ms. Updaing the GUI every 100 microseconds would bog down the CPU
         ScheduledExecutorServiceWithException executor = new ScheduledExecutorServiceWithException(1, new ProcessPriorityThreadFactory(Thread.MIN_PRIORITY, "GuiUpdates"));
-        guiUpdater = new GuiUpdater(this);
+        guiUpdater = new GuiUpdater(this, maxTimeStepCount, maxEpisodeCount);
         executor.scheduleAtFixedRate(guiUpdater, 0, 100, TimeUnit.MILLISECONDS);
 
         // Passes Android App information up to parent classes for various usages. Do not modify
@@ -80,7 +73,7 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
 
     @Override
     public void onPermissionsGranted(){
-// Defining custom actions
+        // Defining custom actions
         CommActionSet commActionSet = new CommActionSet(3);
         commActionSet.addCommAction("action1", (byte) 0); // I'm just overwriting an existing to show how
         commActionSet.addCommAction("action2", (byte) 1);
@@ -147,56 +140,6 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
             timeStepDataAssembler.startGatherers();
         } catch (RecordingWithoutTimeStepBufferException e) {
             ErrorHandler.eLog(TAG, "", e, true);
-        }
-    }
-        // Note this will never be called when the myStepHandler.getTimeStep() >= myStepHandler.getMaxTimeStep() as the forward method will no longer be called
-        updateGUIValues(data, myStepHandler.getTimeStep(), myStepHandler.getEpisodeCount());
-
-        return actionSet;
-    }
-
-    private void updateGUIValues(TimeStepDataBuffer.TimeStepData data, int timeStepCount, int episodeCount){
-        guiUpdater.timeStep = timeStepCount + " of " + maxTimeStepCount;
-        guiUpdater.episodeCount = episodeCount + " of " + maxEpisodeCount;
-        if (data.getBatteryData().getVoltage().length > 0){
-            guiUpdater.batteryVoltage = data.getBatteryData().getVoltage()[0]; // just taking the first recorded one
-        }
-        if (data.getChargerData().getChargerVoltage().length > 0){
-            guiUpdater.chargerVoltage = data.getChargerData().getChargerVoltage()[0];
-            guiUpdater.coilVoltage = data.getChargerData().getCoilVoltage()[0];
-        }
-        if (data.getOrientationData().getTiltAngle().length > 20){
-            double thetaDeg = OrientationData.getThetaDeg(data.getOrientationData().getTiltAngle()[0]);
-            double angularVelocityDeg = OrientationData.getAngularVelocityDeg(data.getOrientationData().getAngularVelocity()[0]);
-            guiUpdater.thetaDeg = thetaDeg;
-            guiUpdater.angularVelocityDeg = angularVelocityDeg;
-        }
-        if (data.getWheelData().getLeft().getCounts().length > 0){
-            guiUpdater.wheelCountL = data.getWheelData().getLeft().getCounts()[0];
-            guiUpdater.wheelCountR = data.getWheelData().getRight().getCounts()[0];
-            guiUpdater.wheelDistanceL = data.getWheelData().getLeft().getDistances()[0];
-            guiUpdater.wheelDistanceR = data.getWheelData().getRight().getDistances()[0];
-            guiUpdater.wheelSpeedInstantL = data.getWheelData().getLeft().getSpeedsInstantaneous()[0];
-            guiUpdater.wheelSpeedInstantR = data.getWheelData().getRight().getSpeedsInstantaneous()[0];
-            guiUpdater.wheelSpeedBufferedL = data.getWheelData().getLeft().getSpeedsBuffered()[0];
-            guiUpdater.wheelSpeedBufferedR = data.getWheelData().getRight().getSpeedsBuffered()[0];
-            guiUpdater.wheelSpeedExpAvgL = data.getWheelData().getLeft().getSpeedsExpAvg()[0];
-            guiUpdater.wheelSpeedExpAvgR = data.getWheelData().getRight().getSpeedsExpAvg()[0];
-        }
-        if (data.getSoundData().getLevels().length > 0){
-            float[] arraySlice = Arrays.copyOfRange(data.getSoundData().getLevels(), 0, 5);
-            DecimalFormat df = new DecimalFormat("0.#E0");
-            String arraySliceString = "";
-            for (double v : arraySlice) {
-                arraySliceString = arraySliceString.concat(df.format(v)) + ", ";
-            }
-            guiUpdater.audioDataString = arraySliceString;
-        }
-        if (data.getImageData().getImages().size() > 1){
-            double frameRate = 1.0 / ((data.getImageData().getImages().get(1).getTimestamp() -
-                    data.getImageData().getImages().get(0).getTimestamp()) / 1000000000.0) ; // just taking difference between two but one could do an average over all differences
-            DecimalFormat df = new DecimalFormat("#.0000000000000");
-            guiUpdater.frameRateString = df.format(frameRate);
         }
     }
 }
