@@ -4,11 +4,11 @@ import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 import jp.oist.abcvlib.core.learning.ActionSet;
 import jp.oist.abcvlib.core.learning.CommAction;
 import jp.oist.abcvlib.core.learning.MotionAction;
-import jp.oist.abcvlib.core.outputs.StepHandler;
+import jp.oist.abcvlib.core.outputs.Trial;
 
-public class MyStepHandler extends StepHandler {
+public class MyTrial extends Trial {
 
-    public MyStepHandler(){}
+    public MyTrial(){}
 
     @Override
     public ActionSet forward(TimeStepDataBuffer.TimeStepData data) {

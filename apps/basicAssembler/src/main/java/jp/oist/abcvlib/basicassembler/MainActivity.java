@@ -85,7 +85,7 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
         motionActionSet.addMotionAction("left", (byte) 3, -100, 100);
         motionActionSet.addMotionAction("right", (byte) 4, 100, -100);
 
-        MyStepHandler myStepHandler = (MyStepHandler) new MyStepHandler(this, guiUpdater)
+        MyTrial myTrial = (MyTrial) new MyTrial(this, guiUpdater)
                 .setTimeStepLength(100)
                 .setMaxTimeStepCount(maxTimeStepCount)
                 .setMaxEpisodeCount(maxEpisodeCount)
@@ -134,7 +134,7 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
         }
 
         // Pass your inputs list to a new instance of TimeStepDataAssember along with all other references
-        TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler(inputs, myStepHandler, null, null, getInputs().getTimeStepDataBuffer());
+        TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler(inputs, myTrial, null, null, getInputs().getTimeStepDataBuffer());
         try {
             timeStepDataAssembler.startGatherers();
         } catch (RecordingWithoutTimeStepBufferException e) {

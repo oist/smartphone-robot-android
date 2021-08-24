@@ -5,7 +5,7 @@ import jp.oist.abcvlib.core.learning.CommActionSet;
 import jp.oist.abcvlib.core.learning.MotionActionSet;
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 
-public abstract class StepHandler {
+public abstract class Trial {
     private int timeStepLength = 50;
     private int maxTimeStepCount = 100;
     private int timeStep = 0;
@@ -19,9 +19,9 @@ public abstract class StepHandler {
     private MotionActionSet motionActionSet;
     private ActionSelector actionSelector;
 
-    public StepHandler(int timeStepLength, int maxTimeStepCount, int maxReward, int maxEpisodeCount,
-                       CommActionSet commActionSet, MotionActionSet motionActionSet,
-                       ActionSelector actionSelector){
+    public Trial(int timeStepLength, int maxTimeStepCount, int maxReward, int maxEpisodeCount,
+                 CommActionSet commActionSet, MotionActionSet motionActionSet,
+                 ActionSelector actionSelector){
         this.timeStepLength = timeStepLength;
         this.maxTimeStepCount = maxTimeStepCount;
         this.maxReward = maxReward;
@@ -31,39 +31,39 @@ public abstract class StepHandler {
         this.actionSelector = actionSelector;
     }
 
-    public StepHandler(){}
+    public Trial(){}
 
-    public StepHandler setTimeStepLength(int timeStepLength){
+    public Trial setTimeStepLength(int timeStepLength){
         this.timeStepLength = timeStepLength;
         return this;
     }
 
-    public StepHandler setMaxTimeStepCount(int maxTimeStepCount){
+    public Trial setMaxTimeStepCount(int maxTimeStepCount){
         this.maxTimeStepCount = maxTimeStepCount;
         return this;
     }
 
-    public StepHandler setMaxReward(int maxReward){
+    public Trial setMaxReward(int maxReward){
         this.maxReward = maxReward;
         return this;
     }
 
-    public StepHandler setMaxEpisodeCount(int maxEpisodeCount){
+    public Trial setMaxEpisodeCount(int maxEpisodeCount){
         this.maxEpisodeCount = maxEpisodeCount;
         return this;
     }
 
-    public StepHandler setCommActionSet(CommActionSet commActionSet){
+    public Trial setCommActionSet(CommActionSet commActionSet){
         this.commActionSet = commActionSet;
         return this;
     }
 
-    public StepHandler setMotionActionSet(MotionActionSet moctionActionSet){
+    public Trial setMotionActionSet(MotionActionSet moctionActionSet){
         this.motionActionSet = moctionActionSet;
         return this;
     }
 
-    public StepHandler setActionSelector(ActionSelector actionSelector){
+    public Trial setActionSelector(ActionSelector actionSelector){
         this.actionSelector = actionSelector;
         return this;
     }

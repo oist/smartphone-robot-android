@@ -15,7 +15,6 @@ import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
 import jp.oist.abcvlib.core.learning.CommActionSet;
 import jp.oist.abcvlib.core.learning.MotionActionSet;
 import jp.oist.abcvlib.core.learning.TimeStepDataAssembler;
-import jp.oist.abcvlib.core.outputs.StepHandler;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.FileOps;
 import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
@@ -23,7 +22,7 @@ import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
 public class MainActivity extends AbcvlibActivity implements IOReadyListener, PermissionsListener{
 
     InetSocketAddress inetSocketAddress = new InetSocketAddress("192.168.27.231", 3000);
-    private MyStepHandler myStepHandler;
+    private MyTrial myTrial;
     private int reward = 0;
     private String TAG = getClass().toString();
     private ServerComm serverComm;
@@ -64,7 +63,7 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener, Pe
         motionActionSet.addMotionAction("left", (byte) 3, -100, 100);
         motionActionSet.addMotionAction("right", (byte) 4, 100, -100);
 
-        myStepHandler = (MyStepHandler) new MyStepHandler()
+        myTrial = (MyTrial) new MyTrial()
                 .setMaxTimeStepCount(20)
                 .setMaxEpisodeCount(3)
                 .setMaxReward(100000)
@@ -86,7 +85,7 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener, Pe
         inputs.add(imageData);
 
         // Pass your inputs list to a new instance of TimeStepDataAssember along with all other references
-        TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler(inputs, myStepHandler, inetSocketAddress, serverComm, getInputs().getTimeStepDataBuffer());
+        TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler(inputs, myTrial, inetSocketAddress, serverComm, getInputs().getTimeStepDataBuffer());
         try {
             timeStepDataAssembler.startGatherers();
         } catch (RecordingWithoutTimeStepBufferException e) {

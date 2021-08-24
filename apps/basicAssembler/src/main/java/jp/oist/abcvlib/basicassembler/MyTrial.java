@@ -7,14 +7,14 @@ import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 import jp.oist.abcvlib.core.learning.ActionSet;
 import jp.oist.abcvlib.core.learning.CommAction;
 import jp.oist.abcvlib.core.learning.MotionAction;
-import jp.oist.abcvlib.core.outputs.StepHandler;
+import jp.oist.abcvlib.core.outputs.Trial;
 
-public class MyStepHandler extends StepHandler {
+public class MyTrial extends Trial {
     private int reward = 0;
     private final Handler mainHandler;
     private final GuiUpdater guiUpdater;
 
-    public MyStepHandler(Context context, GuiUpdater guiUpdater){
+    public MyTrial(Context context, GuiUpdater guiUpdater){
         mainHandler = new Handler(context.getMainLooper());
         this.guiUpdater = guiUpdater;
     }
