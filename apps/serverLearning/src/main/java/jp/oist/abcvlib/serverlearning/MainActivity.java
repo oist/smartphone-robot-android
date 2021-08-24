@@ -2,35 +2,23 @@ package jp.oist.abcvlib.serverlearning;
 
 import android.Manifest;
 import android.os.Bundle;
-import android.util.Log;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.IOReadyListener;
 import jp.oist.abcvlib.core.PermissionsListener;
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
-import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 import jp.oist.abcvlib.core.inputs.phone.ImageData;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
-import jp.oist.abcvlib.core.learning.ActionSet;
-import jp.oist.abcvlib.core.learning.CommAction;
 import jp.oist.abcvlib.core.learning.CommActionSet;
-import jp.oist.abcvlib.core.learning.MotionAction;
 import jp.oist.abcvlib.core.learning.MotionActionSet;
 import jp.oist.abcvlib.core.learning.TimeStepDataAssembler;
-import jp.oist.abcvlib.core.outputs.ActionSelector;
 import jp.oist.abcvlib.core.outputs.StepHandler;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.FileOps;
 import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
-import jp.oist.abcvlib.util.SocketListener;
 
 public class MainActivity extends AbcvlibActivity implements IOReadyListener, PermissionsListener{
 
