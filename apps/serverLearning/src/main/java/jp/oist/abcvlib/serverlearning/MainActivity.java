@@ -13,6 +13,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.IOReadyListener;
 import jp.oist.abcvlib.core.PermissionsListener;
 import jp.oist.abcvlib.core.inputs.AbcvlibInput;
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
@@ -31,7 +32,7 @@ import jp.oist.abcvlib.util.FileOps;
 import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
 import jp.oist.abcvlib.util.SocketListener;
 
-public class MainActivity extends AbcvlibActivity implements PermissionsListener, ActionSelector,
+public class MainActivity extends AbcvlibActivity implements IOReadyListener, PermissionsListener, ActionSelector,
         SocketListener {
 
     InetSocketAddress inetSocketAddress = new InetSocketAddress("192.168.27.231", 3000);
@@ -48,7 +49,10 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
         FileOps.copyAssets(getApplicationContext(), "models/");
 
         super.onCreate(savedInstanceState);
+    }
 
+    @Override
+    public void onIOReady() {
         String[] permissions = new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
         checkPermissions(this, permissions);
     }
