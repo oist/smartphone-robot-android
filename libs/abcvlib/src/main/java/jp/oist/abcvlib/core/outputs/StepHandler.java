@@ -5,18 +5,18 @@ import jp.oist.abcvlib.core.learning.CommActionSet;
 import jp.oist.abcvlib.core.learning.MotionActionSet;
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 
-public class StepHandler {
-    private final int timeStepLength;
-    private final int maxTimeStepCount;
+public abstract class StepHandler {
+    private int timeStepLength = 50;
+    private int maxTimeStepCount = 100;
     private int timeStep = 0;
     private boolean lastEpisode = false; // Use to trigger MainActivity to stop generating episodes
     private boolean lastTimestep = false; // Use to trigger MainActivity to stop generating timesteps for a single episode
     private int reward = 0;
-    private final int maxReward;
-    private final int maxEpisodecount;
+    private int maxReward = 100;
+    private int maxEpisodeCount = 3;
     private int episodeCount = 0;
-    private final CommActionSet commActionSet;
-    private final MotionActionSet motionActionSet;
+    private CommActionSet commActionSet;
+    private MotionActionSet motionActionSet;
     private ActionSelector actionSelector;
 
     public StepHandler(int timeStepLength, int maxTimeStepCount, int maxReward, int maxEpisodeCount,
@@ -25,67 +25,50 @@ public class StepHandler {
         this.timeStepLength = timeStepLength;
         this.maxTimeStepCount = maxTimeStepCount;
         this.maxReward = maxReward;
-        this.maxEpisodecount = maxEpisodeCount;
+        this.maxEpisodeCount = maxEpisodeCount;
         this.motionActionSet = motionActionSet;
         this.commActionSet = commActionSet;
         this.actionSelector = actionSelector;
     }
 
-    public static class StepHandlerBuilder {
-        private int timeStepLength = 50;
-        private int maxTimeStepCount = 100;
-        private int maxReward = 100;
-        private int maxEpisodeCount = 3;
-        private CommActionSet commActionSet = new CommActionSet();
-        private MotionActionSet motionActionSet = new MotionActionSet();
-        private ActionSelector actionSelector;
+    public StepHandler(){}
 
-        public StepHandlerBuilder(){}
-
-        public StepHandler build(){
-            return new StepHandler(timeStepLength, maxTimeStepCount, maxReward, maxEpisodeCount,
-                    commActionSet, motionActionSet, actionSelector);
-        }
-
-        public StepHandlerBuilder setTimeStepLength(int timeStepLength){
-            this.timeStepLength = timeStepLength;
-            return this;
-        }
-
-        public StepHandlerBuilder setMaxTimeStepCount(int maxTimeStepCount){
-            this.maxTimeStepCount = maxTimeStepCount;
-            return this;
-        }
-
-        public StepHandlerBuilder setMaxReward(int maxReward){
-            this.maxReward = maxReward;
-            return this;
-        }
-
-        public StepHandlerBuilder setMaxEpisodeCount(int maxEpisodeCount){
-            this.maxEpisodeCount = maxEpisodeCount;
-            return this;
-        }
-
-        public StepHandlerBuilder setCommActionSet(CommActionSet commActionSet){
-            this.commActionSet = commActionSet;
-            return this;
-        }
-
-        public StepHandlerBuilder setMotionActionSet(MotionActionSet moctionActionSet){
-            this.motionActionSet = moctionActionSet;
-            return this;
-        }
-
-        public StepHandlerBuilder setActionSelector(ActionSelector actionSelector){
-            this.actionSelector = actionSelector;
-            return this;
-        }
+    public StepHandler setTimeStepLength(int timeStepLength){
+        this.timeStepLength = timeStepLength;
+        return this;
     }
 
-    public ActionSet forward(TimeStepDataBuffer.TimeStepData data){
-        return this.actionSelector.forward(data);
+    public StepHandler setMaxTimeStepCount(int maxTimeStepCount){
+        this.maxTimeStepCount = maxTimeStepCount;
+        return this;
     }
+
+    public StepHandler setMaxReward(int maxReward){
+        this.maxReward = maxReward;
+        return this;
+    }
+
+    public StepHandler setMaxEpisodeCount(int maxEpisodeCount){
+        this.maxEpisodeCount = maxEpisodeCount;
+        return this;
+    }
+
+    public StepHandler setCommActionSet(CommActionSet commActionSet){
+        this.commActionSet = commActionSet;
+        return this;
+    }
+
+    public StepHandler setMotionActionSet(MotionActionSet moctionActionSet){
+        this.motionActionSet = moctionActionSet;
+        return this;
+    }
+
+    public StepHandler setActionSelector(ActionSelector actionSelector){
+        this.actionSelector = actionSelector;
+        return this;
+    }
+
+    public abstract ActionSet forward(TimeStepDataBuffer.TimeStepData data);
 
     public int getTimeStepLength() {
         return timeStepLength;
@@ -100,7 +83,7 @@ public class StepHandler {
     }
 
     public boolean isLastEpisode() {
-        return (episodeCount >= maxEpisodecount) | lastEpisode;
+        return (episodeCount >= maxEpisodeCount) | lastEpisode;
     }
 
     public boolean isLastTimestep() {
@@ -108,7 +91,7 @@ public class StepHandler {
     }
 
     public int getMaxEpisodecount() {
-        return maxEpisodecount;
+        return maxEpisodeCount;
     }
 
     public int getMaxTimeStepCount() {
