@@ -15,6 +15,7 @@ import java.util.Map;
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
 import jp.oist.abcvlib.core.inputs.Inputs;
+import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 import jp.oist.abcvlib.core.outputs.Outputs;
 import jp.oist.abcvlib.util.ErrorHandler;
 
@@ -73,6 +74,10 @@ public abstract class AbcvlibActivity extends IOIOActivity implements AbcvlibAbs
     @Override
     public Inputs getInputs() {
         return inputs;
+    }
+
+    protected TimeStepDataBuffer getTimeStepDataBuffer(){
+        return getInputs().getTimeStepDataBuffer();
     }
 
     public Switches getSwitches() {

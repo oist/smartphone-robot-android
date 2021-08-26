@@ -4,7 +4,7 @@ import android.util.Log;
 
 import com.google.flatbuffers.FlatBufferBuilder;
 
-import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
@@ -20,91 +20,57 @@ import jp.oist.abcvlib.core.learning.fbclasses.RobotAction;
 import jp.oist.abcvlib.core.learning.fbclasses.SoundData;
 import jp.oist.abcvlib.core.learning.fbclasses.TimeStep;
 import jp.oist.abcvlib.core.learning.fbclasses.WheelData;
-import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
+import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
+import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
+import jp.oist.abcvlib.util.SocketConnectionManager;
+import jp.oist.abcvlib.util.SocketListener;
 
 /**
- * Enters data from TimeStepDataAssembler into a flatbuffer
+ * Enters data from TimeStepDataBuffer into a flatbuffer
  */
 public class FlatbufferAssembler {
+
     private FlatBufferBuilder builder;
     private final int[] timeStepVector;
+    private final Trial myTrial;
+    private final TimeStepDataBuffer timeStepDataBuffer;
+    private final ScheduledExecutorServiceWithException executor;
+    private final InetSocketAddress inetSocketAddress;
+    private final SocketListener socketListener;
+    private ByteBuffer episode;
 
-    public FlatbufferAssembler(){
-        timeStepVector = new int[myStepHandler.getMaxTimeStepCount() + 1];
+    public FlatbufferAssembler(Trial myTrial,
+                                 InetSocketAddress inetSocketAddress,
+                                 SocketListener socketListener,
+                                 TimeStepDataBuffer timeStepDataBuffer){
+        this.socketListener = socketListener;
+
+        this.inetSocketAddress = inetSocketAddress;
+
+        this.timeStepDataBuffer = timeStepDataBuffer;
+
+        int threads = 5;
+        executor = new ScheduledExecutorServiceWithException(threads, new ProcessPriorityThreadFactory(1, "flatbufferAssembler"));
+
+        this.myTrial = myTrial;
+        this.timeStepVector = new int[myTrial.getMaxTimeStepCount() + 1];
+
+        startEpisode();
+    }
+
+    public TimeStepDataBuffer getTimeStepDataBuffer() {
+        return timeStepDataBuffer;
     }
 
     public void startEpisode(){
-//            ByteBuffer bb = ByteBuffer.allocateDirect(4096);
         builder = new FlatBufferBuilder(1024);
         Log.v("flatbuff", "starting New Episode");
-        // todo reload tflite models here for myStepHandler
-    }
-
-    public void endEpisode() throws BrokenBarrierException, InterruptedException, IOException, RecordingWithoutTimeStepBufferException {
-
-        Log.d("SocketConnections", "End of episode:" + myStepHandler.getEpisodeCount());
-
-        int ts = Episode.createTimestepsVector(builder, timeStepVector); //todo I think I need to add each timestep when it is generated rather than all at once? Is this the leak?
-        Episode.startEpisode(builder);
-        Episode.addTimesteps(builder, ts);
-        int ep = Episode.endEpisode(builder);
-        builder.finish(ep);
-
-//            byte[] episode = builder.sizedByteArray();
-        ByteBuffer episode = builder.dataBuffer();
-
-        // Stop all gathering threads momentarily.
-        stopRecordingData();
-        myStepHandler.incrementEpisodeCount();
-        timeStepDataBuffer.nextTimeStep();
-
-//             The following is just to check the contents of the flatbuffer prior to sending to the server.
-//             You should comment this out if not using it as it doubles the required memory.
-//            Also it seems the getRootAsEpisode modifes the episode buffer itself, thus messing up later processing.
-//            Therefore I propose only using this as an inline debugging step or if you don't want
-//            To evaluate anything past this point for a given run.
-
-//            Episode episodeTest = Episode.getRootAsEpisode(episode);
-//            Log.d("flatbuff", "TimeSteps Length: "  + String.valueOf(episodeTest.timestepsLength()));
-//            Log.d("flatbuff", "WheelCounts TimeStep 0 Length: "  + String.valueOf(episodeTest.timesteps(0).wheelCounts().timestampsLength()));
-//            Log.d("flatbuff", "WheelCounts TimeStep 1 Length: "  + String.valueOf(episodeTest.timesteps(1).wheelCounts().timestampsLength()));
-//            Log.d("flatbuff", "WheelCounts TimeStep 2 Length: "  + String.valueOf(episodeTest.timesteps(2).wheelCounts().timestampsLength()));
-//            Log.d("flatbuff", "WheelCounts TimeStep 3 Length: "  + String.valueOf(episodeTest.timesteps(3).wheelCounts().timestampsLength()));
-//            Log.d("flatbuff", "WheelCounts TimeStep 3 idx 0: "  + String.valueOf(episodeTest.timesteps(3).wheelCounts().timestamps(0)));
-//            Log.d("flatbuff", "Levels Length TimeStep 100: "  + String.valueOf(episodeTest.timesteps(100).soundData().levelsLength()));
-//            Log.d("flatbuff", "SoundData ByteBuffer Length TimeStep 100: "  + String.valueOf(episodeTest.timesteps(100).soundData().getByteBuffer().capacity()));
-//            Log.d("flatbuff", "ImageData ByteBuffer Length TimeStep 100: "  + String.valueOf(episodeTest.timesteps(100).imageData().getByteBuffer().capacity()));
-
-
-//            float[] soundFloats = new float[10];
-//            episodeTest.timesteps(1).soundData().levelsAsByteBuffer().asFloatBuffer().get(soundFloats);
-//            Log.d("flatbuff", "Sound TimeStep 1 as numpy: "  + Arrays.toString(soundFloats));
-
-        // Sets action to take after server has recevied and sent back data completely
-        CyclicBarrier doneSignal = new CyclicBarrier(2,
-                new TimeStepDataAssembler.CyclicBarrierHandler(this));
-
-        // Todo this is getting stuck on registering to the selector likely because selector is running in another thread?
-        sendToServer(episode, doneSignal);
-
-        // Waits for server to finish, then the runnable set in the init of doneSignal above will be fired.
-        Log.d("SocketConnection", "Waiting for socket transfer R/W to complete.");
-        doneSignal.await();
-        Log.d("SocketConnection", "Finished waiting for socket connection. Starting gatherers again.");
-
-        startGatherers();
-
-        // Wait for transfer to server and return message received
-
-//            Log.i("flatbuff", "prior to getting msg from server");
-//            outputs.socketClient.getMessageFromServer();
-//            Log.i("flatbuff", "after getting msg from server");
     }
 
     public void addTimeStep(){
 
         int _wheelData = addWheelData();
-        int _orientationData = addOrientationData(); //todo add this to the actual flatbuffer
+        int _orientationData = addOrientationData();
         int _chargerData = addChargerData();
         int _batteryData = addBatteryData();
         int _soundData = addSoundData();
@@ -120,7 +86,7 @@ public class FlatbufferAssembler {
         TimeStep.addImageData(builder, _imageData);
         TimeStep.addActions(builder, _actionData);
         int ts = TimeStep.endTimeStep(builder);
-        timeStepVector[myStepHandler.getTimeStep()]  = ts;
+        timeStepVector[myTrial.getTimeStep()]  = ts;
     }
 
     private int addWheelData(){
@@ -235,7 +201,7 @@ public class FlatbufferAssembler {
         int numOfImages = imageData.getImages().size();
 
         Log.v("flatbuff", numOfImages + " images gathered");
-        Log.v("flatbuff", "Step:" + myStepHandler.getTimeStep());
+        Log.v("flatbuff", "Step:" + myTrial.getTimeStep());
 
         int[] _images = new int[numOfImages];
 
@@ -268,5 +234,70 @@ public class FlatbufferAssembler {
         Log.v("flatbuff", "MotionAction : " + ma.getActionName());
 
         return RobotAction.createRobotAction(builder, (byte) ca.getActionByte(), (byte) ma.getActionByte());
+    }
+
+    // End episode after some reward has been acheived or maxtimesteps has been reached
+    public void endEpisode() {
+
+        int ts = Episode.createTimestepsVector(builder, timeStepVector); //todo I think I need to add each timestep when it is generated rather than all at once? Is this the leak?
+        Episode.startEpisode(builder);
+        Episode.addTimesteps(builder, ts);
+        int ep = Episode.endEpisode(builder);
+        builder.finish(ep);
+
+        episode = builder.dataBuffer();
+
+//             The following is just to check the contents of the flatbuffer prior to sending to the server.
+//             You should comment this out if not using it as it doubles the required memory.
+//            Also it seems the getRootAsEpisode modifes the episode buffer itself, thus messing up later processing.
+//            Therefore I propose only using this as an inline debugging step or if you don't want
+//            To evaluate anything past this point for a given run.
+
+//            Episode episodeTest = Episode.getRootAsEpisode(episode);
+//            Log.d("flatbuff", "TimeSteps Length: "  + String.valueOf(episodeTest.timestepsLength()));
+//            Log.d("flatbuff", "WheelCounts TimeStep 0 Length: "  + String.valueOf(episodeTest.timesteps(0).wheelCounts().timestampsLength()));
+//            Log.d("flatbuff", "WheelCounts TimeStep 1 Length: "  + String.valueOf(episodeTest.timesteps(1).wheelCounts().timestampsLength()));
+//            Log.d("flatbuff", "WheelCounts TimeStep 2 Length: "  + String.valueOf(episodeTest.timesteps(2).wheelCounts().timestampsLength()));
+//            Log.d("flatbuff", "WheelCounts TimeStep 3 Length: "  + String.valueOf(episodeTest.timesteps(3).wheelCounts().timestampsLength()));
+//            Log.d("flatbuff", "WheelCounts TimeStep 3 idx 0: "  + String.valueOf(episodeTest.timesteps(3).wheelCounts().timestamps(0)));
+//            Log.d("flatbuff", "Levels Length TimeStep 100: "  + String.valueOf(episodeTest.timesteps(100).soundData().levelsLength()));
+//            Log.d("flatbuff", "SoundData ByteBuffer Length TimeStep 100: "  + String.valueOf(episodeTest.timesteps(100).soundData().getByteBuffer().capacity()));
+//            Log.d("flatbuff", "ImageData ByteBuffer Length TimeStep 100: "  + String.valueOf(episodeTest.timesteps(100).imageData().getByteBuffer().capacity()));
+
+
+//            float[] soundFloats = new float[10];
+//            episodeTest.timesteps(1).soundData().levelsAsByteBuffer().asFloatBuffer().get(soundFloats);
+//            Log.d("flatbuff", "Sound TimeStep 1 as numpy: "  + Arrays.toString(soundFloats));
+    }
+
+    private class CyclicBarrierHandler implements Runnable {
+
+        public CyclicBarrierHandler(){
+        }
+
+        @Override
+        public void run() {
+            builder.clear();
+            builder = null;
+            startEpisode();
+        }
+    }
+
+    protected void sendToServer() throws BrokenBarrierException, InterruptedException {
+        CyclicBarrier doneSignal = new CyclicBarrier(2,
+                new CyclicBarrierHandler());
+        Log.d("SocketConnection", "New executor deployed creating new SocketConnectionManager");
+        if (inetSocketAddress != null && socketListener != null){
+            executor.execute(new SocketConnectionManager(socketListener, inetSocketAddress, episode, doneSignal));
+            doneSignal.await();
+        }else {
+            executor.execute(() -> {
+                try {
+                    doneSignal.await();
+                } catch (BrokenBarrierException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
     }
 }

@@ -1,31 +1,62 @@
 package jp.oist.abcvlib.serverlearning;
 
+import java.io.IOException;
+import java.util.concurrent.BrokenBarrierException;
+
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
-import jp.oist.abcvlib.core.learning.ActionSet;
+import jp.oist.abcvlib.core.learning.ActionSpace;
 import jp.oist.abcvlib.core.learning.CommAction;
+import jp.oist.abcvlib.core.learning.MetaParameters;
 import jp.oist.abcvlib.core.learning.MotionAction;
-import jp.oist.abcvlib.core.outputs.Trial;
+import jp.oist.abcvlib.core.learning.StateSpace;
+import jp.oist.abcvlib.core.learning.Trial;
+import jp.oist.abcvlib.core.outputs.ActionSelector;
+import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
+import jp.oist.abcvlib.util.SocketListener;
 
-public class MyTrial extends Trial {
+public class MyTrial extends Trial implements ActionSelector{
 
-    public MyTrial(){}
+    public MyTrial(MetaParameters metaParameters, ActionSpace actionSpace, StateSpace stateSpace) {
+        super(metaParameters, actionSpace, stateSpace);
+    }
 
     @Override
-    public ActionSet forward(TimeStepDataBuffer.TimeStepData data) {
-        ActionSet actionSet;
+    public void forward(TimeStepDataBuffer.TimeStepData data) {
         MotionAction motionAction;
         CommAction commAction;
 
-        // Set actions based on above results. e.g: the first index of each
+        // Use data as input to your policy and select action here
+        // Just using first actions of each set as an example but this should be replaced by your policy's decision process
         motionAction = getMotionActionSet().getMotionActions()[0];
         commAction = getCommActionSet().getCommActions()[0];
 
-        // Bundle them into ActionSet so it can return both
-        actionSet = new ActionSet(motionAction, commAction);
-
-        // set your action to some ints
+        // Add your selected actions to the TimeStepDataBuffer for record
         data.getActions().add(motionAction, commAction);
+    }
 
-        return actionSet;
+    // If you want to do things at the start/end of the episode/trail you can override these methods from Trail
+
+    @Override
+    protected void startTrail() {
+        // Do stuff here
+        super.startTrail();
+    }
+
+    @Override
+    public void startEpisode() {
+        // Do stuff here
+        super.startEpisode();
+    }
+
+    @Override
+    protected void endEpisode() throws BrokenBarrierException, InterruptedException, IOException, RecordingWithoutTimeStepBufferException {
+        // Do stuff here
+        super.endEpisode();
+    }
+
+    @Override
+    protected void endTrail() throws RecordingWithoutTimeStepBufferException {
+        // Do stuff here
+        super.endTrail();
     }
 }

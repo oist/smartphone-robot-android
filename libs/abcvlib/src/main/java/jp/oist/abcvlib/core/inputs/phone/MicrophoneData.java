@@ -70,11 +70,6 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
         recorder.setRecordPositionUpdateListener(this, handler);
     }
 
-    public MicrophoneData() {
-        this(null);
-    }
-
-
     public void start(){
         recorder.startRecording();
 
@@ -115,10 +110,7 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
         recorder = null;
     }
 
-    public synchronized void setRecording(boolean recording) throws RecordingWithoutTimeStepBufferException {
-        if (this.timeStepDataBuffer == null){
-            throw new RecordingWithoutTimeStepBufferException();
-        }
+    public synchronized void setRecording(boolean recording) {
         isRecording = recording;
     }
 

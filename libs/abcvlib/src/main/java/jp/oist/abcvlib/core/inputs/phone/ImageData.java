@@ -3,7 +3,6 @@ package jp.oist.abcvlib.core.inputs.phone;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.media.Image;
-import android.util.Log;
 import android.util.Size;
 
 import androidx.annotation.NonNull;
@@ -20,7 +19,6 @@ import androidx.lifecycle.LifecycleOwner;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.ByteArrayOutputStream;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,7 +28,6 @@ import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.ImageOps;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
-import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
 import jp.oist.abcvlib.util.YuvToRgbConverter;
 
 public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
@@ -53,10 +50,10 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
      * {@link #setImageAnalysis(ImageAnalysis, TimeStepDataBuffer, ImageDataListener)}. Note you
      * can also use {@link #setDefaultImageAnalysis(TimeStepDataBuffer, ImageDataListener)} if you
      * have no preference as to how the ImageAnalysis instance is built.
-     * After you have set either or both, call the {@link #startCamera(Context, LifecycleOwner, CountDownLatch)} to
+     * After you have set either or both, call the {@link #startCamera(Context, LifecycleOwner)} to
      * start one or both. The startCamera method will initialize only those that have been setup
      * prior to calling the startCamera method.
-     * @param timeStepDataBuffer
+     * @param timeStepDataBuffer {@L}
      * @param previewView
      * @param imageAnalysis
      */
@@ -179,12 +176,8 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
         preview.setSurfaceProvider(previewView.getSurfaceProvider());
     }
 
-    public synchronized void setRecording(boolean recording) throws RecordingWithoutTimeStepBufferException {
-        if (timeStepDataBuffer == null){
-            throw new RecordingWithoutTimeStepBufferException();
-        }else{
-            isRecording = recording;
-        }
+    public synchronized void setRecording(boolean recording) {
+        isRecording = recording;
     }
 
     public synchronized boolean isRecording() {

@@ -3,6 +3,7 @@ package jp.oist.abcvlib.basicassembler;
 import android.Manifest;
 import android.os.Bundle;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
@@ -15,9 +16,11 @@ import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.phone.ImageData;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
 import jp.oist.abcvlib.core.inputs.phone.OrientationData;
+import jp.oist.abcvlib.core.learning.ActionSpace;
 import jp.oist.abcvlib.core.learning.CommActionSet;
+import jp.oist.abcvlib.core.learning.MetaParameters;
 import jp.oist.abcvlib.core.learning.MotionActionSet;
-import jp.oist.abcvlib.core.learning.TimeStepDataAssembler;
+import jp.oist.abcvlib.core.learning.StateSpace;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
@@ -28,7 +31,7 @@ import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
  * Shows basics of setting up any standard Android Application framework. This MainActivity class
  * does not implement the various listener interfaces in order to subscribe to updates from various
  * sensor data, but instead sets up a custom
- * {@link jp.oist.abcvlib.core.learning.TimeStepDataAssembler} object that handles setting up the
+ * {@link jp.oist.abcvlib.core.learning.Trial} object that handles setting up the
  * subscribers and assembles the data into a {@link jp.oist.abcvlib.core.inputs.TimeStepDataBuffer}
  * comprising of multiple {@link jp.oist.abcvlib.core.inputs.TimeStepDataBuffer.TimeStepData} objects
  * that each represent all the data gathered from one or more sensors over the course of one timestep
@@ -42,10 +45,10 @@ import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
  */
 public class MainActivity extends AbcvlibActivity implements PermissionsListener, IOReadyListener {
 
-    private GuiUpdater guiUpdater;
     private final String TAG = getClass().getName();
-    private final int maxTimeStepCount = 100;
-    private final int maxEpisodeCount = 10;
+    private GuiUpdater guiUpdater;
+    private int maxEpisodeCount = 10;
+    private int maxTimeStepCount = 100;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +75,17 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
 
     @Override
     public void onPermissionsGranted(){
+       /*------------------------------------------------------------------------------
+        ------------------------------ Set MetaParameters ------------------------------
+        --------------------------------------------------------------------------------
+         */
+        MetaParameters metaParameters = new MetaParameters(this, 100, maxTimeStepCount,
+                100, maxEpisodeCount, null, getTimeStepDataBuffer());
+
+        /*------------------------------------------------------------------------------
+        ------------------------------ Define Action Space -----------------------------
+        --------------------------------------------------------------------------------
+         */
         // Defining custom actions
         CommActionSet commActionSet = new CommActionSet(3);
         commActionSet.addCommAction("action1", (byte) 0); // I'm just overwriting an existing to show how
@@ -85,61 +99,59 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
         motionActionSet.addMotionAction("left", (byte) 3, -100, 100);
         motionActionSet.addMotionAction("right", (byte) 4, 100, -100);
 
-        MyTrial myTrial = (MyTrial) new MyTrial(this, guiUpdater)
-                .setTimeStepLength(100)
-                .setMaxTimeStepCount(maxTimeStepCount)
-                .setMaxEpisodeCount(maxEpisodeCount)
-                .setMaxReward(100000)
-                .setMotionActionSet(motionActionSet)
-                .setCommActionSet(commActionSet);
+        ActionSpace actionSpace = new ActionSpace(commActionSet, motionActionSet);
 
-        // Initialize an ArrayList of AbcvlibInputs that you want the TimeStepDataAssembler to gather data for
-        ArrayList<AbcvlibInput> inputs = new ArrayList<>();
-
-        // reusing the same timeStepDataBuffer shared by all. You could alternatively create a new
-        // one or extend it in another class.
-        BatteryData batteryData = new BatteryData(this.getInputs().getTimeStepDataBuffer());
-        // bufferLength and exptWeight set how the speed is calculated.
+        /*------------------------------------------------------------------------------
+        ------------------------------ Define State Space ------------------------------
+        --------------------------------------------------------------------------------
+         */
+        // Customize how each sensor data is gathered via constructor params or builders
         WheelData wheelData = new WheelData.Builder()
-                .setTimeStepDataBuffer(this.getInputs().getTimeStepDataBuffer())
+                .setTimeStepDataBuffer(getTimeStepDataBuffer())
                 .setBufferLength(50)
                 .setExpWeight(0.01)
                 .build();
-        OrientationData orientationData = new OrientationData(
-                this.getInputs().getTimeStepDataBuffer(), this);
 
-        // Get local reference to MicrophoneData and start the record buffer (within MicrophoneData Class)
-        MicrophoneData microphoneData = getInputs().getMicrophoneData();
+        // You can also just use the default ones if you're not interested in customizing them via:
+        WheelData wheelData1 = getInputs().getWheelData();
+
+        BatteryData batteryData = new BatteryData(getTimeStepDataBuffer());
+
+        OrientationData orientationData = new OrientationData(getTimeStepDataBuffer(), this);
+
+        MicrophoneData microphoneData = new MicrophoneData(getTimeStepDataBuffer());
         microphoneData.start();
+        // Add the reference to your ArrayList
 
-        ImageData imageData = getInputs().getImageData();
-        imageData.setPreviewView(findViewById(R.id.camera_x_preview));
+        ImageData imageData = new ImageData(getTimeStepDataBuffer(), findViewById(R.id.camera_x_preview), null);
         imageData.startCamera(this, this);
 
-        // Add all data inputs to the array list
-        inputs.add(batteryData);
+        // Initialize an ArrayList of AbcvlibInputs that you want to gather data for
+        ArrayList<AbcvlibInput> inputs = new ArrayList<>();
         inputs.add(wheelData);
+        inputs.add(batteryData);
         inputs.add(orientationData);
         inputs.add(microphoneData);
         inputs.add(imageData);
 
-        /* Overwrites the default instances used by the subscriber architecture. If you don't do
-         * this AbcvlibLooper will not refer to the correct instance and IOIO sensor data will not
-         * be updated
-        */
+        StateSpace stateSpace = new StateSpace(inputs);
+
+        /* Overwrites the default sensor data objects with the ones listed in inputs. If you don't do
+         * this AbcvlibLooper will not refer to the correct instances and IOIO sensor data will not
+         * be published to your gatherers
+         */
         try {
             getInputs().overwriteDefaults(inputs, abcvlibLooper);
         } catch (ClassNotFoundException e) {
             ErrorHandler.eLog(TAG, "", e, true);
         }
 
-        // Pass your inputs list to a new instance of TimeStepDataAssember along with all other references
-        TimeStepDataAssembler timeStepDataAssembler = new TimeStepDataAssembler(inputs, myTrial, null, null, getInputs().getTimeStepDataBuffer());
-        try {
-            timeStepDataAssembler.startGatherers();
-        } catch (RecordingWithoutTimeStepBufferException e) {
-            ErrorHandler.eLog(TAG, "", e, true);
-        }
+        /*------------------------------------------------------------------------------
+        ------------------------------ Initialize and Start Trial ----------------------
+        --------------------------------------------------------------------------------
+         */
+        MyTrial myTrial = new MyTrial(this, guiUpdater, metaParameters, actionSpace, stateSpace);
+        myTrial.startTrail();
     }
 }
 
