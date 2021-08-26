@@ -54,8 +54,6 @@ public class FlatbufferAssembler {
 
         this.myTrial = myTrial;
         this.timeStepVector = new int[myTrial.getMaxTimeStepCount() + 1];
-
-        startEpisode();
     }
 
     public TimeStepDataBuffer getTimeStepDataBuffer() {

@@ -1,5 +1,7 @@
 package jp.oist.abcvlib.serverlearning;
 
+import android.util.Log;
+
 import java.io.IOException;
 import java.util.concurrent.BrokenBarrierException;
 
@@ -39,24 +41,28 @@ public class MyTrial extends Trial implements ActionSelector{
     @Override
     protected void startTrail() {
         // Do stuff here
+        Log.v("MyTrail", "startTrail");
         super.startTrail();
     }
 
     @Override
     public void startEpisode() {
         // Do stuff here
+        Log.v("MyTrail", "startEpisode");
         super.startEpisode();
     }
 
     @Override
     protected void endEpisode() throws BrokenBarrierException, InterruptedException, IOException, RecordingWithoutTimeStepBufferException {
         // Do stuff here
+        Log.v("MyTrail", "endEpisode");
         super.endEpisode();
     }
 
     @Override
     protected void endTrail() throws RecordingWithoutTimeStepBufferException {
         // Do stuff here
+        Log.v("MyTrail", "endTrail");
         super.endTrail();
     }
 }

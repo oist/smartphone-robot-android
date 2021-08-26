@@ -70,13 +70,14 @@ public class Trial implements Runnable, ActionSelector, SocketListener {
     }
     
     protected void startTrail(){
-        startGatherers();
+        startEpisode();
     }
 
     protected void startEpisode(){
         if (flatbufferAssembler != null){
             flatbufferAssembler.startEpisode();
         }
+        startGatherers();
     }
 
     protected void startGatherers() {
@@ -149,7 +150,7 @@ public class Trial implements Runnable, ActionSelector, SocketListener {
 
         flatbufferAssembler.sendToServer();
 
-        startGatherers();
+        startEpisode();
     }
 
     protected void endTrail() throws RecordingWithoutTimeStepBufferException {
