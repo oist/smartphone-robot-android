@@ -1,16 +1,16 @@
 package jp.oist.abcvlib.core.learning;
 
-public class CommActionSet {
+public class CommActionSpace {
 
     private final CommAction[] commActions;
 
     /**
      * Initialize an object with actionCount number of discrete actions. Add actions via the
      * {@link #addCommAction(String, byte)} method. Alternatively, you can use the default actions
-     * by calling this method without any arguments. See {@link #CommActionSet()}.
+     * by calling this method without any arguments. See {@link #CommActionSpace()}.
      * @param actionCount Number of possible discrete actions
      */
-    public CommActionSet(int actionCount){
+    public CommActionSpace(int actionCount){
         commActions = new CommAction[actionCount];
     }
 
@@ -18,7 +18,7 @@ public class CommActionSet {
      * Creates 3 default actions called action1, action2, and action3 with bytes 0 to 2 assigned
      * respectively.
      */
-    public CommActionSet(){
+    public CommActionSpace(){
         commActions = new CommAction[3];
         addDefaultActions();
     }

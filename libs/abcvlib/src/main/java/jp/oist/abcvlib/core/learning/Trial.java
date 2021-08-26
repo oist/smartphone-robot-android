@@ -8,7 +8,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.concurrent.BrokenBarrierException;
@@ -39,8 +38,8 @@ public class Trial implements Runnable, ActionSelector, SocketListener {
     private int maxReward = 100;
     private int maxEpisodeCount = 3;
     private int episodeCount = 0;
-    private final CommActionSet commActionSet;
-    private final MotionActionSet motionActionSet;
+    private final CommActionSpace commActionSpace;
+    private final MotionActionSpace motionActionSpace;
     private final TimeStepDataBuffer timeStepDataBuffer;
     private final String TAG = getClass().toString();
     private ScheduledFuture<?> timeStepDataAssemblerFuture;
@@ -58,8 +57,8 @@ public class Trial implements Runnable, ActionSelector, SocketListener {
         this.maxEpisodeCount = metaParameters.maxEpisodeCount;
         this.flatbufferAssembler = new FlatbufferAssembler(this,
                 metaParameters.inetSocketAddress, this, timeStepDataBuffer);
-        this.motionActionSet = actionSpace.motionActionSet;
-        this.commActionSet = actionSpace.commActionSet;
+        this.motionActionSpace = actionSpace.motionActionSpace;
+        this.commActionSpace = actionSpace.commActionSpace;
         this.inputs = stateSpace.inputs;
 
         int threads = 5;
@@ -250,12 +249,12 @@ public class Trial implements Runnable, ActionSelector, SocketListener {
         this.lastEpisode = lastEpisode;
     }
 
-    public MotionActionSet getMotionActionSet() {
-        return motionActionSet;
+    public MotionActionSpace getMotionActionSet() {
+        return motionActionSpace;
     }
 
-    public CommActionSet getCommActionSet() {
-        return commActionSet;
+    public CommActionSpace getCommActionSet() {
+        return commActionSpace;
     }
 
     public void setLastTimestep(boolean lastTimestep) {

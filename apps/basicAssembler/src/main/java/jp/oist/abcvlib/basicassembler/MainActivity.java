@@ -3,7 +3,6 @@ package jp.oist.abcvlib.basicassembler;
 import android.Manifest;
 import android.os.Bundle;
 
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
@@ -17,13 +16,12 @@ import jp.oist.abcvlib.core.inputs.phone.ImageData;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
 import jp.oist.abcvlib.core.inputs.phone.OrientationData;
 import jp.oist.abcvlib.core.learning.ActionSpace;
-import jp.oist.abcvlib.core.learning.CommActionSet;
+import jp.oist.abcvlib.core.learning.CommActionSpace;
 import jp.oist.abcvlib.core.learning.MetaParameters;
-import jp.oist.abcvlib.core.learning.MotionActionSet;
+import jp.oist.abcvlib.core.learning.MotionActionSpace;
 import jp.oist.abcvlib.core.learning.StateSpace;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
-import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
 import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 
 /**
@@ -87,19 +85,19 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
         --------------------------------------------------------------------------------
          */
         // Defining custom actions
-        CommActionSet commActionSet = new CommActionSet(3);
-        commActionSet.addCommAction("action1", (byte) 0); // I'm just overwriting an existing to show how
-        commActionSet.addCommAction("action2", (byte) 1);
-        commActionSet.addCommAction("action3", (byte) 2);
+        CommActionSpace commActionSpace = new CommActionSpace(3);
+        commActionSpace.addCommAction("action1", (byte) 0); // I'm just overwriting an existing to show how
+        commActionSpace.addCommAction("action2", (byte) 1);
+        commActionSpace.addCommAction("action3", (byte) 2);
 
-        MotionActionSet motionActionSet = new MotionActionSet(5);
-        motionActionSet.addMotionAction("stop", (byte) 0, 0, 0); // I'm just overwriting an existing to show how
-        motionActionSet.addMotionAction("forward", (byte) 1, 100, 100);
-        motionActionSet.addMotionAction("backward", (byte) 2, -100, 100);
-        motionActionSet.addMotionAction("left", (byte) 3, -100, 100);
-        motionActionSet.addMotionAction("right", (byte) 4, 100, -100);
+        MotionActionSpace motionActionSpace = new MotionActionSpace(5);
+        motionActionSpace.addMotionAction("stop", (byte) 0, 0, 0); // I'm just overwriting an existing to show how
+        motionActionSpace.addMotionAction("forward", (byte) 1, 100, 100);
+        motionActionSpace.addMotionAction("backward", (byte) 2, -100, 100);
+        motionActionSpace.addMotionAction("left", (byte) 3, -100, 100);
+        motionActionSpace.addMotionAction("right", (byte) 4, 100, -100);
 
-        ActionSpace actionSpace = new ActionSpace(commActionSet, motionActionSet);
+        ActionSpace actionSpace = new ActionSpace(commActionSpace, motionActionSpace);
 
         /*------------------------------------------------------------------------------
         ------------------------------ Define State Space ------------------------------

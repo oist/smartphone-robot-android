@@ -1,23 +1,23 @@
 package jp.oist.abcvlib.core.learning;
 
-public class MotionActionSet {
+public class MotionActionSpace {
 
     private MotionAction[] motionActions;
 
     /**
      * Initialize an object with actionCount number of discrete actions. Add actions via the
      * {@link #addMotionAction(String, byte, int, int)} method. Alternatively, you can use the default actions
-     * by calling this method without any arguments. See {@link #MotionActionSet()}.
+     * by calling this method without any arguments. See {@link #MotionActionSpace()}.
      * @param actionCount Number of possible discrete actions
      */
-    public MotionActionSet(int actionCount){
+    public MotionActionSpace(int actionCount){
         motionActions = new MotionAction[actionCount];
     }
 
     /**
      * Creates default motion action set with stop, forward, backward, left, and right as actions.
      */
-    public MotionActionSet(){
+    public MotionActionSpace(){
         motionActions = new MotionAction[5];
         addDefaultActions();
     }
@@ -37,8 +37,8 @@ public class MotionActionSet {
     public void addMotionAction(String actionName, byte actionByte, int leftWheelPWM, int rightWheelPWM){
         if (actionByte > motionActions.length){
             throw new ArrayIndexOutOfBoundsException("Tried to addMotionAction to an index that " +
-                    "doesn't exist in the MotionActionSet. Make sure you initialize the " +
-                    "MotionActionSet with long enough length to accommodate all the actions you " +
+                    "doesn't exist in the MotionActionSpace. Make sure you initialize the " +
+                    "MotionActionSpace with long enough length to accommodate all the actions you " +
                     "plan to create.");
         }
         motionActions[actionByte] = new MotionAction(actionName, actionByte, leftWheelPWM, rightWheelPWM);
