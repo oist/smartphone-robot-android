@@ -50,7 +50,6 @@ public abstract class AbcvlibService extends IOIOService implements AbcvlibAbstr
     private AbcvlibLooper abcvlibLooper;
     private static final String TAG = "abcvlib";
     private IOReadyListener ioReadyListener;
-    private final String[] permissions = new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
 
     public void setIoReadyListener(IOReadyListener ioReadyListener) {
         this.ioReadyListener = ioReadyListener;
@@ -83,35 +82,8 @@ public abstract class AbcvlibService extends IOIOService implements AbcvlibAbstr
             }
         }
 
-        checkPermissions();
-
         int result = super.onStartCommand(intent, flags, startId);
         return result;
-    }
-
-    public void checkPermissions(){
-        PermissionManager.PermissionRequestListener permissionRequestListener = new PermissionManager.PermissionRequestListener() {
-            @Override
-            public void onPermissionGranted() {
-                Toast.makeText(getApplicationContext(), "Permissions Granted", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onPermissionDenied(DeniedPermissions deniedPermissions) {
-                String deniedPermissionsText = "Denied: " + Arrays.toString(deniedPermissions.toArray());
-                Toast.makeText(getApplicationContext(), deniedPermissionsText, Toast.LENGTH_SHORT).show();
-
-                for (DeniedPermission deniedPermission : deniedPermissions) {
-                    if(deniedPermission.shouldShowRationale()) {
-                        // Display a rationale about why this permission is required
-                    }
-                }
-            }
-        };
-
-        PermissionManager permissionManager = PermissionManager.getInstance(getApplicationContext());
-        permissionManager.checkPermissions(singleton(Manifest.permission.CAMERA), permissionRequestListener);
-        permissionManager.checkPermissions(singleton(Manifest.permission.RECORD_AUDIO), permissionRequestListener);
     }
 
     @Nullable
