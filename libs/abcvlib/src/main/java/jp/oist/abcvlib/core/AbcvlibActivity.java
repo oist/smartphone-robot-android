@@ -14,7 +14,6 @@ import java.util.Map;
 
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
-import jp.oist.abcvlib.core.inputs.Inputs;
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 import jp.oist.abcvlib.core.outputs.Outputs;
 import jp.oist.abcvlib.util.ErrorHandler;
@@ -33,7 +32,6 @@ import jp.oist.abcvlib.util.ErrorHandler;
 public abstract class AbcvlibActivity extends IOIOActivity implements AbcvlibAbstractObject {
 
     // Publically accessible objects that encapsulate a lot other core functionality
-    private Inputs inputs;
     private Outputs outputs;
     private final Switches switches = new Switches();
     protected AbcvlibLooper abcvlibLooper;
@@ -45,7 +43,6 @@ public abstract class AbcvlibActivity extends IOIOActivity implements AbcvlibAbs
     }
 
     protected void onCreate(Bundle savedInstanceState) {
-        inputs = new Inputs(getApplicationContext());
         /*
         This much be called prior to initializing outputs as this is what triggers the creation
         of the abcvlibLooper instance passed to the Outputs constructor
@@ -69,11 +66,6 @@ public abstract class AbcvlibActivity extends IOIOActivity implements AbcvlibAbs
         super.onPause();
         abcvlibLooper.setDutyCycle(0, 0);
         Log.i(TAG, "End of AbcvlibActivity.onPause");
-    }
-
-    @Override
-    public Inputs getInputs() {
-        return inputs;
     }
 
     protected TimeStepDataBuffer getTimeStepDataBuffer(){
@@ -134,15 +126,10 @@ public abstract class AbcvlibActivity extends IOIOActivity implements AbcvlibAbs
      or create a global objects in the Android App MainActivity or otherwise.
       */
     @Override
-    protected IOIOLooper createIOIOLooper() {
-        if (this.abcvlibLooper == null){
-            this.abcvlibLooper = new AbcvlibLooper(this);
+    public IOIOLooper createIOIOLooper(String connectionType, Object extra) {
+        if (this.abcvlibLooper == null && connectionType.equals("ioio.lib.android.accessory.AccessoryConnectionBootstrap.Connection")){
+            this.abcvlibLooper = new AbcvlibLooper(ioReadyListener);
             initializeOutputs();
-            if (ioReadyListener != null){
-                ioReadyListener.onIOReady();
-            }else{
-                ErrorHandler.eLog(TAG, "You must setIoReadyListener(this) within your onCreate method.", new Exception(), true);
-            }
             Log.d("abcvlib", "createIOIOLooper Finished");
         }
         return this.abcvlibLooper;

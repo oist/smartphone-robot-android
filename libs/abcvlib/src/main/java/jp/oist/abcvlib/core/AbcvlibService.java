@@ -45,7 +45,6 @@ import static java.util.Collections.singleton;
  */
 public abstract class AbcvlibService extends IOIOService implements AbcvlibAbstractObject {
     // Publically accessible objects that encapsulate a lot other core functionality
-    private Inputs inputs;
     private Outputs outputs;
     private final Switches switches = new Switches();
     private AbcvlibLooper abcvlibLooper;
@@ -86,7 +85,6 @@ public abstract class AbcvlibService extends IOIOService implements AbcvlibAbstr
 
         checkPermissions();
 
-        inputs = new Inputs(getApplicationContext());
         int result = super.onStartCommand(intent, flags, startId);
         return result;
     }
@@ -129,11 +127,6 @@ public abstract class AbcvlibService extends IOIOService implements AbcvlibAbstr
         super.onDestroy();
     }
 
-    @Override
-    public Inputs getInputs() {
-        return inputs;
-    }
-
     public Switches getSwitches() {
         return switches;
     }
@@ -152,13 +145,10 @@ public abstract class AbcvlibService extends IOIOService implements AbcvlibAbstr
      or create a global objects in the Android App MainActivity or otherwise.
       */
     @Override
-    protected IOIOLooper createIOIOLooper() {
-        if (this.abcvlibLooper == null){
-            this.abcvlibLooper = new AbcvlibLooper(this);
+    public IOIOLooper createIOIOLooper(String connectionType, Object extra) {
+        if (this.abcvlibLooper == null && connectionType.equals("ioio.lib.android.accessory.AccessoryConnectionBootstrap.Connection")){
+            this.abcvlibLooper = new AbcvlibLooper(ioReadyListener);
             initializeOutputs();
-            if (ioReadyListener != null){
-                ioReadyListener.onIOReady();
-            }
             Log.d("abcvlib", "createIOIOLooper Finished");
         }
         return this.abcvlibLooper;
