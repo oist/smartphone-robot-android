@@ -57,14 +57,6 @@ public abstract class AbcvlibActivity extends IOIOActivity {
         Log.i(TAG, "End of AbcvlibActivity.onPause");
     }
 
-    protected TimeStepDataBuffer getTimeStepDataBuffer(){
-        return getInputs().getTimeStepDataBuffer();
-    }
-
-    public Switches getSwitches() {
-        return switches;
-    }
-
     public Outputs getOutputs() {
         return outputs;
     }
