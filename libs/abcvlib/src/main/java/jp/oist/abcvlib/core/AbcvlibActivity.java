@@ -21,7 +21,6 @@ import jp.oist.abcvlib.core.outputs.Outputs;
  */
 public abstract class AbcvlibActivity extends IOIOActivity {
 
-    // Publically accessible objects that encapsulate a lot other core functionality
     private Outputs outputs;
     private final Switches switches = new Switches();
     protected AbcvlibLooper abcvlibLooper;
@@ -33,10 +32,6 @@ public abstract class AbcvlibActivity extends IOIOActivity {
     }
 
     protected void onCreate(Bundle savedInstanceState) {
-        /*
-        This much be called prior to initializing outputs as this is what triggers the creation
-        of the abcvlibLooper instance passed to the Outputs constructor
-        */
         super.onCreate(savedInstanceState);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -88,7 +83,6 @@ public abstract class AbcvlibActivity extends IOIOActivity {
         if (this.abcvlibLooper == null && connectionType.equals("ioio.lib.android.accessory.AccessoryConnectionBootstrap.Connection")){
             this.abcvlibLooper = new AbcvlibLooper(ioReadyListener);
             initializeOutputs();
-            Log.d("abcvlib", "createIOIOLooper Finished");
         }
         return this.abcvlibLooper;
     }

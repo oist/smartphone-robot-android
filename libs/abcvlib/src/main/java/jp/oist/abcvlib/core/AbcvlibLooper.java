@@ -207,7 +207,6 @@ public class AbcvlibLooper extends BaseIOIOLooper {
      */
     private float dutyCycleLeftWheel;
 
-        Log.d("abcvlib", "AbcvlibLooper constructor finished");
     private volatile BatteryData batteryData = null;
     private volatile WheelData wheelData = null;
     private final IOReadyListener ioReadyListener;
