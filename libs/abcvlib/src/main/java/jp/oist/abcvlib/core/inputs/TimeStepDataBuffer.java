@@ -5,10 +5,16 @@ import android.media.AudioTimestamp;
 
 import java.util.ArrayList;
 
+import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataSubscriber;
+import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataSubscriber;
+import jp.oist.abcvlib.core.inputs.phone.ImageDataSubscriber;
+import jp.oist.abcvlib.core.inputs.phone.MicrophoneDataSubscriber;
+import jp.oist.abcvlib.core.inputs.phone.OrientationDataSubscriber;
 import jp.oist.abcvlib.core.learning.CommAction;
 import jp.oist.abcvlib.core.learning.MotionAction;
 
-public class TimeStepDataBuffer {
+public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubscriber,
+        ImageDataSubscriber, MicrophoneDataSubscriber, OrientationDataSubscriber {
 
     private final int bufferLength;
     private int writeIndex;
@@ -52,6 +58,44 @@ public class TimeStepDataBuffer {
     public synchronized TimeStepData getWriteData(){return writeData;}
 
     public synchronized TimeStepData getReadData(){return readData;}
+
+    @Override
+    public void onBatteryVoltageUpdate(double voltage, long timestamp) {
+        getWriteData().getBatteryData().put(voltage, timestamp);
+    }
+
+    @Override
+    public void onChargerVoltageUpdate(double chargerVoltage, double coilVoltage, long timestamp) {
+        getWriteData().getChargerData().put(chargerVoltage, coilVoltage, timestamp);
+    }
+
+    @Override
+    public void onWheelDataUpdate(long timestamp, int wheelCountL, int wheelCountR,
+                                  double wheelDistanceL, double wheelDistanceR,
+                                  double wheelSpeedInstantL, double wheelSpeedInstantR,
+                                  double wheelSpeedBufferedL, double wheelSpeedBufferedR,
+                                  double wheelSpeedExpAvgL, double wheelSpeedExpAvgR) {
+        getWriteData().getWheelData().getLeft().put(timestamp, wheelCountL, wheelDistanceL,
+                wheelSpeedInstantL, wheelSpeedBufferedL, wheelSpeedExpAvgL);
+        getWriteData().getWheelData().getRight().put(timestamp, wheelCountR, wheelDistanceR,
+                wheelSpeedInstantR, wheelSpeedBufferedR, wheelSpeedExpAvgR);
+    }
+
+    @Override
+    public void onImageDataUpdate(long timestamp, int width, int height, Bitmap bitmap, byte[] webpImage) {
+        getWriteData().getImageData().add(timestamp, width, height, bitmap, webpImage);
+    }
+
+    @Override
+    public void onMicrophoneDataUpdate(float[] audioData, int numSamples, int sampleRate, AudioTimestamp startTime, AudioTimestamp endTime) {
+        getWriteData().getSoundData().setMetaData(sampleRate, startTime, endTime);
+        getWriteData().getSoundData().add(audioData, numSamples);
+    }
+
+    @Override
+    public void onOrientationUpdate(long timestamp, double thetaRad, double angularVelocityRad) {
+        getWriteData().getOrientationData().put(timestamp, thetaRad, angularVelocityRad);
+    }
 
     public static class TimeStepData{
         private WheelData wheelData;
