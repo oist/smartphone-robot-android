@@ -56,7 +56,9 @@ public abstract class AbcvlibActivity extends IOIOActivity implements AbcvlibAbs
     @Override
     protected void onStop() {
         super.onStop();
-        abcvlibLooper.setDutyCycle(0, 0);
+        if (abcvlibLooper != null){
+            abcvlibLooper.setDutyCycle(0, 0);
+        }
         Log.v(TAG, "End of AbcvlibActivity.onStop");
     }
 
@@ -64,7 +66,9 @@ public abstract class AbcvlibActivity extends IOIOActivity implements AbcvlibAbs
     public void onPause()
     {
         super.onPause();
-        abcvlibLooper.setDutyCycle(0, 0);
+        if (abcvlibLooper != null){
+            abcvlibLooper.setDutyCycle(0, 0);
+        }
         Log.i(TAG, "End of AbcvlibActivity.onPause");
     }
 

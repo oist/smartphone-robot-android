@@ -122,7 +122,9 @@ public abstract class AbcvlibService extends IOIOService implements AbcvlibAbstr
 
     @Override
     public void onDestroy() {
-        abcvlibLooper.setDutyCycle(0, 0);
+        if (abcvlibLooper != null){
+            abcvlibLooper.setDutyCycle(0, 0);
+        }
         Log.v(TAG, "AbcvlibService onDestroy");
         super.onDestroy();
     }
