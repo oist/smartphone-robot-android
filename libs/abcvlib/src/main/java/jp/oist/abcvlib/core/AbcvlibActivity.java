@@ -1,22 +1,12 @@
 package jp.oist.abcvlib.core;
 
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.WindowManager;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.core.content.ContextCompat;
-
-import java.util.Iterator;
-import java.util.Map;
-
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
-import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 import jp.oist.abcvlib.core.outputs.Outputs;
-import jp.oist.abcvlib.util.ErrorHandler;
 
 /**
  * AbcvlibActivity is where all of the other classes are initialized into objects. The objects

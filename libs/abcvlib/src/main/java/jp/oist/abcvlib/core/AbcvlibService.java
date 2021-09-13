@@ -1,36 +1,19 @@
 package jp.oist.abcvlib.core;
 
-import android.Manifest;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
-import androidx.core.content.ContextCompat;
-
-import com.intentfilter.androidpermissions.PermissionManager;
-import com.intentfilter.androidpermissions.models.DeniedPermission;
-import com.intentfilter.androidpermissions.models.DeniedPermissions;
-
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.Map;
 
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOService;
-import jp.oist.abcvlib.core.inputs.Inputs;
+import jp.oist.abcvlib.core.inputs.Subscriber;
 import jp.oist.abcvlib.core.outputs.Outputs;
-
-import static java.util.Collections.singleton;
 
 /**
  * AbcvlibActivity is where all of the other classes are initialized into objects. The objects
