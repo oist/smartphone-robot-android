@@ -1,10 +1,12 @@
 package jp.oist.abcvlib.core.inputs.microcontroller;
 
-public interface WheelDataListener {
+import jp.oist.abcvlib.core.inputs.Subscriber;
+
+public interface WheelDataSubscriber extends Subscriber {
 
     /**
      * Looping call from IOIOboard with quadrature encoder updates
-     * See {@link jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataListener#onBatteryVoltageUpdate(double, long) 
+     * See {@link BatteryDataSubscriber#onBatteryVoltageUpdate(double, long)
      * for details on looper}
      * @param timestamp in nanoseconds see {@link java.lang.System#nanoTime()}
      */

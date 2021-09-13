@@ -6,5 +6,5 @@ public interface IOReadyListener {
      * this method in your MainActivity and put any code that uses the outputs or inputs there so as
      * to ensure no null pointers.
      */
-    void onIOReady();
+    void onIOReady(AbcvlibLooper abcvlibLooper);
 }

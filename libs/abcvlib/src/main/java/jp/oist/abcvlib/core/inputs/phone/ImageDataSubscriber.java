@@ -2,7 +2,9 @@ package jp.oist.abcvlib.core.inputs.phone;
 
 import android.graphics.Bitmap;
 
-public interface ImageDataListener {
+import jp.oist.abcvlib.core.inputs.Subscriber;
+
+public interface ImageDataSubscriber extends Subscriber {
     /**
      * Likely easier to use TimeStampDataBuffer where all of this is collected over time into
      * timesteps, but this serves as a way to inspect the stream.
