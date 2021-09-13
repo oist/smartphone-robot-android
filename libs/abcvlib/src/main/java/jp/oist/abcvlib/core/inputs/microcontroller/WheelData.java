@@ -1,61 +1,55 @@
 package jp.oist.abcvlib.core.inputs.microcontroller;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import jp.oist.abcvlib.core.AbcvlibLooper;
-import jp.oist.abcvlib.core.inputs.AbcvlibInput;
-import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
+import jp.oist.abcvlib.core.inputs.PublisherManager;
+import jp.oist.abcvlib.core.inputs.Publisher;
 
 import static jp.oist.abcvlib.util.DSP.exponentialAvg;
 
-public class WheelData implements AbcvlibInput {
-
-    private TimeStepDataBuffer timeStepDataBuffer;
-    private boolean isRecording = false;
-
+public class WheelData extends Publisher<WheelDataSubscriber> {
     //----------------------------------- Wheel speed metrics --------------------------------------
     private final SingleWheelData rightWheel;
     private final SingleWheelData leftWheel;
+    private final AbcvlibLooper abcvlibLooper;
 
-    private WheelDataListener wheelDataListener = null;
-    private final Handler handler;
+    public WheelData(Context context, PublisherManager publisherManager, AbcvlibLooper abcvlibLooper,
+                     int bufferLength, double expWeight){
+        super(context, publisherManager);
+        this.abcvlibLooper = abcvlibLooper;
 
-    public WheelData(TimeStepDataBuffer timeStepDataBuffer, int bufferLength, double expWeight){
-        this.timeStepDataBuffer = timeStepDataBuffer;
         rightWheel = new SingleWheelData(bufferLength, expWeight);
         leftWheel = new SingleWheelData(bufferLength, expWeight);
-        HandlerThread mHandlerThread = new HandlerThread("wheelDataThread");
-        mHandlerThread.start();
-        handler = new Handler(mHandlerThread.getLooper());
-    }
-
-    public WheelData(TimeStepDataBuffer timeStepDataBuffer){
-        this(timeStepDataBuffer, 50, 0.01);
     }
 
     public static class Builder{
-        TimeStepDataBuffer timeStepDataBuffer;
-        int bufferLength = 50;
-        double expWeight = 0.01;
+        private final Context context;
+        private final PublisherManager publisherManager;
+        private final AbcvlibLooper abcvlibLooper;
+        private int bufferLength = 50;
+        private double expWeight = 0.01;
 
-        public Builder(){}
+        public Builder(Context context, PublisherManager publisherManager, AbcvlibLooper abcvlibLooper){
+            this.context = context;
+            this.publisherManager = publisherManager;
+            this.abcvlibLooper = abcvlibLooper;
+        }
 
         public WheelData build(){
-            return new WheelData(timeStepDataBuffer, bufferLength, expWeight);
+            return new WheelData(context, publisherManager, abcvlibLooper, bufferLength, expWeight);
         }
-        public Builder setTimeStepDataBuffer(TimeStepDataBuffer timeStepDataBuffer){
-            this.timeStepDataBuffer = timeStepDataBuffer;
-            return this;
-        }
-        public Builder setBufferLength(int bufferLength){
+        public WheelData.Builder setBufferLength(int bufferLength){
             this.bufferLength = bufferLength;
             return this;
         }
-        public Builder setExpWeight(double expWeight){
+        public WheelData.Builder setExpWeight(double expWeight){
             this.expWeight = expWeight;
             return this;
         }
@@ -76,17 +70,17 @@ public class WheelData implements AbcvlibInput {
      *     (and therefore usually zero in value)<br><br>
      * 2.) {@link SingleWheelData#speedBuffered} is the speed as measured from the beginning to the end
      * of a fixed length buffer. The default length is 50, but this can be set via the
-     * {@link WheelData#WheelData(TimeStepDataBuffer, int, double)} constructor or via the
+     * {@link WheelData#WheelData(Context, PublisherManager, AbcvlibLooper, int, double)} constructor or via the
      * {@link WheelData.Builder#setBufferLength(int)} builder method when creating an instance of
      * WheelData.<br><br>
      * 3.) {@link SingleWheelData#speedExponentialAvg} is a running exponential average of
      * {@link SingleWheelData#speedBuffered}. The default weight of the average is 0.01, but this
-     * can be set via the {@link WheelData#WheelData(TimeStepDataBuffer, int, double)} constructor or via the
+     * can be set via the {@link WheelData#WheelData(Context, PublisherManager, AbcvlibLooper, int, double)} constructor or via the
      * {@link WheelData.Builder#setExpWeight(double)} builder method when creating an instance of
      * WheelData.<br><br>
      *
      * Finally, this method then acts as
-     * a publisher to any subscribers/listeners that implement the {@link WheelDataListener}
+     * a publisher to any subscribers/listeners that implement the {@link WheelDataSubscriber}
      * interface and passes this quadrature encoder pin state to <br><br>
      * See the jp.oist.abcvlib.basicsubscriber.MainActivity for an example of this subscription
      * framework
@@ -97,47 +91,43 @@ public class WheelData implements AbcvlibInput {
         handler.post(() -> {
             rightWheel.update(timestamp, encoderARightWheelState, encoderBRightWheelState);
             leftWheel.update(timestamp, encoderALeftWheelState, encoderBLeftWheelState);
-
-            if (isRecording){
-                timeStepDataBuffer.getWriteData().getWheelData().getLeft().put(timestamp,
-                        leftWheel.getLatestEncoderCount(), leftWheel.getLatestDistance(),
-                        leftWheel.getSpeedInstantaneous(), leftWheel.getSpeedBuffered(),
-                        leftWheel.getSpeedExponentialAvg());
-                timeStepDataBuffer.getWriteData().getWheelData().getRight().put(timestamp,
-                        -rightWheel.getLatestEncoderCount(), -rightWheel.getLatestDistance(),
-                        -rightWheel.getSpeedInstantaneous(), -rightWheel.getSpeedBuffered(),
-                        -rightWheel.getSpeedExponentialAvg());
-            }
-            if (wheelDataListener != null){
-                wheelDataListener.onWheelDataUpdate(timestamp, leftWheel.getLatestEncoderCount(),
-                        -rightWheel.getLatestEncoderCount(), leftWheel.getLatestDistance(),
-                        -rightWheel.getLatestDistance(), leftWheel.getSpeedInstantaneous(),
-                        -rightWheel.getSpeedInstantaneous(), leftWheel.getSpeedBuffered(),
-                        -rightWheel.getSpeedBuffered(), leftWheel.getSpeedExponentialAvg(),
-                        -rightWheel.getSpeedExponentialAvg());
+            if (!paused){
+                for (WheelDataSubscriber subscriber:subscribers){
+                    subscriber.onWheelDataUpdate(timestamp, leftWheel.getLatestEncoderCount(),
+                            -rightWheel.getLatestEncoderCount(), leftWheel.getLatestDistance(),
+                            -rightWheel.getLatestDistance(), leftWheel.getSpeedInstantaneous(),
+                            -rightWheel.getSpeedInstantaneous(), leftWheel.getSpeedBuffered(),
+                            -rightWheel.getSpeedBuffered(), leftWheel.getSpeedExponentialAvg(),
+                            -rightWheel.getSpeedExponentialAvg());
+                }
             }
             rightWheel.updateIndex();
             leftWheel.updateIndex();
         });
     }
 
-    public void setWheelDataListener(WheelDataListener wheelDataListener) {
-        this.wheelDataListener = wheelDataListener;
+    @Override
+    public void start() {
+        mHandlerThread = new HandlerThread("wheelDataThread");
+        mHandlerThread.start();
+        handler = new Handler(mHandlerThread.getLooper());
+        abcvlibLooper.setWheelData(this);
+        publisherManager.onPublisherInitialized();
     }
 
-    public void setTimeStepDataBuffer(TimeStepDataBuffer timeStepDataBuffer) {
-        this.timeStepDataBuffer = timeStepDataBuffer;
+    @Override
+    public void stop() {
+        abcvlibLooper.setWheelData(null);
+        mHandlerThread.quitSafely();
+        handler = null;
     }
 
-    public TimeStepDataBuffer getTimeStepDataBuffer() {
-        return timeStepDataBuffer;
+    @Override
+    public ArrayList<String> getRequiredPermissions() {
+        return new ArrayList<>();
     }
 
-    public void setRecording(boolean recording) {
-        isRecording = recording;
-    }
-
-    public void resetWheelCounts(){
+    public void resetWheelCounts(){ //todo I thought this was used at the end of each episode somewhere?
         this.rightWheel.resetCount();
         this.leftWheel.resetCount();
     }
@@ -153,7 +143,7 @@ public class WheelData implements AbcvlibInput {
         // High/Low state of pins monitoring quadrature encoders
         private boolean encoderAStatePrevious;
         private boolean encoderBStatePrevious;
-        private int bufferLength;
+        private final int bufferLength;
         private int idxHead;
         private int idxHeadPrev;
         private int idxTail = 0;

@@ -1,44 +1,143 @@
 package jp.oist.abcvlib.core.inputs.phone;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
+import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.AudioTimestamp;
 import android.media.MediaRecorder;
-import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
 
-import androidx.annotation.RequiresApi;
+import com.intentfilter.androidpermissions.models.DeniedPermissions;
 
-import jp.oist.abcvlib.core.inputs.AbcvlibInput;
-import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
+import java.util.ArrayList;
+
+import jp.oist.abcvlib.core.inputs.PublisherManager;
+import jp.oist.abcvlib.core.inputs.Publisher;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
-import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
 import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 
-public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListener, AbcvlibInput {
+public class MicrophoneData extends Publisher<MicrophoneDataSubscriber> implements AudioRecord.OnRecordPositionUpdateListener{
 
-    private AudioTimestamp startTime = new AudioTimestamp();
-    private AudioTimestamp endTime = new AudioTimestamp();
+    private final AudioTimestamp startTime = new AudioTimestamp();
+    private final AudioTimestamp endTime = new AudioTimestamp();
     private ScheduledExecutorServiceWithException audioExecutor;
 
     private AudioRecord recorder;
-    private boolean isRecording = false;
-    private TimeStepDataBuffer timeStepDataBuffer;
-    private MicrophoneDataListener microphoneDataListener = null;
 
     /**
      * Lazy start. This constructor sets everything up, but you must call {@link #start()} for the
      * buffer to begin filling.
      */
-    public MicrophoneData(TimeStepDataBuffer timeStepDataBuffer) {
+    public MicrophoneData(Context context, PublisherManager publisherManager) {
+        super(context, publisherManager);
+        this.publisherManager = publisherManager;
+    }
 
-        Log.i("abcvlib", "In MicInput run method");
+    public static class Builder{
+        private final Context context;
+        private final PublisherManager publisherManager;
 
-        this.timeStepDataBuffer = timeStepDataBuffer;
+        public Builder(Context context, PublisherManager publisherManager){
+            this.context = context;
+            this.publisherManager = publisherManager;
+        }
 
+        public MicrophoneData build(){
+            return new MicrophoneData(context, publisherManager);
+        }
+    }
+
+    @Override
+    public void start(){
+        recorder.startRecording();
+
+        while (recorder.getTimestamp(startTime, AudioTimestamp.TIMEBASE_MONOTONIC) == AudioRecord.ERROR_INVALID_OPERATION){
+            recorder.getTimestamp(startTime, AudioTimestamp.TIMEBASE_MONOTONIC);
+        }
+        Log.i("microphone_start", "StartFrame:" + startTime.framePosition + " NanoTime: " + startTime.nanoTime);
+        publisherManager.onPublisherInitialized();
+    }
+
+    public void stop(){
+        recorder.stop();
+        recorder.setRecordPositionUpdateListener(null);
+        audioExecutor.shutdownNow();
+        recorder.release();
+        recorder = null;
+    }
+
+    @Override
+    public ArrayList<String> getRequiredPermissions() {
+        ArrayList<String> permissions = new ArrayList<>();
+        permissions.add(Manifest.permission.RECORD_AUDIO);
+        return permissions;
+    }
+
+    public AudioTimestamp getStartTime(){return startTime;}
+
+    public void setStartTime(){
+        recorder.getTimestamp(startTime, AudioTimestamp.TIMEBASE_MONOTONIC);
+    }
+
+    public AudioTimestamp getEndTime(){
+        recorder.getTimestamp(endTime, AudioTimestamp.TIMEBASE_MONOTONIC);
+        return endTime;
+    }
+
+    public int getSampleRate(){return recorder.getSampleRate();}
+
+    @Override
+    public void onMarkerReached(AudioRecord recorder) {
+
+    }
+
+    /**
+     * This method fires 2 times during each loop of the audio record buffer.
+     * audioRecord.read(audioData) writes the buffer values (stored in the audioRecord) to a local
+     * float array called audioData. It is set to read in non_blocking mode
+     * (https://developer.android.com/reference/android/media/AudioRecord?hl=ja#READ_NON_BLOCKING)
+     * You can verify it is not blocking by checking the log for "Missed some audio samples"
+     * You can verify if the buffer writer is overflowing by checking the log for:
+     * "W/AudioFlinger: RecordThread: buffer overflow"
+     * @param audioRecord
+     */
+    @Override
+    public void onPeriodicNotification(AudioRecord audioRecord) {
+        try{
+            audioExecutor.execute(() -> {
+                int readBufferSize = audioRecord.getPositionNotificationPeriod();
+                float[] audioData = new float[readBufferSize];
+                @SuppressLint("WrongConstant") int numSamples = audioRecord.read(audioData, 0,
+                        readBufferSize, AudioRecord.READ_NON_BLOCKING);
+                if (numSamples < readBufferSize){
+                    Log.w("microphone", "Missed some audio samples");
+                }
+                onNewAudioData(audioData, numSamples);
+            });
+        }catch (Exception e){
+            ErrorHandler.eLog("onPeriodicNotification", "sadfkjsdhf", e, true);
+        }
+    }
+
+    protected void onNewAudioData(float[] audioData, int numSamples){
+        if (subscribers.size() > 0 && !paused){
+            android.media.AudioTimestamp startTime = getStartTime();
+            android.media.AudioTimestamp endTime = getEndTime();
+            int sampleRate = getSampleRate();
+            for (MicrophoneDataSubscriber subscriber:subscribers){
+                subscriber.onMicrophoneDataUpdate(audioData, numSamples, sampleRate, startTime, endTime);
+            }
+            setStartTime();
+        }
+    }
+
+    @Override
+    public void onPermissionGranted() {
         audioExecutor = new ScheduledExecutorServiceWithException(1, new ProcessPriorityThreadFactory(10, "dataGatherer"));
         HandlerThread handlerThread = new HandlerThread("audioHandlerThread");
         handlerThread.start();
@@ -68,122 +167,12 @@ public class MicrophoneData implements AudioRecord.OnRecordPositionUpdateListene
         int framePeriod = framePerBuffer / 2; // Read from buffer two times per full buffer.
         recorder.setPositionNotificationPeriod(framePeriod);
         recorder.setRecordPositionUpdateListener(this, handler);
-    }
-
-    public void start(){
-        recorder.startRecording();
-
-        while (recorder.getTimestamp(startTime, AudioTimestamp.TIMEBASE_MONOTONIC) == AudioRecord.ERROR_INVALID_OPERATION){
-//            Log.i("microphone_start", "waiting for start timestamp");
-            int successOrNot = recorder.getTimestamp(startTime, AudioTimestamp.TIMEBASE_MONOTONIC);
-//            Log.i("microphone_start", "successOrNot (0=success, -3=invalid-op):" + successOrNot);
-        }
-        Log.i("microphone_start", "StartFrame:" + startTime.framePosition + " NanoTime: " + startTime.nanoTime);
-    }
-    
-    public AudioTimestamp getStartTime(){return startTime;}
-
-    public AudioRecord getRecorder() {
-        return recorder;
-    }
-
-    public void setStartTime(){
-        recorder.getTimestamp(startTime, AudioTimestamp.TIMEBASE_MONOTONIC);
-//        startTime = endTime;
-    }
-
-    public AudioTimestamp getEndTime(){
-        recorder.getTimestamp(endTime, AudioTimestamp.TIMEBASE_MONOTONIC);
-        return endTime;
-    }
-
-    public int getSampleRate(){return recorder.getSampleRate();}
-
-    public void stop(){
-        recorder.stop();
-    }
-
-    public void close(){
-        recorder.setRecordPositionUpdateListener(null);
-        audioExecutor.shutdownNow();
-        recorder.release();
-        recorder = null;
-    }
-
-    public synchronized void setRecording(boolean recording) {
-        isRecording = recording;
+        publisherManager.onPublisherPermissionsGranted();
     }
 
     @Override
-    public void setTimeStepDataBuffer(TimeStepDataBuffer timeStepDataBuffer) {
-        this.timeStepDataBuffer = timeStepDataBuffer;
-    }
-
-    public void setMicrophoneDataListener(MicrophoneDataListener microphoneDataListener) {
-        this.microphoneDataListener = microphoneDataListener;
-    }
-
-    @Override
-    public TimeStepDataBuffer getTimeStepDataBuffer() {
-        return timeStepDataBuffer;
-    }
-
-    public synchronized boolean isRecording() {
-        return isRecording;
-    }
-
-    @Override
-    public void onMarkerReached(AudioRecord recorder) {
-
-    }
-
-    /**
-     * This method fires 2 times during each loop of the audio record buffer.
-     * audioRecord.read(audioData) writes the buffer values (stored in the audioRecord) to a local
-     * float array called audioData. It is set to read in non_blocking mode
-     * (https://developer.android.com/reference/android/media/AudioRecord?hl=ja#READ_NON_BLOCKING)
-     * You can verify it is not blocking by checking the log for "Missed some audio samples"
-     * You can verify if the buffer writer is overflowing by checking the log for:
-     * "W/AudioFlinger: RecordThread: buffer overflow"
-     * @param audioRecord
-     */
-    @Override
-    public void onPeriodicNotification(AudioRecord audioRecord) {
-        try{
-            audioExecutor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    int writeBufferSizeFrames = audioRecord.getBufferSizeInFrames();
-                    int readBufferSize = audioRecord.getPositionNotificationPeriod();
-//                Log.d("microphone", "readBufferSize:" + readBufferSize);
-                    float[] audioData = new float[readBufferSize];
-                    int numSamples = audioRecord.read(audioData, 0,
-                            readBufferSize, AudioRecord.READ_NON_BLOCKING);
-//                Log.d("microphone", "numSamples:" + numSamples);
-                    if (numSamples < readBufferSize){
-                        Log.w("microphone", "Missed some audio samples");
-                    }
-//                Log.v("microphone", numSamples + " / " + writeBufferSizeFrames + " samples read");
-                    onNewAudioData(audioData, numSamples);
-                }
-            });
-        }catch (Exception e){
-            ErrorHandler.eLog("onPeriodicNotification", "sadfkjsdhf", e, true);
-        }
-    }
-
-    protected void onNewAudioData(float[] audioData, int numSamples){
-        if (isRecording) {
-            android.media.AudioTimestamp startTime = getStartTime();
-            android.media.AudioTimestamp endTime = getEndTime();
-            int sampleRate = getSampleRate();
-            timeStepDataBuffer.getWriteData().getSoundData().setMetaData(sampleRate, startTime, endTime);
-            setStartTime();
-            timeStepDataBuffer.getWriteData().getSoundData().add(audioData, numSamples);
-        }
-        if (microphoneDataListener != null){
-            microphoneDataListener.onMicrophoneDataUpdate(audioData, numSamples);
-        }
+    public void onPermissionDenied(DeniedPermissions deniedPermissions) {
+        ErrorHandler.eLog(TAG, "This app requires Audio Recording", new Exception(), true);
     }
 
 //

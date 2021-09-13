@@ -1,12 +1,14 @@
 package jp.oist.abcvlib.core.inputs.phone;
 
+import android.Manifest;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.media.Image;
+import android.os.Handler;
+import android.util.Log;
 import android.util.Size;
 
 import androidx.annotation.NonNull;
-import androidx.camera.core.Camera;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageProxy;
@@ -14,61 +16,86 @@ import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.OnLifecycleEvent;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import jp.oist.abcvlib.core.inputs.AbcvlibInput;
-import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
+import jp.oist.abcvlib.core.inputs.PublisherManager;
+import jp.oist.abcvlib.core.inputs.Publisher;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.ImageOps;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.YuvToRgbConverter;
 
-public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
+public class ImageData extends Publisher<ImageDataSubscriber> implements ImageAnalysis.Analyzer {
 
     private ImageAnalysis imageAnalysis;
     private YuvToRgbConverter yuvToRgbConverter;
-    private TimeStepDataBuffer timeStepDataBuffer;
-    private boolean isRecording = false;
     private PreviewView previewView;
+    private final LifecycleOwner lifecycleOwner;
 
     private ListenableFuture<ProcessCameraProvider> mCameraProviderFuture;
 
     private ProcessCameraProvider cameraProvider;
-    private ImageDataListener imageDataListener = null;
     private final String TAG = getClass().getName();
+    private ExecutorService imageExecutor;
+    private final CountDownLatch countDownLatch = new CountDownLatch(2); // Waits for both analysis and preview to be running before sending a signal that it is ready
 
-    /**
-     * You can construct this with a PreviewView and or ImageAnalysis, but they can also be null and
-     * set later with {@link #setPreviewView(PreviewView)} and
-     * {@link #setImageAnalysis(ImageAnalysis, TimeStepDataBuffer, ImageDataListener)}. Note you
-     * can also use {@link #setDefaultImageAnalysis(TimeStepDataBuffer, ImageDataListener)} if you
-     * have no preference as to how the ImageAnalysis instance is built.
-     * After you have set either or both, call the {@link #startCamera(Context, LifecycleOwner)} to
-     * start one or both. The startCamera method will initialize only those that have been setup
-     * prior to calling the startCamera method.
-     * @param timeStepDataBuffer {@L}
-     * @param previewView
-     * @param imageAnalysis
+    /*
+     * @param previewView: e.g. from your Activity findViewById(R.id.camera_x_preview)
+     * @param imageAnalysis: If set to null will generate default imageAnalysis object.
      */
-    public ImageData(TimeStepDataBuffer timeStepDataBuffer, PreviewView previewView,
+    public ImageData(Context context, PublisherManager publisherManager, LifecycleOwner lifecycleOwner, PreviewView previewView,
                      ImageAnalysis imageAnalysis){
+        super(context, publisherManager);
+        this.lifecycleOwner = lifecycleOwner;
+        this.previewView = previewView;
+        this.imageAnalysis = imageAnalysis;
+    }
 
-        if (previewView != null){
-            setPreviewView(previewView);
+    public static class Builder{
+        private final Context context;
+        private final PublisherManager publisherManager;
+        private final LifecycleOwner lifecycleOwner;
+        private PreviewView previewView;
+        private ImageAnalysis imageAnalysis;
+
+        public Builder(Context context, PublisherManager publisherManager, LifecycleOwner lifecycleOwner){
+            this.publisherManager = publisherManager;
+            this.context = context;
+            this.lifecycleOwner = lifecycleOwner;
         }
-        if (imageAnalysis != null){
-            setImageAnalysis(imageAnalysis, timeStepDataBuffer, null);
-        }else {
-            setDefaultImageAnalysis(this.timeStepDataBuffer, null);
+
+        public ImageData build(){
+            return new ImageData(context, publisherManager, lifecycleOwner, previewView, imageAnalysis);
         }
-        this.timeStepDataBuffer = timeStepDataBuffer;
+
+        public Builder setPreviewView(PreviewView previewView){
+            this.previewView = previewView;
+            return this;
+        }
+
+        public Builder setImageAnalysis(ImageAnalysis imageAnalysis){
+            this.imageAnalysis = imageAnalysis;
+            return this;
+        }
+    }
+
+    @Override
+    public ArrayList<String> getRequiredPermissions() {
+        ArrayList<String> permissions = new ArrayList<>();
+        permissions.add(Manifest.permission.CAMERA);
+        return permissions;
     }
 
     public ImageAnalysis getImageAnalysis() {
@@ -78,8 +105,9 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
     @androidx.camera.core.ExperimentalGetImage
     @Override
     public void analyze(@NonNull ImageProxy imageProxy) {
-        Image image = null;
-        if (isRecording() || imageDataListener != null){
+        countDownLatch.countDown();
+        Image image;
+        if (subscribers.size() > 0 && !paused){
             image = imageProxy.getImage();
         } else {
             imageProxy.close();
@@ -97,60 +125,44 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
             byte[] webpBytes = webpByteArrayOutputStream.toByteArray();
             Bitmap webpBitMap = ImageOps.generateBitmap(webpBytes);
 
-            if (isRecording()){
-                timeStepDataBuffer.getWriteData().getImageData().add(timestamp, width, height, webpBitMap, webpBytes);
+            for (ImageDataSubscriber subscriber:subscribers){
+                subscriber.onImageDataUpdate(timestamp, width, height, webpBitMap, webpBytes);
             }
-            if (imageDataListener != null){
-                imageDataListener.onImageDataUpdate(timestamp, width, height, webpBitMap, webpBytes);
-            }
-//            Log.v("flatbuff", "Wrote image to timeStepDataBuffer");
         }
         imageProxy.close();
     }
 
-    public void setPreviewView(PreviewView previewView) {
-        this.previewView = previewView;
-    }
-
-    private void setDefaultImageAnalysis(TimeStepDataBuffer timeStepDataBuffer,
-                                                     ImageDataListener imageDataListener){
+    private void setDefaultImageAnalysis(){
         imageAnalysis =
                 new ImageAnalysis.Builder()
                         .setTargetResolution(new Size(10, 10))
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .setImageQueueDepth(20)
                         .build();
-        setImageAnalysis(imageAnalysis, timeStepDataBuffer, imageDataListener);
     }
 
-    /**
-     * @param imageAnalysis
-     * @param timeStepDataBuffer
-     * @param imageDataListener
-     */
-    public void setImageAnalysis(ImageAnalysis imageAnalysis, TimeStepDataBuffer timeStepDataBuffer,
-                                 ImageDataListener imageDataListener) {
-        this.timeStepDataBuffer = timeStepDataBuffer;
-        this.imageDataListener = imageDataListener;
-        this.imageAnalysis = imageAnalysis;
-    }
-
-    public void startCamera(Context context, LifecycleOwner lifecycleOwner) {
-        ExecutorService imageExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "imageAnalysis"));
-        if (imageAnalysis == null && previewView == null){
-            throw new UnsupportedOperationException("Either setImageAnalysis or setPreviewView must be called prior to calling the startCamera method");
+    @Override
+    public void start() {
+        if (imageAnalysis == null) {
+            setDefaultImageAnalysis();
         }
-        if (imageAnalysis != null && (timeStepDataBuffer != null || imageDataListener != null)){
+            imageExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "imageAnalysis"));
+        if (imageAnalysis == null && previewView == null){
+            throw new UnsupportedOperationException("Either setImageAnalysis or setPreviewView must be called prior to calling the start method");
+        }
+        if (imageAnalysis != null && subscribers.size() > 0){
             yuvToRgbConverter = new YuvToRgbConverter(context);
             imageAnalysis.setAnalyzer(imageExecutor, this);
         }
         if (previewView != null){
-            previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
+            Handler handler = new Handler(context.getMainLooper());
+            handler.post(() -> previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER));
             previewView.post(() -> {
                 mCameraProviderFuture = ProcessCameraProvider.getInstance(context);
                 mCameraProviderFuture.addListener(() -> {
                     try {
                         cameraProvider = mCameraProviderFuture.get();
+                        cameraProvider.unbindAll();
                         bindAll(cameraProvider, lifecycleOwner);
                     } catch (ExecutionException | InterruptedException e) {
                         ErrorHandler.eLog(TAG, "Unexpected Error", e, true);
@@ -158,6 +170,24 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
                 }, ContextCompat.getMainExecutor(context));
             });
         }
+        try {
+            countDownLatch.await();
+            publisherManager.onPublisherInitialized();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void stop() {
+        imageAnalysis.clearAnalyzer();
+        imageAnalysis = null;
+        imageExecutor.shutdown();
+        yuvToRgbConverter = null;
+        previewView = null;
+        mCameraProviderFuture.cancel(false);
+        cameraProvider.unbindAll();
+        cameraProvider = null;
     }
 
     private void bindAll(@NonNull ProcessCameraProvider cameraProvider, LifecycleOwner lifecycleOwner) {
@@ -167,34 +197,27 @@ public class ImageData implements ImageAnalysis.Analyzer, AbcvlibInput{
                 .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
                 .build();
 
-        Camera camera;
         if (imageAnalysis != null){
-            camera = cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, preview, imageAnalysis);
+            cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, preview, imageAnalysis);
         }else{
-            camera = cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, preview);
+            cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, preview);
         }
         preview.setSurfaceProvider(previewView.getSurfaceProvider());
+
+        final Observer<PreviewView.StreamState> previewViewObserver = new Observer<PreviewView.StreamState>() {
+            @Override
+            public void onChanged(PreviewView.StreamState streamState) {
+                Log.i("previewView", "PreviewState: " + streamState.toString());
+                if (streamState.name().equals("STREAMING")){
+                    countDownLatch.countDown();
+                }
+            }
+        };
+        this.previewView.getPreviewStreamState().observe(lifecycleOwner, previewViewObserver);
     }
 
-    public synchronized void setRecording(boolean recording) {
-        isRecording = recording;
-    }
-
-    public synchronized boolean isRecording() {
-        return isRecording;
-    }
-
-    @Override
-    public void setTimeStepDataBuffer(TimeStepDataBuffer timeStepDataBuffer) {
-        this.timeStepDataBuffer = timeStepDataBuffer;
-    }
-
-    public void setImageDataListener(ImageDataListener imageDataListener) {
-        this.imageDataListener = imageDataListener;
-    }
-
-    @Override
-    public TimeStepDataBuffer getTimeStepDataBuffer() {
-        return timeStepDataBuffer;
+    @OnLifecycleEvent(Lifecycle.Event.ON_ANY)
+    public void test() {
+        Log.v("lifecycle", "onAny");
     }
 }

@@ -1,61 +1,77 @@
 package jp.oist.abcvlib.core.inputs.microcontroller;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
 
-import jp.oist.abcvlib.core.inputs.AbcvlibInput;
-import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
+import java.util.ArrayList;
 
-public class BatteryData implements AbcvlibInput {
+import jp.oist.abcvlib.core.AbcvlibLooper;
+import jp.oist.abcvlib.core.inputs.PublisherManager;
+import jp.oist.abcvlib.core.inputs.Publisher;
 
-    private TimeStepDataBuffer timeStepDataBuffer;
-    private boolean isRecording = false;
-    private BatteryDataListener batteryDataListener = null;
-    private final Handler handler;
+public class BatteryData extends Publisher<BatteryDataSubscriber> {
+    private final AbcvlibLooper abcvlibLooper;
 
-    public BatteryData(TimeStepDataBuffer timeStepDataBuffer){
-        this.timeStepDataBuffer = timeStepDataBuffer;
-        HandlerThread mHandlerThread = new HandlerThread("batteryThread");
-        mHandlerThread.start();
-        handler = new Handler(mHandlerThread.getLooper());
+    public BatteryData(Context context, PublisherManager publisherManager, AbcvlibLooper abcvlibLooper){
+        super(context, publisherManager);
+        this.abcvlibLooper = abcvlibLooper;
+    }
+
+    public static class Builder{
+        private final Context context;
+        private final PublisherManager publisherManager;
+        private final AbcvlibLooper abcvlibLooper;
+
+        public Builder(Context context, PublisherManager publisherManager, AbcvlibLooper abcvlibLooper){
+            this.context = context;
+            this.publisherManager = publisherManager;
+            this.abcvlibLooper = abcvlibLooper;
+        }
+
+        public BatteryData build(){
+            return new BatteryData(context, publisherManager, abcvlibLooper);
+        }
     }
 
     public void onBatteryVoltageUpdate(double voltage, long timestamp) {
-        handler.post(() -> {
-            if (isRecording){
-                timeStepDataBuffer.getWriteData().getBatteryData().put(voltage);
-            }
-            if (batteryDataListener != null){
-                batteryDataListener.onBatteryVoltageUpdate(voltage, timestamp);
-            }
-        });
+        for (BatteryDataSubscriber subscriber: subscribers){
+            handler.post(() -> {
+                if (!paused){
+                    subscriber.onBatteryVoltageUpdate(voltage, timestamp);
+                }
+            });
+        }
     }
 
     public void onChargerVoltageUpdate(double chargerVoltage, double coilVoltage, long timestamp) {
-        handler.post(() -> {
-            if (isRecording){
-                timeStepDataBuffer.getWriteData().getChargerData().put(chargerVoltage, coilVoltage);
-            }
-            if (batteryDataListener != null){
-                batteryDataListener.onChargerVoltageUpdate(chargerVoltage, coilVoltage, timestamp);
-            }
-        });
+        for (BatteryDataSubscriber subscriber: subscribers){
+            handler.post(() -> {
+                if (!paused){
+                    subscriber.onChargerVoltageUpdate(chargerVoltage, coilVoltage, timestamp);
+                }
+            });
+        }
     }
 
-    public void setRecording(boolean recording) {
-        isRecording = recording;
+    @Override
+    public void start() {
+        mHandlerThread = new HandlerThread("batteryThread");
+        mHandlerThread.start();
+        handler = new Handler(mHandlerThread.getLooper());
+        abcvlibLooper.setBatteryData(this);
+        publisherManager.onPublisherInitialized();
     }
 
-    public void setTimeStepDataBuffer(TimeStepDataBuffer timeStepDataBuffer) {
-        this.timeStepDataBuffer = timeStepDataBuffer;
+    @Override
+    public void stop() {
+        abcvlibLooper.setBatteryData(null);
+        mHandlerThread.quitSafely();
+        handler = null;
     }
 
-    public void setBatteryDataListener(BatteryDataListener batteryDataListener) {
-        this.batteryDataListener = batteryDataListener;
+    @Override
+    public ArrayList<String> getRequiredPermissions() {
+        return new ArrayList<>();
     }
-
-    public TimeStepDataBuffer getTimeStepDataBuffer() {
-        return timeStepDataBuffer;
-    }
-
 }

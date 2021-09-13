@@ -225,8 +225,8 @@ public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubsc
             ArrayList<Long> timestamps = new ArrayList<>();
             ArrayList<Double> chargerVoltage = new ArrayList<>();
             ArrayList<Double> coilVoltage = new ArrayList<>();
-            public void put(double _chargerVoltage, double _coilVoltage){
-                timestamps.add(System.nanoTime());
+            public void put(double _chargerVoltage, double _coilVoltage, long _timestamp){
+                timestamps.add(_timestamp);
                 chargerVoltage.add(_chargerVoltage);
                 coilVoltage.add(_coilVoltage);
             }
@@ -259,8 +259,8 @@ public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubsc
         public static class BatteryData{
             ArrayList<Long> timestamps = new ArrayList<>();
             ArrayList<Double> voltage = new ArrayList<>();
-            public void put(double _voltage){
-                timestamps.add(System.nanoTime());
+            public void put(double _voltage, long _timestamp){
+                timestamps.add(_timestamp);
                 voltage.add(_voltage);
             }
             public long[] getTimeStamps(){

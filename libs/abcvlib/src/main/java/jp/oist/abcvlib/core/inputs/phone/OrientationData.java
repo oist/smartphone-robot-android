@@ -8,16 +8,12 @@ import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.Message;
 import android.util.Log;
 
-import java.text.DecimalFormat;
-import java.util.Arrays;
+import java.util.ArrayList;
 
-import jp.oist.abcvlib.core.inputs.AbcvlibInput;
-import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
-import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
-import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
+import jp.oist.abcvlib.core.inputs.PublisherManager;
+import jp.oist.abcvlib.core.inputs.Publisher;
 
 /**
  * MotionSensors reads and processes the data from the Android phone gryoscope and
@@ -39,7 +35,7 @@ import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
  * @author Jiexin Wang https://github.com/ha5ha6
  * @author Christopher Buckley https://github.com/topherbuckley
  */
-public class OrientationData implements SensorEventListener, AbcvlibInput {
+public class OrientationData extends Publisher<OrientationDataSubscriber> implements SensorEventListener {
 
     /*
      * Keeps track of current history index.
@@ -88,9 +84,6 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
     private final double[] angularVelocityRad = new double[windowLength];
 
     int timerCount = 1;
-    private boolean isRecording = false;
-    private TimeStepDataBuffer timeStepDataBuffer;
-    private OrientationDataListener orientationDataListener = null;
 
     //----------------------------------------------------------------------------------------------
 
@@ -107,15 +100,14 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
      */
     int indexHistoryOldest = 0; // Keeps track of oldest history index.
     double dt = 0;
-    ScheduledExecutorServiceWithException executor;
 
     /**
      * Constructor that sets up Android Sensor Service and creates Sensor objects for both
      * accelerometer and gyroscope. Then registers both sensors such that their onSensorChanged
      * events will call the onSensorChanged method within this class.
      */
-    public OrientationData(TimeStepDataBuffer timeStepDataBuffer, Context context){
-        this.timeStepDataBuffer = timeStepDataBuffer;
+    public OrientationData(Context context, PublisherManager publisherManager){
+        super(context, publisherManager);
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         rotation_sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
@@ -123,10 +115,20 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             accelerometer_uncalibrated = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED);
         }
-        HandlerThread mHandlerThread = new HandlerThread("sensorThread");
-        mHandlerThread.start();
-        Handler handler = new Handler(mHandlerThread.getLooper());
-        register(handler);
+    }
+
+    public static class Builder{
+        private final Context context;
+        private final PublisherManager publisherManager;
+
+        public Builder(Context context, PublisherManager publisherManager){
+            this.context = context;
+            this.publisherManager = publisherManager;
+        }
+
+        public OrientationData build(){
+            return new OrientationData(context, publisherManager);
+        }
     }
 
     /**
@@ -183,15 +185,12 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
 
         timerCount ++;
 
-        if(isRecording){
-            timeStepDataBuffer.getWriteData().getOrientationData().put(timeStamps[indexCurrentRotation],
-                    thetaRad[indexCurrentRotation],
-                    angularVelocityRad[indexCurrentRotation]);
-        }
-        if(orientationDataListener != null){
-            orientationDataListener.onOrientationUpdate(timeStamps[indexCurrentRotation],
-                    thetaRad[indexCurrentRotation],
-                    angularVelocityRad[indexCurrentRotation]);
+        if(!paused){
+            for (OrientationDataSubscriber subscriber:subscribers){
+                subscriber.onOrientationUpdate(timeStamps[indexCurrentRotation],
+                        thetaRad[indexCurrentRotation],
+                        angularVelocityRad[indexCurrentRotation]);
+            }
         }
     }
 
@@ -225,10 +224,10 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
         }
     }
 
-    /**
-     * Check if accelerometer and gyroscope objects still exist before trying to unregister them.
-     * This prevents null pointer exceptions.
-     */
+//    /**
+//     * Check if accelerometer and gyroscope objects still exist before trying to unregister them.
+//     * This prevents null pointer exceptions.
+//     */
     public void unregister(){
         // Check if rotation_sensor exists before trying to turn off the listener
         if (rotation_sensor != null){
@@ -246,19 +245,6 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
         if (accelerometer_uncalibrated != null){
             sensorManager.unregisterListener(this, accelerometer_uncalibrated);
         }
-
-    }
-
-    public void setRecording(boolean recording) {
-        isRecording = recording;
-    }
-
-    public void setTimeStepDataBuffer(TimeStepDataBuffer timeStepDataBuffer) {
-        this.timeStepDataBuffer = timeStepDataBuffer;
-    }
-
-    public void setOrientationDataListener(OrientationDataListener orientationDataListener) {
-        this.orientationDataListener = orientationDataListener;
     }
 
     /**
@@ -283,8 +269,25 @@ public class OrientationData implements SensorEventListener, AbcvlibInput {
         return getThetaDeg(radPerSec);
     }
 
-    public TimeStepDataBuffer getTimeStepDataBuffer() {
-        return timeStepDataBuffer;
+    @Override
+    public void start() {
+        mHandlerThread = new HandlerThread("sensorThread");
+        mHandlerThread.start();
+        handler = new Handler(mHandlerThread.getLooper());
+        register(handler);
+        publisherManager.onPublisherInitialized();
+    }
+
+    @Override
+    public void stop() {
+        mHandlerThread.quitSafely();
+        unregister();
+        handler = null;
+    }
+
+    @Override
+    public ArrayList<String> getRequiredPermissions() {
+        return new ArrayList<>();
     }
 
     /**
