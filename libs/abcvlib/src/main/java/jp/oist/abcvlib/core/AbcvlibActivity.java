@@ -19,7 +19,7 @@ import jp.oist.abcvlib.core.outputs.Outputs;
  * @author Christopher Buckley https://github.com/topherbuckley
  *
  */
-public abstract class AbcvlibActivity extends IOIOActivity implements AbcvlibAbstractObject {
+public abstract class AbcvlibActivity extends IOIOActivity {
 
     // Publically accessible objects that encapsulate a lot other core functionality
     private Outputs outputs;
