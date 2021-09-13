@@ -4,8 +4,8 @@ import android.os.Bundle;
 import android.util.Log;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.AbcvlibLooper;
 import jp.oist.abcvlib.core.IOReadyListener;
-import jp.oist.abcvlib.core.PermissionsListener;
 
 /**
  * Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors
@@ -27,7 +27,7 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
     }
 
     @Override
-    public void onIOReady() {
+    public void onIOReady(AbcvlibLooper abcvlibLooper) {
         // Linear Back and Forth every 10 mm
         setPath setPathThread = new setPath();
         new Thread(setPathThread).start();

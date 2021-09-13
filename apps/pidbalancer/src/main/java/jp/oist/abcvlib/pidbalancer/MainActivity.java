@@ -11,7 +11,11 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.AbcvlibLooper;
 import jp.oist.abcvlib.core.IOReadyListener;
+import jp.oist.abcvlib.core.inputs.PublisherManager;
+import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
+import jp.oist.abcvlib.core.inputs.phone.OrientationData;
 import jp.oist.abcvlib.tests.BalancePIDController;
 import jp.oist.abcvlib.util.ErrorHandler;
 
@@ -89,11 +93,29 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener{
     }
 
     @Override
-    public void onIOReady() {
-        balancePIDController = (BalancePIDController) new BalancePIDController(getInputs()).setInitDelay(0)
+    public void onIOReady(AbcvlibLooper abcvlibLooper) {
+        // Create your data publisher objects
+        PublisherManager publisherManager = new PublisherManager();
+        OrientationData orientationData = new OrientationData
+                .Builder(this, publisherManager).build();
+        WheelData wheelData = new WheelData
+                .Builder(this, publisherManager, abcvlibLooper).build();
+        // Initialize all publishers (i.e. start their threads and data streams)
+        publisherManager.initializePublishers();
+
+        // Create your controller/subscriber
+        balancePIDController = (BalancePIDController) new BalancePIDController().setInitDelay(0)
                 .setName("BalancePIDController").setThreadCount(1)
                 .setThreadPriority(Thread.NORM_PRIORITY).setTimestep(5)
                 .setTimeUnit(TimeUnit.MILLISECONDS);
+
+        // Attach the controller/subscriber to the publishers
+        orientationData.addSubscriber(balancePIDController);
+        wheelData.addSubscriber(balancePIDController);
+
+        // Start your publishers
+        publisherManager.startPublishers();
+
         // Adds your custom controller to the compounding master controller.
         getOutputs().getMasterController().addController(balancePIDController);
         // Start the master controller after adding and starting any customer controllers.

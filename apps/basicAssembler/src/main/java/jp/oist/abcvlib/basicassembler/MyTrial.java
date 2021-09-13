@@ -15,7 +15,6 @@ import jp.oist.abcvlib.core.learning.StateSpace;
 import jp.oist.abcvlib.core.learning.Trial;
 import jp.oist.abcvlib.core.outputs.ActionSelector;
 import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
-import jp.oist.abcvlib.util.SocketListener;
 
 public class MyTrial extends Trial implements ActionSelector{
     private int reward = 0;
@@ -66,8 +65,24 @@ public class MyTrial extends Trial implements ActionSelector{
     }
 
     @Override
-    protected void endTrail() throws RecordingWithoutTimeStepBufferException {
+    protected void endTrial() throws RecordingWithoutTimeStepBufferException, InterruptedException {
         // Do stuff here
-        super.endTrail();
+        super.endTrial();
+    }
+
+    @Override
+    public boolean isLastTimestep() {
+        boolean result = false;
+        result = timeStep >= maxTimeStepCount;
+        // Do some logic here to modify result based on how you want to determine if this is the last timestep (e.g. currentTimeStep > maxTimeStep, reward > maxReward, etc.).
+        return result;
+    }
+
+    @Override
+    public boolean isLastEpisode() {
+        boolean result = false;
+        result = episodeCount >= maxEpisodeCount;
+        // Do some logic here to modify result based on how you want to determine if this is the last episode (e.g. currentEpisode > maxEpisode, etc.).
+        return result;
     }
 }

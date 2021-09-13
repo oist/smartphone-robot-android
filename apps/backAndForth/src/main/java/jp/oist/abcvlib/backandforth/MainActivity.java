@@ -5,6 +5,7 @@ import android.os.Bundle;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.AbcvlibLooper;
 import jp.oist.abcvlib.core.IOReadyListener;
 import jp.oist.abcvlib.tests.BackAndForthController;
 
@@ -28,7 +29,7 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
     }
 
     @Override
-    public void onIOReady() {
+    public void onIOReady(AbcvlibLooper abcvlibLooper) {
         float speed = 0.5f;
         // Customizing ALL build params. You can remove any or all. This object not used, but here for reference.
         BackAndForthController backAndForthController = (BackAndForthController) new BackAndForthController(speed).setInitDelay(0)

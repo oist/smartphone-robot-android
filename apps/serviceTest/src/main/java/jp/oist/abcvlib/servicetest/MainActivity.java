@@ -4,6 +4,12 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
+
+import org.jetbrains.annotations.NotNull;
+
 import jp.oist.abcvlib.tests.BackAndForthService;
 
 /**

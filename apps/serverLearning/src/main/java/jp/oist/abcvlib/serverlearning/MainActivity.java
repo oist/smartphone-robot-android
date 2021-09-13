@@ -1,15 +1,15 @@
 package jp.oist.abcvlib.serverlearning;
 
-import android.Manifest;
 import android.os.Bundle;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.AbcvlibLooper;
 import jp.oist.abcvlib.core.IOReadyListener;
-import jp.oist.abcvlib.core.PermissionsListener;
-import jp.oist.abcvlib.core.inputs.AbcvlibInput;
+import jp.oist.abcvlib.core.inputs.PublisherManager;
+import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
+import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.phone.ImageData;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
@@ -19,12 +19,12 @@ import jp.oist.abcvlib.core.learning.CommActionSpace;
 import jp.oist.abcvlib.core.learning.MetaParameters;
 import jp.oist.abcvlib.core.learning.MotionActionSpace;
 import jp.oist.abcvlib.core.learning.StateSpace;
-import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.FileOps;
 
-public class MainActivity extends AbcvlibActivity implements IOReadyListener, PermissionsListener{
+public class MainActivity extends AbcvlibActivity implements IOReadyListener{
 
-    InetSocketAddress inetSocketAddress = new InetSocketAddress("192.168.31.178", 3000);
+    InetSocketAddress inetSocketAddress = new InetSocketAddress("192.168.19.86", 3000);
+    @SuppressWarnings("unused")
     private final String TAG = getClass().toString();
 
     @Override
@@ -41,19 +41,14 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener, Pe
     }
 
     @Override
-    public void onIOReady() {
-        String[] permissions = new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
-        checkPermissions(this, permissions);
-    }
-
-    @Override
-    public void onPermissionsGranted() {
+    public void onIOReady(AbcvlibLooper abcvlibLooper) {
         /*------------------------------------------------------------------------------
         ------------------------------ Set MetaParameters ------------------------------
         --------------------------------------------------------------------------------
          */
+        TimeStepDataBuffer timeStepDataBuffer = new TimeStepDataBuffer(10);
         MetaParameters metaParameters = new MetaParameters(this, 1000, 5,
-                100, 3, inetSocketAddress, getTimeStepDataBuffer());
+                100, 3, inetSocketAddress, timeStepDataBuffer);
 
         /*------------------------------------------------------------------------------
         ------------------------------ Define Action Space -----------------------------
@@ -78,46 +73,30 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener, Pe
         ------------------------------ Define State Space ------------------------------
         --------------------------------------------------------------------------------
          */
+        PublisherManager publisherManager = new PublisherManager();
         // Customize how each sensor data is gathered via constructor params or builders
-        WheelData wheelData = new WheelData.Builder()
-                .setTimeStepDataBuffer(getTimeStepDataBuffer())
+        WheelData wheelData = new WheelData.Builder(this, publisherManager, abcvlibLooper)
                 .setBufferLength(50)
                 .setExpWeight(0.01)
                 .build();
+        wheelData.addSubscriber(timeStepDataBuffer);
 
-        // You can also just use the default ones if you're not interested in customizing them via:
-        WheelData wheelData1 = getInputs().getWheelData();
+        BatteryData batteryData = new BatteryData.Builder(this, publisherManager, abcvlibLooper).build();
+        batteryData.addSubscriber(timeStepDataBuffer);
 
-        OrientationData orientationData = new OrientationData(getTimeStepDataBuffer(), this);
+        OrientationData orientationData = new OrientationData.Builder(this, publisherManager).build();
+        orientationData.addSubscriber(timeStepDataBuffer);
 
-        MicrophoneData microphoneData = new MicrophoneData(getTimeStepDataBuffer());
-        microphoneData.start();
-        // Add the reference to your ArrayList
+        MicrophoneData microphoneData = new MicrophoneData.Builder(this, publisherManager).build();
+        microphoneData.addSubscriber(timeStepDataBuffer);
 
-        ImageData imageData = new ImageData(getTimeStepDataBuffer(), findViewById(R.id.camera_x_preview), null);
-        imageData.startCamera(this, this);
+        ImageData imageData = new ImageData.Builder(this, publisherManager, this)
+                .setPreviewView(findViewById(R.id.camera_x_preview)).build();
+        imageData.addSubscriber(timeStepDataBuffer);
 
-        // Initialize an ArrayList of AbcvlibInputs that you want to gather data for
-        ArrayList<AbcvlibInput> inputs = new ArrayList<>();
-        inputs.add(wheelData);
-        inputs.add(orientationData);
-        inputs.add(microphoneData);
-        inputs.add(imageData);
-
-        StateSpace stateSpace = new StateSpace(inputs);
-
-        /* Overwrites the default sensor data objects with the ones listed in inputs. If you don't do
-         * this AbcvlibLooper will not refer to the correct instances and IOIO sensor data will not
-         * be published to your gatherers
-         */
-        try {
-            getInputs().overwriteDefaults(inputs, abcvlibLooper);
-        } catch (ClassNotFoundException e) {
-            ErrorHandler.eLog(TAG, "", e, true);
-        }
-
+        StateSpace stateSpace = new StateSpace(publisherManager);
         /*------------------------------------------------------------------------------
-        ------------------------------ Initialize and Start Trial ----------------------
+        ----------- Initialize and Start Trial After PublisherManager Ready ----------------------
         --------------------------------------------------------------------------------
          */
         MyTrial myTrial = new MyTrial(metaParameters, actionSpace, stateSpace);

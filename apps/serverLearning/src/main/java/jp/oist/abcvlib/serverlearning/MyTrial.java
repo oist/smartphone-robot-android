@@ -60,9 +60,9 @@ public class MyTrial extends Trial implements ActionSelector{
     }
 
     @Override
-    protected void endTrail() throws RecordingWithoutTimeStepBufferException {
+    protected void endTrial() throws RecordingWithoutTimeStepBufferException, InterruptedException {
         // Do stuff here
         Log.v("MyTrail", "endTrail");
-        super.endTrail();
+        super.endTrial();
     }
 }

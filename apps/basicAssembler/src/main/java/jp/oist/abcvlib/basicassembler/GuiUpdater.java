@@ -92,8 +92,12 @@ public class GuiUpdater implements Runnable{
     }
 
     protected void updateGUIValues(TimeStepDataBuffer.TimeStepData data, int timeStepCount, int episodeCount){
-        timeStep = timeStepCount + " of " + maxTimeStepCount;
-        episode = episodeCount + " of " + maxEpisodeCount;
+        if (timeStepCount <= maxTimeStepCount){
+            timeStep = (timeStepCount + 1) + " of " + maxTimeStepCount;
+        }
+        if (episodeCount <= maxEpisodeCount){
+            episode = (episodeCount + 1) + " of " + maxEpisodeCount;
+        }
         if (data.getBatteryData().getVoltage().length > 0){
             batteryVoltage = data.getBatteryData().getVoltage()[0]; // just taking the first recorded one
         }

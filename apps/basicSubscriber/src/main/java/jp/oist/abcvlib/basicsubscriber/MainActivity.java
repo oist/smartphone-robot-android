@@ -1,9 +1,8 @@
 package jp.oist.abcvlib.basicsubscriber;
 
-import android.Manifest;
 import android.graphics.Bitmap;
+import android.media.AudioTimestamp;
 import android.os.Bundle;
-import android.util.Log;
 
 import java.text.DecimalFormat;
 import java.util.Arrays;
@@ -11,14 +10,19 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
+import jp.oist.abcvlib.core.AbcvlibLooper;
 import jp.oist.abcvlib.core.IOReadyListener;
-import jp.oist.abcvlib.core.PermissionsListener;
-import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataListener;
-import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataListener;
-import jp.oist.abcvlib.core.inputs.phone.ImageDataListener;
-import jp.oist.abcvlib.core.inputs.phone.MicrophoneDataListener;
+import jp.oist.abcvlib.core.inputs.PublisherManager;
+import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
+import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataSubscriber;
+import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
+import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataSubscriber;
+import jp.oist.abcvlib.core.inputs.phone.ImageData;
+import jp.oist.abcvlib.core.inputs.phone.ImageDataSubscriber;
+import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
+import jp.oist.abcvlib.core.inputs.phone.MicrophoneDataSubscriber;
 import jp.oist.abcvlib.core.inputs.phone.OrientationData;
-import jp.oist.abcvlib.core.inputs.phone.OrientationDataListener;
+import jp.oist.abcvlib.core.inputs.phone.OrientationDataSubscriber;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 
@@ -28,7 +32,7 @@ import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
  * implements the various listener interfaces in order to subscribe to updates from various sensor
  * data. Sensor data publishers are running in the background but only write data when a subscriber
  * has been established (via implementing a listener and it's associated method) or a custom
- * {@link jp.oist.abcvlib.core.learning.TimeStepDataAssembler object has been established} setting
+ * {@link jp.oist.abcvlib.core.learning.Trial object has been established} setting
  * up such an assembler will be illustrated in a different module.
  *
  * Optional commented out lines in each listener method show how to write the data to the Android
@@ -38,8 +42,8 @@ import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
  * unresponsive.
  * @author Christopher Buckley https://github.com/topherbuckley
  */
-public class MainActivity extends AbcvlibActivity implements PermissionsListener, IOReadyListener,
-        BatteryDataListener, OrientationDataListener, WheelDataListener, MicrophoneDataListener, ImageDataListener {
+public class MainActivity extends AbcvlibActivity implements IOReadyListener,
+        BatteryDataSubscriber, OrientationDataSubscriber, WheelDataSubscriber, MicrophoneDataSubscriber, ImageDataSubscriber {
 
     private long lastFrameTime = System.nanoTime();
     private GuiUpdater guiUpdater;
@@ -62,32 +66,24 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
     }
 
     @Override
-    public void onIOReady() {
-        String[] permissions = new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
-        checkPermissions(this, permissions);
-    }
-
-    @Override
-    public void onPermissionsGranted(){
+    public void onIOReady(AbcvlibLooper abcvlibLooper) {
         /*
-         * The various setXXXListener classes set this class as a subscriber to the XXX publisher
-         * Battery, Orientation, and WheelData are publishing by default as they are computationally
-         * cheap. Image and Microphone data are "lazy start" such that you must call their respective
-         * start() methods before they will begin publishing data. ImageData requires that you pass
-         * a reference to this class' layout object via the setPreviewView in order to publish the
-         * image stream to the GUI. If you don't need a preview on the GUI you don't need to attach
-         * this.
+         * Each {XXX}Data class has a builder that you can set various construction input parameters
+         * with. Neglecting to set them will assume default values. See each class for its corresponding
+         * default values and available builder set methods. Context is passed for permission requests,
+         * and {XXX}Listeners are what are used to set the subscriber to the {XXX}Data class.
+         * The subscriber in this example is this (MainActivity) class. It can equally be any other class
+         * that implements the appropriate listener interface.
          */
-        getInputs().getBatteryData().setBatteryDataListener(this);
-        getInputs().getOrientationData().setOrientationDataListener(this);
-        getInputs().getWheelData().setWheelDataListener(this);
-
-        getInputs().getImageData().setImageDataListener(this);
-        getInputs().getImageData().setPreviewView(findViewById(R.id.camera_x_preview));
-        getInputs().getImageData().startCamera(this, this);
-
-        getInputs().getMicrophoneData().setMicrophoneDataListener(this);
-        getInputs().getMicrophoneData().start();
+        PublisherManager publisherManager = new PublisherManager();
+        new WheelData.Builder(this, publisherManager, abcvlibLooper).build().addSubscriber(this);
+        new BatteryData.Builder(this, publisherManager, abcvlibLooper).build().addSubscriber(this);
+        new OrientationData.Builder(this, publisherManager).build().addSubscriber(this);
+        new ImageData.Builder(this, publisherManager, this)
+                .setPreviewView(findViewById(R.id.camera_x_preview)).build().addSubscriber(this);
+        new MicrophoneData.Builder(this, publisherManager).build().addSubscriber(this);
+        publisherManager.initializePublishers();
+        publisherManager.startPublishers();
     }
 
     @Override
@@ -142,7 +138,7 @@ public class MainActivity extends AbcvlibActivity implements PermissionsListener
      * @param numSamples number of samples copied from buffer
      */
     @Override
-    public void onMicrophoneDataUpdate(float[] audioData, int numSamples) {
+    public void onMicrophoneDataUpdate(float[] audioData, int numSamples, int sampleRate, AudioTimestamp startTime, AudioTimestamp endTime) {
         float[] arraySlice = Arrays.copyOfRange(audioData, 0, 5);
         DecimalFormat df = new DecimalFormat("0.#E0");
         String arraySliceString = "";
