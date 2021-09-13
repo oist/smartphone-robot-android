@@ -2,14 +2,13 @@ package jp.oist.abcvlib.tests;
 
 import android.util.Log;
 
-import jp.oist.abcvlib.core.inputs.Inputs;
-import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataListener;
+import jp.oist.abcvlib.core.inputs.Publisher;
+import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataSubscriber;
 import jp.oist.abcvlib.core.inputs.phone.OrientationData;
-import jp.oist.abcvlib.core.inputs.phone.OrientationDataListener;
+import jp.oist.abcvlib.core.inputs.phone.OrientationDataSubscriber;
 import jp.oist.abcvlib.core.outputs.AbcvlibController;
-import jp.oist.abcvlib.util.ErrorHandler;
 
-public class BalancePIDController extends AbcvlibController implements WheelDataListener, OrientationDataListener {
+public class BalancePIDController extends AbcvlibController implements WheelDataSubscriber, OrientationDataSubscriber {
 
     private final String TAG = this.getClass().getName();
 
@@ -31,9 +30,7 @@ public class BalancePIDController extends AbcvlibController implements WheelData
 
     private int bounceLoopCount = 0;
 
-    public BalancePIDController(Inputs inputs){
-        inputs.getOrientationData().setOrientationDataListener(this);
-        inputs.getWheelData().setWheelDataListener(this);
+    public BalancePIDController(){
     }
 
     public void run(){
