@@ -9,15 +9,11 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import jp.oist.abcvlib.core.inputs.AbcvlibInput;
-import jp.oist.abcvlib.core.inputs.phone.ImageData;
-import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
+import jp.oist.abcvlib.core.inputs.PublisherManager;
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 import jp.oist.abcvlib.core.outputs.ActionSelector;
 import jp.oist.abcvlib.util.ErrorHandler;
@@ -28,23 +24,23 @@ import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 import jp.oist.abcvlib.util.SocketListener;
 
 public class Trial implements Runnable, ActionSelector, SocketListener {
-    private Context context;
+    private final Context context;
     private int timeStepLength = 50;
-    private int maxTimeStepCount = 100;
-    private int timeStep = 0;
+    protected int maxTimeStepCount = 100;
+    protected int timeStep = 0;
     private boolean lastEpisode = false; // Use to trigger MainActivity to stop generating episodes
     private boolean lastTimestep = false; // Use to trigger MainActivity to stop generating timesteps for a single episode
     private int reward = 0;
     private int maxReward = 100;
-    private int maxEpisodeCount = 3;
-    private int episodeCount = 0;
+    protected int maxEpisodeCount = 3;
+    protected int episodeCount = 0;
     private final CommActionSpace commActionSpace;
     private final MotionActionSpace motionActionSpace;
     private final TimeStepDataBuffer timeStepDataBuffer;
     private final String TAG = getClass().toString();
     private ScheduledFuture<?> timeStepDataAssemblerFuture;
     private final ScheduledExecutorServiceWithException executor;
-    private final ArrayList<AbcvlibInput> inputs;
+    private final PublisherManager publisherManager;
     private FlatbufferAssembler flatbufferAssembler;
 
     public Trial(MetaParameters metaParameters, ActionSpace actionSpace,
@@ -59,9 +55,9 @@ public class Trial implements Runnable, ActionSelector, SocketListener {
                 metaParameters.inetSocketAddress, this, timeStepDataBuffer);
         this.motionActionSpace = actionSpace.motionActionSpace;
         this.commActionSpace = actionSpace.commActionSpace;
-        this.inputs = stateSpace.inputs;
+        this.publisherManager = stateSpace.publisherManager;
 
-        int threads = 5;
+        int threads = 1;
         executor = new ScheduledExecutorServiceWithException(threads, new ProcessPriorityThreadFactory(1, "trail"));
     }
 
@@ -70,31 +66,19 @@ public class Trial implements Runnable, ActionSelector, SocketListener {
     }
     
     protected void startTrail(){
+        publisherManager.initializePublishers();
+        publisherManager.startPublishers();
         startEpisode();
+        startPublishers();
+    }
+
+    protected void startPublishers() {
+        timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(this, getTimeStepLength(), getTimeStepLength(), TimeUnit.MILLISECONDS);
     }
 
     protected void startEpisode(){
         if (flatbufferAssembler != null){
             flatbufferAssembler.startEpisode();
-        }
-        startGatherers();
-    }
-
-    protected void startGatherers() {
-        CountDownLatch gatherersReady = new CountDownLatch(1);
-
-        for (AbcvlibInput input:inputs){
-            if (input != null){
-                input.setRecording(true);
-            }
-        }
-
-        timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(this, 50, getTimeStepLength(), TimeUnit.MILLISECONDS);
-        gatherersReady.countDown();
-        try {
-            gatherersReady.await();
-        } catch (InterruptedException e) {
-            ErrorHandler.eLog(TAG, "InterruptedException", e, true);
         }
     }
 
@@ -116,7 +100,10 @@ public class Trial implements Runnable, ActionSelector, SocketListener {
             try {
                 endEpisode();
                 if(isLastEpisode()){
-                    endTrail();
+                    endTrial();
+                }else {
+                    startEpisode();
+                    resumePublishers();
                 }
             } catch (BrokenBarrierException | InterruptedException | IOException | RecordingWithoutTimeStepBufferException e) {
                 ErrorHandler.eLog(TAG, "Error when trying to end episode or trail", e, true);
@@ -124,45 +111,35 @@ public class Trial implements Runnable, ActionSelector, SocketListener {
         }
     }
 
-    protected void stopRecordingData() throws RecordingWithoutTimeStepBufferException {
-
-        for (AbcvlibInput input:inputs){
-            if (input != null){
-                input.setRecording(false);
-            }
-        }
-        setTimeStep(0);
-        setLastTimestep(false);
+    protected void pausePublishers() throws RecordingWithoutTimeStepBufferException, InterruptedException {
+        publisherManager.pausePublishers();
         timeStepDataAssemblerFuture.cancel(false);
+    }
+
+    protected void resumePublishers(){
+        publisherManager.resumePublishers();
+        timeStepDataAssemblerFuture = executor.scheduleAtFixedRate(this, getTimeStepLength(), getTimeStepLength(), TimeUnit.MILLISECONDS);
     }
 
     // End episode after some reward has been acheived or maxtimesteps has been reached
     protected void endEpisode() throws BrokenBarrierException, InterruptedException, IOException, RecordingWithoutTimeStepBufferException {
 
         Log.d("Episode", "End of episode:" + getEpisodeCount());
-
         flatbufferAssembler.endEpisode();
-
-        // Stop all gathering threads momentarily.
-        stopRecordingData();
+        pausePublishers();
+        setTimeStep(0);
+        setLastTimestep(false);
         incrementEpisodeCount();
         timeStepDataBuffer.nextTimeStep();
 
         flatbufferAssembler.sendToServer();
-
-        startEpisode();
     }
 
-    protected void endTrail() throws RecordingWithoutTimeStepBufferException {
+    protected void endTrial() throws RecordingWithoutTimeStepBufferException, InterruptedException {
         Log.i(TAG, "Need to handle end of trail here");
-        stopRecordingData();
-        for (AbcvlibInput input:inputs){
-            if (input.getClass() == ImageData.class){
-                ((ImageData) input).getImageAnalysis().clearAnalyzer();
-            }else if (input.getClass() == MicrophoneData.class){
-                ((MicrophoneData) input).close();
-            }
-        }
+        pausePublishers();
+        publisherManager.stopPublishers();
+        timeStepDataAssemblerFuture.cancel(false);
     }
 
     /**
