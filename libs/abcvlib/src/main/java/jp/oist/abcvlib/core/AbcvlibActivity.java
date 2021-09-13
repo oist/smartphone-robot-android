@@ -32,10 +32,9 @@ public abstract class AbcvlibActivity extends IOIOActivity {
     }
 
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         Log.v(TAG, "End of AbcvlibActivity.onCreate");
+        super.onCreate(savedInstanceState);
     }
 
     @Override
