@@ -87,10 +87,6 @@ public class SocketMessage {
             int bitsRead = socketChannel.read(_recv_buffer);
 
             if (bitsRead > 0 || _recv_buffer.position() > 0){
-                if (bitsRead > 0){
-//                    Log.v(TAG, "Read " + bitsRead + " bytes from " + socketChannel.getRemoteAddress());
-                }
-
                 // If you have not determined the length of the header via the 2 byte short protoheader,
                 // try to determine it, though there is no gaurantee it will have enough bytes. So it may
                 // pass through this if statement multiple times. Only after it has been read will
