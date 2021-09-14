@@ -111,6 +111,10 @@ public class SocketMessage {
                     Log.e(TAG, "bitsRead but don't know what to do with them");
                 }
             }
+            // If msgContent is zero this handles it.
+            else if (msgContent != null && !msgReadComplete){
+                process_msgContent(selectionKey);
+            }
         }
     }
 
@@ -256,7 +260,7 @@ public class SocketMessage {
         Log.v(TAG, "processing jsonheader");
 
         // If you have enough bytes in the _recv_buffer to write out the jsonHeader
-        if (_jsonheader_len - _recv_buffer.position() < 0){
+        if (_jsonheader_len - _recv_buffer.position() <= 0){
             _recv_buffer.flip();
             _recv_buffer.get(jsonHeaderBytes);
             // jsonheaderBuffer should now be full and ready to convert to a JSONobject
