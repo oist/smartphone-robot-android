@@ -163,7 +163,7 @@ public class Trial implements Runnable, ActionSelector, SocketListener {
                 for (int i = 0; i < modelNames.length(); i++){
                     byte[] bytes = new byte[modelLengths.getInt(i)];
                     msgFromServer.get(bytes);
-                    FileOps.savedata(context, bytes, "models", modelNames.getString(i) + ".tflite");
+                    FileOps.savedata(context, bytes, "models", modelNames.getString(i));
                 }
             }else{
                 Log.d(TAG, "Data from server does not contain modelVector content. Be sure to set content-encoding to \"modelVector\" in the python jsonHeader");
