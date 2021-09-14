@@ -23,7 +23,7 @@ import jp.oist.abcvlib.util.FileOps;
 
 public class MainActivity extends AbcvlibActivity implements IOReadyListener{
 
-    InetSocketAddress inetSocketAddress = new InetSocketAddress("192.168.19.86", 3000);
+    InetSocketAddress inetSocketAddress = new InetSocketAddress(BuildConfig.HOST, BuildConfig.PORT);
     @SuppressWarnings("unused")
     private final String TAG = getClass().toString();
 

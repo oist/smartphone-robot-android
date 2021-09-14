@@ -9,6 +9,10 @@ buildscript {
     }
 }
 
+allprojects {
+    apply from: "$rootDir.parent/util/pycharm/config.gradle"
+}
+
 subprojects {
     group = 'jp.oist'
     version = getGitVersion()
@@ -76,6 +80,9 @@ subprojects {
             buildToolsVersion = '30.0.2'
             minSdkVersion 24
             targetSdkVersion 30
+
+            buildConfigField("String", "HOST", "\"${host.toString()}\"")
+            buildConfigField("int", "PORT", "${port.toString()}")
 
             // Fetch the version according to git latest tag and "how far are we from last tag"
             def longVersionName = "git -C ${rootDir} describe --tags --long --dirty".execute().text.trim()
