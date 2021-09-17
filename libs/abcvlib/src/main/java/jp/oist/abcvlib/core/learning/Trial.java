@@ -84,11 +84,11 @@ public class Trial implements Runnable, ActionSelector, SocketListener {
 
     @Override
     public void run() {
-        // Choose action wte based on current timestep data
-        forward(timeStepDataBuffer.getWriteData());
-
         // Moves timeStepDataBuffer.writeData to readData and nulls out the writeData for new data
         timeStepDataBuffer.nextTimeStep();
+
+        // Choose action wte based on current timestep data
+        forward(timeStepDataBuffer.getReadData());
 
         // Add timestep and return int representing offset in flatbuffer
         flatbufferAssembler.addTimeStep();
