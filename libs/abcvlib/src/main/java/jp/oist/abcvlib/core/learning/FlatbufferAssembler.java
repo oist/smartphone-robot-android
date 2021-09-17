@@ -38,16 +38,17 @@ public class FlatbufferAssembler {
     private final InetSocketAddress inetSocketAddress;
     private final SocketListener socketListener;
     private ByteBuffer episode;
+    private int robotID;
 
     public FlatbufferAssembler(Trial myTrial,
                                  InetSocketAddress inetSocketAddress,
                                  SocketListener socketListener,
-                                 TimeStepDataBuffer timeStepDataBuffer){
+                                 TimeStepDataBuffer timeStepDataBuffer,
+                               int robotID){
         this.socketListener = socketListener;
-
         this.inetSocketAddress = inetSocketAddress;
-
         this.timeStepDataBuffer = timeStepDataBuffer;
+        this.robotID = robotID;
 
         int threads = 5;
         executor = new ScheduledExecutorServiceWithException(threads, new ProcessPriorityThreadFactory(1, "flatbufferAssembler"));
@@ -239,6 +240,7 @@ public class FlatbufferAssembler {
 
         int ts = Episode.createTimestepsVector(builder, timeStepVector); //todo I think I need to add each timestep when it is generated rather than all at once? Is this the leak?
         Episode.startEpisode(builder);
+        Episode.addRobotid(builder, robotID);
         Episode.addTimesteps(builder, ts);
         int ep = Episode.endEpisode(builder);
         builder.finish(ep);

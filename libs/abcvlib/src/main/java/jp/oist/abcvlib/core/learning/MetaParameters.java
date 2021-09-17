@@ -17,10 +17,11 @@ public class MetaParameters {
     public final InetSocketAddress inetSocketAddress;
     public final TimeStepDataBuffer timeStepDataBuffer;
     public final Outputs outputs;
+    public final int robotID;
 
     public MetaParameters(Context context, int timeStepLength, int maxTimeStepCount, int maxReward, int maxEpisodeCount,
                           InetSocketAddress inetSocketAddress, TimeStepDataBuffer timeStepDataBuffer,
-                          Outputs outputs){
+                          Outputs outputs, int robotID){
         this.context = context;
         this.timeStepLength = timeStepLength;
         this.maxTimeStepCount = maxTimeStepCount;
@@ -29,5 +30,6 @@ public class MetaParameters {
         this.inetSocketAddress = inetSocketAddress;
         this.timeStepDataBuffer= timeStepDataBuffer;
         this.outputs = outputs;
+        this.robotID = robotID;
     }
 }

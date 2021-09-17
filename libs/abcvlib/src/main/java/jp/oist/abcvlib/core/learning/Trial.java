@@ -44,18 +44,20 @@ public class Trial implements Runnable, ActionSelector, SocketListener {
     private final PublisherManager publisherManager;
     private FlatbufferAssembler flatbufferAssembler;
     protected final Outputs outputs;
+    protected final int robotID;
 
     public Trial(MetaParameters metaParameters, ActionSpace actionSpace,
                  StateSpace stateSpace){
         this.context = metaParameters.context;
         this.outputs = metaParameters.outputs;
+        this.robotID = metaParameters.robotID;
         this.timeStepDataBuffer = metaParameters.timeStepDataBuffer;
         this.timeStepLength = metaParameters.timeStepLength;
         this.maxTimeStepCount = metaParameters.maxTimeStepCount;
         this.maxReward = metaParameters.maxReward;
         this.maxEpisodeCount = metaParameters.maxEpisodeCount;
         this.flatbufferAssembler = new FlatbufferAssembler(this,
-                metaParameters.inetSocketAddress, this, timeStepDataBuffer);
+                metaParameters.inetSocketAddress, this, timeStepDataBuffer, robotID);
         this.motionActionSpace = actionSpace.motionActionSpace;
         this.commActionSpace = actionSpace.commActionSpace;
         this.publisherManager = stateSpace.publisherManager;

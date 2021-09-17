@@ -20,18 +20,22 @@ public final class Episode extends Table {
   public int timestepsLength() { int o = __offset(4); return o != 0 ? __vector_len(o) : 0; }
   public jp.oist.abcvlib.core.learning.fbclasses.TimeStep.Vector timestepsVector() { return timestepsVector(new jp.oist.abcvlib.core.learning.fbclasses.TimeStep.Vector()); }
   public jp.oist.abcvlib.core.learning.fbclasses.TimeStep.Vector timestepsVector(jp.oist.abcvlib.core.learning.fbclasses.TimeStep.Vector obj) { int o = __offset(4); return o != 0 ? obj.__assign(__vector(o), 4, bb) : null; }
+  public int robotid() { int o = __offset(6); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
 
   public static int createEpisode(FlatBufferBuilder builder,
-      int timestepsOffset) {
-    builder.startTable(1);
+      int timestepsOffset,
+      int robotid) {
+    builder.startTable(2);
+    Episode.addRobotid(builder, robotid);
     Episode.addTimesteps(builder, timestepsOffset);
     return Episode.endEpisode(builder);
   }
 
-  public static void startEpisode(FlatBufferBuilder builder) { builder.startTable(1); }
+  public static void startEpisode(FlatBufferBuilder builder) { builder.startTable(2); }
   public static void addTimesteps(FlatBufferBuilder builder, int timestepsOffset) { builder.addOffset(0, timestepsOffset, 0); }
   public static int createTimestepsVector(FlatBufferBuilder builder, int[] data) { builder.startVector(4, data.length, 4); for (int i = data.length - 1; i >= 0; i--) builder.addOffset(data[i]); return builder.endVector(); }
   public static void startTimestepsVector(FlatBufferBuilder builder, int numElems) { builder.startVector(4, numElems, 4); }
+  public static void addRobotid(FlatBufferBuilder builder, int robotid) { builder.addInt(1, robotid, 0); }
   public static int endEpisode(FlatBufferBuilder builder) {
     int o = builder.endTable();
     return o;
