@@ -29,11 +29,12 @@ public class MyTrial extends Trial implements ActionSelector{
 
         // Use data as input to your policy and select action here
         // Just using first actions of each set as an example but this should be replaced by your policy's decision process
-        motionAction = getMotionActionSet().getMotionActions()[0];
+        motionAction = getMotionActionSet().getMotionActions()[1];
         commAction = getCommActionSet().getCommActions()[0];
 
         // Add your selected actions to the TimeStepDataBuffer for record
         data.getActions().add(motionAction, commAction);
+        outputs.setWheelOutput(motionAction.getLeftWheelPWM(), motionAction.getRightWheelPWM());
     }
 
     // If you want to do things at the start/end of the episode/trail you can override these methods from Trail

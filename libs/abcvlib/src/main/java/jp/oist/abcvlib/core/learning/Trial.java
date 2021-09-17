@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import jp.oist.abcvlib.core.inputs.PublisherManager;
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 import jp.oist.abcvlib.core.outputs.ActionSelector;
+import jp.oist.abcvlib.core.outputs.Outputs;
 import jp.oist.abcvlib.util.ErrorHandler;
 import jp.oist.abcvlib.util.FileOps;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
@@ -42,10 +43,12 @@ public class Trial implements Runnable, ActionSelector, SocketListener {
     private final ScheduledExecutorServiceWithException executor;
     private final PublisherManager publisherManager;
     private FlatbufferAssembler flatbufferAssembler;
+    protected final Outputs outputs;
 
     public Trial(MetaParameters metaParameters, ActionSpace actionSpace,
                  StateSpace stateSpace){
         this.context = metaParameters.context;
+        this.outputs = metaParameters.outputs;
         this.timeStepDataBuffer = metaParameters.timeStepDataBuffer;
         this.timeStepLength = metaParameters.timeStepLength;
         this.maxTimeStepCount = metaParameters.maxTimeStepCount;

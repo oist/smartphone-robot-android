@@ -5,6 +5,7 @@ import android.content.Context;
 import java.net.InetSocketAddress;
 
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
+import jp.oist.abcvlib.core.outputs.Outputs;
 import jp.oist.abcvlib.util.SocketListener;
 
 public class MetaParameters {
@@ -15,9 +16,11 @@ public class MetaParameters {
     public final int maxEpisodeCount;
     public final InetSocketAddress inetSocketAddress;
     public final TimeStepDataBuffer timeStepDataBuffer;
+    public final Outputs outputs;
 
     public MetaParameters(Context context, int timeStepLength, int maxTimeStepCount, int maxReward, int maxEpisodeCount,
-                          InetSocketAddress inetSocketAddress, TimeStepDataBuffer timeStepDataBuffer){
+                          InetSocketAddress inetSocketAddress, TimeStepDataBuffer timeStepDataBuffer,
+                          Outputs outputs){
         this.context = context;
         this.timeStepLength = timeStepLength;
         this.maxTimeStepCount = maxTimeStepCount;
@@ -25,5 +28,6 @@ public class MetaParameters {
         this.maxEpisodeCount = maxEpisodeCount;
         this.inetSocketAddress = inetSocketAddress;
         this.timeStepDataBuffer= timeStepDataBuffer;
+        this.outputs = outputs;
     }
 }

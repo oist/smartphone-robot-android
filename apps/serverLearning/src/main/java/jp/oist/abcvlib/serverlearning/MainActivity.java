@@ -48,7 +48,7 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener{
          */
         TimeStepDataBuffer timeStepDataBuffer = new TimeStepDataBuffer(10);
         MetaParameters metaParameters = new MetaParameters(this, 10, 1,
-                100, 10000, inetSocketAddress, timeStepDataBuffer);
+                100, 10000, inetSocketAddress, timeStepDataBuffer, getOutputs());
 
         /*------------------------------------------------------------------------------
         ------------------------------ Define Action Space -----------------------------
