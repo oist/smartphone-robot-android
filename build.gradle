@@ -10,7 +10,7 @@ buildscript {
 }
 
 allprojects {
-    apply from: "$rootDir.parent/python/config.gradle"
+    apply from: "$rootDir.parent/python/config/config.gradle"
 }
 
 subprojects {
