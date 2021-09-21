@@ -117,7 +117,8 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
 
         // Attach the controller/subscriber to the publishers
         orientationData.addSubscriber(balancePIDController);
-        wheelData.addSubscriber(balancePIDController).addSubscriber(customController);
+        wheelData.addSubscriber(balancePIDController);
+        wheelData.addSubscriber(customController);;
 
         // Start passing data from publishers to subscribers
         publisherManager.startPublishers();
