@@ -222,8 +222,8 @@ public class SocketMessage {
 
         jsonHeader.put("byteorder", ByteOrder.nativeOrder().toString());
         jsonHeader.put("content-length", numBytesToWrite);
-        jsonHeader.put("content-type", "flatbuffer"); // todo Change to flatbuffer later
-        jsonHeader.put("content-encoding", "flatbuffer"); //Change to flatbuffer later
+        jsonHeader.put("content-type", "episode");
+        jsonHeader.put("content-encoding", "flatbuffer");
         return jsonHeader;
     }
 
