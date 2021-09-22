@@ -160,8 +160,8 @@ public class Trial implements Runnable, ActionSelector, SocketListener {
         try {
             if (jsonHeader.get("content-encoding").equals("modelVector")){
                 Log.d(TAG, "Writing model files to disk");
-                JSONArray modelNames = (JSONArray) jsonHeader.get("model-names");
-                JSONArray modelLengths = (JSONArray) jsonHeader.get("model-lengths");
+                JSONArray modelNames = (JSONArray) jsonHeader.get("file-names");
+                JSONArray modelLengths = (JSONArray) jsonHeader.get("file-lengths");
 
                 msgFromServer.flip();
 
