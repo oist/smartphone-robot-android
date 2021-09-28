@@ -1,15 +1,10 @@
 package jp.oist.abcvlib.pidtransfer_transmitter;
 
-import android.app.Activity;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 
 import android.util.Log;
 import android.view.Display;
@@ -17,7 +12,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.ImageView;
 
 import com.google.zxing.BarcodeFormat;
@@ -26,16 +20,11 @@ import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.Objects;
 
-import jp.oist.abcvlib.core.outputs.AbcvlibController;
-import jp.oist.abcvlib.core.outputs.Outputs;
 import jp.oist.abcvlib.util.ErrorHandler;
+import jp.oist.abcvlib.util.PID_GUI;
 
 import static android.graphics.Color.BLACK;
 import static android.graphics.Color.WHITE;
