@@ -232,7 +232,7 @@ public class FlatbufferAssembler {
         Log.v("flatbuff", "CommAction : " + ca.getActionByte());
         Log.v("flatbuff", "MotionAction : " + ma.getActionName());
 
-        return RobotAction.createRobotAction(builder, (byte) ca.getActionByte(), (byte) ma.getActionByte());
+        return RobotAction.createRobotAction(builder, (byte) ma.getActionByte(), (byte) ca.getActionByte());
     }
 
     // End episode after some reward has been acheived or maxtimesteps has been reached
