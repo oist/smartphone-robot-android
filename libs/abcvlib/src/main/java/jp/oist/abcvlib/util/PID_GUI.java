@@ -1,4 +1,4 @@
-package jp.oist.abcvlib.pidtransfer_transmitter;
+package jp.oist.abcvlib.util;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -17,8 +17,8 @@ import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 
+import jp.oist.abcvlib.core.R;
 import jp.oist.abcvlib.tests.BalancePIDController;
-import jp.oist.abcvlib.util.ErrorHandler;
 
 /**
  * A simple {@link Fragment} subclass.
