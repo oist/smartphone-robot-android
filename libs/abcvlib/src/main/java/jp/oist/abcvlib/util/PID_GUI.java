@@ -67,7 +67,7 @@ public class PID_GUI extends Fragment{
         super.onCreate(savedInstanceState);
     }
 
-    private void updatePID(){
+    public void updatePID(){
         try {
             balancePIDController.setPID(p_tilt_.getValue(),
                     0,
