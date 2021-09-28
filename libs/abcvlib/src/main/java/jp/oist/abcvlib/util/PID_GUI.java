@@ -1,19 +1,12 @@
 package jp.oist.abcvlib.pidtransfer_transmitter;
 
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
-
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 
-import com.google.android.material.slider.LabelFormatter;
+import androidx.fragment.app.Fragment;
+
 import com.google.android.material.slider.Slider;
 
 import org.json.JSONException;
@@ -21,13 +14,10 @@ import org.json.JSONObject;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Map;
-import java.util.Objects;
 
-import jp.oist.abcvlib.core.outputs.Outputs;
+import jp.oist.abcvlib.tests.BalancePIDController;
 import jp.oist.abcvlib.util.ErrorHandler;
 
 /**
@@ -35,7 +25,7 @@ import jp.oist.abcvlib.util.ErrorHandler;
  * Use the {@link PID_GUI#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class PID_GUI extends Fragment {
+public class PID_GUI extends Fragment{
 
     Slider setPoint_;
     Slider p_tilt_;
@@ -43,32 +33,33 @@ public class PID_GUI extends Fragment {
     Slider p_wheel_;
     Slider expWeight_;
     Slider maxAbsTilt_;
+    private BalancePIDController balancePIDController;
+    private final Slider.OnChangeListener sliderChangeListener = (slider, value, fromUser) -> updatePID();
 
     private String TAG = this.getClass().toString();
 
     Map<String, Slider> controls = new HashMap<String, Slider>();
 
-    private Outputs outputs;
     private boolean isQRCodeDisplayed = false;
 
     public PID_GUI() {
         // Required empty public constructor
     }
 
-    public PID_GUI(Outputs outputs) {
-        this.outputs = outputs;
+    public PID_GUI(BalancePIDController balancePIDController) {
+        this.balancePIDController = balancePIDController;
     }
 
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @param outputs Outputs for PID controller
+     * @param balancePIDController
      * @return A new instance of fragment pid_gui.
      */
     // TODO: Rename and change types and number of parameters
-    public static PID_GUI newInstance(Outputs outputs) {
-        return new PID_GUI(outputs);
+    public static PID_GUI newInstance(BalancePIDController balancePIDController) {
+        return new PID_GUI(balancePIDController);
     }
 
     @Override
@@ -76,22 +67,19 @@ public class PID_GUI extends Fragment {
         super.onCreate(savedInstanceState);
     }
 
-    private final Slider.OnChangeListener sliderChangeListener = new Slider.OnChangeListener() {
-        @Override
-        public void onValueChange(@NonNull Slider slider, float value, boolean fromUser) {
-            try {
-                outputs.balancePIDController.setPID(p_tilt_.getValue(),
-                        0,
-                        d_tilt_.getValue(),
-                        setPoint_.getValue(),
-                        p_wheel_.getValue(),
-                        expWeight_.getValue(),
-                        maxAbsTilt_.getValue());
-            } catch (InterruptedException e) {
-                ErrorHandler.eLog(TAG, "Error when getting gui slider values", e, true);
-            }
+    private void updatePID(){
+        try {
+            balancePIDController.setPID(p_tilt_.getValue(),
+                    0,
+                    d_tilt_.getValue(),
+                    setPoint_.getValue(),
+                    p_wheel_.getValue(),
+                    expWeight_.getValue(),
+                    maxAbsTilt_.getValue());
+        } catch (InterruptedException e) {
+            ErrorHandler.eLog(TAG, "Error when getting slider gui values", e, true);
         }
-    };
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
