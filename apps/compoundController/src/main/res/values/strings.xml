@@ -6,4 +6,5 @@
     <string name="speed_p">Wheel Speed P</string>
     <string name="expWeight">Exponential Weight</string>
     <string name="maximum_absolute_tilt_angle">Maximum Absolute Tilt Angle</string>
+    <string name="start">Start</string>
 </resources>
