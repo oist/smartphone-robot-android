@@ -16,7 +16,7 @@ import jp.oist.abcvlib.core.inputs.PublisherManager;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.phone.OrientationData;
 import jp.oist.abcvlib.tests.BalancePIDController;
-import jp.oist.abcvlib.util.PID_GUI;
+import jp.oist.abcvlib.fragments.PidGuiFragament;
 
 /**
  * Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors
@@ -28,7 +28,7 @@ import jp.oist.abcvlib.util.PID_GUI;
 public class MainActivity extends AbcvlibActivity implements IOReadyListener {
 
     private BalancePIDController balancePIDController;
-    private PID_GUI pid_gui;
+    private PidGuiFragament pidGuiFragament;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,17 +45,17 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
     }
 
     public void displayPID_GUI(){
-        pid_gui = PID_GUI.newInstance(balancePIDController);
+        pidGuiFragament = PidGuiFragament.newInstance(balancePIDController);
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.main_fragment, pid_gui).commit();
+        fragmentTransaction.replace(R.id.main_fragment, pidGuiFragament).commit();
     }
 
     public void buttonClick(View view) {
         Button button = (Button) view;
         if (button.getText().equals("Start")){
             // Sets initial values rather than wait for slider change
-            pid_gui.updatePID();
+            pidGuiFragament.updatePID();
             button.setText("Stop");
             balancePIDController.startController();
 

@@ -1,4 +1,4 @@
-package jp.oist.abcvlib.pidtransfer_transmitter;
+package jp.oist.abcvlib.fragments;
 
 import android.graphics.Bitmap;
 import android.graphics.Point;
@@ -7,7 +7,6 @@ import android.os.Bundle;
 import androidx.fragment.app.Fragment;
 
 import android.util.Log;
-import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,41 +22,20 @@ import com.google.zxing.common.BitMatrix;
 import java.util.EnumMap;
 import java.util.Map;
 
+import jp.oist.abcvlib.core.R;
 import jp.oist.abcvlib.util.ErrorHandler;
-import jp.oist.abcvlib.util.PID_GUI;
 
 import static android.graphics.Color.BLACK;
 import static android.graphics.Color.WHITE;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link QRCodeDisplay#newInstance} factory method to
- * create an instance of this fragment.
- */
-public class QRCodeDisplay extends Fragment {
+public class QRCodeDisplayFragment extends Fragment {
 
-    private ImageView qrCode;
-    private PID_GUI pid_gui;
     private final String TAG = this.getClass().toString();
+    private final String data2Encode;
 
-    public QRCodeDisplay() {
-        // Required empty public constructor
-    }
-
-    public QRCodeDisplay(PID_GUI pid_gui) {
-        this.pid_gui = pid_gui;
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @return A new instance of fragment QRCodeDisplay.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static QRCodeDisplay newInstance(PID_GUI pid_gui) {
-        QRCodeDisplay fragment = new QRCodeDisplay(pid_gui);
-        return fragment;
+    public QRCodeDisplayFragment(String data2Encode) {
+        super(R.layout.q_r_code_display);
+        this.data2Encode = data2Encode;
     }
 
     @Override
@@ -68,47 +46,35 @@ public class QRCodeDisplay extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_q_r_code_display, container, false);
-        qrCode = rootView.findViewById(R.id.qrView);
-
+        View rootView = inflater.inflate(R.layout.q_r_code_display, container, false);
+        ImageView qrCode = rootView.findViewById(R.id.qrImage);
         WindowManager wm = requireActivity().getWindowManager();
-        Display display = wm.getDefaultDisplay();
         Point size = new Point();
-        display.getSize(size);
+        wm.getDefaultDisplay().getSize(size);
         int width = size.x;
         int height = size.y;
-
-        String barcode_data = pid_gui.getControls();
-//        barcode_data = "123";
-
-        // barcode image
-        Bitmap bitmap = null;
-
         try {
-            //Todo get actual screen size to enlarge this
-            bitmap = encodeAsBitmap(barcode_data, BarcodeFormat.QR_CODE, width, width);
+            Bitmap bitmap = encodeAsBitmap(data2Encode, width, height);
             qrCode.setImageBitmap(bitmap);
 
         } catch (WriterException e) {
-            ErrorHandler.eLog(TAG, "Error", e, true);
+            ErrorHandler.eLog(TAG, "encodeAsBitmap threw WriterException", e, true);
         }
-
         return rootView;
     }
 
-    Bitmap encodeAsBitmap(String contents, BarcodeFormat format, int img_width, int img_height) throws WriterException {
-        String contentsToEncode = contents;
-        if (contentsToEncode == null) {
+    Bitmap encodeAsBitmap(String contents, int img_width, int img_height) throws WriterException {
+        if (contents == null) {
             return null;
         }
-        Map<EncodeHintType, Object> hints = null;
+        Map<EncodeHintType, Object> hints;
         String encoding = "UTF-8";
-        hints = new EnumMap<EncodeHintType, Object>(EncodeHintType.class);
+        hints = new EnumMap<>(EncodeHintType.class);
         hints.put(EncodeHintType.CHARACTER_SET, encoding);
         MultiFormatWriter writer = new MultiFormatWriter();
         BitMatrix result;
         try {
-            result = writer.encode(contentsToEncode, format, img_width, img_height, hints);
+            result = writer.encode(contents, BarcodeFormat.QR_CODE, img_width, img_height, hints);
         } catch (IllegalArgumentException iae) {
             Log.d(TAG, "Unsupported format", iae);
             return null;

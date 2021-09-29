@@ -13,7 +13,7 @@
         android:layout_gravity="center"
         android:name="jp.oist.abcvlib.pidtransfer_transmitter.PID_GUI"
         android:id="@+id/main_fragment"
-        tools:layout="@layout/fragment_pid_gui"/>
+        tools:layout="@layout/pid_gui"/>
 
     <Button
         android:layout_width="100dp"

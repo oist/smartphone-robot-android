@@ -1,4 +1,4 @@
-package jp.oist.abcvlib.util;
+package jp.oist.abcvlib.fragments;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -19,13 +19,14 @@ import java.util.Map;
 
 import jp.oist.abcvlib.core.R;
 import jp.oist.abcvlib.tests.BalancePIDController;
+import jp.oist.abcvlib.util.ErrorHandler;
 
 /**
  * A simple {@link Fragment} subclass.
- * Use the {@link PID_GUI#newInstance} factory method to
+ * Use the {@link PidGuiFragament#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class PID_GUI extends Fragment{
+public class PidGuiFragament extends Fragment{
 
     Slider setPoint_;
     Slider p_tilt_;
@@ -42,11 +43,11 @@ public class PID_GUI extends Fragment{
 
     private boolean isQRCodeDisplayed = false;
 
-    public PID_GUI() {
+    public PidGuiFragament() {
         // Required empty public constructor
     }
 
-    public PID_GUI(BalancePIDController balancePIDController) {
+    public PidGuiFragament(BalancePIDController balancePIDController) {
         this.balancePIDController = balancePIDController;
     }
 
@@ -58,8 +59,8 @@ public class PID_GUI extends Fragment{
      * @return A new instance of fragment pid_gui.
      */
     // TODO: Rename and change types and number of parameters
-    public static PID_GUI newInstance(BalancePIDController balancePIDController) {
-        return new PID_GUI(balancePIDController);
+    public static PidGuiFragament newInstance(BalancePIDController balancePIDController) {
+        return new PidGuiFragament(balancePIDController);
     }
 
     @Override
@@ -84,7 +85,7 @@ public class PID_GUI extends Fragment{
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        final View rootView = inflater.inflate(R.layout.fragment_pid_gui, container, false);
+        final View rootView = inflater.inflate(R.layout.pid_gui, container, false);
 
         controls.put("sp", setPoint_ = rootView.findViewById(R.id.seekBarSetPoint));
         controls.put("pt", p_tilt_ = rootView.findViewById(R.id.seekBarTiltP));

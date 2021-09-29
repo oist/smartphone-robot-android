@@ -30,7 +30,8 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
     private Button showQRCode;
     private boolean isQRDisplayed = false;
     private PID_GUI pid_view;
-    private BalancePIDController balancePIDController;
+    private FragmentManager fragmentManager;
+    private CameraPreviewFragment cameraPreviewFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
