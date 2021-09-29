@@ -4,11 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000"
-    tools:context=".QRCodeDisplay">
+    android:background="#000000">
 
     <ImageView
-        android:id="@+id/qrView"
+        android:id="@+id/qrImage"
         android:layout_width="match_parent"
         android:contentDescription="@string/qr_code_content"
         app:layout_constraintBottom_toBottomOf="parent"
