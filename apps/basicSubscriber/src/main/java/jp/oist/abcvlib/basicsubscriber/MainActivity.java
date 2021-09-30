@@ -160,7 +160,7 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener,
      * @param webpImage byte array representing bitmap
      */
     @Override
-    public void onImageDataUpdate(long timestamp, int width, int height, Bitmap bitmap, byte[] webpImage) {
+    public void onImageDataUpdate(long timestamp, int width, int height, Bitmap bitmap, byte[] webpImage, String qrDecodedData) {
 //        Log.i(TAG, "Image Data Update: Timestamp=" + timestamp + " dims=" + width + " x "
 //                + height);
         double frameRate = 1.0 / ((System.nanoTime() - lastFrameTime) / 1000000000.0);

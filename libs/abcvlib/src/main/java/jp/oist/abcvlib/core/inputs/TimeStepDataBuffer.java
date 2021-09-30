@@ -82,7 +82,7 @@ public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubsc
     }
 
     @Override
-    public void onImageDataUpdate(long timestamp, int width, int height, Bitmap bitmap, byte[] webpImage) {
+    public void onImageDataUpdate(long timestamp, int width, int height, Bitmap bitmap, byte[] webpImage, String qrDecodedData) {
         getWriteData().getImageData().add(timestamp, width, height, bitmap, webpImage);
     }
 

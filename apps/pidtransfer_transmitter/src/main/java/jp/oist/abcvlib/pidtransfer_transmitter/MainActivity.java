@@ -97,4 +97,11 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
             showQRCode.setText(R.string.qr_button_show);
         }
     };
+
+    @Override
+    public void onImageDataUpdate(long timestamp, int width, int height, Bitmap bitmap, byte[] webpImage, String qrDecodedData) {
+        if (!qrDecodedData.equals("")){
+            Log.i("qrcode", "QR Code Found and decoded: " + qrDecodedData);
+        }
+    }
 }
