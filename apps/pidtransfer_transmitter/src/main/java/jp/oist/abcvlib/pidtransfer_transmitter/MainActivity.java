@@ -1,21 +1,10 @@
 package jp.oist.abcvlib.pidtransfer_transmitter;
 
-import android.content.Intent;
 import android.graphics.Bitmap;
-import android.hardware.camera2.CameraManager;
-import android.hardware.camera2.CameraMetadata;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-
-import androidx.camera.core.CameraSelector;
-
-import com.google.zxing.integration.android.IntentIntegrator;
-import com.google.zxing.integration.android.IntentResult;
-import com.google.zxing.qrcode.QRCodeReader;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.AbcvlibLooper;
@@ -31,12 +20,12 @@ import jp.oist.abcvlib.util.QRCode;
  * Runs PID controller locally on Android, but takes PID parameters from python GUI
  * @author Christopher Buckley https://github.com/topherbuckley
  */
-public class MainActivity extends AbcvlibActivity implements IOReadyListener {
+public class MainActivity extends AbcvlibActivity implements IOReadyListener, ImageDataSubscriber {
 
     private Button showQRCode;
     private boolean isQRDisplayed = false;
     private QRCode qrCode;
-    private QRCodeReader qrCodeReader;
+    private ImageData imageData;
 
     public MainActivity() {
     }
@@ -57,28 +46,16 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
 
         // create a new QRCode object with input args point to the FragmentManager and your layout fragment where you want to generate the qrcode image.
         qrCode = new QRCode(getSupportFragmentManager(), R.id.qrFragmentView);
-        qrCodeReader = new QRCodeReader();
-
-        IntentIntegrator integrator = new IntentIntegrator(this);
-        integrator.initiateScan(1);
-    }
-
-    public void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        IntentResult scanResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, intent);
-        if (scanResult != null) {
-            // handle scan result
-        }
-        // else continue with any other code you need in the method
-        super.onActivityResult(requestCode, resultCode, intent);
-
     }
 
     @Override
     public void onIOReady(AbcvlibLooper abcvlibLooper) {
         PublisherManager publisherManager = new PublisherManager();
-        new ImageData.Builder(this, publisherManager, this)
+        imageData = new ImageData.Builder(this, publisherManager, this)
                 .setPreviewView(findViewById(jp.oist.abcvlib.core.R.id.preview_view))
                 .build();
+        imageData.addSubscriber(this);
+        imageData.setQrcodescanning(true);
 
         publisherManager.initializePublishers();
         publisherManager.startPublishers();
@@ -90,11 +67,13 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
             qrCode.generate("Hello World!");
             showQRCode.setText(R.string.back_button_text);
             isQRDisplayed = true;
+            imageData.setQrcodescanning(false);
         } else {
             // removes the fragment that holds the last generated qrcode.
             qrCode.close();
             isQRDisplayed = false;
             showQRCode.setText(R.string.qr_button_show);
+            imageData.setQrcodescanning(true);
         }
     };
 
