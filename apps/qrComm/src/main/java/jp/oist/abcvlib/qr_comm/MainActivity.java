@@ -1,4 +1,4 @@
-package jp.oist.abcvlib.pidtransfer_transmitter;
+package jp.oist.abcvlib.qr_comm;
 
 import android.graphics.Bitmap;
 import android.os.Bundle;

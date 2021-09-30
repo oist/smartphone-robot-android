@@ -11,8 +11,7 @@ def apps = [
         'pidbalancer',
         'setPath',
         'compoundController',
-        "pidtransfer_transmitter",
-//        "pidtransfer_receiver",
+        "qrComm",
         "serverLearning",
         "serviceTest",
 ]
