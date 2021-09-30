@@ -1,8 +1,18 @@
 package jp.oist.abcvlib.pidtransfer_transmitter;
 
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+
+import androidx.camera.core.CameraSelector;
+
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
+import com.google.zxing.qrcode.QRCodeReader;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -12,6 +22,7 @@ import jp.oist.abcvlib.core.AbcvlibLooper;
 import jp.oist.abcvlib.core.IOReadyListener;
 import jp.oist.abcvlib.core.inputs.PublisherManager;
 import jp.oist.abcvlib.core.inputs.phone.ImageData;
+import jp.oist.abcvlib.core.inputs.phone.ImageDataSubscriber;
 import jp.oist.abcvlib.util.QRCode;
 
 /**
@@ -25,6 +36,7 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
     private Button showQRCode;
     private boolean isQRDisplayed = false;
     private QRCode qrCode;
+    private QRCodeReader qrCodeReader;
 
     public MainActivity() {
     }
@@ -45,13 +57,29 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
 
         // create a new QRCode object with input args point to the FragmentManager and your layout fragment where you want to generate the qrcode image.
         qrCode = new QRCode(getSupportFragmentManager(), R.id.qrFragmentView);
+        qrCodeReader = new QRCodeReader();
+
+        IntentIntegrator integrator = new IntentIntegrator(this);
+        integrator.initiateScan(1);
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        IntentResult scanResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, intent);
+        if (scanResult != null) {
+            // handle scan result
+        }
+        // else continue with any other code you need in the method
+        super.onActivityResult(requestCode, resultCode, intent);
+
     }
 
     @Override
     public void onIOReady(AbcvlibLooper abcvlibLooper) {
         PublisherManager publisherManager = new PublisherManager();
         new ImageData.Builder(this, publisherManager, this)
-                .setPreviewView(findViewById(jp.oist.abcvlib.core.R.id.preview_view)).build();
+                .setPreviewView(findViewById(jp.oist.abcvlib.core.R.id.preview_view))
+                .build();
+
         publisherManager.initializePublishers();
         publisherManager.startPublishers();
     }
