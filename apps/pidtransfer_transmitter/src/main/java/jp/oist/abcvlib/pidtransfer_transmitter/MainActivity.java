@@ -4,15 +4,15 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
-import androidx.fragment.app.FragmentManager;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.AbcvlibLooper;
 import jp.oist.abcvlib.core.IOReadyListener;
 import jp.oist.abcvlib.core.inputs.PublisherManager;
 import jp.oist.abcvlib.core.inputs.phone.ImageData;
-import jp.oist.abcvlib.fragments.CameraPreviewFragment;
-import jp.oist.abcvlib.fragments.QRCodeDisplayFragment;
+import jp.oist.abcvlib.util.QRCode;
 
 /**
  * Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors
@@ -24,8 +24,10 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
 
     private Button showQRCode;
     private boolean isQRDisplayed = false;
-    private FragmentManager fragmentManager;
-    private CameraPreviewFragment cameraPreviewFragment;
+    private QRCode qrCode;
+
+    public MainActivity() {
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,10 +40,11 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
         // ID within the R class
         setContentView(R.layout.activity_main);
 
-        fragmentManager = getSupportFragmentManager();
-
         showQRCode = findViewById(R.id.show_qr_button);
         showQRCode.setOnClickListener(qrCodeButtonClickListener);
+
+        // create a new QRCode object with input args point to the FragmentManager and your layout fragment where you want to generate the qrcode image.
+        qrCode = new QRCode(getSupportFragmentManager(), R.id.qrFragmentView);
     }
 
     @Override
@@ -55,16 +58,13 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
 
     private final View.OnClickListener qrCodeButtonClickListener = v -> {
         if (!isQRDisplayed) {
-            QRCodeDisplayFragment qrCodeDisplayFragment = new QRCodeDisplayFragment("Hello World!");
-            fragmentManager.beginTransaction()
-                    .replace(R.id.qrFragmentView, qrCodeDisplayFragment)
-                    .setReorderingAllowed(true)
-                    .addToBackStack("qrCode")
-                    .commit();
+            // generate new qrcode using the string you want to encode. Use JSONObject.toString for more complex data sets.
+            qrCode.generate("Hello World!");
             showQRCode.setText(R.string.back_button_text);
             isQRDisplayed = true;
         } else {
-            fragmentManager.popBackStack();
+            // removes the fragment that holds the last generated qrcode.
+            qrCode.close();
             isQRDisplayed = false;
             showQRCode.setText(R.string.qr_button_show);
         }
