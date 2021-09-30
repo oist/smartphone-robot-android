@@ -64,6 +64,7 @@ public class ImageData extends Publisher<ImageDataSubscriber> implements ImageAn
     private final String TAG = getClass().getName();
     private ExecutorService imageExecutor;
     private final CountDownLatch countDownLatch = new CountDownLatch(2); // Waits for both analysis and preview to be running before sending a signal that it is ready
+    private boolean qrcodescanning = false;
 
     /*
      * @param previewView: e.g. from your Activity findViewById(R.id.camera_x_preview)
@@ -177,12 +178,17 @@ public class ImageData extends Publisher<ImageDataSubscriber> implements ImageAn
     }
 
     private void setDefaultImageAnalysis(){
+
         imageAnalysis =
                 new ImageAnalysis.Builder()
-                        .setTargetResolution(new Size(10, 10))
+                        .setTargetResolution(new Size(400, 300))
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .setImageQueueDepth(20)
                         .build();
+    }
+
+    public void setQrcodescanning(boolean bool){
+        qrcodescanning = bool;
     }
 
     @Override
