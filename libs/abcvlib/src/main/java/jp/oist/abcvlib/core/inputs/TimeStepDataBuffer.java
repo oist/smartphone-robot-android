@@ -4,6 +4,12 @@ import android.graphics.Bitmap;
 import android.media.AudioTimestamp;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataSubscriber;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataSubscriber;
@@ -12,6 +18,8 @@ import jp.oist.abcvlib.core.inputs.phone.MicrophoneDataSubscriber;
 import jp.oist.abcvlib.core.inputs.phone.OrientationDataSubscriber;
 import jp.oist.abcvlib.core.learning.CommAction;
 import jp.oist.abcvlib.core.learning.MotionAction;
+import jp.oist.abcvlib.util.ImageOps;
+import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 
 public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubscriber,
         ImageDataSubscriber, MicrophoneDataSubscriber, OrientationDataSubscriber {
@@ -22,6 +30,8 @@ public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubsc
     private final TimeStepData[] buffer;
     private TimeStepData writeData;
     private TimeStepData readData;
+    public final Collection<Future<?>> imgCompressionFutures = new LinkedList<Future<?>>();
+    private final ExecutorService imageCompressionExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "ImageCompression"));
 
     public TimeStepDataBuffer(int bufferLength){
         if (bufferLength <= 1){
@@ -85,15 +95,7 @@ public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubsc
     public void onImageDataUpdate(long timestamp, int width, int height, Bitmap bitmap, String qrDecodedData) {
         getWriteData().getImageData().add(timestamp, width, height, bitmap, null);
         // Handler to compress and put images into buffer
-        int timestep = writeIndex;
-        // Find the correct TimeStep based on timestamp
-        Arrays.stream(buffer[timestep].imageData.getImages().toArray(new TimeStepData.ImageData.SingleImage[0]))
-                .filter(singleImage -> singleImage.timestamp == timestamp)
-                .collect(Collectors.toList());
-        ByteArrayOutputStream webpByteArrayOutputStream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.WEBP, 0, webpByteArrayOutputStream);
-        byte[] webpBytes = webpByteArrayOutputStream.toByteArray();
-        Bitmap webpBitMap = ImageOps.generateBitmap(webpBytes);
+        imgCompressionFutures.add(imageCompressionExecutor.submit(() -> ImageOps.addCompressedImage2Buffer(writeIndex, timestamp, bitmap, buffer)));
     }
 
     @Override
@@ -378,7 +380,7 @@ public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubsc
                 private final int width;
                 private final int height;
                 private final Bitmap bitmap;
-                private final byte[] webpImage;
+                private byte[] webpImage;
 
                 public SingleImage(long timestamp, int width, int height, Bitmap bitmap,
                                    byte[] webpImage){
@@ -407,6 +409,10 @@ public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubsc
 
                 public long getTimestamp() {
                     return timestamp;
+                }
+
+                public synchronized void setWebpImage(byte[] imageBytes){
+                    this.webpImage = imageBytes;
                 }
             }
         }

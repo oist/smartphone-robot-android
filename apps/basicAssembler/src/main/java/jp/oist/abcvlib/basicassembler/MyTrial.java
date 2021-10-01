@@ -5,6 +5,7 @@ import android.os.Handler;
 
 import java.io.IOException;
 import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.ExecutionException;
 
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 import jp.oist.abcvlib.core.learning.ActionSpace;
@@ -59,7 +60,7 @@ public class MyTrial extends Trial implements ActionSelector{
     }
 
     @Override
-    protected void endEpisode() throws BrokenBarrierException, InterruptedException, IOException, RecordingWithoutTimeStepBufferException {
+    protected void endEpisode() throws BrokenBarrierException, InterruptedException, IOException, RecordingWithoutTimeStepBufferException, ExecutionException {
         // Do stuff here
         super.endEpisode();
     }

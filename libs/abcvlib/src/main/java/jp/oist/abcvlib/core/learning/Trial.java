@@ -10,6 +10,8 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -110,7 +112,7 @@ public class Trial implements Runnable, ActionSelector, SocketListener {
                     startEpisode();
                     resumePublishers();
                 }
-            } catch (BrokenBarrierException | InterruptedException | IOException | RecordingWithoutTimeStepBufferException e) {
+            } catch (BrokenBarrierException | InterruptedException | IOException | RecordingWithoutTimeStepBufferException | ExecutionException e) {
                 ErrorHandler.eLog(TAG, "Error when trying to end episode or trail", e, true);
             }
         }
@@ -127,9 +129,12 @@ public class Trial implements Runnable, ActionSelector, SocketListener {
     }
 
     // End episode after some reward has been acheived or maxtimesteps has been reached
-    protected void endEpisode() throws BrokenBarrierException, InterruptedException, IOException, RecordingWithoutTimeStepBufferException {
+    protected void endEpisode() throws BrokenBarrierException, InterruptedException, IOException, RecordingWithoutTimeStepBufferException, ExecutionException {
 
         Log.d("Episode", "End of episode:" + getEpisodeCount());
+        for (Future<?> future:timeStepDataBuffer.imgCompressionFutures){
+            future.get();
+        }
         flatbufferAssembler.endEpisode();
         pausePublishers();
         setTimeStep(0);
