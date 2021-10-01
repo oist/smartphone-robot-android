@@ -171,7 +171,7 @@ public class ImageData extends Publisher<ImageDataSubscriber> implements ImageAn
             }
 
             for (ImageDataSubscriber subscriber:subscribers){
-                subscriber.onImageDataUpdate(timestamp, width, height, webpBitMap, webpBytes, qrDecodedData);
+                subscriber.onImageDataUpdate(timestamp, width, height, webpBitMap, qrDecodedData);
             }
         }
         imageProxy.close();

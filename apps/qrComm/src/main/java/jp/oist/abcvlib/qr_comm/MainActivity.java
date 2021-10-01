@@ -78,7 +78,7 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener, Im
     };
 
     @Override
-    public void onImageDataUpdate(long timestamp, int width, int height, Bitmap bitmap, byte[] webpImage, String qrDecodedData) {
+    public void onImageDataUpdate(long timestamp, int width, int height, Bitmap bitmap, String qrDecodedData) {
         if (!qrDecodedData.equals("")){
             Log.i("qrcode", "QR Code Found and decoded: " + qrDecodedData);
         }

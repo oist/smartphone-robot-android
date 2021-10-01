@@ -12,7 +12,6 @@ public interface ImageDataSubscriber extends Subscriber {
      * @param width in pixels
      * @param height in pixels
      * @param bitmap compressed bitmap object
-     * @param webpImage byte array representing bitmap
      */
-    void onImageDataUpdate(long timestamp, int width, int height, Bitmap bitmap, byte[] webpImage, String qrDecodedData);
+    void onImageDataUpdate(long timestamp, int width, int height, Bitmap bitmap, String qrDecodedData);
 }
