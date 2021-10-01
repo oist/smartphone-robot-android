@@ -2,6 +2,7 @@ package jp.oist.abcvlib.core.inputs;
 
 import android.graphics.Bitmap;
 import android.media.AudioTimestamp;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,13 +18,14 @@ import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataSubscriber;
 import jp.oist.abcvlib.core.inputs.phone.ImageDataSubscriber;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneDataSubscriber;
 import jp.oist.abcvlib.core.inputs.phone.OrientationDataSubscriber;
+import jp.oist.abcvlib.core.inputs.phone.QRCodeDataSubscriber;
 import jp.oist.abcvlib.core.learning.CommAction;
 import jp.oist.abcvlib.core.learning.MotionAction;
 import jp.oist.abcvlib.util.ImageOps;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 
 public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubscriber,
-        ImageDataSubscriber, MicrophoneDataSubscriber, OrientationDataSubscriber {
+        ImageDataSubscriber, MicrophoneDataSubscriber, OrientationDataSubscriber, QRCodeDataSubscriber {
 
     private final int bufferLength;
     private int writeIndex;
@@ -56,8 +58,10 @@ public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubsc
 
     public synchronized void nextTimeStep(){
         // Keeps track of how many image compression threads have yet to finish per timestep
-        imgCompFuturesEpisode.add(imgCompFuturesTimeStep);
-        imgCompFuturesTimeStep.clear();
+        synchronized (this){
+            imgCompFuturesEpisode.add(imgCompFuturesTimeStep);
+            imgCompFuturesTimeStep.clear();
+        }
 
         // Update index for read and write pointer
         writeIndex = ((writeIndex + 1) % bufferLength);
@@ -107,7 +111,9 @@ public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubsc
     public void onImageDataUpdate(long timestamp, int width, int height, Bitmap bitmap, String qrDecodedData) {
         getWriteData().getImageData().add(timestamp, width, height, bitmap, null);
         // Handler to compress and put images into buffer
-        imgCompFuturesTimeStep.add(imageCompressionExecutor.submit(() -> ImageOps.addCompressedImage2Buffer(writeIndex, timestamp, bitmap, buffer)));
+        synchronized (imgCompFuturesTimeStep){
+            imgCompFuturesTimeStep.add(imageCompressionExecutor.submit(() -> ImageOps.addCompressedImage2Buffer(writeIndex, timestamp, bitmap, buffer)));
+        }
     }
 
     @Override
@@ -119,6 +125,11 @@ public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubsc
     @Override
     public void onOrientationUpdate(long timestamp, double thetaRad, double angularVelocityRad) {
         getWriteData().getOrientationData().put(timestamp, thetaRad, angularVelocityRad);
+    }
+
+    @Override
+    public void onQRCodeDetected(String qrDataDecoded) {
+        Log.i("qrcode", "Qrcode detected: " + qrDataDecoded);
     }
 
     public static class TimeStepData{

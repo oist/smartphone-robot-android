@@ -79,8 +79,10 @@ public class FlatbufferAssembler {
 
     public void addTimeStep(int timestep) throws ExecutionException, InterruptedException {
         // Wait for image compression to finish before trying to write to flatbuffer
-        for (Future<?> future:timeStepDataBuffer.imgCompFuturesTimeStep){
-            future.get();
+        synchronized (timeStepDataBuffer.imgCompFuturesTimeStep){
+            for (Future<?> future:timeStepDataBuffer.imgCompFuturesTimeStep){
+                future.get();
+            }
         }
         flatbufferWriteFutures.add(flatbufferWriter.submit(() -> {
             TimeStepDataBuffer.TimeStepData timeStepData = getTimeStepDataBuffer().getTimeStepData(timestep);

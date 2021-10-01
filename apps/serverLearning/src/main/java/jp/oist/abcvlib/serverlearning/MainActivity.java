@@ -1,6 +1,7 @@
 package jp.oist.abcvlib.serverlearning;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import java.net.InetSocketAddress;
 
@@ -14,6 +15,8 @@ import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.phone.ImageData;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
 import jp.oist.abcvlib.core.inputs.phone.OrientationData;
+import jp.oist.abcvlib.core.inputs.phone.QRCodeData;
+import jp.oist.abcvlib.core.inputs.phone.QRCodeDataSubscriber;
 import jp.oist.abcvlib.core.learning.ActionSpace;
 import jp.oist.abcvlib.core.learning.CommActionSpace;
 import jp.oist.abcvlib.core.learning.MetaParameters;
@@ -21,7 +24,7 @@ import jp.oist.abcvlib.core.learning.MotionActionSpace;
 import jp.oist.abcvlib.core.learning.StateSpace;
 import jp.oist.abcvlib.util.FileOps;
 
-public class MainActivity extends AbcvlibActivity implements IOReadyListener{
+public class MainActivity extends AbcvlibActivity implements IOReadyListener {
 
     InetSocketAddress inetSocketAddress = new InetSocketAddress(BuildConfig.HOST, BuildConfig.PORT);
     @SuppressWarnings("unused")
@@ -93,6 +96,9 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener{
         ImageData imageData = new ImageData.Builder(this, publisherManager, this)
                 .setPreviewView(findViewById(R.id.camera_x_preview)).build();
         imageData.addSubscriber(timeStepDataBuffer);
+
+        QRCodeData qrCodeData = new QRCodeData.Builder(this, publisherManager, this).build();
+        qrCodeData.addSubscriber(timeStepDataBuffer);
 
         StateSpace stateSpace = new StateSpace(publisherManager);
         /*------------------------------------------------------------------------------
