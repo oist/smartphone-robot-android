@@ -5,6 +5,7 @@ import android.media.AudioTimestamp;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
@@ -30,7 +31,8 @@ public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubsc
     private final TimeStepData[] buffer;
     private TimeStepData writeData;
     private TimeStepData readData;
-    public final Collection<Future<?>> imgCompressionFutures = new LinkedList<Future<?>>();
+    public final Collection<Future<?>> imgCompFuturesTimeStep = Collections.synchronizedList(new LinkedList<Future<?>>());
+    public final Collection<Collection<Future<?>>> imgCompFuturesEpisode = Collections.synchronizedList(new LinkedList<>());
     private final ExecutorService imageCompressionExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "ImageCompression"));
 
     public TimeStepDataBuffer(int bufferLength){
@@ -52,7 +54,11 @@ public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubsc
         readData = buffer[readIndex];
     }
 
-    public void nextTimeStep(){
+    public synchronized void nextTimeStep(){
+        // Keeps track of how many image compression threads have yet to finish per timestep
+        imgCompFuturesEpisode.add(imgCompFuturesTimeStep);
+        imgCompFuturesTimeStep.clear();
+
         // Update index for read and write pointer
         writeIndex = ((writeIndex + 1) % bufferLength);
         readIndex = ((readIndex + 1) % bufferLength);
@@ -68,6 +74,12 @@ public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubsc
     public synchronized TimeStepData getWriteData(){return writeData;}
 
     public synchronized TimeStepData getReadData(){return readData;}
+
+    public synchronized TimeStepData getTimeStepData(int timestep){
+        return buffer[timestep];
+    }
+
+    public synchronized  int getReadIndex(){return readIndex;}
 
     @Override
     public void onBatteryVoltageUpdate(double voltage, long timestamp) {
@@ -95,7 +107,7 @@ public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubsc
     public void onImageDataUpdate(long timestamp, int width, int height, Bitmap bitmap, String qrDecodedData) {
         getWriteData().getImageData().add(timestamp, width, height, bitmap, null);
         // Handler to compress and put images into buffer
-        imgCompressionFutures.add(imageCompressionExecutor.submit(() -> ImageOps.addCompressedImage2Buffer(writeIndex, timestamp, bitmap, buffer)));
+        imgCompFuturesTimeStep.add(imageCompressionExecutor.submit(() -> ImageOps.addCompressedImage2Buffer(writeIndex, timestamp, bitmap, buffer)));
     }
 
     @Override

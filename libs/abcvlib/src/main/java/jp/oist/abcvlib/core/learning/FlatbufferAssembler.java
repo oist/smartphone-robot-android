@@ -4,10 +4,19 @@ import android.util.Log;
 
 import com.google.flatbuffers.FlatBufferBuilder;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 import jp.oist.abcvlib.core.learning.fbclasses.AudioTimestamp;
@@ -39,6 +48,8 @@ public class FlatbufferAssembler {
     private final SocketListener socketListener;
     private ByteBuffer episode;
     private int robotID;
+    private ExecutorService flatbufferWriter = Executors.newSingleThreadExecutor(new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY, "flatbufferWriter"));
+    public final Collection<Future<?>> flatbufferWriteFutures = Collections.synchronizedList(new LinkedList<Future<?>>());
 
     public FlatbufferAssembler(Trial myTrial,
                                  InetSocketAddress inetSocketAddress,
@@ -66,31 +77,38 @@ public class FlatbufferAssembler {
         Log.v("flatbuff", "starting New Episode");
     }
 
-    public void addTimeStep(){
+    public void addTimeStep(int timestep) throws ExecutionException, InterruptedException {
+        // Wait for image compression to finish before trying to write to flatbuffer
+        for (Future<?> future:timeStepDataBuffer.imgCompFuturesTimeStep){
+            future.get();
+        }
+        flatbufferWriteFutures.add(flatbufferWriter.submit(() -> {
+            TimeStepDataBuffer.TimeStepData timeStepData = getTimeStepDataBuffer().getTimeStepData(timestep);
 
-        int _wheelData = addWheelData();
-        int _orientationData = addOrientationData();
-        int _chargerData = addChargerData();
-        int _batteryData = addBatteryData();
-        int _soundData = addSoundData();
-        int _imageData = addImageData();
-        int _actionData = addActionData();
+            int _wheelData = addWheelData(timeStepData);
+            int _orientationData = addOrientationData(timeStepData);
+            int _chargerData = addChargerData(timeStepData);
+            int _batteryData = addBatteryData(timeStepData);
+            int _soundData = addSoundData(timeStepData);
+            int _imageData = addImageData(timeStepData);
+            int _actionData = addActionData(timeStepData);
 
-        TimeStep.startTimeStep(builder);
-        TimeStep.addWheelData(builder, _wheelData);
-        TimeStep.addOrientationData(builder, _orientationData);
-        TimeStep.addChargerData(builder, _chargerData);
-        TimeStep.addBatteryData(builder, _batteryData);
-        TimeStep.addSoundData(builder, _soundData);
-        TimeStep.addImageData(builder, _imageData);
-        TimeStep.addActions(builder, _actionData);
-        int ts = TimeStep.endTimeStep(builder);
-        timeStepVector[myTrial.getTimeStep()]  = ts;
+            TimeStep.startTimeStep(builder);
+            TimeStep.addWheelData(builder, _wheelData);
+            TimeStep.addOrientationData(builder, _orientationData);
+            TimeStep.addChargerData(builder, _chargerData);
+            TimeStep.addBatteryData(builder, _batteryData);
+            TimeStep.addSoundData(builder, _soundData);
+            TimeStep.addImageData(builder, _imageData);
+            TimeStep.addActions(builder, _actionData);
+            int ts = TimeStep.endTimeStep(builder);
+            timeStepVector[timestep]  = ts;
+        }));
     }
 
-    private int addWheelData(){
+    private int addWheelData(TimeStepDataBuffer.TimeStepData timeStepData){
         TimeStepDataBuffer.TimeStepData.WheelData.IndividualWheelData leftData =
-                timeStepDataBuffer.getReadData().getWheelData().getLeft();
+                timeStepData.getWheelData().getLeft();
         Log.v("flatbuff", "STEP wheelCount TimeStamps Length: " +
                 leftData.getTimeStamps().length);
         int timeStampsLeft = IndividualWheelData.createTimestampsVector(builder,
@@ -109,7 +127,7 @@ public class FlatbufferAssembler {
                 countsLeft, distancesLeft, speedsLeftInstant, speedsLeftBuffered, speedsLeftExpAvg);
 
         TimeStepDataBuffer.TimeStepData.WheelData.IndividualWheelData rightData =
-                timeStepDataBuffer.getReadData().getWheelData().getRight();
+                timeStepData.getWheelData().getRight();
         Log.v("flatbuff", "STEP wheelCount TimeStamps Length: " +
                 rightData.getTimeStamps().length);
         int timeStampsRight = IndividualWheelData.createTimestampsVector(builder,
@@ -130,41 +148,41 @@ public class FlatbufferAssembler {
         return WheelData.createWheelData(builder, leftOffset, rightOffset);
     }
 
-    private int addOrientationData(){
+    private int addOrientationData(TimeStepDataBuffer.TimeStepData timeStepData){
         Log.v("flatbuff", "STEP orientationData TimeStamps Length: " +
-                timeStepDataBuffer.getReadData().getOrientationData().getTimeStamps().length);
+                timeStepData.getOrientationData().getTimeStamps().length);
         int ts = OrientationData.createTimestampsVector(builder,
-                timeStepDataBuffer.getReadData().getOrientationData().getTimeStamps());
+                timeStepData.getOrientationData().getTimeStamps());
         int tiltAngles = OrientationData.createTiltangleVector(builder,
-                timeStepDataBuffer.getReadData().getOrientationData().getTiltAngle());
+                timeStepData.getOrientationData().getTiltAngle());
         int tiltVelocityAngles = OrientationData.createTiltvelocityVector(builder,
-                timeStepDataBuffer.getReadData().getOrientationData().getAngularVelocity());
+                timeStepData.getOrientationData().getAngularVelocity());
         return OrientationData.createOrientationData(builder, ts, tiltAngles, tiltVelocityAngles);
     }
 
-    private int addChargerData(){
+    private int addChargerData(TimeStepDataBuffer.TimeStepData timeStepData){
         Log.v("flatbuff", "STEP chargerData TimeStamps Length: " +
-                timeStepDataBuffer.getReadData().getChargerData().getTimeStamps().length);
+                timeStepData.getChargerData().getTimeStamps().length);
         int ts = ChargerData.createTimestampsVector(builder,
-                timeStepDataBuffer.getReadData().getChargerData().getTimeStamps());
+                timeStepData.getChargerData().getTimeStamps());
         int voltage = ChargerData.createVoltageVector(builder,
-                timeStepDataBuffer.getReadData().getChargerData().getChargerVoltage());
+                timeStepData.getChargerData().getChargerVoltage());
         return ChargerData.createChargerData(builder, ts, voltage);
     }
 
-    private int addBatteryData(){
+    private int addBatteryData(TimeStepDataBuffer.TimeStepData timeStepData){
         Log.v("flatbuff", "STEP batteryData TimeStamps Length: " +
-                timeStepDataBuffer.getReadData().getBatteryData().getTimeStamps().length);
+                timeStepData.getBatteryData().getTimeStamps().length);
         int ts = BatteryData.createTimestampsVector(builder,
-                timeStepDataBuffer.getReadData().getBatteryData().getTimeStamps());
+                timeStepData.getBatteryData().getTimeStamps());
         int voltage = BatteryData.createVoltageVector(builder,
-                timeStepDataBuffer.getReadData().getBatteryData().getVoltage());
+                timeStepData.getBatteryData().getVoltage());
         return ChargerData.createChargerData(builder, ts, voltage);
     }
 
-    private int addSoundData(){
+    private int addSoundData(TimeStepDataBuffer.TimeStepData timeStepData){
 
-        TimeStepDataBuffer.TimeStepData.SoundData soundData = timeStepDataBuffer.getReadData().getSoundData();
+        TimeStepDataBuffer.TimeStepData.SoundData soundData = timeStepData.getSoundData();
 
         Log.v("flatbuff", "Sound Data TotalSamples: " +
                 soundData.getTotalSamples());
@@ -178,7 +196,7 @@ public class FlatbufferAssembler {
                 soundData.getStartTime().framePosition,
                 soundData.getStartTime().nanoTime);
         int _levels = SoundData.createLevelsVector(builder,
-                timeStepDataBuffer.getReadData().getSoundData().getLevels());
+                timeStepData.getSoundData().getLevels());
 
         SoundData.startSoundData(builder);
         SoundData.addStartTime(builder, _startTime);
@@ -191,8 +209,8 @@ public class FlatbufferAssembler {
         return SoundData.endSoundData(builder);
     }
 
-    private int addImageData(){
-        TimeStepDataBuffer.TimeStepData.ImageData imageData = timeStepDataBuffer.getReadData().getImageData();
+    private int addImageData(TimeStepDataBuffer.TimeStepData timeStepData){
+        TimeStepDataBuffer.TimeStepData.ImageData imageData = timeStepData.getImageData();
 
         // Offset for all image data to be returned from this method
         int _imageData = 0;
@@ -207,15 +225,20 @@ public class FlatbufferAssembler {
         for (int i = 0; i < numOfImages ; i++){
             TimeStepDataBuffer.TimeStepData.ImageData.SingleImage image = imageData.getImages().get(i);
 
-            int _webpImage = jp.oist.abcvlib.core.learning.fbclasses.Image.createWebpImageVector(builder, image.getWebpImage());
-            jp.oist.abcvlib.core.learning.fbclasses.Image.startImage(builder);
-            jp.oist.abcvlib.core.learning.fbclasses.Image.addWebpImage(builder, _webpImage);
-            jp.oist.abcvlib.core.learning.fbclasses.Image.addTimestamp(builder, image.getTimestamp());
-            jp.oist.abcvlib.core.learning.fbclasses.Image.addHeight(builder, image.getHeight());
-            jp.oist.abcvlib.core.learning.fbclasses.Image.addWidth(builder, image.getWidth());
-            int _image = jp.oist.abcvlib.core.learning.fbclasses.Image.endImage(builder);
+            try{
+                int _webpImage = jp.oist.abcvlib.core.learning.fbclasses.Image.createWebpImageVector(builder, image.getWebpImage());
+                jp.oist.abcvlib.core.learning.fbclasses.Image.startImage(builder);
+                jp.oist.abcvlib.core.learning.fbclasses.Image.addWebpImage(builder, _webpImage);
+                jp.oist.abcvlib.core.learning.fbclasses.Image.addTimestamp(builder, image.getTimestamp());
+                jp.oist.abcvlib.core.learning.fbclasses.Image.addHeight(builder, image.getHeight());
+                jp.oist.abcvlib.core.learning.fbclasses.Image.addWidth(builder, image.getWidth());
+                int _image = jp.oist.abcvlib.core.learning.fbclasses.Image.endImage(builder);
 
-            _images[i] = _image;
+                _images[i] = _image;
+            }catch (NullPointerException e){
+                Log.i("FlatbufferImages", "No images recorded");
+                e.printStackTrace();
+            }
         }
 
         int _images_offset = jp.oist.abcvlib.core.learning.fbclasses.ImageData.createImagesVector(builder, _images);
@@ -226,9 +249,9 @@ public class FlatbufferAssembler {
         return _imageData;
     }
 
-    private int addActionData(){
-        CommAction ca = timeStepDataBuffer.getReadData().getActions().getCommAction();
-        MotionAction ma = timeStepDataBuffer.getReadData().getActions().getMotionAction();
+    private int addActionData(TimeStepDataBuffer.TimeStepData timeStepData){
+        CommAction ca = timeStepData.getActions().getCommAction();
+        MotionAction ma = timeStepData.getActions().getMotionAction();
         Log.v("flatbuff", "CommAction : " + ca.getActionByte());
         Log.v("flatbuff", "MotionAction : " + ma.getActionName());
 

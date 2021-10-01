@@ -9,6 +9,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -91,6 +92,7 @@ public class Trial implements Runnable, ActionSelector, SocketListener {
 
     @Override
     public void run() {
+        incrementTimeStep();
         // Moves timeStepDataBuffer.writeData to readData and nulls out the writeData for new data
         timeStepDataBuffer.nextTimeStep();
 
@@ -98,9 +100,11 @@ public class Trial implements Runnable, ActionSelector, SocketListener {
         forward(timeStepDataBuffer.getReadData());
 
         // Add timestep and return int representing offset in flatbuffer
-        flatbufferAssembler.addTimeStep();
-
-        incrementTimeStep();
+        try {
+            flatbufferAssembler.addTimeStep(timeStepDataBuffer.getReadIndex());
+        } catch (ExecutionException | InterruptedException e) {
+            e.printStackTrace();
+        }
 
         // If some criteria met, end episode.
         if (isLastTimestep()){
@@ -130,11 +134,20 @@ public class Trial implements Runnable, ActionSelector, SocketListener {
 
     // End episode after some reward has been acheived or maxtimesteps has been reached
     protected void endEpisode() throws BrokenBarrierException, InterruptedException, IOException, RecordingWithoutTimeStepBufferException, ExecutionException {
-
         Log.d("Episode", "End of episode:" + getEpisodeCount());
-        for (Future<?> future:timeStepDataBuffer.imgCompressionFutures){
+        // Waits for all image compression to finish prior to finishing flatbuffer
+        long start = System.nanoTime();
+        for (Collection<Future<?>> timestepFutures: timeStepDataBuffer.imgCompFuturesEpisode){
+            for (Future<?> future:timestepFutures){
+                future.get();
+            }
+        }
+        // Waits for all timestep flatbuffer writes to finish prior to finishing flatbuffer
+        for (Future<?> future:flatbufferAssembler.flatbufferWriteFutures){
             future.get();
         }
+        long stop = System.nanoTime();
+        long timediff = stop - start;
         flatbufferAssembler.endEpisode();
         pausePublishers();
         setTimeStep(0);
