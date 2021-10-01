@@ -46,8 +46,8 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener{
         ------------------------------ Set MetaParameters ------------------------------
         --------------------------------------------------------------------------------
          */
-        TimeStepDataBuffer timeStepDataBuffer = new TimeStepDataBuffer(10);
-        MetaParameters metaParameters = new MetaParameters(this, 10, 1,
+        TimeStepDataBuffer timeStepDataBuffer = new TimeStepDataBuffer(200);
+        MetaParameters metaParameters = new MetaParameters(this, 50, 200,
                 100000, 1000, inetSocketAddress, timeStepDataBuffer, getOutputs(), 1);
 
         /*------------------------------------------------------------------------------
