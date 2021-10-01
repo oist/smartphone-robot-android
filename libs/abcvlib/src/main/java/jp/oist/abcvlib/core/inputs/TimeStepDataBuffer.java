@@ -357,19 +357,23 @@ public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubsc
             }
         }
 
-        public static class ImageData{
-            private final ArrayList<SingleImage> images = new ArrayList<>();
+        public static class ImageData extends Hashtable<Long, ImageData.SingleImage>{
 
             public void add(long timestamp, int width, int height, Bitmap bitmap, byte[] webpImage){
                 SingleImage singleImage = new SingleImage(timestamp, width, height, bitmap, webpImage);
-                images.add(singleImage);
+                put(timestamp, singleImage);
+            }
+
+            @Override
+            public synchronized SingleImage put(Long key, SingleImage value) {
+                return super.put(key, value);
             }
 
             public ArrayList<SingleImage> getImages() {
-                return images;
+                return new ArrayList<>(this.values());
             }
 
-            public static class SingleImage{
+            public static class SingleImage {
                 private final long timestamp;
                 private final int width;
                 private final int height;
