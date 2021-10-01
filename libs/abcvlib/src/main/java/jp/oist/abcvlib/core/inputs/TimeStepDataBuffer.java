@@ -84,6 +84,16 @@ public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubsc
     @Override
     public void onImageDataUpdate(long timestamp, int width, int height, Bitmap bitmap, String qrDecodedData) {
         getWriteData().getImageData().add(timestamp, width, height, bitmap, null);
+        // Handler to compress and put images into buffer
+        int timestep = writeIndex;
+        // Find the correct TimeStep based on timestamp
+        Arrays.stream(buffer[timestep].imageData.getImages().toArray(new TimeStepData.ImageData.SingleImage[0]))
+                .filter(singleImage -> singleImage.timestamp == timestamp)
+                .collect(Collectors.toList());
+        ByteArrayOutputStream webpByteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.WEBP, 0, webpByteArrayOutputStream);
+        byte[] webpBytes = webpByteArrayOutputStream.toByteArray();
+        Bitmap webpBitMap = ImageOps.generateBitmap(webpBytes);
     }
 
     @Override

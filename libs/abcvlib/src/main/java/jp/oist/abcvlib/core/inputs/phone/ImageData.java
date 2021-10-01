@@ -135,11 +135,6 @@ public class ImageData extends Publisher<ImageDataSubscriber> implements ImageAn
             Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
             yuvToRgbConverter.yuvToRgb(image, bitmap);
 
-            ByteArrayOutputStream webpByteArrayOutputStream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.WEBP, 0, webpByteArrayOutputStream);
-            byte[] webpBytes = webpByteArrayOutputStream.toByteArray();
-            Bitmap webpBitMap = ImageOps.generateBitmap(webpBytes);
-
             String qrDecodedData = "";
             if (qrcodescanning && (image.getFormat() == YUV_420_888 || image.getFormat() == YUV_422_888 || image.getFormat() == YUV_444_888)) {
                 ByteBuffer byteBuffer = image.getPlanes()[0].getBuffer();
@@ -171,7 +166,7 @@ public class ImageData extends Publisher<ImageDataSubscriber> implements ImageAn
             }
 
             for (ImageDataSubscriber subscriber:subscribers){
-                subscriber.onImageDataUpdate(timestamp, width, height, webpBitMap, qrDecodedData);
+                subscriber.onImageDataUpdate(timestamp, width, height, bitmap, qrDecodedData);
             }
         }
         imageProxy.close();
@@ -181,7 +176,7 @@ public class ImageData extends Publisher<ImageDataSubscriber> implements ImageAn
 
         imageAnalysis =
                 new ImageAnalysis.Builder()
-                        .setTargetResolution(new Size(400, 300))
+                        .setTargetResolution(new Size(10, 10))
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .setImageQueueDepth(20)
                         .build();
