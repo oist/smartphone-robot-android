@@ -12,6 +12,8 @@ import jp.oist.abcvlib.core.IOReadyListener;
 import jp.oist.abcvlib.core.inputs.PublisherManager;
 import jp.oist.abcvlib.core.inputs.phone.ImageData;
 import jp.oist.abcvlib.core.inputs.phone.ImageDataSubscriber;
+import jp.oist.abcvlib.core.inputs.phone.QRCodeData;
+import jp.oist.abcvlib.core.inputs.phone.QRCodeDataSubscriber;
 import jp.oist.abcvlib.util.QRCode;
 
 /**
@@ -20,7 +22,7 @@ import jp.oist.abcvlib.util.QRCode;
  * Runs PID controller locally on Android, but takes PID parameters from python GUI
  * @author Christopher Buckley https://github.com/topherbuckley
  */
-public class MainActivity extends AbcvlibActivity implements IOReadyListener, ImageDataSubscriber {
+public class MainActivity extends AbcvlibActivity implements IOReadyListener, ImageDataSubscriber, QRCodeDataSubscriber {
 
     private Button showQRCode;
     private boolean isQRDisplayed = false;
@@ -55,7 +57,9 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener, Im
                 .setPreviewView(findViewById(jp.oist.abcvlib.core.R.id.preview_view))
                 .build();
         imageData.addSubscriber(this);
-        imageData.setQrcodescanning(true);
+
+        QRCodeData qrCodeData = new QRCodeData.Builder(this, publisherManager, this).build();
+        qrCodeData.addSubscriber(this);
 
         publisherManager.initializePublishers();
         publisherManager.startPublishers();
@@ -79,8 +83,12 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener, Im
 
     @Override
     public void onImageDataUpdate(long timestamp, int width, int height, Bitmap bitmap, String qrDecodedData) {
-        if (!qrDecodedData.equals("")){
-            Log.i("qrcode", "QR Code Found and decoded: " + qrDecodedData);
+    }
+
+    @Override
+    public void onQRCodeDetected(String qrDataDecoded) {
+        if (!qrDataDecoded.equals("")){
+            Log.i("qrcode", "QR Code Found and decoded: " + qrDataDecoded);
         }
     }
 }
