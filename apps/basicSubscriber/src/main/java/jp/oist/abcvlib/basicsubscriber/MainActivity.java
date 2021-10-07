@@ -1,6 +1,8 @@
 package jp.oist.abcvlib.basicsubscriber;
 
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.hardware.usb.UsbManager;
 import android.media.AudioTimestamp;
 import android.os.Bundle;
 
@@ -12,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.AbcvlibLooper;
 import jp.oist.abcvlib.core.IOReadyListener;
+import jp.oist.abcvlib.core.UsbSerial;
 import jp.oist.abcvlib.core.inputs.PublisherManager;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataSubscriber;
@@ -43,16 +46,17 @@ import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
  * @author Christopher Buckley https://github.com/topherbuckley
  */
 public class MainActivity extends AbcvlibActivity implements IOReadyListener,
-        BatteryDataSubscriber, OrientationDataSubscriber, WheelDataSubscriber, MicrophoneDataSubscriber, ImageDataSubscriber {
+        BatteryDataSubscriber, OrientationDataSubscriber, WheelDataSubscriber,
+        MicrophoneDataSubscriber, ImageDataSubscriber {
 
     private long lastFrameTime = System.nanoTime();
     private GuiUpdater guiUpdater;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
-        // Setup Android GUI object references such that we can write data to them later.
-        setContentView(R.layout.activity_main);
+        // Passes Android App information up to parent classes for various usages. Do not modify
+        super.onCreate(savedInstanceState);
+        UsbSerial usbSerial = new UsbSerial(this, (UsbManager) getSystemService(Context.USB_SERVICE));
 
         setIoReadyListener(this);
 
@@ -60,11 +64,7 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener,
         ScheduledExecutorServiceWithException executor = new ScheduledExecutorServiceWithException(1, new ProcessPriorityThreadFactory(Thread.MIN_PRIORITY, "GuiUpdates"));
         guiUpdater = new GuiUpdater(this);
         executor.scheduleAtFixedRate(guiUpdater, 0, 100, TimeUnit.MILLISECONDS);
-
-        // Passes Android App information up to parent classes for various usages. Do not modify
-        super.onCreate(savedInstanceState);
     }
-
     @Override
     public void onIOReady(AbcvlibLooper abcvlibLooper) {
         /*
@@ -157,7 +157,6 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener,
      * @param width in pixels
      * @param height in pixels
      * @param bitmap compressed bitmap object
-     * @param webpImage byte array representing bitmap
      */
     @Override
     public void onImageDataUpdate(long timestamp, int width, int height, Bitmap bitmap, String qrDecodedData) {
