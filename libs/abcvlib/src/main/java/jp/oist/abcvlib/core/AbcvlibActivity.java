@@ -1,8 +1,12 @@
 package jp.oist.abcvlib.core;
 
+import android.content.Context;
+import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.WindowManager;
+
+import java.io.IOException;
 
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
@@ -34,6 +38,11 @@ public abstract class AbcvlibActivity extends IOIOActivity {
     protected void onCreate(Bundle savedInstanceState) {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         Log.v(TAG, "End of AbcvlibActivity.onCreate");
+        try {
+            new UsbSerial(this, (UsbManager) getSystemService(Context.USB_SERVICE));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         super.onCreate(savedInstanceState);
     }
 

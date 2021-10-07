@@ -1,8 +1,6 @@
 package jp.oist.abcvlib.basicsubscriber;
 
-import android.content.Context;
 import android.graphics.Bitmap;
-import android.hardware.usb.UsbManager;
 import android.media.AudioTimestamp;
 import android.os.Bundle;
 
@@ -14,7 +12,6 @@ import java.util.concurrent.TimeUnit;
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.AbcvlibLooper;
 import jp.oist.abcvlib.core.IOReadyListener;
-import jp.oist.abcvlib.core.UsbSerial;
 import jp.oist.abcvlib.core.inputs.PublisherManager;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataSubscriber;
@@ -54,9 +51,8 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener,
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Passes Android App information up to parent classes for various usages. Do not modify
-        super.onCreate(savedInstanceState);
-        UsbSerial usbSerial = new UsbSerial(this, (UsbManager) getSystemService(Context.USB_SERVICE));
+        // Setup Android GUI object references such that we can write data to them later.
+        setContentView(R.layout.activity_main);
 
         setIoReadyListener(this);
 
@@ -64,6 +60,9 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener,
         ScheduledExecutorServiceWithException executor = new ScheduledExecutorServiceWithException(1, new ProcessPriorityThreadFactory(Thread.MIN_PRIORITY, "GuiUpdates"));
         guiUpdater = new GuiUpdater(this);
         executor.scheduleAtFixedRate(guiUpdater, 0, 100, TimeUnit.MILLISECONDS);
+
+        // Passes Android App information up to parent classes for various usages. Do not modify
+        super.onCreate(savedInstanceState);
     }
     @Override
     public void onIOReady(AbcvlibLooper abcvlibLooper) {
