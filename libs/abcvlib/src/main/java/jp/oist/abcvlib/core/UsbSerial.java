@@ -31,7 +31,7 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
     private final UsbManager usbManager;
     private UsbSerialPort port;
     private int cnt = 0;
-    private float[] pwm = new float[]{1.0f, 0.5f, 0.0f, 0.5f, 1.0f};
+    private float[] pwm = new float[]{1.0f, 0.5f, 0.0f, -0.5f, -1.0f};
 
     private static final String ACTION_USB_PERMISSION =
             "com.android.example.USB_PERMISSION";
@@ -144,7 +144,7 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
         responseStr = responseStr.concat(String.valueOf(System.nanoTime()));
         responseStr = responseStr.concat(",\"wheelL\":");
         responseStr = responseStr.concat(Float.toString(val));
-        responseStr = responseStr.concat(",\"wheelR\":0.57");
+        responseStr = responseStr.concat(",\"wheelR\":0.8");
         responseStr = responseStr.concat("}\n");
         byte[] response = responseStr.getBytes(StandardCharsets.US_ASCII);
         port.write(response, 1000);
