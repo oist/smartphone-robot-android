@@ -214,6 +214,8 @@ public class ImageData extends Publisher<ImageDataSubscriber> implements ImageAn
                     }
                 }, ContextCompat.getMainExecutor(context));
             });
+        }else{
+            countDownLatch.countDown();
         }
         try {
             countDownLatch.await();
