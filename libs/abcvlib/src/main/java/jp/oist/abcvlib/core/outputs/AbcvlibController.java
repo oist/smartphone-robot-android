@@ -16,6 +16,7 @@ public abstract class AbcvlibController implements Runnable{
     private TimeUnit timeUnit;
     private ScheduledExecutorServiceWithException executor;
     private final String TAG = getClass().getName();
+    private boolean isRunning = false;
 
     public AbcvlibController(){}
 
@@ -54,11 +55,13 @@ public abstract class AbcvlibController implements Runnable{
                 threadCount, new ProcessPriorityThreadFactory(threadPriority,
                 name));
         executor.scheduleAtFixedRate(this, initDelay, timeStep, timeUnit);
+        isRunning = true;
     }
 
     public void stopController(){
         setOutput(0,0);
         executor.shutdownNow();
+        isRunning = false;
     }
 
     public Output output = new Output();
@@ -80,5 +83,9 @@ public abstract class AbcvlibController implements Runnable{
     public static class Output{
         public float left;
         public float right;
+    }
+
+    public synchronized boolean isRunning(){
+        return isRunning;
     }
 }
