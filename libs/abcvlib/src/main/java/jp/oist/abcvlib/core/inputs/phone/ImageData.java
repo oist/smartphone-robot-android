@@ -215,7 +215,7 @@ public class ImageData extends Publisher<ImageDataSubscriber> implements ImageAn
                 }, ContextCompat.getMainExecutor(context));
             });
         }else{
-            countDownLatch.countDown();
+            bindImageAnalysis();
         }
         try {
             countDownLatch.await();
@@ -235,6 +235,35 @@ public class ImageData extends Publisher<ImageDataSubscriber> implements ImageAn
         mCameraProviderFuture.cancel(false);
         cameraProvider.unbindAll();
         cameraProvider = null;
+    }
+
+    private void bindImageAnalysis(){
+        Executors.newSingleThreadExecutor().execute(() -> {
+            mCameraProviderFuture = ProcessCameraProvider.getInstance(context);
+            mCameraProviderFuture.addListener(() -> {
+                try {
+                    cameraProvider = mCameraProviderFuture.get();
+                    cameraProvider.unbindAll();
+
+                    CameraSelector cameraSelector = new CameraSelector.Builder()
+                            .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
+                            .build();
+                    try {
+                        cameraProvider = mCameraProviderFuture.get();
+                    } catch (ExecutionException | InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    cameraProvider.unbindAll();
+                    if (imageAnalysis != null){
+                        cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, imageAnalysis);
+                    }
+                    countDownLatch.countDown();
+
+                } catch (ExecutionException | InterruptedException e) {
+                    ErrorHandler.eLog(TAG, "Unexpected Error", e, true);
+                }
+            }, ContextCompat.getMainExecutor(context));
+        });
     }
 
     private void bindAll(@NonNull ProcessCameraProvider cameraProvider, LifecycleOwner lifecycleOwner) {
