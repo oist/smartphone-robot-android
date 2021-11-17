@@ -243,7 +243,6 @@ public class ImageData extends Publisher<ImageDataSubscriber> implements ImageAn
             mCameraProviderFuture.addListener(() -> {
                 try {
                     cameraProvider = mCameraProviderFuture.get();
-                    cameraProvider.unbindAll();
 
                     CameraSelector cameraSelector = new CameraSelector.Builder()
                             .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
@@ -253,7 +252,6 @@ public class ImageData extends Publisher<ImageDataSubscriber> implements ImageAn
                     } catch (ExecutionException | InterruptedException e) {
                         e.printStackTrace();
                     }
-                    cameraProvider.unbindAll();
                     if (imageAnalysis != null){
                         cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, imageAnalysis);
                     }
