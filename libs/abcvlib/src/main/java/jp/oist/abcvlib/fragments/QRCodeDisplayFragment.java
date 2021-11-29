@@ -49,10 +49,8 @@ public class QRCodeDisplayFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.q_r_code_display, container, false);
         ImageView qrCode = rootView.findViewById(R.id.qrImage);
         WindowManager wm = requireActivity().getWindowManager();
-        Point size = new Point();
-        wm.getDefaultDisplay().getSize(size);
-        int width = size.x;
-        int height = size.y;
+        int width = container.getWidth();
+        int height = container.getHeight();
         try {
             Bitmap bitmap = encodeAsBitmap(data2Encode, width, height);
             qrCode.setImageBitmap(bitmap);
@@ -71,6 +69,7 @@ public class QRCodeDisplayFragment extends Fragment {
         String encoding = "UTF-8";
         hints = new EnumMap<>(EncodeHintType.class);
         hints.put(EncodeHintType.CHARACTER_SET, encoding);
+        hints.put(EncodeHintType.MARGIN, 0);
         MultiFormatWriter writer = new MultiFormatWriter();
         BitMatrix result;
         try {
