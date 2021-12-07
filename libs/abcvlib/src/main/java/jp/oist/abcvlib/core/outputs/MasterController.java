@@ -44,4 +44,16 @@ public class MasterController extends AbcvlibController{
     public void addController(AbcvlibController controller){
         this.controllers.add(controller);
     }
+
+    public void removeController(AbcvlibController controller){
+        if (controllers.contains(controller)){
+            this.controllers.remove(controller);
+        }
+    }
+
+    public void stopAllControllers(){
+        for (AbcvlibController controller : controllers){
+            controller.setOutput(0, 0);
+        }
+    }
 }
