@@ -23,7 +23,7 @@ import jp.oist.abcvlib.core.outputs.Outputs;
 public abstract class AbcvlibActivity extends IOIOActivity {
 
     private Outputs outputs;
-    private final Switches switches = new Switches();
+    private Switches switches = new Switches();
     protected AbcvlibLooper abcvlibLooper;
     private static final String TAG = "abcvlib";
     private IOReadyListener ioReadyListener;
@@ -57,6 +57,14 @@ public abstract class AbcvlibActivity extends IOIOActivity {
 
     public Outputs getOutputs() {
         return outputs;
+    }
+
+    public Switches getSwitches() {
+        return switches;
+    }
+
+    public void setSwitches(Switches switches){
+        this.switches = switches;
     }
 
     private void initializeOutputs(){

@@ -30,7 +30,7 @@ import jp.oist.abcvlib.core.outputs.Outputs;
 public abstract class AbcvlibService extends IOIOService implements Subscriber {
     // Publically accessible objects that encapsulate a lot other core functionality
     private Outputs outputs;
-    private final Switches switches = new Switches();
+    private Switches switches = new Switches();
     private AbcvlibLooper abcvlibLooper;
     private static final String TAG = "abcvlib";
     private IOReadyListener ioReadyListener;
@@ -98,6 +98,10 @@ public abstract class AbcvlibService extends IOIOService implements Subscriber {
 
     public Switches getSwitches() {
         return switches;
+    }
+
+    public void setSwitches(Switches switches){
+        this.switches = switches;
     }
 
     public Outputs getOutputs() {
