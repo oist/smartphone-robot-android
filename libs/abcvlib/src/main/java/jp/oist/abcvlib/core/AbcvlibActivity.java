@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.WindowManager;
 
+import ioio.lib.api.exception.ConnectionLostException;
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
 import jp.oist.abcvlib.core.outputs.Outputs;
@@ -40,9 +41,6 @@ public abstract class AbcvlibActivity extends IOIOActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        if (abcvlibLooper != null){
-            abcvlibLooper.setDutyCycle(0, 0);
-        }
         Log.v(TAG, "End of AbcvlibActivity.onStop");
     }
 
@@ -51,7 +49,8 @@ public abstract class AbcvlibActivity extends IOIOActivity {
     {
         super.onPause();
         if (abcvlibLooper != null){
-            abcvlibLooper.setDutyCycle(0, 0);
+//            abcvlibLooper.setDutyCycle(0, 0);
+            abcvlibLooper.shutDown();
         }
         Log.i(TAG, "End of AbcvlibActivity.onPause");
     }

@@ -76,4 +76,6 @@ public class ScheduledExecutorServiceWithException {
     public void shutdownNow(){
         executor.shutdownNow();
     }
+
+    public void shutdown(){executor.shutdown();}
 }

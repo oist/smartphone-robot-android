@@ -4,6 +4,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -33,6 +34,15 @@ public abstract class AbcvlibService extends IOIOService implements Subscriber {
     private AbcvlibLooper abcvlibLooper;
     private static final String TAG = "abcvlib";
     private IOReadyListener ioReadyListener;
+    // Binder given to clients
+    private final IBinder binder = new LocalBinder();
+
+    public class LocalBinder extends Binder {
+        public AbcvlibService getService() {
+            // Return this instance of LocalService so clients can call public methods
+            return AbcvlibService.this;
+        }
+    }
 
     public void setIoReadyListener(IOReadyListener ioReadyListener) {
         this.ioReadyListener = ioReadyListener;
@@ -69,19 +79,21 @@ public abstract class AbcvlibService extends IOIOService implements Subscriber {
         return result;
     }
 
-    @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return binder;
     }
 
     @Override
     public void onDestroy() {
-        if (abcvlibLooper != null){
-            abcvlibLooper.setDutyCycle(0, 0);
-        }
         Log.v(TAG, "AbcvlibService onDestroy");
         super.onDestroy();
+    }
+
+    public void onPause(){
+        if (abcvlibLooper != null){
+            abcvlibLooper.shutDown();
+        }
     }
 
     public Switches getSwitches() {

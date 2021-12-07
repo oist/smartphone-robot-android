@@ -2,7 +2,11 @@ package jp.oist.abcvlib.core;
 
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ioio.lib.api.AnalogInput;
+import ioio.lib.api.Closeable;
 import ioio.lib.api.DigitalInput;
 import ioio.lib.api.DigitalOutput;
 import ioio.lib.api.IOIO;
@@ -211,6 +215,8 @@ public class AbcvlibLooper extends BaseIOIOLooper {
     private volatile WheelData wheelData = null;
     private final IOReadyListener ioReadyListener;
 
+    private List<Closeable> ioioPins = new ArrayList<>();
+
     public AbcvlibLooper(IOReadyListener ioReadyListener){
         this.ioReadyListener = ioReadyListener;
     }
@@ -270,13 +276,20 @@ public class AbcvlibLooper extends BaseIOIOLooper {
         is required for some reason or just what was defaulted to.
         */
         input1RightWheelController = ioio_.openDigitalOutput(INPUT1_RIGHT_WHEEL_PIN,false);
+        ioioPins.add(input1RightWheelController);
         input2RightWheelController = ioio_.openDigitalOutput(INPUT2_RIGHT_WHEEL_PIN,false);
+        ioioPins.add(input2RightWheelController);
         input1LeftWheelController = ioio_.openDigitalOutput(INPUT1_LEFT_WHEEL_PIN,false);
+        ioioPins.add(input1LeftWheelController);
         input2LeftWheelController = ioio_.openDigitalOutput(INPUT2_LEFT_WHEEL_PIN,false);
+        ioioPins.add(input2LeftWheelController);
 
         batteryVoltageMonitor = ioio_.openAnalogInput(BATTERY_VOLTAGE);
+        ioioPins.add(batteryVoltageMonitor);
         chargerVoltageMonitor = ioio_.openAnalogInput(CHARGER_VOLTAGE);
+        ioioPins.add(chargerVoltageMonitor);
         coilVoltageMonitor = ioio_.openAnalogInput(COIL_VOLTAGE);
+        ioioPins.add(coilVoltageMonitor);
 
         // This try-catch statement should likely be refined to handle common errors/exceptions
         try{
@@ -294,7 +307,9 @@ public class AbcvlibLooper extends BaseIOIOLooper {
              */
             int PWM_FREQ = 1000;
             pwmControllerRightWheel = ioio_.openPwmOutput(PWM_RIGHT_WHEEL_PIN, PWM_FREQ);
+            ioioPins.add(pwmControllerRightWheel);
             pwmControllerLeftWheel = ioio_.openPwmOutput(PWM_LEFT_WHEEL_PIN, PWM_FREQ);
+            ioioPins.add(pwmControllerLeftWheel);
 
             /*
             Note openDigitalInput() can also accept DigitalInput.Spec.Mode.OPEN_DRAIN if motor
@@ -302,12 +317,16 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             */
             encoderARightWheel = ioio_.openDigitalInput(ENCODER_A_RIGHT_WHEEL_PIN,
                     DigitalInput.Spec.Mode.PULL_UP);
+            ioioPins.add(encoderARightWheel);
             encoderBRightWheel = ioio_.openDigitalInput(ENCODER_B_RIGHT_WHEEL_PIN,
                     DigitalInput.Spec.Mode.PULL_UP);
+            ioioPins.add(encoderBRightWheel);
             encoderALeftWheel = ioio_.openDigitalInput(ENCODER_A_LEFT_WHEEL_PIN,
                     DigitalInput.Spec.Mode.PULL_UP);
+            ioioPins.add(encoderALeftWheel);
             encoderBLeftWheel = ioio_.openDigitalInput(ENCODER_B_LEFT_WHEEL_PIN,
                     DigitalInput.Spec.Mode.PULL_UP);
+            ioioPins.add(encoderBLeftWheel);
 
         }catch (ConnectionLostException e){
             Log.e("abcvlib", "ConnectionLostException at AbcvlibLooper.setup()");
@@ -428,5 +447,17 @@ public class AbcvlibLooper extends BaseIOIOLooper {
 
     public void setWheelData(WheelData wheelData) {
         this.wheelData = wheelData;
+    }
+
+    public void turnOffWheels() throws ConnectionLostException {
+        pwmControllerRightWheel.setDutyCycle(0);
+        pwmControllerLeftWheel.setDutyCycle(0);
+        Log.d("abcvlib", "Turning off wheels");
+    }
+
+    void shutDown(){
+        for (Closeable pin:ioioPins){
+            pin.close();
+        }
     }
 }

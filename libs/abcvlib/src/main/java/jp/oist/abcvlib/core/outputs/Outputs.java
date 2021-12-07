@@ -2,6 +2,7 @@ package jp.oist.abcvlib.core.outputs;
 
 import java.util.concurrent.TimeUnit;
 
+import ioio.lib.api.exception.ConnectionLostException;
 import jp.oist.abcvlib.core.AbcvlibLooper;
 import jp.oist.abcvlib.core.Switches;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
@@ -41,5 +42,9 @@ public class Outputs {
 
     public synchronized MasterController getMasterController() {
         return masterController;
+    }
+
+    public void turnOffWheels() throws ConnectionLostException {
+        abcvlibLooper.turnOffWheels();
     }
 }
