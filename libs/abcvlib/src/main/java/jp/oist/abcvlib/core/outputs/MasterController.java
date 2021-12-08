@@ -3,6 +3,7 @@ package jp.oist.abcvlib.core.outputs;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import ioio.lib.api.exception.ConnectionLostException;
 import jp.oist.abcvlib.core.AbcvlibLooper;
@@ -13,7 +14,7 @@ public class MasterController extends AbcvlibController{
     private final String TAG = this.getClass().getName();
 
     private final Switches switches;
-    private final ArrayList<AbcvlibController> controllers = new ArrayList<>();
+    private final CopyOnWriteArrayList<AbcvlibController> controllers = new CopyOnWriteArrayList<>();
     private final AbcvlibLooper abcvlibLooper;
 
     MasterController(Switches switches, AbcvlibLooper abcvlibLooper){
