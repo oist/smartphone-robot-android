@@ -54,7 +54,7 @@ public abstract class AbcvlibController implements Runnable{
         executor = new ScheduledExecutorServiceWithException(
                 threadCount, new ProcessPriorityThreadFactory(threadPriority,
                 name));
-        executor.scheduleAtFixedRate(this, initDelay, timeStep, timeUnit);
+        executor.scheduleWithFixedDelay(this, initDelay, timeStep, timeUnit);
         isRunning = true;
     }
 
