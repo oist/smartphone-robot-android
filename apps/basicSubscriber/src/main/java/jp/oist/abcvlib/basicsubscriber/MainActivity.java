@@ -43,14 +43,14 @@ import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
  * @author Christopher Buckley https://github.com/topherbuckley
  */
 public class MainActivity extends AbcvlibActivity implements IOReadyListener,
-        BatteryDataSubscriber, OrientationDataSubscriber, WheelDataSubscriber, MicrophoneDataSubscriber, ImageDataSubscriber {
+        BatteryDataSubscriber, OrientationDataSubscriber, WheelDataSubscriber,
+        MicrophoneDataSubscriber, ImageDataSubscriber {
 
     private long lastFrameTime = System.nanoTime();
     private GuiUpdater guiUpdater;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         // Setup Android GUI object references such that we can write data to them later.
         setContentView(R.layout.activity_main);
 
@@ -64,7 +64,6 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener,
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
     }
-
     @Override
     public void onIOReady(AbcvlibLooper abcvlibLooper) {
         /*
@@ -157,7 +156,6 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener,
      * @param width in pixels
      * @param height in pixels
      * @param bitmap compressed bitmap object
-     * @param webpImage byte array representing bitmap
      */
     @Override
     public void onImageDataUpdate(long timestamp, int width, int height, Bitmap bitmap, String qrDecodedData) {
