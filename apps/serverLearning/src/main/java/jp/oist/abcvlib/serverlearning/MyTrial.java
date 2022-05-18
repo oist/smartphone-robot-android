@@ -65,6 +65,7 @@ public class MyTrial extends Trial implements ActionSelector{
     protected void endTrial() throws RecordingWithoutTimeStepBufferException, InterruptedException {
         // Do stuff here
         Log.v("MyTrail", "endTrail");
+        outputs.setWheelOutput(0,0);
         super.endTrial();
     }
 }
