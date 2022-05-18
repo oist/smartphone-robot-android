@@ -65,10 +65,10 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
 
         MotionActionSpace motionActionSpace = new MotionActionSpace(5);
         motionActionSpace.addMotionAction("stop", (byte) 0, 0, 0); // I'm just overwriting an existing to show how
-        motionActionSpace.addMotionAction("forward", (byte) 1, 100, 100);
-        motionActionSpace.addMotionAction("backward", (byte) 2, -100, 100);
-        motionActionSpace.addMotionAction("left", (byte) 3, -100, 100);
-        motionActionSpace.addMotionAction("right", (byte) 4, 100, -100);
+        motionActionSpace.addMotionAction("forward", (byte) 1, 1, 1);
+        motionActionSpace.addMotionAction("backward", (byte) 2, -1, 1);
+        motionActionSpace.addMotionAction("left", (byte) 3, -1, 1);
+        motionActionSpace.addMotionAction("right", (byte) 4, 1, -1);
 
         ActionSpace actionSpace = new ActionSpace(commActionSpace, motionActionSpace);
 
