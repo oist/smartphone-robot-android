@@ -30,8 +30,8 @@ public class MyTrial extends Trial implements ActionSelector{
 
         // Use data as input to your policy and select action here
         // Just using first actions of each set as an example but this should be replaced by your policy's decision process
-        motionAction = getMotionActionSet().getMotionActions()[1];
-        commAction = getCommActionSet().getCommActions()[1];
+        motionAction = getMotionActionSet().getMotionActions()[0];
+        commAction = getCommActionSet().getCommActions()[0];
 
         // Add your selected actions to the TimeStepDataBuffer for record
         data.getActions().add(motionAction, commAction);
