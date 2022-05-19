@@ -16,7 +16,7 @@ public class MotionAction {
     public int getLeftWheelPWM(){return leftWheelPWM;}
     public int getRightWheelPWM(){return rightWheelPWM;}
     public String getActionName(){return actionName;}
-    public int getActionByte(){return actionByte;}
+    public byte getActionByte(){return actionByte;}
 
     public void setLeftWheelPWM(int leftWheelPWM){this.leftWheelPWM = leftWheelPWM;};
     public void setRightWheelPWM(int rightWheelPWM){this.rightWheelPWM = rightWheelPWM;};

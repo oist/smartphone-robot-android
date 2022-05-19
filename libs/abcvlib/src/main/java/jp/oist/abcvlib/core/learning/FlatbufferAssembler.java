@@ -256,8 +256,12 @@ public class FlatbufferAssembler {
         MotionAction ma = timeStepData.getActions().getMotionAction();
         Log.v("flatbuff", "CommAction : " + ca.getActionByte());
         Log.v("flatbuff", "MotionAction : " + ma.getActionName());
-
-        return RobotAction.createRobotAction(builder, (byte) ma.getActionByte(), (byte) ca.getActionByte());
+        int ca_offset = jp.oist.abcvlib.core.learning.fbclasses.CommAction.createCommAction(
+                builder, ca.getActionByte(), builder.createString(ca.getActionName()));
+        int ma_offset = jp.oist.abcvlib.core.learning.fbclasses.MotionAction.createMotionAction(
+                builder, ma.getActionByte(), builder.createString(ma.getActionName()),
+                ma.getLeftWheelPWM(), ma.getRightWheelPWM());
+        return RobotAction.createRobotAction(builder, ma_offset, ca_offset);
     }
 
     // End episode after some reward has been acheived or maxtimesteps has been reached

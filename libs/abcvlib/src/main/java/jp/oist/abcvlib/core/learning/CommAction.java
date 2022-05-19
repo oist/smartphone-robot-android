@@ -10,7 +10,7 @@ public class CommAction {
     }
 
     public String getActionName(){return actionName;};
-    public int getActionByte(){return  actionByte;};
+    public byte getActionByte(){return  actionByte;};
 
     public void setActionName(String actionName){this.actionName = actionName;};
     public void setActionByte(byte actionByte){this.actionByte = actionByte;};
