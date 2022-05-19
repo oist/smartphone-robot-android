@@ -9,6 +9,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.ExecutionException;
@@ -176,17 +177,33 @@ public class Trial implements Runnable, ActionSelector, SocketListener {
         // Parse whatever you sent from python here
         //loadMappedFile...
         try {
-            if (jsonHeader.get("content-encoding").equals("modelVector")){
-                Log.d(TAG, "Writing model files to disk");
-                JSONArray modelNames = (JSONArray) jsonHeader.get("file-names");
-                JSONArray modelLengths = (JSONArray) jsonHeader.get("file-lengths");
-
+            if (jsonHeader.get("content-encoding").equals("utf-8")){
+                Log.d(TAG, "Received text message from server");
                 msgFromServer.flip();
+                byte[] bytes = new byte[(int) jsonHeader.get("content-length")];
+                msgFromServer.get(bytes);
+                String msg = new String(bytes, StandardCharsets.UTF_8);
+                Log.d(TAG, "Server says, \"" + msg + "\"");
+            }
+            else if (jsonHeader.get("content-encoding").equals("binary")){
+                if (jsonHeader.get("content-type").equals("files")){
+                    Log.d(TAG, "Writing files to disk");
+                    JSONArray fileNames = (JSONArray) jsonHeader.get("file-names");
+                    JSONArray fileLengths = (JSONArray) jsonHeader.get("file-lengths");
 
-                for (int i = 0; i < modelNames.length(); i++){
-                    byte[] bytes = new byte[modelLengths.getInt(i)];
-                    msgFromServer.get(bytes);
-                    FileOps.savedata(context, bytes, "models", modelNames.getString(i));
+                    msgFromServer.flip();
+
+                    for (int i = 0; i < fileNames.length(); i++){
+                        byte[] bytes = new byte[fileLengths.getInt(i)];
+                        msgFromServer.get(bytes);
+                        FileOps.savedata(context, bytes, "models", fileNames.getString(i));
+                    }
+                }
+                else if (jsonHeader.get("content-type").equals("flatbuffer")){
+                    //todo
+                }
+                else if (jsonHeader.get("content-type").equals("json")){
+                    //todo
                 }
             }else{
                 Log.d(TAG, "Data from server does not contain modelVector content. Be sure to set content-encoding to \"modelVector\" in the python jsonHeader");
