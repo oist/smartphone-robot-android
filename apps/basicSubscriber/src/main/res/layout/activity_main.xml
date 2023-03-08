@@ -182,4 +182,21 @@
         app:layout_constraintStart_toEndOf="@id/frameRateHeader"
         app:layout_constraintTop_toBottomOf="@+id/frameLayout"
         app:layout_constraintHorizontal_bias="0.05"/>
+
+    <TextView
+        android:id="@+id/qrDataHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/qrDataHeader"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/frameRateHeader" />
+
+    <TextView
+        android:id="@+id/qrData"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/frameRateHeader"
+        app:layout_constraintTop_toBottomOf="@+id/frameRate"
+        app:layout_constraintHorizontal_bias="0.05"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
