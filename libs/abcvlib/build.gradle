@@ -1,3 +1,5 @@
+apply plugin: 'de.undercouch.download'
+
 dependencies {
     api "com.github.ytai.ioio:IOIOLibAndroid:6.1.0"
     implementation "com.github.ytai.ioio:IOIOLibAndroidAccessory:6.1.0"
@@ -5,6 +7,12 @@ dependencies {
     implementation "com.github.ytai.ioio:IOIOLibAndroidDevice:6.1.0"
     implementation 'io.github.nishkarsh:android-permissions:2.0.54'
 }
+
+project.ext.ASSET_DIR = projectDir.toString() + '/src/main/assets'
+
+// Download default models; if you wish to use your own models then
+// place them in the "assets" directory and comment out this line.
+apply from:'download_models.gradle'
 
 tasks.withType(GenerateMavenPom).all {
     doFirst {
