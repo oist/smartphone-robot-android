@@ -5,3 +5,4 @@ build/intermediates
 build/generated
 build/tmp
 build/outputs/logs
+*.tflite
