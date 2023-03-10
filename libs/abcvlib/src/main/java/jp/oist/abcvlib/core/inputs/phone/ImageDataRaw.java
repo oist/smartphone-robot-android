@@ -51,7 +51,7 @@ public class ImageDataRaw extends ImageData<ImageDataRawSubscriber> implements I
     }
 
     @Override
-    protected void customAnalysis(byte[] imageData, int format, int width, int height, long timestamp, Bitmap bitmap) {
+    protected void customAnalysis(byte[] imageData, int rotation, int format, int width, int height, long timestamp, Bitmap bitmap) {
         for (ImageDataRawSubscriber subscriber:subscribers){
             subscriber.onImageDataRawUpdate(timestamp, width, height, bitmap);
         }

@@ -112,6 +112,7 @@ public abstract class ImageData<S extends Subscriber> extends Publisher<S> imple
         countDownLatch.countDown();
         if (subscribers.size() > 0 && !paused){
             Image image = imageProxy.getImage();
+            int rotation = imageProxy.getImageInfo().getRotationDegrees();
             if (image != null) {
                 // Copy the image buffer, as it appears to get overwritten or read from externally
                 ByteBuffer byteBuffer = image.getPlanes()[0].getBuffer();
@@ -123,13 +124,13 @@ public abstract class ImageData<S extends Subscriber> extends Publisher<S> imple
                 long timestamp = image.getTimestamp();
                 Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
                 yuvToRgbConverter.yuvToRgb(image, bitmap);
-                customAnalysis(imageData, format, width, height, timestamp, bitmap);
+                customAnalysis(imageData, rotation, format, width, height, timestamp, bitmap);
             }
         }
         imageProxy.close(); // You must call these two lines at the end of the child's analyze method
     }
 
-    protected abstract void customAnalysis(byte[] imageData, int format, int width, int height, long timestamp, Bitmap bitmap);
+    protected abstract void customAnalysis(byte[] imageData, int rotation, int format, int width, int height, long timestamp, Bitmap bitmap);
 
     protected void setDefaultImageAnalysis(){
         imageAnalysis =

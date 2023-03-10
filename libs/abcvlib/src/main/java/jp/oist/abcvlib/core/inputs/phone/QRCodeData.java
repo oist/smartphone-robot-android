@@ -52,7 +52,7 @@ public class QRCodeData extends ImageData<QRCodeDataSubscriber>{
     }
 
     @Override
-    protected void customAnalysis(byte[] imageData, int format, int width, int height, long timestamp, Bitmap bitmap){
+    protected void customAnalysis(byte[] imageData, int rotation, int format, int width, int height, long timestamp, Bitmap bitmap){
         String qrDecodedData = "";
         if (format == YUV_420_888 || format == YUV_422_888 || format == YUV_444_888) {
             PlanarYUVLuminanceSource source = new PlanarYUVLuminanceSource(
