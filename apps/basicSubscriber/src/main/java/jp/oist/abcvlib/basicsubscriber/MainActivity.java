@@ -1,11 +1,17 @@
 package jp.oist.abcvlib.basicsubscriber;
 
+import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.media.AudioTimestamp;
 import android.os.Bundle;
+import android.util.Log;
+
+import org.tensorflow.lite.support.label.Category;
+import org.tensorflow.lite.task.vision.detector.Detection;
 
 import java.text.DecimalFormat;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
@@ -21,6 +27,8 @@ import jp.oist.abcvlib.core.inputs.phone.ImageDataRaw;
 import jp.oist.abcvlib.core.inputs.phone.ImageDataRawSubscriber;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneDataSubscriber;
+import jp.oist.abcvlib.core.inputs.phone.ObjectDetectorData;
+import jp.oist.abcvlib.core.inputs.phone.ObjectDetectorDataSubscriber;
 import jp.oist.abcvlib.core.inputs.phone.OrientationData;
 import jp.oist.abcvlib.core.inputs.phone.OrientationDataSubscriber;
 import jp.oist.abcvlib.core.inputs.phone.QRCodeData;
@@ -46,10 +54,11 @@ import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
  */
 public class MainActivity extends AbcvlibActivity implements IOReadyListener,
         BatteryDataSubscriber, OrientationDataSubscriber, WheelDataSubscriber,
-        MicrophoneDataSubscriber, ImageDataRawSubscriber, QRCodeDataSubscriber {
+        MicrophoneDataSubscriber, ImageDataRawSubscriber, QRCodeDataSubscriber, ObjectDetectorDataSubscriber {
 
     private long lastFrameTime = System.nanoTime();
     private GuiUpdater guiUpdater;
+    private final String TAG = getClass().getName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,7 +92,8 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener,
         new ImageDataRaw.Builder(this, publisherManager, this)
                 .setPreviewView(findViewById(R.id.camera_x_preview)).build().addSubscriber(this);
         new MicrophoneData.Builder(this, publisherManager).build().addSubscriber(this);
-        new QRCodeData.Builder(this, publisherManager, this).build().addSubscriber(this);
+        new ObjectDetectorData.Builder(this, publisherManager, this).build().addSubscriber(this);
+//        new QRCodeData.Builder(this, publisherManager, this).build().addSubscriber(this);
         publisherManager.initializePublishers();
         publisherManager.startPublishers();
     }
@@ -173,6 +183,20 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener,
     @Override
     public void onQRCodeDetected(String qrDataDecoded) {
         guiUpdater.qrDataString = qrDataDecoded;
+    }
+
+    @Override
+    public void onResults(List<Detection> results, long inferenceTime, int height, int width) {
+        try{
+            // Note you can also get the bounding box here. See https://www.tensorflow.org/lite/api_docs/java/org/tensorflow/lite/task/vision/detector/Detection
+            Category category = results.get(0).getCategories().get(0); //todo not sure if there will ever be more than one category (multiple detections). If so are they ordered by higheest score?
+            String label = category.getLabel();
+            @SuppressLint("DefaultLocale") String score = String.format("%.2f", category.getScore());
+            @SuppressLint("DefaultLocale") String time = String.format("%d", inferenceTime);
+            guiUpdater.objectDetectorString = label + " : " + score + " : " + time + "ms";
+        }catch (IndexOutOfBoundsException e){
+            guiUpdater.objectDetectorString = "No results from ObjectDetector";
+        }
     }
 }
 

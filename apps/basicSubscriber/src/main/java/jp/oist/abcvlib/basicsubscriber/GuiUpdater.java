@@ -17,6 +17,7 @@ public class GuiUpdater implements Runnable{
     private final TextView soundDataText;
     private final TextView frameRateText;
     private final TextView qrDataText;
+    private final TextView objectDetectorText;
     private final DecimalFormat df = new DecimalFormat("#.00");
     volatile double batteryVoltage = 0.0;
     volatile double chargerVoltage = 0.0;
@@ -37,6 +38,7 @@ public class GuiUpdater implements Runnable{
     volatile String audioDataString = "";
     volatile String frameRateString = "";
     volatile String qrDataString = "";
+    volatile String objectDetectorString = "";
 
     public GuiUpdater(Activity activity){
         this.activity = activity;
@@ -50,6 +52,7 @@ public class GuiUpdater implements Runnable{
         soundDataText = activity.findViewById(R.id.soundData);
         frameRateText = activity.findViewById(R.id.frameRate);
         qrDataText = activity.findViewById(R.id.qrData);
+        objectDetectorText = activity.findViewById(R.id.objectDetector);
     }
 
     @Override
@@ -75,6 +78,7 @@ public class GuiUpdater implements Runnable{
             soundDataText.setText(audioDataString);
             frameRateText.setText(frameRateString);
             qrDataText.setText(qrDataString);
+            objectDetectorText.setText(objectDetectorString);
         });
     }
 }

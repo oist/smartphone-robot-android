@@ -184,12 +184,29 @@
         app:layout_constraintHorizontal_bias="0.05"/>
 
     <TextView
+        android:id="@+id/objectDetectorHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/objectDetectorHeader"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/frameRateHeader" />
+
+    <TextView
+        android:id="@+id/objectDetector"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/objectDetectorHeader"
+        app:layout_constraintTop_toBottomOf="@+id/frameRateHeader"
+        app:layout_constraintHorizontal_bias="0.05"/>
+
+    <TextView
         android:id="@+id/qrDataHeader"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/qrDataHeader"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/frameRateHeader" />
+        app:layout_constraintTop_toBottomOf="@+id/objectDetectorHeader" />
 
     <TextView
         android:id="@+id/qrData"
@@ -197,6 +214,6 @@
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/frameRateHeader"
-        app:layout_constraintTop_toBottomOf="@+id/frameRate"
+        app:layout_constraintTop_toBottomOf="@+id/objectDetectorHeader"
         app:layout_constraintHorizontal_bias="0.05"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
