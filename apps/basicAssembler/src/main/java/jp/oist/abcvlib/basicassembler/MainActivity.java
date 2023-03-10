@@ -11,7 +11,7 @@ import jp.oist.abcvlib.core.inputs.PublisherManager;
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
-import jp.oist.abcvlib.core.inputs.phone.ImageData;
+import jp.oist.abcvlib.core.inputs.phone.ImageDataRaw;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
 import jp.oist.abcvlib.core.inputs.phone.OrientationData;
 import jp.oist.abcvlib.core.learning.ActionSpace;
@@ -28,8 +28,8 @@ import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
  * does not implement the various listener interfaces in order to subscribe to updates from various
  * sensor data, but instead sets up a custom
  * {@link jp.oist.abcvlib.core.learning.Trial} object that handles setting up the
- * subscribers and assembles the data into a {@link jp.oist.abcvlib.core.inputs.TimeStepDataBuffer}
- * comprising of multiple {@link jp.oist.abcvlib.core.inputs.TimeStepDataBuffer.TimeStepData} objects
+ * subscribers and assembles the data into a {@link TimeStepDataBuffer}
+ * comprising of multiple {@link TimeStepDataBuffer.TimeStepData} objects
  * that each represent all the data gathered from one or more sensors over the course of one timestep
  *
  * Optional commented out lines in each listener method show how to write the data to the Android
@@ -113,9 +113,9 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
         MicrophoneData microphoneData = new MicrophoneData.Builder(this, publisherManager).build();
         microphoneData.addSubscriber(timeStepDataBuffer);
 
-        ImageData imageData = new ImageData.Builder(this, publisherManager, this)
+        ImageDataRaw imageDataRaw = new ImageDataRaw.Builder(this, publisherManager, this)
                 .setPreviewView(findViewById(R.id.camera_x_preview)).build();
-        imageData.addSubscriber(timeStepDataBuffer);
+        imageDataRaw.addSubscriber(timeStepDataBuffer);
 
         StateSpace stateSpace = new StateSpace(publisherManager);
 

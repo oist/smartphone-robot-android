@@ -5,7 +5,6 @@ import android.content.Context;
 import androidx.fragment.app.Fragment;
 
 import jp.oist.abcvlib.core.R;
-import jp.oist.abcvlib.core.inputs.phone.ImageDataSubscriber;
 
 public class CameraPreviewFragment extends Fragment {
 

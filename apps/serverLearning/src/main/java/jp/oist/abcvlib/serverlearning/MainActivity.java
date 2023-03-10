@@ -1,7 +1,6 @@
 package jp.oist.abcvlib.serverlearning;
 
 import android.os.Bundle;
-import android.util.Log;
 
 import java.net.InetSocketAddress;
 
@@ -12,11 +11,10 @@ import jp.oist.abcvlib.core.inputs.PublisherManager;
 import jp.oist.abcvlib.core.inputs.TimeStepDataBuffer;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
-import jp.oist.abcvlib.core.inputs.phone.ImageData;
+import jp.oist.abcvlib.core.inputs.phone.ImageDataRaw;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
 import jp.oist.abcvlib.core.inputs.phone.OrientationData;
 import jp.oist.abcvlib.core.inputs.phone.QRCodeData;
-import jp.oist.abcvlib.core.inputs.phone.QRCodeDataSubscriber;
 import jp.oist.abcvlib.core.learning.ActionSpace;
 import jp.oist.abcvlib.core.learning.CommActionSpace;
 import jp.oist.abcvlib.core.learning.MetaParameters;
@@ -93,9 +91,9 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
         MicrophoneData microphoneData = new MicrophoneData.Builder(this, publisherManager).build();
         microphoneData.addSubscriber(timeStepDataBuffer);
 
-        ImageData imageData = new ImageData.Builder(this, publisherManager, this)
+        ImageDataRaw imageDataRaw = new ImageDataRaw.Builder(this, publisherManager, this)
                 .setPreviewView(findViewById(R.id.camera_x_preview)).build();
-        imageData.addSubscriber(timeStepDataBuffer);
+        imageDataRaw.addSubscriber(timeStepDataBuffer);
 
         QRCodeData qrCodeData = new QRCodeData.Builder(this, publisherManager, this).build();
         qrCodeData.addSubscriber(timeStepDataBuffer);

@@ -10,8 +10,8 @@ import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.AbcvlibLooper;
 import jp.oist.abcvlib.core.IOReadyListener;
 import jp.oist.abcvlib.core.inputs.PublisherManager;
-import jp.oist.abcvlib.core.inputs.phone.ImageData;
-import jp.oist.abcvlib.core.inputs.phone.ImageDataSubscriber;
+import jp.oist.abcvlib.core.inputs.phone.ImageDataRaw;
+import jp.oist.abcvlib.core.inputs.phone.ImageDataRawSubscriber;
 import jp.oist.abcvlib.core.inputs.phone.QRCodeData;
 import jp.oist.abcvlib.core.inputs.phone.QRCodeDataSubscriber;
 import jp.oist.abcvlib.util.QRCode;
@@ -22,12 +22,12 @@ import jp.oist.abcvlib.util.QRCode;
  * Runs PID controller locally on Android, but takes PID parameters from python GUI
  * @author Christopher Buckley https://github.com/topherbuckley
  */
-public class MainActivity extends AbcvlibActivity implements IOReadyListener, ImageDataSubscriber, QRCodeDataSubscriber {
+public class MainActivity extends AbcvlibActivity implements IOReadyListener, ImageDataRawSubscriber, QRCodeDataSubscriber {
 
     private Button showQRCode;
     private boolean isQRDisplayed = false;
     private QRCode qrCode;
-    private ImageData imageData;
+    private ImageDataRaw imageDataRaw;
 
     public MainActivity() {
     }
@@ -53,10 +53,10 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener, Im
     @Override
     public void onIOReady(AbcvlibLooper abcvlibLooper) {
         PublisherManager publisherManager = new PublisherManager();
-        imageData = new ImageData.Builder(this, publisherManager, this)
+        imageDataRaw = new ImageDataRaw.Builder(this, publisherManager, this)
                 .setPreviewView(findViewById(jp.oist.abcvlib.core.R.id.preview_view))
                 .build();
-        imageData.addSubscriber(this);
+        imageDataRaw.addSubscriber(this);
 
         QRCodeData qrCodeData = new QRCodeData.Builder(this, publisherManager, this).build();
         qrCodeData.addSubscriber(this);
@@ -71,18 +71,16 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener, Im
             qrCode.generate("Hello World!");
             showQRCode.setText(R.string.back_button_text);
             isQRDisplayed = true;
-            imageData.setQrcodescanning(false);
         } else {
             // removes the fragment that holds the last generated qrcode.
             qrCode.close();
             isQRDisplayed = false;
             showQRCode.setText(R.string.qr_button_show);
-            imageData.setQrcodescanning(true);
         }
     };
 
     @Override
-    public void onImageDataUpdate(long timestamp, int width, int height, Bitmap bitmap, String qrDecodedData) {
+    public void onImageDataRawUpdate(long timestamp, int width, int height, Bitmap bitmap) {
     }
 
     @Override

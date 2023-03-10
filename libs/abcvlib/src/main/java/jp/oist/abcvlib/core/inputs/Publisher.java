@@ -13,6 +13,8 @@ import com.intentfilter.androidpermissions.models.DeniedPermissions;
 
 import java.util.ArrayList;
 
+import jp.oist.abcvlib.core.inputs.phone.ImageDataRawSubscriber;
+
 /**
  * A publisher is any data stream, e.g. {@link jp.oist.abcvlib.core.inputs.microcontroller.BatteryData}, {@link jp.oist.abcvlib.core.inputs.microcontroller.WheelData}, etc.
  * <br><br>
@@ -36,9 +38,9 @@ import java.util.ArrayList;
  * specify how to properly start/stop the data stream.
  * <br><br>
  * @param <T> The {@link Subscriber} subclass that can accept the data published by your publisher.
- *           e.g. the {@link jp.oist.abcvlib.core.inputs.phone.ImageData class extends Publisher<ImageDataSubscriber>}
- *           where {@link jp.oist.abcvlib.core.inputs.phone.ImageDataSubscriber} implements the
- *           {@link jp.oist.abcvlib.core.inputs.phone.ImageDataSubscriber#onImageDataUpdate(long, int, int, Bitmap, byte[])}
+ *           e.g. the {@link jp.oist.abcvlib.core.inputs.phone.ImageData class extends Publisher<ImageDataRawSubscriber>}
+ *           where {@link ImageDataRawSubscriber} implements the
+ *           {@link ImageDataRawSubscriber#onImageDataUpdate(long, int, int, Bitmap, byte[])}
  *           method accepting the data from the last part of {@link jp.oist.abcvlib.core.inputs.phone.ImageData#analyze(ImageProxy)}
  */
 public abstract class Publisher<T extends Subscriber> implements PermissionManager.PermissionRequestListener{

@@ -3,7 +3,6 @@ package jp.oist.abcvlib.basicsubscriber;
 import android.graphics.Bitmap;
 import android.media.AudioTimestamp;
 import android.os.Bundle;
-import android.util.Log;
 
 import java.text.DecimalFormat;
 import java.util.Arrays;
@@ -18,8 +17,8 @@ import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataSubscriber;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataSubscriber;
-import jp.oist.abcvlib.core.inputs.phone.ImageData;
-import jp.oist.abcvlib.core.inputs.phone.ImageDataSubscriber;
+import jp.oist.abcvlib.core.inputs.phone.ImageDataRaw;
+import jp.oist.abcvlib.core.inputs.phone.ImageDataRawSubscriber;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneDataSubscriber;
 import jp.oist.abcvlib.core.inputs.phone.OrientationData;
@@ -47,7 +46,7 @@ import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
  */
 public class MainActivity extends AbcvlibActivity implements IOReadyListener,
         BatteryDataSubscriber, OrientationDataSubscriber, WheelDataSubscriber,
-        MicrophoneDataSubscriber, ImageDataSubscriber, QRCodeDataSubscriber {
+        MicrophoneDataSubscriber, ImageDataRawSubscriber, QRCodeDataSubscriber {
 
     private long lastFrameTime = System.nanoTime();
     private GuiUpdater guiUpdater;
@@ -81,7 +80,7 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener,
         new WheelData.Builder(this, publisherManager, abcvlibLooper).build().addSubscriber(this);
         new BatteryData.Builder(this, publisherManager, abcvlibLooper).build().addSubscriber(this);
         new OrientationData.Builder(this, publisherManager).build().addSubscriber(this);
-        new ImageData.Builder(this, publisherManager, this)
+        new ImageDataRaw.Builder(this, publisherManager, this)
                 .setPreviewView(findViewById(R.id.camera_x_preview)).build().addSubscriber(this);
         new MicrophoneData.Builder(this, publisherManager).build().addSubscriber(this);
         new QRCodeData.Builder(this, publisherManager, this).build().addSubscriber(this);
@@ -156,13 +155,13 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener,
     /**
      * Calculates the frame rate and sends it to the GUI. Other input params are ignored in this
      * example, but one could process each bitmap as necessary here.
-     * @param timestamp in nanoseconds see {@link java.lang.System#nanoTime()}
+     * @param timestamp in nanoseconds see {@link System#nanoTime()}
      * @param width in pixels
      * @param height in pixels
      * @param bitmap compressed bitmap object
      */
     @Override
-    public void onImageDataUpdate(long timestamp, int width, int height, Bitmap bitmap, String qrDecodedData) {
+    public void onImageDataRawUpdate(long timestamp, int width, int height, Bitmap bitmap) {
 //        Log.i(TAG, "Image Data Update: Timestamp=" + timestamp + " dims=" + width + " x "
 //                + height);
         double frameRate = 1.0 / ((System.nanoTime() - lastFrameTime) / 1000000000.0);

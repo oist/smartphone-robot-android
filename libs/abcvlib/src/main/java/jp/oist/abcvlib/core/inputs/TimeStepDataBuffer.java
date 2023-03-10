@@ -15,7 +15,7 @@ import java.util.concurrent.Future;
 
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataSubscriber;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataSubscriber;
-import jp.oist.abcvlib.core.inputs.phone.ImageDataSubscriber;
+import jp.oist.abcvlib.core.inputs.phone.ImageDataRawSubscriber;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneDataSubscriber;
 import jp.oist.abcvlib.core.inputs.phone.OrientationDataSubscriber;
 import jp.oist.abcvlib.core.inputs.phone.QRCodeDataSubscriber;
@@ -25,7 +25,7 @@ import jp.oist.abcvlib.util.ImageOps;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 
 public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubscriber,
-        ImageDataSubscriber, MicrophoneDataSubscriber, OrientationDataSubscriber, QRCodeDataSubscriber {
+        ImageDataRawSubscriber, MicrophoneDataSubscriber, OrientationDataSubscriber, QRCodeDataSubscriber {
 
     private final int bufferLength;
     private int writeIndex;
@@ -108,7 +108,7 @@ public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubsc
     }
 
     @Override
-    public void onImageDataUpdate(long timestamp, int width, int height, Bitmap bitmap, String qrDecodedData) {
+    public void onImageDataRawUpdate(long timestamp, int width, int height, Bitmap bitmap) {
         getWriteData().getImageData().add(timestamp, width, height, bitmap, null);
         // Handler to compress and put images into buffer
         synchronized (imgCompFuturesTimeStep){

@@ -22,17 +22,8 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.OnLifecycleEvent;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.zxing.BinaryBitmap;
-import com.google.zxing.ChecksumException;
-import com.google.zxing.FormatException;
-import com.google.zxing.NotFoundException;
-import com.google.zxing.PlanarYUVLuminanceSource;
-import com.google.zxing.Result;
-import com.google.zxing.common.HybridBinarizer;
-import com.google.zxing.multi.qrcode.QRCodeMultiReader;
-import com.google.zxing.qrcode.QRCodeReader;
 
-import java.io.ByteArrayOutputStream;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -40,69 +31,71 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import jp.oist.abcvlib.core.inputs.PublisherManager;
 import jp.oist.abcvlib.core.inputs.Publisher;
-import jp.oist.abcvlib.util.ErrorHandler;
-import jp.oist.abcvlib.util.ImageOps;
+import jp.oist.abcvlib.core.inputs.PublisherManager;
+import jp.oist.abcvlib.core.inputs.Subscriber;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.YuvToRgbConverter;
 
-import static android.graphics.ImageFormat.YUV_420_888;
-import static android.graphics.ImageFormat.YUV_422_888;
-import static android.graphics.ImageFormat.YUV_444_888;
+public abstract class ImageData<S extends Subscriber> extends Publisher<S> implements ImageAnalysis.Analyzer {
 
-public class ImageData extends Publisher<ImageDataSubscriber> implements ImageAnalysis.Analyzer {
-
-    private ImageAnalysis imageAnalysis;
+    protected ImageAnalysis imageAnalysis;
     private YuvToRgbConverter yuvToRgbConverter;
     private PreviewView previewView;
-    private final LifecycleOwner lifecycleOwner;
+    protected final LifecycleOwner lifecycleOwner;
+    protected ExecutorService imageExecutor;
 
     private ListenableFuture<ProcessCameraProvider> mCameraProviderFuture;
 
     private ProcessCameraProvider cameraProvider;
     private final String TAG = getClass().getName();
-    private ExecutorService imageExecutor;
     private final CountDownLatch countDownLatch = new CountDownLatch(2); // Waits for both analysis and preview to be running before sending a signal that it is ready
-    private boolean qrcodescanning = false;
 
     /*
      * @param previewView: e.g. from your Activity findViewById(R.id.camera_x_preview)
      * @param imageAnalysis: If set to null will generate default imageAnalysis object.
      */
     public ImageData(Context context, PublisherManager publisherManager, LifecycleOwner lifecycleOwner, PreviewView previewView,
-                     ImageAnalysis imageAnalysis){
+                     ImageAnalysis imageAnalysis, ExecutorService imageExecutor){
         super(context, publisherManager);
         this.lifecycleOwner = lifecycleOwner;
         this.previewView = previewView;
         this.imageAnalysis = imageAnalysis;
+        this.imageExecutor = imageExecutor;
     }
 
-    public static class Builder{
-        private final Context context;
-        private final PublisherManager publisherManager;
-        private final LifecycleOwner lifecycleOwner;
-        private PreviewView previewView;
-        private ImageAnalysis imageAnalysis;
+    // We must specify T to define the extending subclass, S to specify the subscriber type used by the extending subclass, and B to reference the extending subclasses' builder class.
+    public abstract static class Builder<T extends ImageData<S>,S extends Subscriber, B extends Builder<T, S, B>>{
+        protected final Context context;
+        protected final PublisherManager publisherManager;
+        protected final LifecycleOwner lifecycleOwner;
+        protected PreviewView previewView;
+        protected ImageAnalysis imageAnalysis;
+        protected ExecutorService imageExecutor;
+        protected T imageDataSubtype;
+        protected B self;
 
         public Builder(Context context, PublisherManager publisherManager, LifecycleOwner lifecycleOwner){
-            this.publisherManager = publisherManager;
             this.context = context;
+            this.publisherManager = publisherManager;
             this.lifecycleOwner = lifecycleOwner;
         }
 
-        public ImageData build(){
-            return new ImageData(context, publisherManager, lifecycleOwner, previewView, imageAnalysis);
-        }
+        protected abstract B self();
 
-        public Builder setPreviewView(PreviewView previewView){
+        public B setPreviewView(PreviewView previewView){
             this.previewView = previewView;
-            return this;
+            return self;
         }
 
-        public Builder setImageAnalysis(ImageAnalysis imageAnalysis){
+        public B setImageAnalysis(ImageAnalysis imageAnalysis){
             this.imageAnalysis = imageAnalysis;
-            return this;
+            return self;
+        }
+
+        public B setImageExecutor(ExecutorService imageExecutor){
+            this.imageExecutor = imageExecutor;
+            return self;
         }
     }
 
@@ -113,67 +106,32 @@ public class ImageData extends Publisher<ImageDataSubscriber> implements ImageAn
         return permissions;
     }
 
-    public ImageAnalysis getImageAnalysis() {
-        return imageAnalysis;
-    }
-
     @androidx.camera.core.ExperimentalGetImage
     @Override
     public void analyze(@NonNull ImageProxy imageProxy) {
         countDownLatch.countDown();
-        Image image;
         if (subscribers.size() > 0 && !paused){
-            image = imageProxy.getImage();
-        } else {
-            imageProxy.close();
-            return;}
-        if (image != null) {
-            int width = image.getWidth();
-            int height = image.getHeight();
-            long timestamp = image.getTimestamp();
-
-            Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-            yuvToRgbConverter.yuvToRgb(image, bitmap);
-
-            String qrDecodedData = "";
-            if (qrcodescanning && (image.getFormat() == YUV_420_888 || image.getFormat() == YUV_422_888 || image.getFormat() == YUV_444_888)) {
+            Image image = imageProxy.getImage();
+            if (image != null) {
+                // Copy the image buffer, as it appears to get overwritten or read from externally
                 ByteBuffer byteBuffer = image.getPlanes()[0].getBuffer();
                 byte[] imageData = new byte[byteBuffer.capacity()];
-                byteBuffer.flip();
                 byteBuffer.get(imageData);
-
-                PlanarYUVLuminanceSource source = new PlanarYUVLuminanceSource(
-                        imageData,
-                        image.getWidth(), image.getHeight(),
-                        0, 0,
-                        image.getWidth(), image.getHeight(),
-                        false
-                );
-
-                BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(source));
-
-                try {
-                    Result result = new QRCodeReader().decode(binaryBitmap);
-                    qrDecodedData = result.getText();
-                } catch (FormatException e) {
-                    Log.v("qrcode", "QR Code cannot be decoded");
-                } catch (ChecksumException e) {
-                    Log.v("qrcode", "QR Code error correction failed");
-                    e.printStackTrace();
-                } catch (NotFoundException e) {
-                    Log.v("qrcode", "QR Code not found");
-                }
-            }
-
-            for (ImageDataSubscriber subscriber:subscribers){
-                subscriber.onImageDataUpdate(timestamp, width, height, bitmap, qrDecodedData);
+                int format = image.getFormat();
+                int width = image.getWidth();
+                int height = image.getHeight();
+                long timestamp = image.getTimestamp();
+                Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                yuvToRgbConverter.yuvToRgb(image, bitmap);
+                customAnalysis(imageData, format, width, height, timestamp, bitmap);
             }
         }
-        imageProxy.close();
+        imageProxy.close(); // You must call these two lines at the end of the child's analyze method
     }
 
-    private void setDefaultImageAnalysis(){
+    protected abstract void customAnalysis(byte[] imageData, int format, int width, int height, long timestamp, Bitmap bitmap);
 
+    protected void setDefaultImageAnalysis(){
         imageAnalysis =
                 new ImageAnalysis.Builder()
                         .setTargetResolution(new Size(10, 10))
@@ -182,41 +140,23 @@ public class ImageData extends Publisher<ImageDataSubscriber> implements ImageAn
                         .build();
     }
 
-    public void setQrcodescanning(boolean bool){
-        qrcodescanning = bool;
-    }
-
     @Override
     public void start() {
         if (imageAnalysis == null) {
             setDefaultImageAnalysis();
         }
-            imageExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "imageAnalysis"));
-        if (imageAnalysis == null && previewView == null){
-            throw new UnsupportedOperationException("Either setImageAnalysis or setPreviewView must be called prior to calling the start method");
+        if (imageExecutor == null){
+            imageExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY, "imageAnalysis"));
         }
-        if (imageAnalysis != null && subscribers.size() > 0){
+        if (subscribers.size() > 0){
             yuvToRgbConverter = new YuvToRgbConverter(context);
             imageAnalysis.setAnalyzer(imageExecutor, this);
         }
         if (previewView != null){
             Handler handler = new Handler(context.getMainLooper());
             handler.post(() -> previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER));
-            previewView.post(() -> {
-                mCameraProviderFuture = ProcessCameraProvider.getInstance(context);
-                mCameraProviderFuture.addListener(() -> {
-                    try {
-                        cameraProvider = mCameraProviderFuture.get();
-                        cameraProvider.unbindAll();
-                        bindAll(cameraProvider, lifecycleOwner);
-                    } catch (ExecutionException | InterruptedException e) {
-                        ErrorHandler.eLog(TAG, "Unexpected Error", e, true);
-                    }
-                }, ContextCompat.getMainExecutor(context));
-            });
-        }else{
-            bindImageAnalysis();
         }
+        bindAll(lifecycleOwner);
         try {
             countDownLatch.await();
             publisherManager.onPublisherInitialized();
@@ -237,57 +177,41 @@ public class ImageData extends Publisher<ImageDataSubscriber> implements ImageAn
         cameraProvider = null;
     }
 
-    private void bindImageAnalysis(){
-        Executors.newSingleThreadExecutor().execute(() -> {
-            mCameraProviderFuture = ProcessCameraProvider.getInstance(context);
-            mCameraProviderFuture.addListener(() -> {
-                try {
-                    cameraProvider = mCameraProviderFuture.get();
+    private void bindAll(LifecycleOwner lifecycleOwner) {
 
-                    CameraSelector cameraSelector = new CameraSelector.Builder()
-                            .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
-                            .build();
-                    try {
-                        cameraProvider = mCameraProviderFuture.get();
-                    } catch (ExecutionException | InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    if (imageAnalysis != null){
-                        cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, imageAnalysis);
-                    }
-                    countDownLatch.countDown();
-
-                } catch (ExecutionException | InterruptedException e) {
-                    ErrorHandler.eLog(TAG, "Unexpected Error", e, true);
-                }
-            }, ContextCompat.getMainExecutor(context));
-        });
-    }
-
-    private void bindAll(@NonNull ProcessCameraProvider cameraProvider, LifecycleOwner lifecycleOwner) {
-        Preview preview = new Preview.Builder()
-                .build();
         CameraSelector cameraSelector = new CameraSelector.Builder()
                 .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
                 .build();
 
-        if (imageAnalysis != null){
-            cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, preview, imageAnalysis);
-        }else{
-            cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, preview);
-        }
-        preview.setSurfaceProvider(previewView.getSurfaceProvider());
+        mCameraProviderFuture = ProcessCameraProvider.getInstance(context);
+        mCameraProviderFuture.addListener(() -> {
+            try {
+                cameraProvider = mCameraProviderFuture.get();
+                if (previewView != null){
+                    Preview preview = new Preview.Builder()
+                            .build();
 
-        final Observer<PreviewView.StreamState> previewViewObserver = new Observer<PreviewView.StreamState>() {
-            @Override
-            public void onChanged(PreviewView.StreamState streamState) {
-                Log.i("previewView", "PreviewState: " + streamState.toString());
-                if (streamState.name().equals("STREAMING")){
-                    countDownLatch.countDown();
+                    cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, preview, imageAnalysis);
+
+                    preview.setSurfaceProvider(previewView.getSurfaceProvider());
+
+                    final Observer<PreviewView.StreamState> previewViewObserver = new Observer<PreviewView.StreamState>() {
+                        @Override
+                        public void onChanged(PreviewView.StreamState streamState) {
+                            Log.i("previewView", "PreviewState: " + streamState.toString());
+                            if (streamState.name().equals("STREAMING")) {
+                                countDownLatch.countDown();
+                            }
+                        }
+                    };
+                    this.previewView.getPreviewStreamState().observe(lifecycleOwner, previewViewObserver);
+                }else{
+                    cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, imageAnalysis);
                 }
+            } catch (ExecutionException | InterruptedException e) {
+                e.printStackTrace();
             }
-        };
-        this.previewView.getPreviewStreamState().observe(lifecycleOwner, previewViewObserver);
+        }, ContextCompat.getMainExecutor(context));
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_ANY)
