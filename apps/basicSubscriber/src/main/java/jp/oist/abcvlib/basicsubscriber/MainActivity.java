@@ -23,7 +23,6 @@ import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataSubscriber;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataSubscriber;
-import jp.oist.abcvlib.core.inputs.phone.ImageDataRaw;
 import jp.oist.abcvlib.core.inputs.phone.ImageDataRawSubscriber;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneData;
 import jp.oist.abcvlib.core.inputs.phone.MicrophoneDataSubscriber;
@@ -89,11 +88,10 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener,
         new WheelData.Builder(this, publisherManager, abcvlibLooper).build().addSubscriber(this);
         new BatteryData.Builder(this, publisherManager, abcvlibLooper).build().addSubscriber(this);
         new OrientationData.Builder(this, publisherManager).build().addSubscriber(this);
-        new ImageDataRaw.Builder(this, publisherManager, this)
-                .setPreviewView(findViewById(R.id.camera_x_preview)).build().addSubscriber(this);
+//        new ImageDataRaw.Builder(this, publisherManager, this).build().addSubscriber(this);
         new MicrophoneData.Builder(this, publisherManager).build().addSubscriber(this);
-        new ObjectDetectorData.Builder(this, publisherManager, this).build().addSubscriber(this);
-//        new QRCodeData.Builder(this, publisherManager, this).build().addSubscriber(this);
+        new ObjectDetectorData.Builder(this, publisherManager, this).setPreviewView(findViewById(R.id.camera_x_preview)).build().addSubscriber(this);
+        new QRCodeData.Builder(this, publisherManager, this).build().addSubscriber(this);
         publisherManager.initializePublishers();
         publisherManager.startPublishers();
     }
