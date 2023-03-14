@@ -27,65 +27,10 @@ task downloadModelFile2(type: Download) {
     overwrite false
 }
 
-def String getAssetID(String token, String owner, String repo, String tag_name, String asset_name){
-    def jsonFile = new ByteArrayOutputStream()
-    String path = "https://api.github.com/repos/${owner}/${repo}/releases".toString()
-    def asset_info
-    def asset_id
-    exec {
-        commandLine 'curl', '-L', '-H', 'Accept: application/vnd.github+json', '-H', "Authorization: token $token", '-H', 'X-GitHub-Api-Version: 2022-11-28', path
-
-        standardOutput = jsonFile
-    }
-    def jsonContent = new JsonSlurper().parseText(jsonFile.toString())
-    def release_info = null
-    for (def obj : jsonContent) {
-        if (obj.tag_name == tag_name) {
-            release_info = obj
-            def assets
-            if (release_info != null) {
-                assets = release_info.assets
-//                    println("assets: $assets")
-                if (assets != null) {
-                    for (def asset : assets) {
-                        if (asset.name == asset_name) {
-                            asset_info = asset
-                            println("found asset $asset_name")
-                            break
-                        }
-                    }
-                    if (asset_info != null){
-                        asset_id = asset_info.id
-                        println("asset_id: " + asset_id)
-                        return asset_id
-                    }else {
-                        println "Asset with $asset_name not found"
-                    }
-                } else {
-                    println "Release with tag $tag_name has no assets"
-                }
-            } else {
-                println "Release with tag $tag_name not found"
-            }
-            break
-        }
-    }
-}
-
-task downloadModelFileRobot(type: Download) {
-    doFirst{
-        String token = System.getenv("GITHUB_TOKEN")
-        String owner = 'oist'
-        String repo = 'smartphone_robot_object_detection'
-        String tag_name="0.1.1"
-        String asset_name = "model.tflite"
-        String asset_id = getAssetID(token, owner, repo, tag_name, asset_name)
-        println("asset_id: " + asset_id)
-        header 'Authorization', 'token ' + System.getenv("GITHUB_TOKEN")
-        src "https://api.github.com/repos/$owner/$repo/releases/assets/$asset_id"
-        dest project.ext.ASSET_DIR + '/model.tflite'
-        overwrite false
-    }
+task downloadModelFileRobot(type: Exec) {
+    ignoreExitValue true
+    commandLine 'echo', '$GITHUB_TOKEN', '|','gh', 'auth', 'login', '--with-token'
+    commandLine 'gh', 'release', 'download', '0.1.1', '-p', 'model.tflite', '-R', 'oist/smartphone_robot_object_detection', '-D', project.ext.ASSET_DIR, '--skip-existing'
 }
 
 preBuild.dependsOn downloadModelFile, downloadModelFile0, downloadModelFile1, downloadModelFile2, downloadModelFileRobot
