@@ -28,4 +28,5 @@ apps.each {
     app ->
         include app
         project(":${app}").projectDir = file("apps/${app}")
+
 }

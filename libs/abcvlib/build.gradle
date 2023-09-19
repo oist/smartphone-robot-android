@@ -8,6 +8,10 @@ dependencies {
     implementation 'io.github.nishkarsh:android-permissions:2.0.54'
 }
 
+android {
+    namespace 'jp.oist.abcvlib.core'
+}
+
 project.ext.ASSET_DIR = projectDir.toString() + '/src/main/assets'
 
 // Download default models; if you wish to use your own models then
