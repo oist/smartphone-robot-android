@@ -39,7 +39,7 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
     private UsbSerialPort port;
     private int cnt = 0;
     private float[] pwm = new float[]{1.0f, 0.5f, 0.0f, -0.5f, -1.0f};
-    private CircularFifoQueue<Byte> fifoQueue = new CircularFifoQueue<>(256);
+    private CircularFifoQueue<byte[]> fifoQueue = new CircularFifoQueue<>(256);
 
     private static final String ACTION_USB_PERMISSION =
             "com.android.example.USB_PERMISSION";
@@ -96,7 +96,8 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
         SerialInputOutputManager usbIoManager = new SerialInputOutputManager(port, this);
         usbIoManager.start();
         try {
-            sendPacket();
+            byte[] intialization = new byte[]{Commands.DO_NOTHING.getHexValue()};
+            sendPacket(intialization);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -188,20 +189,24 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
     private void ReadBytesHandler(byte[] data) throws IOException {
         //Ensure a proper start and stop mark present before adding anything to the fifoQueue
         StartStopIndex startStopIdx = startStopIndexSearch(data);
-        // Add the data from between the start and stop marks to the fifoQueue
+        // Not adding start and end index as fifoqueue is storing byte[]. One byte[] per packet/command
         if (startStopIdx.startIdx != -1 && startStopIdx.stopIdx != -1){
-            for (int i = startStopIdx.startIdx + 1; i < startStopIdx.stopIdx; i++){
-
-                if (fifoQueue.isAtFullCapacity()){
-                    Log.e("serial", "fifoQueue is full");
-                    throw new RuntimeException("fifoQueue is full");
-                }
-                fifoQueue.add(data[i]);
-
+            byte[] packet = new byte[startStopIdx.stopIdx - startStopIdx.startIdx - 1];
+            if (startStopIdx.stopIdx - (startStopIdx.startIdx + 1) >= 0)
+                System.arraycopy(data, startStopIdx.startIdx + 1, packet, 0, startStopIdx.stopIdx - (startStopIdx.startIdx + 1));
+            if (fifoQueue.isAtFullCapacity()){
+                Log.e("serial", "fifoQueue is full");
+                throw new RuntimeException("fifoQueue is full");
+            }else{
+                fifoQueue.add(packet);
                 // Run the command on a thread handler to allow the queue to keep being added to
-
-                parsePacket(data);
-                sendPacket();
+                
+                byte[] commandData = fifoQueue.peek();
+                if (commandData != null){
+                    parsePacket(commandData);
+                }else{
+                    Log.e("serial", "commandData is null");
+                }
             }
         }
     }
@@ -247,53 +252,55 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
         }
     }
 
-    private void parsePacket(byte[] data) {
+    private void parsePacket(byte[] commandData) {
         // The first byte after the start mark is the command
-        Commands command = Commands.getEnumByValue(data[1]);
+        Commands command = Commands.getEnumByValue(commandData[0]);
         switch (command){
             case DO_NOTHING:
                 Log.d("serial", "parseDoNothing");
                 break;
             case GET_CHARGE_DETAILS:
-                parseGetChargeDetails(data);
+                parseGetChargeDetails(commandData);
                 break;
             case GET_LOGS:
-                parseGetLogs(data);
+                parseGetLogs(commandData);
                 break;
             case VARIOUS:
-                parseVarious(data);
+                parseVarious(commandData);
                 break;
             case GET_ENCODER_COUNTS:
-                parseGetEncoderCounts(data);
+                parseGetEncoderCounts(commandData);
                 break;
             case RESET_ENCODER_COUNTS:
-                parseResetEncoderCounts(data);
+                parseResetEncoderCounts(commandData);
                 break;
             case SET_MOTOR_LEVELS:
-                parseSetMotorLevels(data);
+                parseSetMotorLevels(commandData);
                 break;
             case SET_MOTOR_BRAKE:
-                parseSetMotorBrake(data);
+                parseSetMotorBrake(commandData);
                 break;
             case GET_USB_VOLTAGE:
-                parseGetUSBVoltage(data);
+                parseGetUSBVoltage(commandData);
                 break;
             case ON_WIRELESS_ATTACHED:
-                parseOnWirelessAttached(data);
+                parseOnWirelessAttached(commandData);
                 break;
             case ON_WIRELESS_DETACHED:
-                parseOnWirelessDetached(data);
+                parseOnWirelessDetached(commandData);
                 break;
             case ON_MOTOR_FAULT:
-                parseOnMotorFault(data);
+                parseOnMotorFault(commandData);
                 break;
             case ON_USB_ERROR:
-                parseOnUSBError(data);
+                parseOnUSBError(commandData);
                 break;
             case NACK:
+                parseNack(commandData);
                 Log.w("serial", "Nack issued from device");
                 break;
             case ACK:
+                parseAck(commandData);
                 Log.d("serial", "parseAck");
                 break;
             case START:
@@ -308,10 +315,19 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
         }
     }
 
-    protected void sendPacket() throws IOException {
-        byte[] response = {(byte) Commands.GET_CHARGE_DETAILS.getHexValue()};
-        port.write(response, 1000);
-        cnt++;
+    protected void sendPacket(byte[] response) throws IOException {
+        byte[] mResponse = new byte[5];
+        // check whether mResponse is large enough to hold all of response and the start/stop marks
+        if (mResponse.length < response.length + 2){
+            Log.e("serial", "mResponse is not large enough to hold all of response and the stop mark");
+        }else{
+            mResponse[0] = Commands.START.getHexValue();
+            //Copies the contents of response into mResponse starting at index 1 so as not to overwrite the start mark
+            System.arraycopy(response, 0, mResponse, 1, response.length);
+            mResponse[response.length+1] = Commands.STOP.getHexValue();
+            port.write(mResponse, 1000);
+            cnt++;
+        }
     }
 
     private void parseDoNothing(byte[] bytes) {
@@ -358,6 +374,11 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
     }
     private void parseAck(byte[] bytes) {
         Log.d("serial", "parseAck");
+    }
+
+    private void sendAck() throws IOException {
+        byte[] ack = new byte[]{Commands.ACK.getHexValue()};
+        sendPacket(ack);
     }
     @Override
     public void onRunError(Exception e) {
