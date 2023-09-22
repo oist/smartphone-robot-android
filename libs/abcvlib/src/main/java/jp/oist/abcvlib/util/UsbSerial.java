@@ -1,4 +1,4 @@
-package jp.oist.abcvlib.core;
+package jp.oist.abcvlib.util;
 
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;

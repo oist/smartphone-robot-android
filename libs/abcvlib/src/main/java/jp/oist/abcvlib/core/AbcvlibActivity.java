@@ -6,11 +6,11 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.WindowManager;
 
-import ioio.lib.api.exception.ConnectionLostException;
 import java.io.IOException;
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
 import jp.oist.abcvlib.core.outputs.Outputs;
+import jp.oist.abcvlib.util.UsbSerial;
 
 /**
  * AbcvlibActivity is where all of the other classes are initialized into objects. The objects
