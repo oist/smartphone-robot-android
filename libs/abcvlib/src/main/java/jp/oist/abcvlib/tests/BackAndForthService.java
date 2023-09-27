@@ -17,7 +17,7 @@ public class BackAndForthService extends AbcvlibService implements IOReadyListen
     }
 
     @Override
-    public void onIOReady(AbcvlibLooper abcvlibLooper) {
+    public void onIOReady() {
         float speed = 0.5f;
         // Customizing ALL build params. You can remove any or all. This object not used, but here for reference.
         BackAndForthController backAndForthController = (BackAndForthController) new BackAndForthController(speed).setInitDelay(0)

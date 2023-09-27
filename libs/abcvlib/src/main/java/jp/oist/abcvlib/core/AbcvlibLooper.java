@@ -333,7 +333,7 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             throw e;
         }
         Log.d("abcvlib", "AbcvlibLooper setup() finished");
-        ioReadyListener.onIOReady(this);
+        ioReadyListener.onIOReady();
     }
 
     /**

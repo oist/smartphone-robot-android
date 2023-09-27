@@ -12,4 +12,6 @@
     <string name="qr_button_show">Show QR Code</string>
     <string name="qr_code_content">qr_code</string>
     <string name="back_button">Back</string>
+    <string name="robot_not_properly_attached_please_reattach_and_press_confirm">Robot not properly attached. Please reattach and press confirm</string>
+    <string name="confirm">Confirm</string>
 </resources>
