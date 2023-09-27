@@ -12,14 +12,19 @@ import android.util.Log;
 
 import com.hoho.android.usbserial.driver.CdcAcmSerialDriver;
 import com.hoho.android.usbserial.driver.ProbeTable;
+import com.hoho.android.usbserial.driver.SerialTimeoutException;
 import com.hoho.android.usbserial.driver.UsbSerialDriver;
 import com.hoho.android.usbserial.driver.UsbSerialPort;
 import com.hoho.android.usbserial.driver.UsbSerialProber;
 import com.hoho.android.usbserial.util.SerialInputOutputManager;
 
+import org.apache.commons.collections4.queue.CircularFifoQueue;
+
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
+
 
 public class UsbSerial implements SerialInputOutputManager.Listener{
 
@@ -30,6 +35,25 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
     private int cnt = 0;
     private float[] pwm = new float[]{1.0f, 0.5f, 0.0f, -0.5f, -1.0f};
     private SerialCommManager serialCommManager;
+    private byte[] responseData;
+    protected CircularFifoQueue<byte[]> fifoQueue = new CircularFifoQueue<>(256);
+    int timeout = 1000; //1s
+    int totalBytesRead = 0; // Track total bytes read
+    ByteBuffer packetBuffer = ByteBuffer.allocate(1024); // Adjust the buffer size as needed
+    boolean packetFound = false;
+    //Ensure a proper start and stop mark present before adding anything to the fifoQueue
+    StartStopIndex startStopIdx;
+    // Used to signal when a new packet is available between thread handling sending and receiving
+    private final Object newPacketReeceived = new Object();
+
+    private class StartStopIndex{
+        private int startIdx;
+        private int stopIdx;
+        private StartStopIndex(int startIdx, int stopIdx){
+            this.startIdx = startIdx;
+            this.stopIdx = stopIdx;
+        }
+    }
 
     private static final String ACTION_USB_PERMISSION =
             "com.android.example.USB_PERMISSION";
@@ -44,6 +68,7 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
         // Find all available drivers from attached devices.
         this.usbManager = usbManager;
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
+
 
         HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
 
@@ -99,33 +124,6 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
-//        byte[] intialization = new byte[]{Commands.DO_NOTHING.getHexValue()};
-//        sendPacket(intialization);
-
-
-//            ScheduledExecutorServiceWithException executor =
-//                    new ScheduledExecutorServiceWithException(1,
-//                            new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY,
-//                                    "serial"));
-//            executor.scheduleAtFixedRate(() -> {
-//                try {
-//                    Log.i("serial", "Writing qp to serial port");
-//                    port.write("a".getBytes(), 500);
-//                    port.write("p".getBytes(), 500);
-//                    byte[] recv = new byte[port.getReadEndpoint().getMaxPacketSize()];
-//                    int len = port.read(recv, 2000);
-//                    if (len > 0){
-//                        Log.i("serial", "Read " + len + " bytes from serial");
-//                        Log.i("serial", "Read " + new String(recv) + " from serial port");
-//                    } else{
-//                        Log.i("serial", "Zero bytes read");
-//                    }
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }, 0, 1000, TimeUnit.MILLISECONDS);
     }
 
     private UsbSerialDriver getDriver(){
@@ -144,14 +142,98 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
     @Override
     public void onNewData(byte[] data) {
         try {
-            serialCommManager.verifyPacket(data);
+            if (verifyPacket(data)){
+                Log.d("serial", "Packet verified");
+                synchronized (newPacketReeceived){
+                    newPacketReeceived.notify();
+                }
+            }
+            else{
+                Log.d("serial", "Incomplete Packet. Waiting for more data");
+            };
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
     public void send(byte[] packet, int timeout) throws IOException {
         port.write(packet, timeout);
+        awaitResponse();
+    }
+
+    /**
+     * Blocks until a response is received
+     */
+    public void awaitResponse() {
+        try {
+            // Wait until packet is available
+            Log.i("serial", "Waiting for packet to be available");
+            synchronized (newPacketReeceived){
+                newPacketReeceived.wait();
+            }
+            Log.i("serial", "Packet available");
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private StartStopIndex startStopIndexSearch(byte[] data) throws IOException {
+        StartStopIndex startStopIdx = new StartStopIndex(-1, -1);
+
+        for (int i = 0; i < data.length; i++){
+            if (data[i] == UsbSerialProtocol.STOP.getHexValue()){
+                startStopIdx.stopIdx = i;
+            }
+            else if (data[i] == UsbSerialProtocol.START.getHexValue()){
+                startStopIdx.startIdx = i;
+            }
+        }
+        // Error handling for startIdx or stopIdx not found
+        if (startStopIdx.startIdx == -1 || startStopIdx.stopIdx == -1){
+            Log.d("serial", "startIdx or stopIdx not found");
+        }
+        // Error handling for startIdx after stopIdx
+        else if (startStopIdx.startIdx > startStopIdx.stopIdx){
+            Log.d("serial", "startIdx after stopIdx");
+        }
+        // Error handling for startIdx and stopIdx too close together
+        else if (startStopIdx.stopIdx - startStopIdx.startIdx < 2){
+            Log.d("serial", "startIdx and stopIdx too close together");
+        }
+        // Error handling for startIdx and stopIdx too far apart
+        else if (startStopIdx.stopIdx - startStopIdx.startIdx > 100){
+            Log.d("serial", "startIdx and stopIdx too far apart");
+        }
+        return startStopIdx;
+    }
+
+    /**
+     * @param bytes to be verified to contain a valid packet. If so, the packet is added to the fifoQueue
+     * @return 0 if successful, -1 if unsuccessful
+     * @throws IOException if fifoQueue is full
+     */
+    protected boolean verifyPacket(byte[] bytes) throws IOException {
+        packetBuffer.put(bytes);
+
+        startStopIdx = startStopIndexSearch(packetBuffer.array());
+        if (startStopIdx.startIdx != -1 && startStopIdx.stopIdx != -1){
+            // If the packet is not empty, copy the contents of the packet into the byte[]
+            if (startStopIdx.stopIdx - (startStopIdx.startIdx + 1) >= 0) {
+                // Extract the packet and add it to the fifoQueue
+                packetBuffer.position(startStopIdx.startIdx);
+                ByteBuffer packet = packetBuffer.slice();
+                packet.limit(startStopIdx.stopIdx - startStopIdx.startIdx + 1);
+                packetBuffer.clear();
+                if (fifoQueue.isAtFullCapacity()) {
+                    Log.e("serial", "fifoQueue is full");
+                    throw new RuntimeException("fifoQueue is full");
+                } else {
+                    fifoQueue.add(packet.array());
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public int read(byte[] packet, int timeout) throws IOException {

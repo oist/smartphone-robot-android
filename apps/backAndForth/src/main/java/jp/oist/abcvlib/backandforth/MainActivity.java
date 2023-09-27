@@ -39,10 +39,12 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
         public void run() {
             if (switchMethod) {
                 Log.d("BackAndForth", "Setting motor levels to 0.5");
-                serialCommManager.setMotorLevels(0.5f, 0.5f);
+//                serialCommManager.setMotorLevels(0.5f, 0.5f);
+                serialCommManager.setMotorLevels(1f, 1f);
             } else {
                 Log.d("BackAndForth", "Setting motor levels to -0.5");
-                serialCommManager.setMotorLevels(-0.5f, -0.5f);
+//                serialCommManager.setMotorLevels(-0.5f, -0.5f);
+                serialCommManager.setMotorLevels(-1f, -1f);
             }
             switchMethod = !switchMethod;
         }
@@ -53,14 +55,13 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
         Runnable backAndForth = new BackAndForth();
 
-        serialCommManager.setMotorLevels(-0.5f, -0.5f);
-        serialCommManager.setMotorLevels(0.5f, 0.5f);
-        serialCommManager.setMotorLevels(0f, 0f);
+//        serialCommManager.setMotorLevels(-0.5f, -0.5f);
+//        serialCommManager.setMotorLevels(0.5f, 0.5f);
+//        serialCommManager.setMotorLevels(0f, 0f);
 
+        // Schedule the task to run every 2 seconds + whatever time it takes to run the task
+        executorService.scheduleWithFixedDelay(backAndForth, 0, 100, TimeUnit.MILLISECONDS);
 
-//        // Schedule the task to run every 2 seconds
-//        executorService.scheduleAtFixedRate(backAndForth, 0, 2, TimeUnit.SECONDS);
-//
 //        // Keep the program running for a while to observe the scheduled task
 //        try {
 //            Thread.sleep(10000); // Run for 10 seconds

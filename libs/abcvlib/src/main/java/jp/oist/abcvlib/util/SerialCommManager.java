@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
+
 public class SerialCommManager {
     /*
     Class to manage request-response patter between Android phone and USB Serial connection
@@ -24,50 +25,11 @@ public class SerialCommManager {
     private UsbSerial usbSerial;
     // fifoQueue is used to store the commands that are sent from the mcu to be executed
     // on the Android phone
-    private CircularFifoQueue<byte[]> fifoQueue = new CircularFifoQueue<>(256);
     // Preallocated bytebuffer to write motor levels to
     private ByteBuffer motorLevels = ByteBuffer.allocate((Float.BYTES * 2) + 1);
 
-    private enum ProtocolDataTypes {
-        DO_NOTHING((byte) 0x00),
-        GET_CHARGE_DETAILS((byte) 0x01),
-        GET_LOGS((byte) 0x02),
-        VARIOUS((byte) 0x03),
-        GET_ENCODER_COUNTS((byte) 0x04),
-        RESET_ENCODER_COUNTS((byte) 0x05),
-        SET_MOTOR_LEVELS((byte) 0x06),
-        SET_MOTOR_BRAKE((byte) 0x07),
-        GET_USB_VOLTAGE((byte) 0x08),
-        ON_WIRELESS_ATTACHED((byte) 0x09),
-        ON_WIRELESS_DETACHED((byte) 0x0A),
-        ON_MOTOR_FAULT((byte) 0x0B),
-        ON_USB_ERROR((byte) 0x0C),
 
-        NACK((byte) 0xFC),
-        ACK((byte) 0xFD),
-        START((byte) 0xFE),
-        STOP((byte) 0xFF);
 
-        private final byte hexValue;
-        ProtocolDataTypes(byte hexValue){
-            this.hexValue = hexValue;
-        }
-        public byte getHexValue(){
-            return hexValue;
-        }
-
-        private static final Map<Byte, ProtocolDataTypes> map = new HashMap<>();
-
-        static {
-            for (ProtocolDataTypes command : ProtocolDataTypes.values()) {
-                map.put(command.getHexValue(), command);
-            }
-        }
-
-        public static ProtocolDataTypes getEnumByValue(byte value) {
-            return map.get(value);
-        }
-    }
 
 
     // Constructor to initialize SerialCommManager
@@ -102,79 +64,13 @@ public class SerialCommManager {
         });
     }
 
-    private class StartStopIndex{
-        private int startIdx;
-        private int stopIdx;
-        private StartStopIndex(int startIdx, int stopIdx){
-            this.startIdx = startIdx;
-            this.stopIdx = stopIdx;
-        }
-    }
-
-    private StartStopIndex startStopIndexSearch(byte[] data) throws IOException {
-        StartStopIndex startStopIdx = new StartStopIndex(-1, -1);
-
-        for (int i = 0; i < data.length; i++){
-            if (data[i] == ProtocolDataTypes.STOP.getHexValue()){
-                startStopIdx.stopIdx = i;
-            }
-            else if (data[i] == ProtocolDataTypes.START.getHexValue()){
-                startStopIdx.startIdx = i;
-            }
-        }
-        // Error handling for startIdx or stopIdx not found
-        if (startStopIdx.startIdx == -1 || startStopIdx.stopIdx == -1){
-            Log.d("serial", "startIdx or stopIdx not found");
-        }
-        // Error handling for startIdx after stopIdx
-        else if (startStopIdx.startIdx > startStopIdx.stopIdx){
-            Log.d("serial", "startIdx after stopIdx");
-        }
-        // Error handling for startIdx and stopIdx too close together
-        else if (startStopIdx.stopIdx - startStopIdx.startIdx < 2){
-            Log.d("serial", "startIdx and stopIdx too close together");
-        }
-        // Error handling for startIdx and stopIdx too far apart
-        else if (startStopIdx.stopIdx - startStopIdx.startIdx > 100){
-            Log.d("serial", "startIdx and stopIdx too far apart");
-        }
-        return startStopIdx;
-    }
-
-
-    /**
-     * @param data byte[] to be added to the fifoQueue
-     * @return 0 if successful, -1 if unsuccessful
-     * @throws IOException if fifoQueue is full
-     */
-    protected int verifyPacket(byte[] data) throws IOException {
-        int result = 0;
-        //Ensure a proper start and stop mark present before adding anything to the fifoQueue
-        StartStopIndex startStopIdx = startStopIndexSearch(data);
-        // Not adding start and end index as fifoqueue is storing byte[]. One byte[] per packet/command
-        if (startStopIdx.startIdx != -1 && startStopIdx.stopIdx != -1){
-            byte[] packet = new byte[startStopIdx.stopIdx - startStopIdx.startIdx - 1];
-            if (startStopIdx.stopIdx - (startStopIdx.startIdx + 1) >= 0)
-                System.arraycopy(data, startStopIdx.startIdx + 1, packet, 0, startStopIdx.stopIdx - (startStopIdx.startIdx + 1));
-            if (fifoQueue.isAtFullCapacity()){
-                Log.e("serial", "fifoQueue is full");
-                throw new RuntimeException("fifoQueue is full");
-            }else{
-                fifoQueue.add(packet);
-            }
-        }else{
-            result = -1;
-        }
-        return result;
-    }
-
     private int parseFifoPacket() {
         int result = 0;
         // Run the command on a thread handler to allow the queue to keep being added to
-        byte[] packet = fifoQueue.poll();
+        byte[] packet = usbSerial.fifoQueue.poll();
         if (packet != null) {
             // The first byte after the start mark is the command
-            ProtocolDataTypes command = ProtocolDataTypes.getEnumByValue(packet[0]);
+            UsbSerialProtocol command = UsbSerialProtocol.getEnumByValue(packet[0]);
             switch (command) {
                 case DO_NOTHING:
                     Log.d("serial", "parseDoNothing");
@@ -250,14 +146,13 @@ public class SerialCommManager {
             Log.e("serial", "mResponse is not large enough to hold all of response and the stop mark");
             return -1;
         }else{
-            packetSend[0] = ProtocolDataTypes.START.getHexValue();
+            packetSend[0] = UsbSerialProtocol.START.getHexValue();
             //Copies the contents of response into mResponse starting at index 1 so as not to overwrite the start mark
             System.arraycopy(bytes, 0, packetSend, 1, bytes.length);
-            packetSend[bytes.length+1] = ProtocolDataTypes.STOP.getHexValue();
+            packetSend[bytes.length+1] = UsbSerialProtocol.STOP.getHexValue();
             try {
                 this.usbSerial.send(packetSend, 1000);
-                readPacket(returnPacket, 10000);
-
+                //TODO wait for onNewData to be called and succeed in finding a packet
             } catch (SerialTimeoutException e){
                 Log.e("serial", "SerialTimeoutException on send");
                 return -2;
@@ -268,28 +163,11 @@ public class SerialCommManager {
         return 0;
     }
 
-    protected int readPacket(byte[] bytes, int timeout) {
-        int bytesRead = 0;
-        try {
-            bytesRead = this.usbSerial.read(bytes, timeout);
-            while (verifyPacket(bytes) != 0){
-                Log.e("serial", "Error verifying packet");
-                bytesRead = this.usbSerial.read(bytes, timeout);
-            }
-        } catch (SerialTimeoutException e){
-            Log.e("serial", "SerialTimeoutException on read");
-            return -2;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return bytesRead;
-    }
-
     //-------------------------------------------------------------------///
     // ---- API function calls for requesting something from the mcu ----///
     //-------------------------------------------------------------------///
     private void sendAck() throws IOException {
-        byte[] ack = new byte[]{ProtocolDataTypes.ACK.getHexValue()};
+        byte[] ack = new byte[]{UsbSerialProtocol.ACK.getHexValue()};
         sendPacket(ack);
     }
 
@@ -320,7 +198,7 @@ public class SerialCommManager {
         right = right * 5.08f;
 
         motorLevels.clear();
-        motorLevels.put(ProtocolDataTypes.SET_MOTOR_LEVELS.getHexValue());
+        motorLevels.put(UsbSerialProtocol.SET_MOTOR_LEVELS.getHexValue());
         motorLevels.putFloat(left);
         motorLevels.putFloat(right);
         byte[] commandData = motorLevels.array();

@@ -11,6 +11,8 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import java.io.IOException;
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
@@ -30,7 +32,7 @@ import jp.oist.abcvlib.util.SerialReadyListener;
  * @author Christopher Buckley https://github.com/topherbuckley
  *
  */
-public abstract class AbcvlibActivity extends IOIOActivity implements SerialReadyListener {
+public abstract class AbcvlibActivity extends AppCompatActivity implements SerialReadyListener {
 
     private Outputs outputs;
     private Switches switches = new Switches();
@@ -132,17 +134,17 @@ public abstract class AbcvlibActivity extends IOIOActivity implements SerialRead
         outputs = new Outputs(switches, abcvlibLooper);
     }
 
-    /**
-     Overriding here passes the initialized AbcvlibLooper object to the IOIOLooper class which
-     then connects the object to the actual IOIOBoard. There is no need to start a separate thread
-     or create a global objects in the Android App MainActivity or otherwise.
-      */
-    @Override
-    public IOIOLooper createIOIOLooper(String connectionType, Object extra) {
-        if (this.abcvlibLooper == null && connectionType.equals("ioio.lib.android.accessory.AccessoryConnectionBootstrap.Connection")){
-            this.abcvlibLooper = new AbcvlibLooper(ioReadyListener);
-            initializeOutputs();
-        }
-        return this.abcvlibLooper;
-    }
+//    /**
+//     Overriding here passes the initialized AbcvlibLooper object to the IOIOLooper class which
+//     then connects the object to the actual IOIOBoard. There is no need to start a separate thread
+//     or create a global objects in the Android App MainActivity or otherwise.
+//      */
+//    @Override
+//    public IOIOLooper createIOIOLooper(String connectionType, Object extra) {
+//        if (this.abcvlibLooper == null && connectionType.equals("ioio.lib.android.accessory.AccessoryConnectionBootstrap.Connection")){
+//            this.abcvlibLooper = new AbcvlibLooper(ioReadyListener);
+//            initializeOutputs();
+//        }
+//        return this.abcvlibLooper;
+//    }
 }
