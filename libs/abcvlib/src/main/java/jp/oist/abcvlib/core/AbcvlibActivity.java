@@ -18,6 +18,7 @@ import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
 import jp.oist.abcvlib.core.outputs.Outputs;
 import jp.oist.abcvlib.util.SerialCommManager;
+import jp.oist.abcvlib.util.SerialResponseListener;
 import jp.oist.abcvlib.util.UsbSerial;
 import jp.oist.abcvlib.util.SerialReadyListener;
 
@@ -32,7 +33,7 @@ import jp.oist.abcvlib.util.SerialReadyListener;
  * @author Christopher Buckley https://github.com/topherbuckley
  *
  */
-public abstract class AbcvlibActivity extends AppCompatActivity implements SerialReadyListener {
+public abstract class AbcvlibActivity extends AppCompatActivity implements SerialResponseListener {
 
     private Outputs outputs;
     private Switches switches = new Switches();
@@ -40,13 +41,11 @@ public abstract class AbcvlibActivity extends AppCompatActivity implements Seria
     private static final String TAG = "abcvlib";
     private IOReadyListener ioReadyListener;
     protected UsbSerial usbSerial;
-    private SerialReadyListener serialReadyListener;
+    private SerialResponseListener serialResponseListener;
     protected SerialCommManager serialCommManager;
+    private Runnable android2PiWriter = null;
+    private Runnable pi2AndroidReader = null;
     AlertDialog alertDialog = null;
-
-    public void setIoReadyListener(IOReadyListener ioReadyListener) {
-        this.ioReadyListener = ioReadyListener;
-    }
 
     protected void onCreate(Bundle savedInstanceState) {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -58,12 +57,22 @@ public abstract class AbcvlibActivity extends AppCompatActivity implements Seria
         try {
             this.usbSerial = new UsbSerial(this,
                     (UsbManager) getSystemService(Context.USB_SERVICE),
-                    this,
-                    serialCommManager);
+                    this);
         } catch (IOException e) {
             e.printStackTrace();
             showCustomDialog();
         }
+    }
+
+    public void onSerialReady(UsbSerial usbSerial) {
+    }
+
+    protected void setAndroi2PiWriter(Runnable android2PiWriter){
+        this.android2PiWriter = android2PiWriter;
+    }
+
+    protected void setPi2AndroidReader(Runnable pi2AndroidReader){
+        this.pi2AndroidReader = pi2AndroidReader;
     }
 
     private void showCustomDialog() {
@@ -93,12 +102,6 @@ public abstract class AbcvlibActivity extends AppCompatActivity implements Seria
 
         // Show the dialog
         alertDialog.show();
-    }
-
-
-    public void onSerialReady(UsbSerial usbSerial){
-        serialCommManager = new SerialCommManager(usbSerial);
-        ioReadyListener.onIOReady();
     }
 
     @Override
@@ -133,18 +136,4 @@ public abstract class AbcvlibActivity extends AppCompatActivity implements Seria
     private void initializeOutputs(){
         outputs = new Outputs(switches, abcvlibLooper);
     }
-
-//    /**
-//     Overriding here passes the initialized AbcvlibLooper object to the IOIOLooper class which
-//     then connects the object to the actual IOIOBoard. There is no need to start a separate thread
-//     or create a global objects in the Android App MainActivity or otherwise.
-//      */
-//    @Override
-//    public IOIOLooper createIOIOLooper(String connectionType, Object extra) {
-//        if (this.abcvlibLooper == null && connectionType.equals("ioio.lib.android.accessory.AccessoryConnectionBootstrap.Connection")){
-//            this.abcvlibLooper = new AbcvlibLooper(ioReadyListener);
-//            initializeOutputs();
-//        }
-//        return this.abcvlibLooper;
-//    }
 }

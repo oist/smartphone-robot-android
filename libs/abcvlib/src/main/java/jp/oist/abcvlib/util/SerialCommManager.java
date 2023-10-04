@@ -1,16 +1,10 @@
 package jp.oist.abcvlib.util;
-
 import android.util.Log;
-
 import com.hoho.android.usbserial.driver.SerialTimeoutException;
-
-import org.apache.commons.collections4.queue.CircularFifoQueue;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Executors;
 
 
@@ -27,53 +21,105 @@ public class SerialCommManager {
     // on the Android phone
     // Preallocated bytebuffer to write motor levels to
     private ByteBuffer motorLevels = ByteBuffer.allocate((Float.BYTES * 2) + 1);
-
-
-
+    private boolean shutdown = false;
+    private Runnable pi2AndroidReader;
+    private Runnable android2PiWriter;
 
 
     // Constructor to initialize SerialCommManager
-    public SerialCommManager(UsbSerial usbSerial) {
+    public SerialCommManager(UsbSerial usbSerial, Runnable pi2AndroidReader, Runnable android2PiWriter) {
         this.usbSerial = usbSerial;
+        if (pi2AndroidReader == null){
+            this.pi2AndroidReader = defaultPi2AndroidReader;
+            Log.w("serial", "pi2AndroidReader was null. Using default rather than custom");
+        }else {
+            this.pi2AndroidReader = pi2AndroidReader;
+        }
+        if (android2PiWriter == null){
+            this.android2PiWriter = defaultAndroid2PiWriter;
+            Log.w("serial", "android2PiWriter was null. Using default rather than custom");
+        }else{
+            this.android2PiWriter = android2PiWriter;
+        }
         //rp2040 is little endian whereas Java is big endian. This is to ensure that the bytes are
         //written in the correct order for parsing on the rp2040
         motorLevels.order(ByteOrder.LITTLE_ENDIAN);
     }
 
-    // Create a default Runnable that sends the Commands.DO_NOTHING command
-    // This default Runnable will be overridden or specified in the constructor of this class
-    // such that when started, the overriden or specified Runnable will be executed instead of the default
+    public SerialCommManager(UsbSerial usbSerial, Runnable android2PiWriter){
+        this(usbSerial, null, android2PiWriter);
+    }
 
-    Runnable defaultRunnable = new Runnable() {
-        UsbSerial usbSerial = SerialCommManager.this.usbSerial;
+    private final Runnable defaultPi2AndroidReader = new Runnable() {
         @Override
         public void run() {
-            parseFifoPacket();
-            setMotorLevels(0.0f, 0.0f);
+            while (!shutdown) {
+                int result = parseFifoPacket();
+                usbSerial.packetParsed.setStatus(result);
+                Log.i(Thread.currentThread().getName(), "usbSerial.packetParsed.notify()");
+                synchronized (usbSerial.packetParsed){
+                    usbSerial.packetParsed.notify();
+                }
+                usbSerial.awaitPacketReceived();
+            }
+        }
+    };
+
+    private final Runnable defaultAndroid2PiWriter = new Runnable() {
+        @Override
+        public void run() {
+            while (!shutdown) {
+                //TODO
+            }
         }
     };
 
     // Start method to start the thread
     public void start() {
-        ProcessPriorityThreadFactory threadFactory = new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY, "SerialCommManager");
-        Executors.newSingleThreadExecutor(threadFactory).execute(new Runnable() {
-            @Override
-            public void run() {
-
-            }
-        });
+        ProcessPriorityThreadFactory serialCommManager_Pi2Android_factory =
+                new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY,
+                        "SerialCommManager_Pi2Android");
+        ProcessPriorityThreadFactory serialCommManager_Android2Pi_factory =
+                new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY,
+                        "SerialCommManager_Android2Pi");
+        Executors.newSingleThreadScheduledExecutor(serialCommManager_Pi2Android_factory).
+                execute(pi2AndroidReader);
+        Executors.newSingleThreadScheduledExecutor(serialCommManager_Android2Pi_factory).
+                scheduleWithFixedDelay(android2PiWriter, 0, 1, java.util.concurrent.TimeUnit.MILLISECONDS);
     }
 
-    private int parseFifoPacket() {
+    protected void stop() {
+        shutdown = true;
+    }
+
+    //TODO paseFifoPacket() should call the various SerialResponseListener methods.
+    protected int parseFifoPacket() {
         int result = 0;
+        byte[] packet = null;
         // Run the command on a thread handler to allow the queue to keep being added to
-        byte[] packet = usbSerial.fifoQueue.poll();
+        synchronized (usbSerial.fifoQueue) {
+            packet = usbSerial.fifoQueue.poll();
+        }
+            // Check if there is a packet in the queue (fifoQueue
         if (packet != null) {
+
+            // Log packet as an array of hex bytes
+            StringBuilder sb = new StringBuilder();
+            for (byte b : packet) {
+                sb.append(String.format("%02X ", b));
+            }
+            Log.i(Thread.currentThread().getName(), "Received packet: " + sb.toString());
+
             // The first byte after the start mark is the command
             UsbSerialProtocol command = UsbSerialProtocol.getEnumByValue(packet[0]);
+            Log.i(Thread.currentThread().getName(), "Received " + command + " from pi");
+            if (command == null){
+                Log.e("Pi2AndroidReader", "Command not found");
+                return -1;
+            }
             switch (command) {
                 case DO_NOTHING:
-                    Log.d("serial", "parseDoNothing");
+                    Log.d("Pi2AndroidReader", "parseDoNothing");
                     break;
                 case GET_CHARGE_DETAILS:
                     onResponseGetChargeDetails(packet);
@@ -113,31 +159,46 @@ public class SerialCommManager {
                     break;
                 case NACK:
                     onNack(packet);
-                    Log.w("serial", "Nack issued from device");
+                    Log.w("Pi2AndroidReader", "Nack issued from device");
                     result = -1;
                     break;
                 case ACK:
                     onAck(packet);
-                    Log.d("serial", "parseAck");
+                    result = 1;
+                    Log.d("Pi2AndroidReader", "parseAck");
                     break;
                 case START:
-                    Log.e("serial", "parseStart. Start should never be a command");
+                    Log.e("Pi2AndroidReader", "parseStart. Start should never be a command");
                     result = -1;
                     break;
                 case STOP:
-                    Log.e("serial", "parseStop. Stop should never be a command");
+                    Log.e("Pi2AndroidReader", "parseStop. Stop should never be a command");
                     result = -1;
                     break;
                 default:
-                    Log.e("serial", "parsePacket. Command not found");
+                    Log.e("Pi2AndroidReader", "parsePacket. Command not found");
                     result = -1;
                     break;
             }
         }
+        else {
+            Log.i(Thread.currentThread().getName(), "No packet in queue");
+            result = 0;
+        }
         return result;
     }
 
-    protected int sendPacket(byte[] bytes) {
+
+    /**
+     * Do not use this method unless you are very familiar with the protocol on both the rp2040 and
+     * Android side. This method is used to send raw bytes to the rp2040. It is recommended to use
+     * the wrapped methods for doing higher level commands such as setMotorLevels. Sending the wrong
+     * bytes to the rp2040 can cause it to crash and require a reset or worse.
+     * @param bytes The raw bytes to be sent to the rp2040
+     * @return 0 if successful, -1 if mResponse is not large enough to hold all of response and the stop mark,
+     * -2 if SerialTimeoutException on send
+     */
+    private int sendPacket(byte[] bytes) {
         byte[] packetSend = new byte[11];
         // Note this size should match the one being sent by rp2040.
         byte[] returnPacket = new byte[512];
@@ -205,9 +266,9 @@ public class SerialCommManager {
         //TODO this can likely be optimized by reuse rather than allocation every loop.
         byte[] packetReturn = new byte[8];
         if (sendPacket(commandData) != 0){
-            Log.e("serial", "Error sending packet");
+            Log.e("Android2PiWriter", "Error sending packet");
         }else{
-            Log.d("serial", "Packet sent");
+            Log.d("Android2PiWriter", "Packet sent");
         }
     }
 
