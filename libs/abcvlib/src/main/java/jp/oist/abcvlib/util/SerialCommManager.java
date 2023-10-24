@@ -85,7 +85,7 @@ public class SerialCommManager {
         Executors.newSingleThreadScheduledExecutor(serialCommManager_Pi2Android_factory).
                 execute(pi2AndroidReader);
         Executors.newSingleThreadScheduledExecutor(serialCommManager_Android2Pi_factory).
-                scheduleWithFixedDelay(android2PiWriter, 0, 1, java.util.concurrent.TimeUnit.MILLISECONDS);
+                scheduleWithFixedDelay(android2PiWriter, 0, 10, java.util.concurrent.TimeUnit.MILLISECONDS);
     }
 
     protected void stop() {
