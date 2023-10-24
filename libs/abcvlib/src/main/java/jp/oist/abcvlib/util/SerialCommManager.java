@@ -19,8 +19,41 @@ public class SerialCommManager {
     private UsbSerial usbSerial;
     // fifoQueue is used to store the commands that are sent from the mcu to be executed
     // on the Android phone
+
+    private class AndroidToRP2040Packet {
+        private byte packetType;
+        protected ByteBuffer data = ByteBuffer.allocate(Float.BYTES * 2);
+        // make room for packet_type, and start and stop marks
+        private ByteBuffer packet = ByteBuffer.allocate(Float.BYTES * 2 + 3);
+
+        public AndroidToRP2040Packet(byte packetType){
+            //rp2040 is little endian whereas Java is big endian. This is to ensure that the bytes are
+            //written in the correct order for parsing on the rp2040
+            data.order(ByteOrder.LITTLE_ENDIAN);
+            packet.order(ByteOrder.LITTLE_ENDIAN);
+            this.packetType = packetType;
+            packet.put(UsbSerialProtocol.START.getHexValue());
+            packet.put(packetType);
+        }
+
+        // Add data to packet then the end mark
+        protected byte[] packetTobytes(){
+            data.flip();
+            packet.put(data);
+            packet.put(UsbSerialProtocol.STOP.getHexValue());
+            return packet.array();
+        }
+
+        protected void clear(){
+            packet.clear();
+            packet.put(UsbSerialProtocol.START.getHexValue());
+            packet.put(packetType);
+            data.clear();
+        }
+    }
+
     // Preallocated bytebuffer to write motor levels to
-    private ByteBuffer motorLevels = ByteBuffer.allocate((Float.BYTES * 2) + 1);
+    private AndroidToRP2040Packet motorLevels = new AndroidToRP2040Packet(UsbSerialProtocol.SET_MOTOR_LEVELS.getHexValue());
     private boolean shutdown = false;
     private Runnable pi2AndroidReader;
     private Runnable android2PiWriter;
@@ -41,9 +74,6 @@ public class SerialCommManager {
         }else{
             this.android2PiWriter = android2PiWriter;
         }
-        //rp2040 is little endian whereas Java is big endian. This is to ensure that the bytes are
-        //written in the correct order for parsing on the rp2040
-        motorLevels.order(ByteOrder.LITTLE_ENDIAN);
     }
 
     public SerialCommManager(UsbSerial usbSerial, Runnable android2PiWriter){
@@ -199,27 +229,13 @@ public class SerialCommManager {
      * -2 if SerialTimeoutException on send
      */
     private int sendPacket(byte[] bytes) {
-        byte[] packetSend = new byte[11];
-        // Note this size should match the one being sent by rp2040.
-        byte[] returnPacket = new byte[512];
-        // check whether mResponse is large enough to hold all of response and the start/stop marks
-        if (packetSend.length < bytes.length + 2){
-            Log.e("serial", "mResponse is not large enough to hold all of response and the stop mark");
-            return -1;
-        }else{
-            packetSend[0] = UsbSerialProtocol.START.getHexValue();
-            //Copies the contents of response into mResponse starting at index 1 so as not to overwrite the start mark
-            System.arraycopy(bytes, 0, packetSend, 1, bytes.length);
-            packetSend[bytes.length+1] = UsbSerialProtocol.STOP.getHexValue();
-            try {
-                this.usbSerial.send(packetSend, 1000);
-                //TODO wait for onNewData to be called and succeed in finding a packet
-            } catch (SerialTimeoutException e){
-                Log.e("serial", "SerialTimeoutException on send");
-                return -2;
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        try {
+            this.usbSerial.send(bytes, 1000);
+        } catch (SerialTimeoutException e){
+            Log.e("serial", "SerialTimeoutException on send");
+            return -2;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
         return 0;
     }
@@ -259,12 +275,9 @@ public class SerialCommManager {
         right = right * 5.08f;
 
         motorLevels.clear();
-        motorLevels.put(UsbSerialProtocol.SET_MOTOR_LEVELS.getHexValue());
-        motorLevels.putFloat(left);
-        motorLevels.putFloat(right);
-        byte[] commandData = motorLevels.array();
-        //TODO this can likely be optimized by reuse rather than allocation every loop.
-        byte[] packetReturn = new byte[8];
+        motorLevels.data.putFloat(left);
+        motorLevels.data.putFloat(right);
+        byte[] commandData = motorLevels.packetTobytes();
         if (sendPacket(commandData) != 0){
             Log.e("Android2PiWriter", "Error sending packet");
         }else{
