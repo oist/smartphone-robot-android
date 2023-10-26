@@ -23,9 +23,9 @@ public class SerialCommManager {
     public static int packetSize = Float.BYTES * 2 + 3;
     private class AndroidToRP2040Packet {
         private byte packetType;
-        protected ByteBuffer data = ByteBuffer.allocate(Float.BYTES * 2);
         // make room for packet_type, and start and stop marks
-        private ByteBuffer packet = ByteBuffer.allocate(Float.BYTES * 2 + 3);
+        protected ByteBuffer data = ByteBuffer.allocate(Float.BYTES * 2);
+        private ByteBuffer packet = ByteBuffer.allocate(packetSize);
 
         public AndroidToRP2040Packet(byte packetType){
             //rp2040 is little endian whereas Java is big endian. This is to ensure that the bytes are
