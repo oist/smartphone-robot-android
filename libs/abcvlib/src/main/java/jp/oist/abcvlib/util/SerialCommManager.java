@@ -38,7 +38,7 @@ public class SerialCommManager {
 
         // Add data to packet then the end mark
         protected byte[] packetTobytes(){
-            data.flip();
+            data.rewind();
             packet.put(data);
             packet.put(UsbSerialProtocol.STOP.getHexValue());
             return packet.array();
