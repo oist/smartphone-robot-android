@@ -20,39 +20,6 @@ public class SerialCommManager {
     // fifoQueue is used to store the commands that are sent from the mcu to be executed
     // on the Android phone
 
-    public static int packetSize = Float.BYTES * 2 + 3;
-    private class AndroidToRP2040Packet {
-        private byte packetType;
-        // make room for packet_type, and start and stop marks
-        protected ByteBuffer data = ByteBuffer.allocate(Float.BYTES * 2);
-        private ByteBuffer packet = ByteBuffer.allocate(packetSize);
-
-        public AndroidToRP2040Packet(byte packetType){
-            //rp2040 is little endian whereas Java is big endian. This is to ensure that the bytes are
-            //written in the correct order for parsing on the rp2040
-            data.order(ByteOrder.LITTLE_ENDIAN);
-            packet.order(ByteOrder.LITTLE_ENDIAN);
-            this.packetType = packetType;
-            packet.put(UsbSerialProtocol.START.getHexValue());
-            packet.put(packetType);
-        }
-
-        // Add data to packet then the end mark
-        protected byte[] packetTobytes(){
-            data.rewind();
-            packet.put(data);
-            packet.put(UsbSerialProtocol.STOP.getHexValue());
-            return packet.array();
-        }
-
-        protected void clear(){
-            packet.clear();
-            packet.put(UsbSerialProtocol.START.getHexValue());
-            packet.put(packetType);
-            data.clear();
-        }
-    }
-
     // Preallocated bytebuffer to write motor levels to
     private AndroidToRP2040Packet motorLevels = new AndroidToRP2040Packet(UsbSerialProtocol.SET_MOTOR_LEVELS.getHexValue());
     private AndroidToRP2040Packet encoderCounts = new AndroidToRP2040Packet(UsbSerialProtocol.GET_ENCODER_COUNTS.getHexValue());
@@ -231,8 +198,8 @@ public class SerialCommManager {
      * -2 if SerialTimeoutException on send
      */
     private int sendPacket(byte[] bytes) {
-        if (bytes.length != packetSize) {
-            throw new IllegalArgumentException("Input byte array must have a length of " + packetSize);
+        if (bytes.length != AndroidToRP2040Packet.packetSize) {
+            throw new IllegalArgumentException("Input byte array must have a length of " + AndroidToRP2040Packet.packetSize);
         }
         try {
             this.usbSerial.send(bytes, 1000);
