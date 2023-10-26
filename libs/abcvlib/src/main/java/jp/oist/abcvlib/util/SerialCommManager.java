@@ -319,10 +319,10 @@ public class SerialCommManager {
     private void onResponseGetEncoderCounts(byte[] bytes) {
         Log.d("serial", "parseGetEncoderCounts");
         //bytes[2-5] is the left encoder count in little Endien, so need to reverse the order
-        Log.d("serial", "Left encoder count: " + ByteBuffer.wrap(bytes, 2, 4).order(ByteOrder.LITTLE_ENDIAN).getInt());
+        int left = ByteBuffer.wrap(bytes, 2, 4).order(ByteOrder.LITTLE_ENDIAN).getInt();
         //bytes[6-9] is the right encoder count
-        Log.d("serial", "Right encoder count: " + ByteBuffer.wrap(bytes, 6, 4).order(ByteOrder.LITTLE_ENDIAN).getInt());
-
+        int right = ByteBuffer.wrap(bytes, 6, 4).order(ByteOrder.LITTLE_ENDIAN).getInt();
+        usbSerial.serialResponseListener.onEncoderCountsRec(left, right);
     }
     private void onResponseResetEncoderCounts(byte[] bytes) {
         Log.d("serial", "parseResetEncoderCounts");    }

@@ -67,6 +67,11 @@ public abstract class AbcvlibActivity extends AppCompatActivity implements Seria
     public void onSerialReady(UsbSerial usbSerial) {
     }
 
+    public void onEncoderCountsRec(int left, int right){
+        Log.d("serial", "Left encoder count: " + left);
+        Log.d("serial", "Right encoder count: " + right);
+    }
+
     protected void setAndroi2PiWriter(Runnable android2PiWriter){
         this.android2PiWriter = android2PiWriter;
     }

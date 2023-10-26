@@ -48,7 +48,7 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
     private final Context context;
     private final UsbManager usbManager;
     private UsbSerialPort port;
-    private SerialResponseListener serialResponseListener;
+    protected SerialResponseListener serialResponseListener;
     private int cnt = 0;
     private float[] pwm = new float[]{1.0f, 0.5f, 0.0f, -0.5f, -1.0f};
     private byte[] responseData;

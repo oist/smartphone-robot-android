@@ -41,13 +41,13 @@ public class MainActivity extends AbcvlibActivity implements SerialResponseListe
 
         @Override
         public void run() {
+            serialCommManager.getEncoderCounts();
             System.out.println("Current speed: " + speed);
             serialCommManager.setMotorLevels(speed, speed);
             if (speed >= 1.00f || speed <= -1.00f) {
                 increment = -increment;
             }
             speed += increment;
-            serialCommManager.getEncoderCounts();
         }
     };
 
@@ -56,5 +56,11 @@ public class MainActivity extends AbcvlibActivity implements SerialResponseListe
         serialCommManager = new SerialCommManager(usbSerial, backAndForth);
         serialCommManager.start();
         super.onSerialReady(usbSerial);
+    }
+
+    @Override
+    public void onEncoderCountsRec(int left, int right){
+        // Use as in basicSubscriber here. Integrating into basicAssembler is a TODO
+        super.onEncoderCountsRec(left, right);
     }
 }
