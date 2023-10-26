@@ -52,6 +52,7 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
     private int cnt = 0;
     private float[] pwm = new float[]{1.0f, 0.5f, 0.0f, -0.5f, -1.0f};
     private byte[] responseData;
+    private final int RP2020_PACKET_SIZE = 64;
     protected final CircularFifoQueue<byte[]> fifoQueue = new CircularFifoQueue<>(256);
     int timeout = 1000; //1s
     int totalBytesRead = 0; // Track total bytes read
@@ -217,14 +218,17 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
 
         int i = 0;
         data.flip();
-        while (i < data.limit() && (startStopIdx.startIdx == -1 || startStopIdx.stopIdx == -1)){
+        while (i < data.limit()){
             // get value at position and increment position by 1 (so don't call it multiple times)
             byte value = data.get();
 
+            // Always overwrite the value of stopIdx as you want the last instance
             if (value == UsbSerialProtocol.STOP.getHexValue()) {
                 startStopIdx.stopIdx = i;
                 Log.v("serial", "stopIdx found at " + i);
-            } else if (value == UsbSerialProtocol.START.getHexValue()) {
+            }
+            // Only write the value of startIdx once as you only want the first instance.
+            else if (value == UsbSerialProtocol.START.getHexValue() && startStopIdx.startIdx < 0){
                 startStopIdx.startIdx = i;
                 Log.v("serial", "startIdx found at " + i);
             }
@@ -234,22 +238,6 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
         // need to set limit back to capacity after reading
         data.limit(data.capacity());
 
-        // Error handling for startIdx or stopIdx not found
-        if (startStopIdx.startIdx == -1 || startStopIdx.stopIdx == -1){
-            Log.d("serial", "startIdx or stopIdx not found");
-        }
-        // Error handling for startIdx after stopIdx
-        else if (startStopIdx.startIdx > startStopIdx.stopIdx){
-            Log.d("serial", "startIdx after stopIdx");
-        }
-        // Error handling for startIdx and stopIdx too close together
-        else if (startStopIdx.stopIdx - startStopIdx.startIdx < 2){
-            Log.d("serial", "startIdx and stopIdx too close together");
-        }
-        // Error handling for startIdx and stopIdx too far apart
-        else if (startStopIdx.stopIdx - startStopIdx.startIdx > 100){
-            Log.d("serial", "startIdx and stopIdx too far apart");
-        }
         return startStopIdx;
     }
 
@@ -262,35 +250,52 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
     protected synchronized boolean verifyPacket(byte[] bytes) throws IOException {
         packetBuffer.put(bytes);
 
-        startStopIdx = startStopIndexSearch(packetBuffer);
-        if (startStopIdx.startIdx != -1 && startStopIdx.stopIdx != -1){
-            // If the packet is not empty, copy the contents of the packet into the byte[]
-            if (startStopIdx.stopIdx - (startStopIdx.startIdx + 1) >= 0) {
-                // Extract the packet and add it to the fifoQueue
-                packetBuffer.position(startStopIdx.startIdx + 1);
-                int length = startStopIdx.stopIdx - (startStopIdx.startIdx + 1); // Calculate the length
-                byte[] partialArray = new byte[length];
-                packetBuffer.get(partialArray, 0, length); // Copy the data from packetBuffer to partialArray
-                packetBuffer.clear();
-                synchronized (fifoQueue) {
-                    if (fifoQueue.isAtFullCapacity()) {
-                        Log.e("serial", "fifoQueue is full");
-                        throw new RuntimeException("fifoQueue is full");
-                    } else {
-                        // Log partialArray as array of hex values
-                        StringBuilder sb = new StringBuilder();
-                        for (byte b : partialArray) {
-                            sb.append(String.format("%02X ", b));
-                        }
-                        Log.d("verifyPacket", "Adding Packet: " + sb.toString() + " to fifoQueue");
+        // Check if you have enough data for a full packet before processing anything
+        if (packetBuffer.limit() < (RP2020_PACKET_SIZE - 1)){
+            Log.d("verifyPacket", "Data received not yet enough to fill packet. Waiting for more data");
+            return false;
+        }else{
+            startStopIdx = startStopIndexSearch(packetBuffer);
+            if (startStopIdx.startIdx >= 0 && startStopIdx.stopIdx >= 0) {
+                if ((startStopIdx.stopIdx - (startStopIdx.startIdx - 1)) < RP2020_PACKET_SIZE){
+                    Log.d("verifyPacket", "End marker found, but not at correct packet length. Waiting for more data");
+                    return false;
+                }
+                if ((startStopIdx.stopIdx - (startStopIdx.startIdx - 1)) > RP2020_PACKET_SIZE){
+                    Log.d("verifyPacket", "Packet too large. Ignoring as error. Clearing buffer and sending next command.");
+                    // Ignore this packet as it is corrupted by some other data being sent between.
+                    packetBuffer.clear();
+                    // Returning true so that the if(verifyPacket(data) block in onNewData can packetReceived.notify()
+                    return true;
+                }
+                else{
+                    // Extract the packet and add it to the fifoQueue
+                    packetBuffer.position(startStopIdx.startIdx);
+                    byte[] partialArray = new byte[RP2020_PACKET_SIZE];
+                    packetBuffer.get(partialArray, 0, RP2020_PACKET_SIZE); // Copy the data from packetBuffer to partialArray
+                    packetBuffer.clear();
+                    synchronized (fifoQueue) {
+                        if (fifoQueue.isAtFullCapacity()) {
+                            Log.e("serial", "fifoQueue is full");
+                            throw new RuntimeException("fifoQueue is full");
+                        } else {
+                            // Log partialArray as array of hex values
+                            StringBuilder sb = new StringBuilder();
+                            for (byte b : partialArray) {
+                                sb.append(String.format("%02X ", b));
+                            }
+                            Log.d("verifyPacket", "Adding Packet: " + sb.toString() + " to fifoQueue");
 
-                        fifoQueue.add(partialArray); // Add the partialArray to the queue
-                        return true;
+                            fifoQueue.add(partialArray); // Add the partialArray to the queue
+                            return true;
+                        }
                     }
                 }
+            }else {
+                Log.v("serial", "StartIdx or StopIdx not yet found. Waiting for more data");
+                return false;
             }
         }
-        return false;
     }
 
     @Override
