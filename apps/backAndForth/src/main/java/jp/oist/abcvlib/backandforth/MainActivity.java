@@ -41,8 +41,8 @@ public class MainActivity extends AbcvlibActivity implements SerialResponseListe
 
         @Override
         public void run() {
-            serialCommManager.getEncoderCounts();
-            System.out.println("Current speed: " + speed);
+            Log.i("BackAndForth", "Current command speed: " + speed);
+            // TODO show state info here
             serialCommManager.setMotorLevels(speed, speed);
             if (speed >= 1.00f || speed <= -1.00f) {
                 increment = -increment;
@@ -56,6 +56,10 @@ public class MainActivity extends AbcvlibActivity implements SerialResponseListe
         serialCommManager = new SerialCommManager(usbSerial, backAndForth);
         serialCommManager.start();
         super.onSerialReady(usbSerial);
+    }
+
+    private void calculateSpeedError(){
+
     }
 
     @Override

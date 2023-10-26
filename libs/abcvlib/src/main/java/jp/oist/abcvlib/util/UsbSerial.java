@@ -21,6 +21,7 @@ import org.apache.commons.collections4.queue.CircularFifoQueue;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 
@@ -223,12 +224,12 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
             byte value = data.get();
 
             // Always overwrite the value of stopIdx as you want the last instance
-            if (value == UsbSerialProtocol.STOP.getHexValue()) {
+            if (value == AndroidToRP2040Command.STOP.getHexValue()) {
                 startStopIdx.stopIdx = i;
                 Log.v("serial", "stopIdx found at " + i);
             }
             // Only write the value of startIdx once as you only want the first instance.
-            else if (value == UsbSerialProtocol.START.getHexValue() && startStopIdx.startIdx < 0){
+            else if (value == AndroidToRP2040Command.START.getHexValue() && startStopIdx.startIdx < 0){
                 startStopIdx.startIdx = i;
                 Log.v("serial", "startIdx found at " + i);
             }

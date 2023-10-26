@@ -3,8 +3,6 @@ import android.util.Log;
 import com.hoho.android.usbserial.driver.SerialTimeoutException;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.concurrent.Executors;
 
 
@@ -21,8 +19,7 @@ public class SerialCommManager {
     // on the Android phone
 
     // Preallocated bytebuffer to write motor levels to
-    private AndroidToRP2040Packet motorLevels = new AndroidToRP2040Packet(UsbSerialProtocol.SET_MOTOR_LEVELS.getHexValue());
-    private AndroidToRP2040Packet encoderCounts = new AndroidToRP2040Packet(UsbSerialProtocol.GET_ENCODER_COUNTS.getHexValue());
+    private AndroidToRP2040Packet androidToRP2040Packet = new AndroidToRP2040Packet();
     private boolean shutdown = false;
     private Runnable pi2AndroidReader;
     private Runnable android2PiWriter;
@@ -110,51 +107,22 @@ public class SerialCommManager {
             Log.i(Thread.currentThread().getName(), "Received packet: " + sb.toString());
 
             // The first byte after the start mark is the command
-            UsbSerialProtocol command = UsbSerialProtocol.getEnumByValue(packet[1]);
+            AndroidToRP2040Command command = AndroidToRP2040Command.getEnumByValue(packet[1]);
             Log.i(Thread.currentThread().getName(), "Received " + command + " from pi");
             if (command == null){
                 Log.e("Pi2AndroidReader", "Command not found");
                 return -1;
             }
             switch (command) {
-                case DO_NOTHING:
-                    Log.d("Pi2AndroidReader", "parseDoNothing");
-                    break;
-                case GET_CHARGE_DETAILS:
-                    onResponseGetChargeDetails(packet);
-                    break;
-                case GET_LOGS:
-                    onResponseGetLog(packet);
-                    break;
-                case VARIOUS:
-                    onResponseVarious(packet);
-                    break;
-                case GET_ENCODER_COUNTS:
-                    onResponseGetEncoderCounts(packet);
-                    break;
-                case RESET_ENCODER_COUNTS:
-                    onResponseResetEncoderCounts(packet);
+                case GET_LOG:
+                    parseLog(packet);
+                    result = 1;
                     break;
                 case SET_MOTOR_LEVELS:
-                    onResponseSetMotorLevels(packet);
-                    break;
                 case SET_MOTOR_BRAKE:
-                    onResponseSetMotorBrake(packet);
-                    break;
-                case GET_USB_VOLTAGE:
-                    onResponseGetUSBVoltage(packet);
-                    break;
-                case ON_WIRELESS_ATTACHED:
-                    onWirelessCoilAttached(packet);
-                    break;
-                case ON_WIRELESS_DETACHED:
-                    onWirelessCoilDetached(packet);
-                    break;
-                case ON_MOTOR_FAULT:
-                    onMotorFault(packet);
-                    break;
-                case ON_USB_ERROR:
-                    onUSBError(packet);
+                case RESET_STATE:
+                    parseStatus(packet);
+                    result = 1;
                     break;
                 case NACK:
                     onNack(packet);
@@ -216,7 +184,7 @@ public class SerialCommManager {
     // ---- API function calls for requesting something from the mcu ----///
     //-------------------------------------------------------------------///
     private void sendAck() throws IOException {
-        byte[] ack = new byte[]{UsbSerialProtocol.ACK.getHexValue()};
+        byte[] ack = new byte[]{AndroidToRP2040Command.ACK.getHexValue()};
         sendPacket(ack);
     }
 
@@ -246,20 +214,12 @@ public class SerialCommManager {
         left = left * 5.08f;
         right = right * 5.08f;
 
-        motorLevels.clear();
-        motorLevels.data.putFloat(left);
-        motorLevels.data.putFloat(right);
-        byte[] commandData = motorLevels.packetTobytes();
-        if (sendPacket(commandData) != 0){
-            Log.e("Android2PiWriter", "Error sending packet");
-        }else{
-            Log.d("Android2PiWriter", "Packet sent");
-        }
-    }
+        androidToRP2040Packet.clear();
+        androidToRP2040Packet.setCommand(AndroidToRP2040Command.SET_MOTOR_LEVELS);
+        androidToRP2040Packet.payload.putFloat(left);
+        androidToRP2040Packet.payload.putFloat(right);
 
-    public void getEncoderCounts() {
-        encoderCounts.clear();
-        byte[] commandData = encoderCounts.packetTobytes();
+        byte[] commandData = androidToRP2040Packet.packetTobytes();
         if (sendPacket(commandData) != 0){
             Log.e("Android2PiWriter", "Error sending packet");
         }else{
@@ -271,48 +231,12 @@ public class SerialCommManager {
     // ---- Handlers for when data is returned from the mcu ----///
     // ---- Override these defaults with your own handlers -----///
     //----------------------------------------------------------///
-    private void parseDoNothing(byte[] bytes) {
-        Log.d("serial", "parseDoNothing");
+    private void parseLog(byte[] bytes) {
+        Log.d("serial", "parseLogs");
     }
-    private void onResponseGetChargeDetails(byte[] bytes) {
-        Log.d("serial", "parseGetChargeDetails");
-    }
-    private void onResponseGetLog(byte[] bytes) {
-        Log.d("serial", "parseGetLogs");
-    }
-    private void onResponseVarious(byte[] bytes) {
-        Log.d("serial", "parseVarious");
-    }
-    private void onResponseGetEncoderCounts(byte[] bytes) {
-        Log.d("serial", "parseGetEncoderCounts");
-        //bytes[2-5] is the left encoder count in little Endien, so need to reverse the order
-        int left = ByteBuffer.wrap(bytes, 2, 4).order(ByteOrder.LITTLE_ENDIAN).getInt();
-        //bytes[6-9] is the right encoder count
-        int right = ByteBuffer.wrap(bytes, 6, 4).order(ByteOrder.LITTLE_ENDIAN).getInt();
-        usbSerial.serialResponseListener.onEncoderCountsRec(left, right);
-    }
-    private void onResponseResetEncoderCounts(byte[] bytes) {
-        Log.d("serial", "parseResetEncoderCounts");    }
-    private void onResponseSetMotorLevels(byte[] bytes) {
-        Log.d("serial", "parseSetMotorLevels");
-    }
-    private void onResponseSetMotorBrake(byte[] bytes) {
-        Log.d("serial", "parseSetMotorBrake");
-    }
-    private void onResponseGetUSBVoltage(byte[] bytes) {
-        Log.d("serial", "parseGetUSBVoltage");
-    }
-    private void onWirelessCoilAttached(byte[] bytes) {
-        Log.d("serial", "parseOnWirelessAttached");
-    }
-    private void onWirelessCoilDetached(byte[] bytes) {
-        Log.d("serial", "parseOnWirelessDetached");
-    }
-    private void onMotorFault(byte[] bytes) {
-        Log.d("serial", "parseOnMotorFault");
-    }
-    private void onUSBError(byte[] bytes) {
-        Log.d("serial", "parseOnUSBError");
+    private void parseStatus(byte[] bytes) {
+        Log.d("serial", "parseStatus");
+
     }
     private void onNack(byte[] bytes) {
         Log.d("serial", "parseNack");
