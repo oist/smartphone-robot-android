@@ -55,6 +55,7 @@ public class SerialCommManager {
 
     // Preallocated bytebuffer to write motor levels to
     private AndroidToRP2040Packet motorLevels = new AndroidToRP2040Packet(UsbSerialProtocol.SET_MOTOR_LEVELS.getHexValue());
+    private AndroidToRP2040Packet encoderCounts = new AndroidToRP2040Packet(UsbSerialProtocol.GET_ENCODER_COUNTS.getHexValue());
     private boolean shutdown = false;
     private Runnable pi2AndroidReader;
     private Runnable android2PiWriter;
@@ -142,7 +143,7 @@ public class SerialCommManager {
             Log.i(Thread.currentThread().getName(), "Received packet: " + sb.toString());
 
             // The first byte after the start mark is the command
-            UsbSerialProtocol command = UsbSerialProtocol.getEnumByValue(packet[0]);
+            UsbSerialProtocol command = UsbSerialProtocol.getEnumByValue(packet[1]);
             Log.i(Thread.currentThread().getName(), "Received " + command + " from pi");
             if (command == null){
                 Log.e("Pi2AndroidReader", "Command not found");
@@ -289,6 +290,16 @@ public class SerialCommManager {
         }
     }
 
+    public void getEncoderCounts() {
+        encoderCounts.clear();
+        byte[] commandData = encoderCounts.packetTobytes();
+        if (sendPacket(commandData) != 0){
+            Log.e("Android2PiWriter", "Error sending packet");
+        }else{
+            Log.d("Android2PiWriter", "Packet sent");
+        }
+    }
+
     //----------------------------------------------------------///
     // ---- Handlers for when data is returned from the mcu ----///
     // ---- Override these defaults with your own handlers -----///
@@ -307,10 +318,14 @@ public class SerialCommManager {
     }
     private void onResponseGetEncoderCounts(byte[] bytes) {
         Log.d("serial", "parseGetEncoderCounts");
+        //bytes[2-5] is the left encoder count in little Endien, so need to reverse the order
+        Log.d("serial", "Left encoder count: " + ByteBuffer.wrap(bytes, 2, 4).order(ByteOrder.LITTLE_ENDIAN).getInt());
+        //bytes[6-9] is the right encoder count
+        Log.d("serial", "Right encoder count: " + ByteBuffer.wrap(bytes, 6, 4).order(ByteOrder.LITTLE_ENDIAN).getInt());
+
     }
     private void onResponseResetEncoderCounts(byte[] bytes) {
-        Log.d("serial", "parseResetEncoderCounts");
-    }
+        Log.d("serial", "parseResetEncoderCounts");    }
     private void onResponseSetMotorLevels(byte[] bytes) {
         Log.d("serial", "parseSetMotorLevels");
     }

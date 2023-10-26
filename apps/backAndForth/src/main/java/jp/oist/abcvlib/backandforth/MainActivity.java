@@ -47,6 +47,7 @@ public class MainActivity extends AbcvlibActivity implements SerialResponseListe
                 increment = -increment;
             }
             speed += increment;
+            serialCommManager.getEncoderCounts();
         }
     };
 
