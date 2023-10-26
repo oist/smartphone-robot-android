@@ -20,6 +20,7 @@ public class SerialCommManager {
     // fifoQueue is used to store the commands that are sent from the mcu to be executed
     // on the Android phone
 
+    public static int packetSize = Float.BYTES * 2 + 3;
     private class AndroidToRP2040Packet {
         private byte packetType;
         protected ByteBuffer data = ByteBuffer.allocate(Float.BYTES * 2);
@@ -229,6 +230,9 @@ public class SerialCommManager {
      * -2 if SerialTimeoutException on send
      */
     private int sendPacket(byte[] bytes) {
+        if (bytes.length != packetSize) {
+            throw new IllegalArgumentException("Input byte array must have a length of " + packetSize);
+        }
         try {
             this.usbSerial.send(bytes, 1000);
         } catch (SerialTimeoutException e){
