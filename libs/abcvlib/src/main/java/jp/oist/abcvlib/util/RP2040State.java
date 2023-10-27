@@ -5,8 +5,8 @@ public class RP2040State {
 //    BATTERY_DETAILS((byte) 0x03), // BQ27742-G1 Data: Battery Voltage, Current, and State of Charge
 //    PHONE_SIDE_USB((byte) 0x0C), // MAX77958 Phone-side USB Controller
 //    MOTOR_DETAILS // DRV8830DRCR Data: Includes MOTOR_FAULT, ENCODER_COUNTS, MOTOR_LEVELS, MOTOR_BRAKE
-    protected class ChargeSideUSB{}
-    protected class BatteryDetails{}
-    protected class PhoneSideUSB{}
     protected class MotorDetails{}
+    protected class BatteryDetails{}
+    protected class ChargeSideUSB{}
+    protected class PhoneSideUSB{}
 }

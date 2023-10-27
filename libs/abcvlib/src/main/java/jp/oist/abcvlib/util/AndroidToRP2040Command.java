@@ -6,8 +6,7 @@ import java.util.Map;
 enum AndroidToRP2040Command {
     GET_LOG((byte) 0x00), //GET_STATE not necessary as you should just repeat the last command from previous time step
     SET_MOTOR_LEVELS((byte) 0x01),
-    SET_MOTOR_BRAKE((byte) 0x02), // This might not even be used
-    RESET_STATE((byte) 0x03),
+    RESET_STATE((byte) 0x02),
     NACK((byte) 0xFC),
     ACK((byte) 0xFD),
     START((byte) 0xFE),

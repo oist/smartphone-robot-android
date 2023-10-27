@@ -119,7 +119,6 @@ public class SerialCommManager {
                     result = 1;
                     break;
                 case SET_MOTOR_LEVELS:
-                case SET_MOTOR_BRAKE:
                 case RESET_STATE:
                     parseStatus(packet);
                     result = 1;
