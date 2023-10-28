@@ -192,31 +192,68 @@ public class SerialCommManager {
     int: left [-1,1] representing full speed backward to full speed forward
     int: right (same as left)
      */
-    public void setMotorLevels(float left, float right) {
-        // Truncate levels above or below 1 or -1
-        if (left > 1){
-            left = 1;
-            Log.w("serial", "Left motor level truncated to 1");
-        }else if (left < -1){
-            left = -1;
-            Log.w("serial", "Left motor level truncated to -1");
-        }
-        if (right > 1){
-            right = 1;
-            Log.w("serial", "Right motor level truncated to 1");
-        }else if (right < -1){
-            right = -1;
-            Log.w("serial", "Right motor level truncated to -1");
-        }
-
-        // Normalize [-1,1] to [-5.08,5.08] as this is the range accepted by the chip
-        left = left * 5.08f;
-        right = right * 5.08f;
-
+    public void setMotorLevels(float left, float right, boolean leftBrake, boolean rightBrake) {
         androidToRP2040Packet.clear();
         androidToRP2040Packet.setCommand(AndroidToRP2040Command.SET_MOTOR_LEVELS);
-        androidToRP2040Packet.payload.putFloat(left);
-        androidToRP2040Packet.payload.putFloat(right);
+
+        final float LOWER_LIMIT = 0.49f;
+
+        // Normalize [-1,1] to [-5.06,5.06] as this is the range accepted by the chip
+        left = left * 5.06f;
+        right = right * 5.06f;
+
+        byte DRV8830_IN1_BIT = 0;
+        byte DRV8830_IN2_BIT = 1;
+
+        float[] voltages = new float[]{left, right};
+        float[] abs_voltages = new float[2];
+        byte[] control_values = new byte[2];
+        boolean[] brakes = new boolean[]{leftBrake, rightBrake};
+
+        for (int i = 0; i < voltages.length; i++) {
+            float voltage = voltages[i]; // Get the current voltage
+            control_values[i] = 0; // Reset the control value
+            // Exclude or truncate voltages between -0.48V and 0.48V to 0V
+            // Changing to 0.49 as the scaling function would result in 0x05h for 0.48V and
+            // cause the rp2040 to perform unexpectely as it is a reserved register value
+            if (voltage >= -LOWER_LIMIT && voltage <= LOWER_LIMIT) {
+                voltages[i] = 0.0f; // Update the value in the array
+            }else{
+                // Clamp the voltage within the valid range
+                // Need to clamp here rather than at byte representation to prevent overflow
+                if (voltages[i] < -5.06) {
+                    voltages[i] = -5.06f; // Update the value in the array
+                }
+                else if (voltages[i] > 5.06) {
+                    voltages[i] = 5.06f; // Update the value in the array
+                }
+
+                abs_voltages[i] = Math.abs(voltages[i]);
+                // Convert voltage to control value (-0x3F to 0x3F)
+                control_values[i] = (byte)(((64 * abs_voltages[i]) / (4 * 1.285)) - 1);
+                // voltage is defined by bits 2-7. Shift the control value to the correct position
+                control_values[i] = (byte) (control_values[i] << 2);
+            }
+
+
+            // Set the IN1 and IN2 bits based on the sign of the voltage
+            if (brakes[i]) {
+                control_values[i] |= (1 << DRV8830_IN1_BIT);
+                control_values[i] |= (1 << DRV8830_IN2_BIT);
+            }else{
+                if (voltage < 0) {
+                    control_values[i] |= (1 << DRV8830_IN1_BIT);
+                    control_values[i] &= ~(1 << DRV8830_IN2_BIT);
+                } else if (voltage > 0) {
+                    control_values[i] |= (1 << DRV8830_IN2_BIT);
+                    control_values[i] &= ~(1 << DRV8830_IN1_BIT);
+                } else {
+                    // Standby/Coast: Both IN1 and IN2 set to 0
+                    control_values[i] = 0;
+                }
+            }
+            androidToRP2040Packet.payload.put(control_values[i]);
+        }
 
         byte[] commandData = androidToRP2040Packet.packetTobytes();
         if (sendPacket(commandData) != 0){

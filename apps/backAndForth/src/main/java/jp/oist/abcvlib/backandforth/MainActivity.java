@@ -43,7 +43,7 @@ public class MainActivity extends AbcvlibActivity implements SerialResponseListe
         public void run() {
             Log.i("BackAndForth", "Current command speed: " + speed);
             // TODO show state info here
-            serialCommManager.setMotorLevels(speed, speed);
+            serialCommManager.setMotorLevels(speed, speed, false, false);
             if (speed >= 1.00f || speed <= -1.00f) {
                 increment = -increment;
             }

@@ -11,8 +11,8 @@ packet[10] = STOP marker
 
  */
 class AndroidToRP2040Packet {
-    // + 1 for command
-    public static final int AndroidToRP2040PayloadSize = (Float.BYTES * 2) + 1;
+    // (2) 1 byte for each wheel, and + 1 for command
+    public static final int AndroidToRP2040PayloadSize = 2 + 1;
     // Making room for start and stop marks
     public static int packetSize = AndroidToRP2040PayloadSize + 2;
     private AndroidToRP2040Command command;
