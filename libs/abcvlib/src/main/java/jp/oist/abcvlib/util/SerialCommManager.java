@@ -3,6 +3,7 @@ import android.util.Log;
 import com.hoho.android.usbserial.driver.SerialTimeoutException;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.concurrent.Executors;
 
 
@@ -20,6 +21,7 @@ public class SerialCommManager {
 
     // Preallocated bytebuffer to write motor levels to
     private AndroidToRP2040Packet androidToRP2040Packet = new AndroidToRP2040Packet();
+    private RP2040State rp2040State = new RP2040State();
     private boolean shutdown = false;
     private Runnable pi2AndroidReader;
     private Runnable android2PiWriter;
@@ -255,6 +257,10 @@ public class SerialCommManager {
             androidToRP2040Packet.payload.put(control_values[i]);
         }
 
+        // Just to check for error in return packet
+        rp2040State.motorsState.controlValues.left = control_values[0];
+        rp2040State.motorsState.controlValues.right = control_values[1];
+
         byte[] commandData = androidToRP2040Packet.packetTobytes();
         if (sendPacket(commandData) != 0){
             Log.e("Android2PiWriter", "Error sending packet");
@@ -272,7 +278,21 @@ public class SerialCommManager {
     }
     private void parseStatus(byte[] bytes) {
         Log.d("serial", "parseStatus");
-
+        ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+        byteBuffer.order(java.nio.ByteOrder.LITTLE_ENDIAN);
+        byteBuffer.position(2); // Skip the start and command bytes
+        if (rp2040State.motorsState.controlValues.left != byteBuffer.get()){
+            Log.e("serial", "Left control value mismatch");
+        }
+        if (rp2040State.motorsState.controlValues.right != byteBuffer.get()){
+            Log.e("serial", "Right control value mismatch");
+        }
+        rp2040State.motorsState.faults.left = byteBuffer.get();
+        rp2040State.motorsState.faults.right = byteBuffer.get();
+        rp2040State.motorsState.encoderCounts.left = byteBuffer.getInt();
+        rp2040State.motorsState.encoderCounts.right = byteBuffer.getInt();
+        Log.v("serial", "Left encoder count: " + rp2040State.motorsState.encoderCounts.left);
+        Log.v("serial", "Right encoder count: " + rp2040State.motorsState.encoderCounts.right);
     }
     private void onNack(byte[] bytes) {
         Log.d("serial", "parseNack");
