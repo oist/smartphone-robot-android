@@ -302,6 +302,8 @@ public class SerialCommManager {
         Log.v("serial", "Battery voltage: " + rp2040State.batteryDetails.voltage);
         Log.v("serial", "Battery voltage in V: " + rp2040State.batteryDetails.getVoltage());
         Log.v("serial", "Battery temperature: " + rp2040State.batteryDetails.temperature);
+        rp2040State.chargeSideUSB.max77976_chg_details = byteBuffer.getInt();
+        Log.v("serial", "max77976_chg_details: " + rp2040State.chargeSideUSB.max77976_chg_details);
     }
     private void onNack(byte[] bytes) {
         Log.d("serial", "parseNack");

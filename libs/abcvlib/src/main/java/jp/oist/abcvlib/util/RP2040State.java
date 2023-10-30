@@ -1,8 +1,7 @@
 package jp.oist.abcvlib.util;
 
 public class RP2040State {
-//    CHARGE_SIDE_USB((byte) 0x01), Mux MAX77976 and NCP3901 Data: Charger-side USB Voltage, and Wireless Coil State
-//    PHONE_SIDE_USB((byte) 0x0C), // MAX77958 Phone-side USB Controller
+
     protected class MotorsState{
         protected class ControlValues{
             byte left;
@@ -42,7 +41,11 @@ public class RP2040State {
             return ((float) voltage / 1000f);
         }
     }
-    protected class ChargeSideUSB{}
+    //    CHARGE_SIDE_USB((byte) 0x01), Mux MAX77976 and NCP3901 Data: Charger-side USB Voltage, and Wireless Coil State
+//    PHONE_SIDE_USB((byte) 0x0C), // MAX77958 Phone-side USB Controller
+    protected class ChargeSideUSB{
+        int max77976_chg_details;
+    }
     protected class PhoneSideUSB{}
 
     MotorsState motorsState;
