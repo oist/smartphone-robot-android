@@ -36,7 +36,7 @@ public class MainActivity extends AbcvlibActivity implements SerialResponseListe
     }
 
     Runnable backAndForth = new Runnable() {
-        float speed = 0.50f;
+        float speed = 0.35f;
         float increment = 0.01f;
 
         @Override

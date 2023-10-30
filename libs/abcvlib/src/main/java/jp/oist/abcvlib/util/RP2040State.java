@@ -46,6 +46,7 @@ public class RP2040State {
     protected class ChargeSideUSB{
         int max77976_chg_details;
         boolean ncp3901_wireless_charger_attached;
+        short usb_charger_voltage;
     }
     protected class PhoneSideUSB{}
 
