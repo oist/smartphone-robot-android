@@ -304,6 +304,9 @@ public class SerialCommManager {
         Log.v("serial", "Battery temperature: " + rp2040State.batteryDetails.temperature);
         rp2040State.chargeSideUSB.max77976_chg_details = byteBuffer.getInt();
         Log.v("serial", "max77976_chg_details: " + rp2040State.chargeSideUSB.max77976_chg_details);
+        rp2040State.chargeSideUSB.ncp3901_wireless_charger_attached = byteBuffer.get() == 1;
+        Log.v("serial", "ncp3901_wireless_charger_attached: " + rp2040State.chargeSideUSB.ncp3901_wireless_charger_attached);
+
     }
     private void onNack(byte[] bytes) {
         Log.d("serial", "parseNack");

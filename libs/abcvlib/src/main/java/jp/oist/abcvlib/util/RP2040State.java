@@ -45,6 +45,7 @@ public class RP2040State {
 //    PHONE_SIDE_USB((byte) 0x0C), // MAX77958 Phone-side USB Controller
     protected class ChargeSideUSB{
         int max77976_chg_details;
+        boolean ncp3901_wireless_charger_attached;
     }
     protected class PhoneSideUSB{}
 
