@@ -2,7 +2,6 @@ package jp.oist.abcvlib.util;
 
 public class RP2040State {
 //    CHARGE_SIDE_USB((byte) 0x01), Mux MAX77976 and NCP3901 Data: Charger-side USB Voltage, and Wireless Coil State
-//    BATTERY_DETAILS((byte) 0x03), // BQ27742-G1 Data: Battery Voltage, Current, and State of Charge
 //    PHONE_SIDE_USB((byte) 0x0C), // MAX77958 Phone-side USB Controller
     protected class MotorsState{
         protected class ControlValues{
@@ -28,7 +27,21 @@ public class RP2040State {
             faults = new Faults();
         }
     }
-    protected class BatteryDetails{}
+    protected class BatteryDetails{
+        // Raw byte data
+        short voltage;
+        byte safety_status;
+        short temperature;
+        byte state_of_health;
+        short flags;
+
+        /* convert mV to V
+           See bq27441-G1 Technical Reference Manual, Section 4.1.5
+         */
+        public float getVoltage() {
+            return ((float) voltage / 1000f);
+        }
+    }
     protected class ChargeSideUSB{}
     protected class PhoneSideUSB{}
 

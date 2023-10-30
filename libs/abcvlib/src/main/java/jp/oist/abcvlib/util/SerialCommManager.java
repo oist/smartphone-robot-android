@@ -1,4 +1,5 @@
 package jp.oist.abcvlib.util;
+
 import android.util.Log;
 import com.hoho.android.usbserial.driver.SerialTimeoutException;
 
@@ -293,6 +294,14 @@ public class SerialCommManager {
         rp2040State.motorsState.encoderCounts.right = byteBuffer.getInt();
         Log.v("serial", "Left encoder count: " + rp2040State.motorsState.encoderCounts.left);
         Log.v("serial", "Right encoder count: " + rp2040State.motorsState.encoderCounts.right);
+        rp2040State.batteryDetails.voltage = byteBuffer.getShort();
+        rp2040State.batteryDetails.safety_status = byteBuffer.get();
+        rp2040State.batteryDetails.temperature = byteBuffer.getShort();
+        rp2040State.batteryDetails.state_of_health = byteBuffer.get();
+        rp2040State.batteryDetails.flags = byteBuffer.getShort();
+        Log.v("serial", "Battery voltage: " + rp2040State.batteryDetails.voltage);
+        Log.v("serial", "Battery voltage in V: " + rp2040State.batteryDetails.getVoltage());
+        Log.v("serial", "Battery temperature: " + rp2040State.batteryDetails.temperature);
     }
     private void onNack(byte[] bytes) {
         Log.d("serial", "parseNack");
