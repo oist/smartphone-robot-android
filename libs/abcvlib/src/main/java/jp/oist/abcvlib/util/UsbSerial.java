@@ -21,7 +21,7 @@ import org.apache.commons.collections4.queue.CircularFifoQueue;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
+import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.List;
 
@@ -53,11 +53,16 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
     private int cnt = 0;
     private float[] pwm = new float[]{1.0f, 0.5f, 0.0f, -0.5f, -1.0f};
     private byte[] responseData;
-    private final int RP2020_PACKET_SIZE = 64;
-    protected final CircularFifoQueue<byte[]> fifoQueue = new CircularFifoQueue<>(256);
+    private final int RP2020_PACKET_SIZE_STATE = 64;
+    // 1024 + 3 for start, command, and stop markers sent as putchar. (i.e. they won't be optimized anyway).
+    private final int RP2020_PACKET_SIZE_LOG = 1027;
+    // Initialize as the smallest of the two packet sizes
+    private int packetDataSize = RP2020_PACKET_SIZE_STATE;
+    private AndroidToRP2040Command packetType = AndroidToRP2040Command.NACK;
+    protected final CircularFifoQueue<FifoQueuePair> fifoQueue = new CircularFifoQueue<>(256);
     int timeout = 1000; //1s
     int totalBytesRead = 0; // Track total bytes read
-    final ByteBuffer packetBuffer = ByteBuffer.allocate(1024); // Adjust the buffer size as needed
+    final ByteBuffer packetBuffer = ByteBuffer.allocate(1024 * 2);// Adjust the buffer size as needed
     boolean packetFound = false;
     //Ensure a proper start and stop mark present before adding anything to the fifoQueue
     StartStopIndex startStopIdx;
@@ -85,6 +90,8 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
         this.usbManager = usbManager;
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
         HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
+        startStopIdx = new StartStopIndex(-1, -1);
+        packetBuffer.order(ByteOrder.LITTLE_ENDIAN);
 
         if (deviceList.isEmpty()){
             throw new IOException("No USB devices found");
@@ -245,58 +252,109 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
     /**
      * synchronized as newData might be called again while this method is running
      * @param bytes to be verified to contain a valid packet. If so, the packet is added to the fifoQueue
-     * @return 0 if successful, -1 if unsuccessful
+     * @return 0 if successfully found a complete packet or found an erroneous packet,
+     * -1 if not enough data to determine
      * @throws IOException if fifoQueue is full
      */
     protected synchronized boolean verifyPacket(byte[] bytes) throws IOException {
         packetBuffer.put(bytes);
 
-        // Check if you have enough data for a full packet before processing anything
-        if (packetBuffer.limit() < (RP2020_PACKET_SIZE - 1)){
-            Log.d("verifyPacket", "Data received not yet enough to fill packet. Waiting for more data");
-            return false;
-        }else{
+        // If startIdx not yet found, find it
+        if (startStopIdx.startIdx < 0){
             startStopIdx = startStopIndexSearch(packetBuffer);
-            if (startStopIdx.startIdx >= 0 && startStopIdx.stopIdx >= 0) {
-                if ((startStopIdx.stopIdx - (startStopIdx.startIdx - 1)) < RP2020_PACKET_SIZE){
-                    Log.d("verifyPacket", "End marker found, but not at correct packet length. Waiting for more data");
-                    return false;
-                }
-                if ((startStopIdx.stopIdx - (startStopIdx.startIdx - 1)) > RP2020_PACKET_SIZE){
-                    Log.d("verifyPacket", "Packet too large. Ignoring as error. Clearing buffer and sending next command.");
-                    // Ignore this packet as it is corrupted by some other data being sent between.
-                    packetBuffer.clear();
-                    // Returning true so that the if(verifyPacket(data) block in onNewData can packetReceived.notify()
-                    return true;
+        }
+
+        // If startIdx still not found, return false
+        if (startStopIdx.startIdx < 0){
+            Log.v("serial", "StartIdx not yet found. Waiting for more data");
+            return false;
+        }
+        // else startIdx found
+        else{
+            Log.v("serial", "StartIdx found at " + startStopIdx.startIdx);
+            // if packetType not yet found, find it
+            if (packetType == AndroidToRP2040Command.NACK){
+                // If position is 0, nothing received yet. If position is 1 only the start mark has been received.
+                // position 2 is the packetType, and positions 3 and 4 are a short for packetSize
+                    if (packetBuffer.position() >= RP2040ToAndroidPacket.Offsets.DATA){
+                    try{
+                        packetType = AndroidToRP2040Command.getEnumByValue(packetBuffer.get(startStopIdx.startIdx + RP2040ToAndroidPacket.Offsets.PACKET_TYPE));
+                    }catch (IndexOutOfBoundsException e){
+                        Log.e("serial", "IndexOutOfBoundsException: " + e.getMessage());
+                        Log.e("serial", "Unknown packetType: " + packetType);
+                        // Ignore this packet as it is corrupted by some other data being sent between.
+                        packetBuffer.clear();
+                        return true;
+                    }
+                    // get the packetDataSize. It is stored at index 3 and 4 as a short
+                    packetDataSize = packetBuffer.getShort(startStopIdx.startIdx + RP2040ToAndroidPacket.Offsets.DATA_SIZE);
+                    Log.v("serial", packetType + " packetType of size " + packetDataSize + " found at " + (startStopIdx.startIdx + RP2040ToAndroidPacket.Offsets.PACKET_TYPE));
                 }
                 else{
-                    // Extract the packet and add it to the fifoQueue
-                    packetBuffer.position(startStopIdx.startIdx);
-                    byte[] partialArray = new byte[RP2020_PACKET_SIZE];
-                    packetBuffer.get(partialArray, 0, RP2020_PACKET_SIZE); // Copy the data from packetBuffer to partialArray
-                    packetBuffer.clear();
-                    synchronized (fifoQueue) {
-                        if (fifoQueue.isAtFullCapacity()) {
-                            Log.e("serial", "fifoQueue is full");
-                            throw new RuntimeException("fifoQueue is full");
-                        } else {
-                            // Log partialArray as array of hex values
-                            StringBuilder sb = new StringBuilder();
-                            for (byte b : partialArray) {
-                                sb.append(String.format("%02X ", b));
-                            }
-                            Log.d("verifyPacket", "Adding Packet: " + sb.toString() + " to fifoQueue");
-
-                            fifoQueue.add(partialArray); // Add the partialArray to the queue
-                            return true;
-                        }
-                    }
+                    Log.v("serial", "Nothing other than startIdx found. Waiting for more data");
+                    return false;
                 }
-            }else {
-                Log.v("serial", "StartIdx or StopIdx not yet found. Waiting for more data");
+            }
+
+            // Check if you have enough data for a full packet before processing anything
+            // +1 for moving 1 past packetBuffer.position() to endIdx byte
+            startStopIdx.stopIdx = startStopIdx.startIdx + packetDataSize + (RP2040ToAndroidPacket.Offsets.DATA);
+            // +1 for packetBuffer.position() needing to be 1 after endIdx byte to indicate that you have the stopIdx byte
+            if (packetBuffer.position() < (startStopIdx.stopIdx + 1)){
+                Log.d("verifyPacket", "Data received not yet enough to fill " +
+                        packetType + " packetType. Waiting for more data");
                 return false;
             }
+            // You have enough data for a full packet
+            else{
+                if (packetBuffer.get(startStopIdx.stopIdx) != AndroidToRP2040Command.STOP.getHexValue()){
+                    onBadPacket();
+                    return true;
+                }
+                else {
+                    if (packetType == AndroidToRP2040Command.GET_LOG) {
+                        Log.i("verifyPacket", "GET_LOG command received");
+                    } else if (packetType == AndroidToRP2040Command.SET_MOTOR_LEVELS) {
+                        Log.i("verifyPacket", "SET_MOTOR_LEVELS command received");
+                    }
+                    onCompletePacketReceived();
+                    return true;
+                }
+            }
         }
+    }
+
+    private void onCompletePacketReceived(){
+        packetBuffer.position(startStopIdx.startIdx + RP2040ToAndroidPacket.Offsets.DATA);
+        packetBuffer.limit(startStopIdx.stopIdx);
+        byte[] partialArray = new byte[packetBuffer.remaining()];
+        packetBuffer.get(partialArray);
+        packetBuffer.clear();
+        synchronized (fifoQueue) {
+            if (fifoQueue.isAtFullCapacity()) {
+                Log.e("serial", "fifoQueue is full");
+                throw new RuntimeException("fifoQueue is full");
+            } else {
+                // Log partialArray as array of hex values
+                StringBuilder sb = new StringBuilder();
+                for (byte b : partialArray) {
+                    sb.append(String.format("%02X ", b));
+                }
+                Log.d("verifyPacket", "Adding Packet: " + sb.toString() + " to fifoQueue");
+                FifoQueuePair fifoQueuePair = new FifoQueuePair(packetType, partialArray);
+                fifoQueue.add(fifoQueuePair); // Add the partialArray to the queue
+            }
+        }
+        // reset to default value;
+        packetType = AndroidToRP2040Command.NACK;
+    }
+
+    private void onBadPacket(){
+        Log.e("serial", "Bad packet received. Clearing buffer and sending next command.");
+        // Ignore this packet as it is corrupted by some other data being sent between.
+        packetBuffer.clear();
+        // reset to default value;
+        packetType = AndroidToRP2040Command.NACK;
     }
 
     @Override

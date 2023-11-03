@@ -5,6 +5,7 @@ import com.hoho.android.usbserial.driver.SerialTimeoutException;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executors;
 
 
@@ -94,23 +95,21 @@ public class SerialCommManager {
     //TODO paseFifoPacket() should call the various SerialResponseListener methods.
     protected int parseFifoPacket() {
         int result = 0;
+        FifoQueuePair fifoQueuePair;
         byte[] packet = null;
         // Run the command on a thread handler to allow the queue to keep being added to
         synchronized (usbSerial.fifoQueue) {
-            packet = usbSerial.fifoQueue.poll();
+            fifoQueuePair = usbSerial.fifoQueue.poll();
         }
             // Check if there is a packet in the queue (fifoQueue
-        if (packet != null) {
+        if (fifoQueuePair != null) {
+            packet = fifoQueuePair.getByteArray();
 
             // Log packet as an array of hex bytes
-            StringBuilder sb = new StringBuilder();
-            for (byte b : packet) {
-                sb.append(String.format("%02X ", b));
-            }
-            Log.i(Thread.currentThread().getName(), "Received packet: " + sb.toString());
+            Log.i(Thread.currentThread().getName(), "Received packet: " + HexBinConverters.bytesToHex(packet));
 
             // The first byte after the start mark is the command
-            AndroidToRP2040Command command = AndroidToRP2040Command.getEnumByValue(packet[1]);
+            AndroidToRP2040Command command = fifoQueuePair.getAndroidToRP2040Command();
             Log.i(Thread.currentThread().getName(), "Received " + command + " from pi");
             if (command == null){
                 Log.e("Pi2AndroidReader", "Command not found");
@@ -270,18 +269,33 @@ public class SerialCommManager {
         }
     }
 
+    public void getLog(){
+        androidToRP2040Packet.clear();
+        androidToRP2040Packet.setCommand(AndroidToRP2040Command.GET_LOG);
+        byte[] commandData = androidToRP2040Packet.packetTobytes();
+        if (sendPacket(commandData) != 0){
+            Log.e("Android2PiWriter", "Error sending packet");
+        }else{
+            Log.d("Android2PiWriter", "Packet sent");
+        }
+    }
+
     //----------------------------------------------------------///
     // ---- Handlers for when data is returned from the mcu ----///
     // ---- Override these defaults with your own handlers -----///
     //----------------------------------------------------------///
     private void parseLog(byte[] bytes) {
         Log.d("serial", "parseLogs");
+        String string = new String(bytes, StandardCharsets.US_ASCII);
+        String[] lines = string.split("\\r?\\n");
+        for (String line : lines) {
+            Log.i("rp2040Log", line);
+        }
     }
     private void parseStatus(byte[] bytes) {
         Log.d("serial", "parseStatus");
         ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
         byteBuffer.order(java.nio.ByteOrder.LITTLE_ENDIAN);
-        byteBuffer.position(2); // Skip the start and command bytes
         if (rp2040State.motorsState.controlValues.left != byteBuffer.get()){
             Log.e("serial", "Left control value mismatch");
         }
