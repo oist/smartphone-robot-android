@@ -303,6 +303,7 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
             if (packetBuffer.position() < (startStopIdx.stopIdx + 1)){
                 Log.d("verifyPacket", "Data received not yet enough to fill " +
                         packetType + " packetType. Waiting for more data");
+                Log.d("verifyPacket", packetBuffer.position() + " bytes recvd thus far. Require " + startStopIdx.stopIdx);
                 return false;
             }
             // You have enough data for a full packet
