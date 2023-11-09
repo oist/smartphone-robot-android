@@ -62,7 +62,7 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
     protected final CircularFifoQueue<FifoQueuePair> fifoQueue = new CircularFifoQueue<>(256);
     int timeout = 1000; //1s
     int totalBytesRead = 0; // Track total bytes read
-    final ByteBuffer packetBuffer = ByteBuffer.allocate(1024 * 2);// Adjust the buffer size as needed
+    final ByteBuffer packetBuffer = ByteBuffer.allocate((512 * 128)+ 8);// Adjust the buffer size as needed
     boolean packetFound = false;
     //Ensure a proper start and stop mark present before adding anything to the fifoQueue
     StartStopIndex startStopIdx;
