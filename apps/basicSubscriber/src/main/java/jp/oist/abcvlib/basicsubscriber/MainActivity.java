@@ -34,7 +34,10 @@ import jp.oist.abcvlib.core.inputs.phone.OrientationDataSubscriber;
 import jp.oist.abcvlib.core.inputs.phone.QRCodeData;
 import jp.oist.abcvlib.core.inputs.phone.QRCodeDataSubscriber;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
+import jp.oist.abcvlib.util.RP2040State;
 import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
+import jp.oist.abcvlib.util.SerialResponseListener;
+import jp.oist.abcvlib.util.UsbSerial;
 
 /**
  * Most basic Android application showing connection to IOIOBoard and Android Sensors
@@ -52,7 +55,7 @@ import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
  * unresponsive.
  * @author Christopher Buckley https://github.com/topherbuckley
  */
-public class MainActivity extends AbcvlibActivity implements IOReadyListener,
+public class MainActivity extends AbcvlibActivity implements SerialResponseListener,
         BatteryDataSubscriber, OrientationDataSubscriber, WheelDataSubscriber,
         MicrophoneDataSubscriber, ImageDataRawSubscriber, QRCodeDataSubscriber, ObjectDetectorDataSubscriber {
 
@@ -65,8 +68,6 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener,
         // Setup Android GUI object references such that we can write data to them later.
         setContentView(R.layout.activity_main);
 
-        setIoReadyListener(this);
-
         // Creates an another thread that schedules updates to the GUI every 100 ms. Updaing the GUI every 100 microseconds would bog down the CPU
         ScheduledExecutorServiceWithException executor = new ScheduledExecutorServiceWithException(1, new ProcessPriorityThreadFactory(Thread.MIN_PRIORITY, "GuiUpdates"));
         guiUpdater = new GuiUpdater(this);
@@ -76,7 +77,7 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener,
         super.onCreate(savedInstanceState);
     }
     @Override
-    public void onIOReady(AbcvlibLooper abcvlibLooper) {
+    public void onSerialReady(UsbSerial usbSerial){
         /*
          * Each {XXX}Data class has a builder that you can set various construction input parameters
          * with. Neglecting to set them will assume default values. See each class for its corresponding
@@ -86,8 +87,8 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener,
          * that implements the appropriate listener interface.
          */
         PublisherManager publisherManager = new PublisherManager();
-        new WheelData.Builder(this, publisherManager, abcvlibLooper).build().addSubscriber(this);
-        new BatteryData.Builder(this, publisherManager, abcvlibLooper).build().addSubscriber(this);
+//        new WheelData.Builder(this, publisherManager, abcvlibLooper).build().addSubscriber(this);
+//        new BatteryData.Builder(this, publisherManager, abcvlibLooper).build().addSubscriber(this);
         new OrientationData.Builder(this, publisherManager).build().addSubscriber(this);
 //        new ImageDataRaw.Builder(this, publisherManager, this).build().addSubscriber(this);
         new MicrophoneData.Builder(this, publisherManager).build().addSubscriber(this);
@@ -97,18 +98,18 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener,
         publisherManager.startPublishers();
     }
 
-    @Override
-    public void onBatteryVoltageUpdate(double voltage, long timestamp) {
-//        Log.i(TAG, "Battery Update: Voltage=" + voltage + " Timestemp=" + timestamp);
-        guiUpdater.batteryVoltage = voltage; // make volitile
-    }
+//    @Override
+//    public void onBatteryVoltageUpdate(double voltage, long timestamp) {
+////        Log.i(TAG, "Battery Update: Voltage=" + voltage + " Timestemp=" + timestamp);
+//        guiUpdater.batteryVoltage = voltage; // make volitile
+//    }
 
-    @Override
-    public void onChargerVoltageUpdate(double chargerVoltage, double coilVoltage, long timestamp) {
-//        Log.i(TAG, "Charger Update: Voltage=" + voltage + " Timestemp=" + timestamp);
-        guiUpdater.chargerVoltage = chargerVoltage;
-        guiUpdater.coilVoltage = coilVoltage;
-    }
+//    @Override
+//    public void onChargerVoltageUpdate(double chargerVoltage, double coilVoltage, long timestamp) {
+////        Log.i(TAG, "Charger Update: Voltage=" + voltage + " Timestemp=" + timestamp);
+//        guiUpdater.chargerVoltage = chargerVoltage;
+//        guiUpdater.coilVoltage = coilVoltage;
+//    }
 
     @Override
     public void onOrientationUpdate(long timestamp, double thetaRad, double angularVelocityRad) {
@@ -122,26 +123,26 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener,
         guiUpdater.angularVelocityDeg = angularVelocityDeg;
     }
 
-    @Override
-    public void onWheelDataUpdate(long timestamp, int wheelCountL, int wheelCountR,
-                                  double wheelDistanceL, double wheelDistanceR,
-                                  double wheelSpeedInstantL, double wheelSpeedInstantR,
-                                  double wheelSpeedBufferedL, double wheelSpeedBufferedR,
-                                  double wheelSpeedExpAvgL, double wheelSpeedExpAvgR) {
-//        Log.i(TAG, "Wheel Data Update: Timestamp=" + timestamp + " countLeft=" + countLeft +
-//                " countRight=" + countRight);
-//        double distanceLeft = WheelData.countsToDistance(countLeft);
-        guiUpdater.wheelCountL = wheelCountL;
-        guiUpdater.wheelCountR = wheelCountR;
-        guiUpdater.wheelDistanceL = wheelDistanceL;
-        guiUpdater.wheelDistanceR = wheelDistanceR;
-        guiUpdater.wheelSpeedInstantL = wheelSpeedInstantL;
-        guiUpdater.wheelSpeedInstantR = wheelSpeedInstantR;
-        guiUpdater.wheelSpeedBufferedL = wheelSpeedBufferedL;
-        guiUpdater.wheelSpeedBufferedR = wheelSpeedBufferedR;
-        guiUpdater.wheelSpeedExpAvgL = wheelSpeedExpAvgL;
-        guiUpdater.wheelSpeedExpAvgR = wheelSpeedExpAvgR;
-    }
+//    @Override
+//    public void onWheelDataUpdate(long timestamp, int wheelCountL, int wheelCountR,
+//                                  double wheelDistanceL, double wheelDistanceR,
+//                                  double wheelSpeedInstantL, double wheelSpeedInstantR,
+//                                  double wheelSpeedBufferedL, double wheelSpeedBufferedR,
+//                                  double wheelSpeedExpAvgL, double wheelSpeedExpAvgR) {
+////        Log.i(TAG, "Wheel Data Update: Timestamp=" + timestamp + " countLeft=" + countLeft +
+////                " countRight=" + countRight);
+////        double distanceLeft = WheelData.countsToDistance(countLeft);
+//        guiUpdater.wheelCountL = wheelCountL;
+//        guiUpdater.wheelCountR = wheelCountR;
+//        guiUpdater.wheelDistanceL = wheelDistanceL;
+//        guiUpdater.wheelDistanceR = wheelDistanceR;
+//        guiUpdater.wheelSpeedInstantL = wheelSpeedInstantL;
+//        guiUpdater.wheelSpeedInstantR = wheelSpeedInstantR;
+//        guiUpdater.wheelSpeedBufferedL = wheelSpeedBufferedL;
+//        guiUpdater.wheelSpeedBufferedR = wheelSpeedBufferedR;
+//        guiUpdater.wheelSpeedExpAvgL = wheelSpeedExpAvgL;
+//        guiUpdater.wheelSpeedExpAvgR = wheelSpeedExpAvgR;
+//    }
 
     /**
      * Takes the first 10 samples from the sampled audio data and sends them to the GUI.
@@ -196,6 +197,14 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener,
         }catch (IndexOutOfBoundsException e){
             guiUpdater.objectDetectorString = "No results from ObjectDetector";
         }
+    }
+
+    @Override
+    public void onRP2040StateUpdate(RP2040State rp2040State){
+        rp2040State.motorsState.encoderCounts.getLeft();
+        rp2040State.motorsState.encoderCounts.getRight();
+        rp2040State.batteryDetails.getVoltage();
+        rp2040State.chargeSideUSB.isWirelessChargerAttached();
     }
 }
 

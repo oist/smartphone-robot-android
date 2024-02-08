@@ -54,7 +54,7 @@ public class RP2040State {
             return faults;
         }
     }
-    protected class BatteryDetails{
+    public class BatteryDetails{
         // Raw byte data
         short voltage;
         byte safety_status;
@@ -89,7 +89,7 @@ public class RP2040State {
         public int getMax77976ChgDetails() {
             return max77976_chg_details;
         }
-        public boolean isNcp3901WirelessChargerAttached() {
+        public boolean isWirelessChargerAttached() {
             return ncp3901_wireless_charger_attached;
         }
         public float getUsbChargerVoltage() {
