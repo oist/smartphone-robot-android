@@ -8,7 +8,9 @@ public interface SerialResponseListener {
      * there so as to ensure no null pointers.
      */
     void onSerialReady(UsbSerial usbSerial);
-    void onEncoderCountsRec(int left, int right);
+    default void onRP2040StateUpdate(RP2040State rp2040State){
+        // Do nothing
+    }
 
     default void onRawPacketReceived(byte[] packet){
         // Do nothing
