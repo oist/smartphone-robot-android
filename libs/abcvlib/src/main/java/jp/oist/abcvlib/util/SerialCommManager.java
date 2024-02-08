@@ -28,6 +28,9 @@ public class SerialCommManager {
     private Runnable pi2AndroidReader;
     private Runnable android2PiWriter;
 
+    long startTimeAndroid;
+    int cnt = 0;
+    long durationAndroid;
 
     // Constructor to initialize SerialCommManager
     public SerialCommManager(UsbSerial usbSerial, Runnable pi2AndroidReader, Runnable android2PiWriter) {
@@ -55,6 +58,8 @@ public class SerialCommManager {
         public void run() {
             while (!shutdown) {
                 int result = parseFifoPacket();
+                // Packet received from rp2040 start Android Processing
+                startTimeAndroid = System.nanoTime();
                 usbSerial.packetParsed.setStatus(result);
                 Log.i(Thread.currentThread().getName(), "usbSerial.packetParsed.notify()");
                 synchronized (usbSerial.packetParsed){
@@ -195,6 +200,10 @@ public class SerialCommManager {
     int: right (same as left)
      */
     public void setMotorLevels(float left, float right, boolean leftBrake, boolean rightBrake) {
+        if (cnt == 0) {
+            // start timer
+            startTimeAndroid = System.nanoTime();
+        }
         androidToRP2040Packet.clear();
         androidToRP2040Packet.setCommand(AndroidToRP2040Command.SET_MOTOR_LEVELS);
 
@@ -265,7 +274,15 @@ public class SerialCommManager {
         if (sendPacket(commandData) != 0){
             Log.e("Android2PiWriter", "Error sending packet");
         }else{
-            Log.d("Android2PiWriter", "Packet sent");
+            //Log.d("Android2PiWriter", "Packet sent");
+        }
+        cnt++;
+        durationAndroid = durationAndroid + (System.nanoTime() - startTimeAndroid);
+        if (cnt == 100) {
+            cnt = 0;
+            durationAndroid = durationAndroid / 100;
+            // convert from nanoseconds to milliseconds
+            Log.i("AndroidSide", "Average time per command: " + durationAndroid / 1000 + "us");
         }
     }
 
