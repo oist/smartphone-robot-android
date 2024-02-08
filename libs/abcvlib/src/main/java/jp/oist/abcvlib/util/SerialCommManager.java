@@ -317,9 +317,7 @@ public class SerialCommManager {
         rp2040State.batteryDetails.flags = byteBuffer.getShort();
         Log.v("serial", "Battery voltage: " + rp2040State.batteryDetails.voltage);
         Log.v("serial", "Battery voltage in V: " + rp2040State.batteryDetails.getVoltage());
-        Log.v("serial", "Battery temperature: " + rp2040State.batteryDetails.temperature);
         rp2040State.chargeSideUSB.max77976_chg_details = byteBuffer.getInt();
-        Log.v("serial", "max77976_chg_details: " + rp2040State.chargeSideUSB.max77976_chg_details);
         rp2040State.chargeSideUSB.ncp3901_wireless_charger_attached = byteBuffer.get() == 1;
         Log.v("serial", "ncp3901_wireless_charger_attached: " + rp2040State.chargeSideUSB.ncp3901_wireless_charger_attached);
         rp2040State.chargeSideUSB.usb_charger_voltage = byteBuffer.getShort();
