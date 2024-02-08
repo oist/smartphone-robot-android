@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.IOReadyListener;
+import jp.oist.abcvlib.util.RP2040State;
 import jp.oist.abcvlib.util.SerialCommManager;
 import jp.oist.abcvlib.util.SerialReadyListener;
 import jp.oist.abcvlib.util.SerialResponseListener;
@@ -23,7 +24,7 @@ import jp.oist.abcvlib.util.UsbSerial;
  * Also includes a simple controller making the robot move back and forth at a set interval and speed
  * @author Christopher Buckley https://github.com/topherbuckley
  */
-public class MainActivity extends AbcvlibActivity implements SerialResponseListener{
+public class MainActivity extends AbcvlibActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +43,6 @@ public class MainActivity extends AbcvlibActivity implements SerialResponseListe
         @Override
         public void run() {
             Log.i("BackAndForth", "Current command speed: " + speed);
-            // TODO show state info here
             serialCommManager.setMotorLevels(speed, speed, false, false);
             if (speed >= 1.00f || speed <= -1.00f) {
                 increment = -increment;
@@ -57,15 +57,5 @@ public class MainActivity extends AbcvlibActivity implements SerialResponseListe
         serialCommManager = new SerialCommManager(usbSerial, backAndForth);
         serialCommManager.start();
         super.onSerialReady(usbSerial);
-    }
-
-    private void calculateSpeedError(){
-
-    }
-
-    @Override
-    public void onEncoderCountsRec(int left, int right){
-        // Use as in basicSubscriber here. Integrating into basicAssembler is a TODO
-        super.onEncoderCountsRec(left, right);
     }
 }
