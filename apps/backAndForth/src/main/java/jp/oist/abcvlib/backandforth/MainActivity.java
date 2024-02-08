@@ -18,7 +18,7 @@ import jp.oist.abcvlib.util.SerialCommManager;
 import jp.oist.abcvlib.util.SerialReadyListener;
 import jp.oist.abcvlib.util.SerialResponseListener;
 import jp.oist.abcvlib.util.UsbSerial;
-
+import java.lang.System;
 /**
  * Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors
  * Also includes a simple controller making the robot move back and forth at a set interval and speed
@@ -39,16 +39,32 @@ public class MainActivity extends AbcvlibActivity {
     Runnable backAndForth = new Runnable() {
         float speed = 0.35f;
         float increment = 0.01f;
+        int cnt = 0;
+        long startTime;
+        // start timer to measure how long to get to cnt = 100
 
         @Override
         public void run() {
+            if (cnt == 0) {
+                // start timer
+                startTime = System.nanoTime();
+            }
             Log.i("BackAndForth", "Current command speed: " + speed);
             serialCommManager.setMotorLevels(speed, speed, false, false);
             if (speed >= 1.00f || speed <= -1.00f) {
                 increment = -increment;
-                serialCommManager.getLog();
+//                serialCommManager.getLog();
             }
             speed += increment;
+            cnt++;
+            if (cnt == 100) {
+                cnt = 0;
+                // stop timer
+                long endTime = System.nanoTime();
+                long duration = (endTime - startTime);
+                // divide by 100 to get average time per command and convert from nanoseconds to milliseconds
+                Log.i("BackAndForth", "Average time per command: " + duration/100000000 + "ms");
+            }
         }
     };
 
