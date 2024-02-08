@@ -304,6 +304,8 @@ public class SerialCommManager {
         }
         rp2040State.motorsState.faults.left = byteBuffer.get();
         rp2040State.motorsState.faults.right = byteBuffer.get();
+        Log.v("serial", "left motor fault: " + rp2040State.motorsState.faults.left);
+        Log.v("serial", "right motor fault: " + rp2040State.motorsState.faults.right);
         rp2040State.motorsState.encoderCounts.left = byteBuffer.getInt();
         rp2040State.motorsState.encoderCounts.right = byteBuffer.getInt();
         Log.v("serial", "Left encoder count: " + rp2040State.motorsState.encoderCounts.left);
