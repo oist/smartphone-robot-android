@@ -2,28 +2,56 @@ package jp.oist.abcvlib.util;
 
 public class RP2040State {
 
-    protected class MotorsState{
-        protected class ControlValues{
-            byte left;
-            byte right;
+    public class MotorsState{
+        public class ControlValues{
+            public byte left;
+            public byte right;
+            public byte getLeft() {
+                return left;
+            }
+            public byte getRight() {
+                return right;
+            }
         }
-        protected class Faults{
-            byte left;
-            byte right;
+        public class Faults{
+            public byte left;
+            public byte right;
+            public byte getLeft() {
+                return left;
+            }
+            public byte getRight() {
+                return right;
+            }
         }
-        protected class EncoderCounts{
+        public class EncoderCounts{
             int left;
             int right;
+            public int getLeft() {
+                return left;
+            }
+            public int getRight() {
+                return right;
+            }
         }
 
-        ControlValues controlValues;
-        EncoderCounts encoderCounts;
-        Faults faults;
+        public ControlValues controlValues;
+        public EncoderCounts encoderCounts;
+        public Faults faults;
 
-        public MotorsState(){
+        protected MotorsState(){
             controlValues = new ControlValues();
             encoderCounts = new EncoderCounts();
             faults = new Faults();
+        }
+
+        public ControlValues getControlValues() {
+            return controlValues;
+        }
+        public EncoderCounts getEncoderCounts() {
+            return encoderCounts;
+        }
+        public Faults getFaults() {
+            return faults;
         }
     }
     protected class BatteryDetails{
@@ -40,16 +68,38 @@ public class RP2040State {
         public float getVoltage() {
             return ((float) voltage / 1000f);
         }
+        public byte getSafetyStatus() {
+            return safety_status;
+        }
+        public float getTemperature() {
+            return ((float) temperature / 10f);
+        }
+        public byte getStateOfHealth() {
+            return state_of_health;
+        }
+        public short getFlags() {
+            return flags;
+        }
     }
-    protected class ChargeSideUSB{
+    public class ChargeSideUSB{
         int max77976_chg_details;
         boolean ncp3901_wireless_charger_attached;
         short usb_charger_voltage;
+
+        public int getMax77976ChgDetails() {
+            return max77976_chg_details;
+        }
+        public boolean isNcp3901WirelessChargerAttached() {
+            return ncp3901_wireless_charger_attached;
+        }
+        public float getUsbChargerVoltage() {
+            return ((float) usb_charger_voltage / 1000f);
+        }
     }
 
-    MotorsState motorsState;
-    BatteryDetails batteryDetails;
-    ChargeSideUSB chargeSideUSB;
+    public MotorsState motorsState;
+    public BatteryDetails batteryDetails;
+    public ChargeSideUSB chargeSideUSB;
 
     public RP2040State(){
         motorsState = new MotorsState();
