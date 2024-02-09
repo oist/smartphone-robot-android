@@ -27,14 +27,16 @@ public class SerialCommManager {
     private boolean shutdown = false;
     private Runnable pi2AndroidReader;
     private Runnable android2PiWriter;
+    private SerialResponseListener serialResponseListener;
 
     long startTimeAndroid;
     int cnt = 0;
     long durationAndroid;
 
     // Constructor to initialize SerialCommManager
-    public SerialCommManager(UsbSerial usbSerial, Runnable pi2AndroidReader, Runnable android2PiWriter) {
+    public SerialCommManager(UsbSerial usbSerial, Runnable pi2AndroidReader, Runnable android2PiWriter, SerialResponseListener serialResponseListener) {
         this.usbSerial = usbSerial;
+        this.serialResponseListener = serialResponseListener;
         if (pi2AndroidReader == null){
             this.pi2AndroidReader = defaultPi2AndroidReader;
             Log.w("serial", "pi2AndroidReader was null. Using default rather than custom");
@@ -49,8 +51,8 @@ public class SerialCommManager {
         }
     }
 
-    public SerialCommManager(UsbSerial usbSerial, Runnable android2PiWriter){
-        this(usbSerial, null, android2PiWriter);
+    public SerialCommManager(UsbSerial usbSerial, Runnable android2PiWriter, SerialResponseListener serialResponseListener){
+        this(usbSerial, null, android2PiWriter, serialResponseListener);
     }
 
     private final Runnable defaultPi2AndroidReader = new Runnable() {

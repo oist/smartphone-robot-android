@@ -70,7 +70,7 @@ public class MainActivity extends AbcvlibActivity {
 
     @Override
     public void onSerialReady(UsbSerial usbSerial) {
-        serialCommManager = new SerialCommManager(usbSerial, backAndForth);
+        serialCommManager = new SerialCommManager(usbSerial, backAndForth, this);
         serialCommManager.start();
         super.onSerialReady(usbSerial);
     }
