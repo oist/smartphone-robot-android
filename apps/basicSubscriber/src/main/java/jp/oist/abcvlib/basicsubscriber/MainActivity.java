@@ -36,6 +36,7 @@ import jp.oist.abcvlib.core.inputs.phone.QRCodeDataSubscriber;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.RP2040State;
 import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
+import jp.oist.abcvlib.util.SerialCommManager;
 import jp.oist.abcvlib.util.SerialResponseListener;
 import jp.oist.abcvlib.util.UsbSerial;
 
@@ -78,6 +79,10 @@ public class MainActivity extends AbcvlibActivity implements SerialResponseListe
     }
     @Override
     public void onSerialReady(UsbSerial usbSerial){
+        serialCommManager = new SerialCommManager(usbSerial, null, this);
+        serialCommManager.start();
+        super.onSerialReady(usbSerial);
+
         /*
          * Each {XXX}Data class has a builder that you can set various construction input parameters
          * with. Neglecting to set them will assume default values. See each class for its corresponding
@@ -98,18 +103,18 @@ public class MainActivity extends AbcvlibActivity implements SerialResponseListe
         publisherManager.startPublishers();
     }
 
-//    @Override
-//    public void onBatteryVoltageUpdate(double voltage, long timestamp) {
-////        Log.i(TAG, "Battery Update: Voltage=" + voltage + " Timestemp=" + timestamp);
-//        guiUpdater.batteryVoltage = voltage; // make volitile
-//    }
+    @Override
+    public void onBatteryVoltageUpdate(double voltage, long timestamp) {
+//        Log.i(TAG, "Battery Update: Voltage=" + voltage + " Timestemp=" + timestamp);
+        guiUpdater.batteryVoltage = voltage; // make volitile
+    }
 
-//    @Override
-//    public void onChargerVoltageUpdate(double chargerVoltage, double coilVoltage, long timestamp) {
-////        Log.i(TAG, "Charger Update: Voltage=" + voltage + " Timestemp=" + timestamp);
-//        guiUpdater.chargerVoltage = chargerVoltage;
-//        guiUpdater.coilVoltage = coilVoltage;
-//    }
+    @Override
+    public void onChargerVoltageUpdate(double chargerVoltage, double coilVoltage, long timestamp) {
+//        Log.i(TAG, "Charger Update: Voltage=" + voltage + " Timestemp=" + timestamp);
+        guiUpdater.chargerVoltage = chargerVoltage;
+        guiUpdater.coilVoltage = coilVoltage;
+    }
 
     @Override
     public void onOrientationUpdate(long timestamp, double thetaRad, double angularVelocityRad) {
@@ -123,26 +128,26 @@ public class MainActivity extends AbcvlibActivity implements SerialResponseListe
         guiUpdater.angularVelocityDeg = angularVelocityDeg;
     }
 
-//    @Override
-//    public void onWheelDataUpdate(long timestamp, int wheelCountL, int wheelCountR,
-//                                  double wheelDistanceL, double wheelDistanceR,
-//                                  double wheelSpeedInstantL, double wheelSpeedInstantR,
-//                                  double wheelSpeedBufferedL, double wheelSpeedBufferedR,
-//                                  double wheelSpeedExpAvgL, double wheelSpeedExpAvgR) {
-////        Log.i(TAG, "Wheel Data Update: Timestamp=" + timestamp + " countLeft=" + countLeft +
-////                " countRight=" + countRight);
-////        double distanceLeft = WheelData.countsToDistance(countLeft);
-//        guiUpdater.wheelCountL = wheelCountL;
-//        guiUpdater.wheelCountR = wheelCountR;
-//        guiUpdater.wheelDistanceL = wheelDistanceL;
-//        guiUpdater.wheelDistanceR = wheelDistanceR;
-//        guiUpdater.wheelSpeedInstantL = wheelSpeedInstantL;
-//        guiUpdater.wheelSpeedInstantR = wheelSpeedInstantR;
-//        guiUpdater.wheelSpeedBufferedL = wheelSpeedBufferedL;
-//        guiUpdater.wheelSpeedBufferedR = wheelSpeedBufferedR;
-//        guiUpdater.wheelSpeedExpAvgL = wheelSpeedExpAvgL;
-//        guiUpdater.wheelSpeedExpAvgR = wheelSpeedExpAvgR;
-//    }
+    @Override
+    public void onWheelDataUpdate(long timestamp, int wheelCountL, int wheelCountR,
+                                  double wheelDistanceL, double wheelDistanceR,
+                                  double wheelSpeedInstantL, double wheelSpeedInstantR,
+                                  double wheelSpeedBufferedL, double wheelSpeedBufferedR,
+                                  double wheelSpeedExpAvgL, double wheelSpeedExpAvgR) {
+//        Log.i(TAG, "Wheel Data Update: Timestamp=" + timestamp + " countLeft=" + countLeft +
+//                " countRight=" + countRight);
+//        double distanceLeft = WheelData.countsToDistance(countLeft);
+        guiUpdater.wheelCountL = wheelCountL;
+        guiUpdater.wheelCountR = wheelCountR;
+        guiUpdater.wheelDistanceL = wheelDistanceL;
+        guiUpdater.wheelDistanceR = wheelDistanceR;
+        guiUpdater.wheelSpeedInstantL = wheelSpeedInstantL;
+        guiUpdater.wheelSpeedInstantR = wheelSpeedInstantR;
+        guiUpdater.wheelSpeedBufferedL = wheelSpeedBufferedL;
+        guiUpdater.wheelSpeedBufferedR = wheelSpeedBufferedR;
+        guiUpdater.wheelSpeedExpAvgL = wheelSpeedExpAvgL;
+        guiUpdater.wheelSpeedExpAvgR = wheelSpeedExpAvgR;
+    }
 
     /**
      * Takes the first 10 samples from the sampled audio data and sends them to the GUI.
