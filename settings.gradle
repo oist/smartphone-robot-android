@@ -8,12 +8,12 @@ def apps = [
         'basicSubscriber',
         'basicAssembler',
         'backAndForth',
-        'pidbalancer',
-        'setPath',
-        'compoundController',
-        "qrComm",
-        "serverLearning",
-        "serviceTest",
+//        'pidbalancer',
+//        'setPath',
+//        'compoundController',
+//        "qrComm",
+//        "serverLearning",
+//        "serviceTest",
 ]
 
 gradle.ext.apps = apps
