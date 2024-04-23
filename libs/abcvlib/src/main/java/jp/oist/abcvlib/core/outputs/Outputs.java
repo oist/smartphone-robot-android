@@ -7,25 +7,26 @@ import jp.oist.abcvlib.core.AbcvlibLooper;
 import jp.oist.abcvlib.core.Switches;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
+import jp.oist.abcvlib.util.SerialCommManager;
 
 public class Outputs {
 
     public Motion motion;
     private final MasterController masterController;
     private final ScheduledExecutorServiceWithException threadPoolExecutor;
-    private final AbcvlibLooper abcvlibLooper;
+    private final SerialCommManager serialCommManager;
 
-    public Outputs(Switches switches, AbcvlibLooper abcvlibLooper){
+    public Outputs(Switches switches, SerialCommManager serialCommManager){
         // Determine number of necessary threads.
         int threadCount = 1; // At least one for the MasterController
-        this.abcvlibLooper = abcvlibLooper;
+        this.serialCommManager = serialCommManager;
         ProcessPriorityThreadFactory processPriorityThreadFactory = new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY, "Outputs");
         threadPoolExecutor = new ScheduledExecutorServiceWithException(threadCount, processPriorityThreadFactory);
 
         //BalancePIDController Controller
         motion = new Motion(switches);
 
-        masterController = new MasterController(switches, abcvlibLooper);
+        masterController = new MasterController(switches, serialCommManager);
     }
 
     public void startMasterController(){
@@ -36,8 +37,8 @@ public class Outputs {
      * @param left speed from -1 to 1 (full speed backward vs full speed forward)
      * @param right speed from -1 to 1 (full speed backward vs full speed forward)
      */
-    public void setWheelOutput(float left, float right) {
-        abcvlibLooper.setDutyCycle(left, right);
+    public void setWheelOutput(float left, float right, boolean leftBrake, boolean rightBrake) {
+        serialCommManager.setMotorLevels(left, right, leftBrake, rightBrake);
     }
 
     public synchronized MasterController getMasterController() {
@@ -45,6 +46,6 @@ public class Outputs {
     }
 
     public void turnOffWheels() throws ConnectionLostException {
-        abcvlibLooper.turnOffWheels();
+        setWheelOutput(0, 0, false, false);
     }
 }

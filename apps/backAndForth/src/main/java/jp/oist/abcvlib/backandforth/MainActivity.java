@@ -5,18 +5,8 @@ import static java.lang.Thread.sleep;
 import android.os.Bundle;
 import android.util.Log;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
 import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.core.IOReadyListener;
-import jp.oist.abcvlib.util.RP2040State;
 import jp.oist.abcvlib.util.SerialCommManager;
-import jp.oist.abcvlib.util.SerialReadyListener;
-import jp.oist.abcvlib.util.SerialResponseListener;
 import jp.oist.abcvlib.util.UsbSerial;
 import java.lang.System;
 /**

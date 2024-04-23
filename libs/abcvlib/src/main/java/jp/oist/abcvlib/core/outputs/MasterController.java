@@ -2,24 +2,28 @@ package jp.oist.abcvlib.core.outputs;
 
 import android.util.Log;
 
-import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import ioio.lib.api.exception.ConnectionLostException;
-import jp.oist.abcvlib.core.AbcvlibLooper;
+import jp.oist.abcvlib.util.SerialCommManager;
 import jp.oist.abcvlib.core.Switches;
 
+/*
+Currently deprecated. This class was intended to be used as a way to control multiple controllers
+This needs to be updated to include a way to control the motors via the SerialCommManager class
+instead of the deprecated SerialCommManager class
+ */
 public class MasterController extends AbcvlibController{
 
     private final String TAG = this.getClass().getName();
 
     private final Switches switches;
     private final CopyOnWriteArrayList<AbcvlibController> controllers = new CopyOnWriteArrayList<>();
-    private final AbcvlibLooper abcvlibLooper;
+    private final SerialCommManager serialCommManager;
 
-    MasterController(Switches switches, AbcvlibLooper abcvlibLooper){
+    MasterController(Switches switches, SerialCommManager serialCommManager){
         this.switches = switches;
-        this.abcvlibLooper = abcvlibLooper;
+        this.serialCommManager = serialCommManager;
     }
 
     @Override
@@ -39,7 +43,7 @@ public class MasterController extends AbcvlibController{
             Log.v("abcvlib", "grandController output:" + output.left);
         }
 
-        abcvlibLooper.setDutyCycle(output.left, output.right);
+        serialCommManager.setMotorLevels(output.left, output.right, false, false);
     }
 
     public void addController(AbcvlibController controller){

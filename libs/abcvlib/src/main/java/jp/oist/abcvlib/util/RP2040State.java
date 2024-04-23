@@ -1,42 +1,47 @@
 package jp.oist.abcvlib.util;
 
+import android.content.Context;
+
+import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
+import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
+
 public class RP2040State {
 
-    public class MotorsState{
-        public class ControlValues{
-            public byte left;
-            public byte right;
-            public byte getLeft() {
+    protected class MotorsState{
+        protected class ControlValues{
+            protected byte left;
+            protected byte right;
+            protected byte getLeft() {
                 return left;
             }
-            public byte getRight() {
+            protected byte getRight() {
                 return right;
             }
         }
-        public class Faults{
-            public byte left;
-            public byte right;
-            public byte getLeft() {
+        protected class Faults{
+            protected byte left;
+            protected byte right;
+            protected byte getLeft() {
                 return left;
             }
-            public byte getRight() {
+            protected byte getRight() {
                 return right;
             }
         }
-        public class EncoderCounts{
+        protected class EncoderCounts{
             int left;
             int right;
-            public int getLeft() {
+            protected int getLeft() {
                 return left;
             }
-            public int getRight() {
+            protected int getRight() {
                 return right;
             }
         }
 
-        public ControlValues controlValues;
-        public EncoderCounts encoderCounts;
-        public Faults faults;
+        protected ControlValues controlValues;
+        protected EncoderCounts encoderCounts;
+        protected Faults faults;
 
         protected MotorsState(){
             controlValues = new ControlValues();
@@ -44,17 +49,17 @@ public class RP2040State {
             faults = new Faults();
         }
 
-        public ControlValues getControlValues() {
+        protected ControlValues getControlValues() {
             return controlValues;
         }
-        public EncoderCounts getEncoderCounts() {
+        protected EncoderCounts getEncoderCounts() {
             return encoderCounts;
         }
-        public Faults getFaults() {
+        protected Faults getFaults() {
             return faults;
         }
     }
-    public class BatteryDetails{
+    protected class BatteryDetails{
         // Raw byte data
         short voltage;
         byte safety_status;
@@ -65,45 +70,58 @@ public class RP2040State {
         /* convert mV to V
            See bq27441-G1 Technical Reference Manual, Section 4.1.5
          */
-        public float getVoltage() {
+        protected float getVoltage() {
             return ((float) voltage / 1000f);
         }
-        public byte getSafetyStatus() {
+        protected byte getSafetyStatus() {
             return safety_status;
         }
-        public float getTemperature() {
+        protected float getTemperature() {
             return ((float) temperature / 10f);
         }
-        public byte getStateOfHealth() {
+        protected byte getStateOfHealth() {
             return state_of_health;
         }
-        public short getFlags() {
+        protected short getFlags() {
             return flags;
         }
     }
-    public class ChargeSideUSB{
+    protected class ChargeSideUSB{
         int max77976_chg_details;
         boolean ncp3901_wireless_charger_attached;
         short usb_charger_voltage;
 
-        public int getMax77976ChgDetails() {
+        protected int getMax77976ChgDetails() {
             return max77976_chg_details;
         }
-        public boolean isWirelessChargerAttached() {
+        protected boolean isWirelessChargerAttached() {
             return ncp3901_wireless_charger_attached;
         }
-        public float getUsbChargerVoltage() {
+        protected float getUsbChargerVoltage() {
             return ((float) usb_charger_voltage / 1000f);
         }
     }
 
-    public MotorsState motorsState;
-    public BatteryDetails batteryDetails;
-    public ChargeSideUSB chargeSideUSB;
+    protected MotorsState motorsState;
+    protected BatteryDetails batteryDetails;
+    protected ChargeSideUSB chargeSideUSB;
+    private BatteryData batteryData;
+    private WheelData wheelData;
+    
 
-    public RP2040State(){
+    protected RP2040State(BatteryData batteryData, WheelData wheelData){
         motorsState = new MotorsState();
         batteryDetails = new BatteryDetails();
         chargeSideUSB = new ChargeSideUSB();
+        this.batteryData = batteryData;
+        this.wheelData = wheelData;
+    }
+
+    protected void updatePublishers(){
+        long ts = System.nanoTime();
+        batteryData.onBatteryVoltageUpdate(ts, batteryDetails.getVoltage());
+        //Todo need to implement coilVoltage get from rp2040
+        batteryData.onChargerVoltageUpdate(ts, chargeSideUSB.getUsbChargerVoltage(), 0);
+        wheelData.onWheelDataUpdate(ts, motorsState.getEncoderCounts().getLeft(), motorsState.getEncoderCounts().getRight());
     }
 }

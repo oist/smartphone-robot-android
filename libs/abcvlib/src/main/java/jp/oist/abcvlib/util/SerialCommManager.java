@@ -1,5 +1,6 @@
 package jp.oist.abcvlib.util;
 
+import android.content.Context;
 import android.util.Log;
 import com.hoho.android.usbserial.driver.SerialTimeoutException;
 
@@ -7,6 +8,10 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executors;
+
+import jp.oist.abcvlib.core.inputs.PublisherManager;
+import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
+import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 
 
 public class SerialCommManager {
@@ -23,20 +28,25 @@ public class SerialCommManager {
 
     // Preallocated bytebuffer to write motor levels to
     private AndroidToRP2040Packet androidToRP2040Packet = new AndroidToRP2040Packet();
-    private RP2040State rp2040State = new RP2040State();
+    private RP2040State rp2040State;
     private boolean shutdown = false;
     private Runnable pi2AndroidReader;
     private Runnable android2PiWriter;
-    private SerialResponseListener serialResponseListener;
+    private SerialReadyListener serialReadyListener;
 
     long startTimeAndroid;
     int cnt = 0;
     long durationAndroid;
 
     // Constructor to initialize SerialCommManager
-    public SerialCommManager(UsbSerial usbSerial, Runnable pi2AndroidReader, Runnable android2PiWriter, SerialResponseListener serialResponseListener) {
+    public SerialCommManager(UsbSerial usbSerial,
+                             Runnable pi2AndroidReader,
+                             Runnable android2PiWriter,
+                             SerialReadyListener serialReadyListener,
+                             BatteryData batteryData,
+                             WheelData wheelData) {
         this.usbSerial = usbSerial;
-        this.serialResponseListener = serialResponseListener;
+        this.serialReadyListener = serialReadyListener;
         if (pi2AndroidReader == null){
             this.pi2AndroidReader = defaultPi2AndroidReader;
             Log.w("serial", "pi2AndroidReader was null. Using default rather than custom");
@@ -49,10 +59,26 @@ public class SerialCommManager {
         }else{
             this.android2PiWriter = android2PiWriter;
         }
+        if (batteryData == null || wheelData == null){
+            Log.w("serial", "batteryData or wheelData was null. " +
+                    "Ignoring all rp2040 state values. You must initialize both to use rp2040 state");
+            rp2040State = null;
+        }else{
+            rp2040State = new RP2040State(batteryData, wheelData);
+        }
     }
 
-    public SerialCommManager(UsbSerial usbSerial, Runnable android2PiWriter, SerialResponseListener serialResponseListener){
-        this(usbSerial, null, android2PiWriter, serialResponseListener);
+    public SerialCommManager(UsbSerial usbSerial,
+                             Runnable android2PiWriter,
+                             SerialReadyListener serialReadyListener){
+        this(usbSerial, null, android2PiWriter, serialReadyListener, null, null);
+    }
+
+    public SerialCommManager(UsbSerial usbSerial,
+                             SerialReadyListener serialReadyListener,
+                             BatteryData batteryData,
+                             WheelData wheelData){
+        this(usbSerial, null, null, serialReadyListener, batteryData, wheelData);
     }
 
     private final Runnable defaultPi2AndroidReader = new Runnable() {
@@ -95,7 +121,7 @@ public class SerialCommManager {
                 scheduleWithFixedDelay(android2PiWriter, 0, 10, java.util.concurrent.TimeUnit.MILLISECONDS);
     }
 
-    protected void stop() {
+    public void stop() {
         shutdown = true;
     }
 
@@ -198,8 +224,8 @@ public class SerialCommManager {
 
     /*
     parameters:
-    int: left [-1,1] representing full speed backward to full speed forward
-    int: right (same as left)
+    float: left [-1,1] representing full speed backward to full speed forward
+    float: right (same as left)
      */
     public void setMotorLevels(float left, float right, boolean leftBrake, boolean rightBrake) {
         if (cnt == 0) {
@@ -269,8 +295,10 @@ public class SerialCommManager {
         }
 
         // Just to check for error in return packet
-        rp2040State.motorsState.controlValues.left = control_values[0];
-        rp2040State.motorsState.controlValues.right = control_values[1];
+        if (rp2040State != null){
+            rp2040State.motorsState.controlValues.left = control_values[0];
+            rp2040State.motorsState.controlValues.right = control_values[1];
+        }
 
         byte[] commandData = androidToRP2040Packet.packetTobytes();
         if (sendPacket(commandData) != 0){
@@ -313,35 +341,37 @@ public class SerialCommManager {
     }
     private void parseStatus(byte[] bytes) {
         Log.d("serial", "parseStatus");
-        ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
-        byteBuffer.order(java.nio.ByteOrder.LITTLE_ENDIAN);
-        if (rp2040State.motorsState.controlValues.left != byteBuffer.get()){
-            Log.e("serial", "Left control value mismatch");
+        if (rp2040State != null){
+            ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+            byteBuffer.order(java.nio.ByteOrder.LITTLE_ENDIAN);
+            if (rp2040State.motorsState.controlValues.left != byteBuffer.get()){
+                Log.e("serial", "Left control value mismatch");
+            }
+            if (rp2040State.motorsState.controlValues.right != byteBuffer.get()){
+                Log.e("serial", "Right control value mismatch");
+            }
+            rp2040State.motorsState.faults.left = byteBuffer.get();
+            rp2040State.motorsState.faults.right = byteBuffer.get();
+            Log.v("serial", "left motor fault: " + rp2040State.motorsState.faults.left);
+            Log.v("serial", "right motor fault: " + rp2040State.motorsState.faults.right);
+            rp2040State.motorsState.encoderCounts.left = byteBuffer.getInt();
+            rp2040State.motorsState.encoderCounts.right = byteBuffer.getInt();
+            Log.v("serial", "Left encoder count: " + rp2040State.motorsState.encoderCounts.left);
+            Log.v("serial", "Right encoder count: " + rp2040State.motorsState.encoderCounts.right);
+            rp2040State.batteryDetails.voltage = byteBuffer.getShort();
+            rp2040State.batteryDetails.safety_status = byteBuffer.get();
+            rp2040State.batteryDetails.temperature = byteBuffer.getShort();
+            rp2040State.batteryDetails.state_of_health = byteBuffer.get();
+            rp2040State.batteryDetails.flags = byteBuffer.getShort();
+            Log.v("serial", "Battery voltage: " + rp2040State.batteryDetails.voltage);
+            Log.v("serial", "Battery voltage in V: " + rp2040State.batteryDetails.getVoltage());
+            rp2040State.chargeSideUSB.max77976_chg_details = byteBuffer.getInt();
+            rp2040State.chargeSideUSB.ncp3901_wireless_charger_attached = byteBuffer.get() == 1;
+            Log.v("serial", "ncp3901_wireless_charger_attached: " + rp2040State.chargeSideUSB.ncp3901_wireless_charger_attached);
+            rp2040State.chargeSideUSB.usb_charger_voltage = byteBuffer.getShort();
+            //Log.v("serial", "usb_charger_voltage: " + rp2040State.chargeSideUSB.usb_charger_voltage);
+            rp2040State.updatePublishers();
         }
-        if (rp2040State.motorsState.controlValues.right != byteBuffer.get()){
-            Log.e("serial", "Right control value mismatch");
-        }
-        rp2040State.motorsState.faults.left = byteBuffer.get();
-        rp2040State.motorsState.faults.right = byteBuffer.get();
-        Log.v("serial", "left motor fault: " + rp2040State.motorsState.faults.left);
-        Log.v("serial", "right motor fault: " + rp2040State.motorsState.faults.right);
-        rp2040State.motorsState.encoderCounts.left = byteBuffer.getInt();
-        rp2040State.motorsState.encoderCounts.right = byteBuffer.getInt();
-        Log.v("serial", "Left encoder count: " + rp2040State.motorsState.encoderCounts.left);
-        Log.v("serial", "Right encoder count: " + rp2040State.motorsState.encoderCounts.right);
-        rp2040State.batteryDetails.voltage = byteBuffer.getShort();
-        rp2040State.batteryDetails.safety_status = byteBuffer.get();
-        rp2040State.batteryDetails.temperature = byteBuffer.getShort();
-        rp2040State.batteryDetails.state_of_health = byteBuffer.get();
-        rp2040State.batteryDetails.flags = byteBuffer.getShort();
-        Log.v("serial", "Battery voltage: " + rp2040State.batteryDetails.voltage);
-        Log.v("serial", "Battery voltage in V: " + rp2040State.batteryDetails.getVoltage());
-        rp2040State.chargeSideUSB.max77976_chg_details = byteBuffer.getInt();
-        rp2040State.chargeSideUSB.ncp3901_wireless_charger_attached = byteBuffer.get() == 1;
-        Log.v("serial", "ncp3901_wireless_charger_attached: " + rp2040State.chargeSideUSB.ncp3901_wireless_charger_attached);
-        rp2040State.chargeSideUSB.usb_charger_voltage = byteBuffer.getShort();
-        //Log.v("serial", "usb_charger_voltage: " + rp2040State.chargeSideUSB.usb_charger_voltage);
-
     }
     private void onNack(byte[] bytes) {
         Log.d("serial", "parseNack");

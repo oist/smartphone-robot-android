@@ -34,10 +34,9 @@ import jp.oist.abcvlib.core.inputs.phone.OrientationDataSubscriber;
 import jp.oist.abcvlib.core.inputs.phone.QRCodeData;
 import jp.oist.abcvlib.core.inputs.phone.QRCodeDataSubscriber;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
-import jp.oist.abcvlib.util.RP2040State;
 import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 import jp.oist.abcvlib.util.SerialCommManager;
-import jp.oist.abcvlib.util.SerialResponseListener;
+import jp.oist.abcvlib.util.SerialReadyListener;
 import jp.oist.abcvlib.util.UsbSerial;
 
 /**
@@ -56,9 +55,10 @@ import jp.oist.abcvlib.util.UsbSerial;
  * unresponsive.
  * @author Christopher Buckley https://github.com/topherbuckley
  */
-public class MainActivity extends AbcvlibActivity implements SerialResponseListener,
+public class MainActivity extends AbcvlibActivity implements SerialReadyListener,
         BatteryDataSubscriber, OrientationDataSubscriber, WheelDataSubscriber,
-        MicrophoneDataSubscriber, ImageDataRawSubscriber, QRCodeDataSubscriber, ObjectDetectorDataSubscriber {
+        MicrophoneDataSubscriber, ImageDataRawSubscriber, QRCodeDataSubscriber,
+        ObjectDetectorDataSubscriber {
 
     private long lastFrameTime = System.nanoTime();
     private GuiUpdater guiUpdater;
@@ -79,10 +79,6 @@ public class MainActivity extends AbcvlibActivity implements SerialResponseListe
     }
     @Override
     public void onSerialReady(UsbSerial usbSerial){
-        serialCommManager = new SerialCommManager(usbSerial, null, this);
-        serialCommManager.start();
-        super.onSerialReady(usbSerial);
-
         /*
          * Each {XXX}Data class has a builder that you can set various construction input parameters
          * with. Neglecting to set them will assume default values. See each class for its corresponding
@@ -92,25 +88,37 @@ public class MainActivity extends AbcvlibActivity implements SerialResponseListe
          * that implements the appropriate listener interface.
          */
         PublisherManager publisherManager = new PublisherManager();
-//        new WheelData.Builder(this, publisherManager, abcvlibLooper).build().addSubscriber(this);
-//        new BatteryData.Builder(this, publisherManager, abcvlibLooper).build().addSubscriber(this);
+
+        // Note how BatteryData and WheelData objects must have a reference such that they can
+        // passed to the SerialCommManager object.
+        BatteryData batteryData = new BatteryData.Builder(this, publisherManager).build();
+        batteryData.addSubscriber(this);
+        WheelData wheelData = new WheelData.Builder(this, publisherManager).build();
+        wheelData.addSubscriber(this);
+
+        // These publishers do not need references as they are not passed to the SerialCommManager
         new OrientationData.Builder(this, publisherManager).build().addSubscriber(this);
 //        new ImageDataRaw.Builder(this, publisherManager, this).build().addSubscriber(this);
         new MicrophoneData.Builder(this, publisherManager).build().addSubscriber(this);
         new ObjectDetectorData.Builder(this, publisherManager, this).setPreviewView(findViewById(R.id.camera_x_preview)).build().addSubscriber(this);
         new QRCodeData.Builder(this, publisherManager, this).build().addSubscriber(this);
+
+        serialCommManager = new SerialCommManager(usbSerial,this, batteryData, wheelData);
+        serialCommManager.start();
+        super.onSerialReady(usbSerial);
+
         publisherManager.initializePublishers();
         publisherManager.startPublishers();
     }
 
     @Override
-    public void onBatteryVoltageUpdate(double voltage, long timestamp) {
+    public void onBatteryVoltageUpdate(long timestamp, double voltage) {
 //        Log.i(TAG, "Battery Update: Voltage=" + voltage + " Timestemp=" + timestamp);
         guiUpdater.batteryVoltage = voltage; // make volitile
     }
 
     @Override
-    public void onChargerVoltageUpdate(double chargerVoltage, double coilVoltage, long timestamp) {
+    public void onChargerVoltageUpdate(long timestamp, double chargerVoltage, double coilVoltage) {
 //        Log.i(TAG, "Charger Update: Voltage=" + voltage + " Timestemp=" + timestamp);
         guiUpdater.chargerVoltage = chargerVoltage;
         guiUpdater.coilVoltage = coilVoltage;
@@ -202,14 +210,6 @@ public class MainActivity extends AbcvlibActivity implements SerialResponseListe
         }catch (IndexOutOfBoundsException e){
             guiUpdater.objectDetectorString = "No results from ObjectDetector";
         }
-    }
-
-    @Override
-    public void onRP2040StateUpdate(RP2040State rp2040State){
-        rp2040State.motorsState.encoderCounts.getLeft();
-        rp2040State.motorsState.encoderCounts.getRight();
-        rp2040State.batteryDetails.getVoltage();
-        rp2040State.chargeSideUSB.isWirelessChargerAttached();
     }
 }
 

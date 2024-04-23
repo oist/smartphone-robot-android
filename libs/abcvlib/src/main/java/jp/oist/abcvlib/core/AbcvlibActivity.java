@@ -9,16 +9,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.IOException;
-import ioio.lib.util.IOIOLooper;
-import ioio.lib.util.android.IOIOActivity;
+
 import jp.oist.abcvlib.core.outputs.Outputs;
 import jp.oist.abcvlib.util.SerialCommManager;
-import jp.oist.abcvlib.util.SerialResponseListener;
 import jp.oist.abcvlib.util.UsbSerial;
 import jp.oist.abcvlib.util.SerialReadyListener;
 
@@ -33,15 +30,13 @@ import jp.oist.abcvlib.util.SerialReadyListener;
  * @author Christopher Buckley https://github.com/topherbuckley
  *
  */
-public abstract class AbcvlibActivity extends AppCompatActivity implements SerialResponseListener {
+public abstract class AbcvlibActivity extends AppCompatActivity implements SerialReadyListener {
 
     private Outputs outputs;
     private Switches switches = new Switches();
-    protected AbcvlibLooper abcvlibLooper;
     private static final String TAG = "abcvlib";
     private IOReadyListener ioReadyListener;
     protected UsbSerial usbSerial;
-    private SerialResponseListener serialResponseListener;
     protected SerialCommManager serialCommManager;
     private Runnable android2PiWriter = null;
     private Runnable pi2AndroidReader = null;
@@ -119,9 +114,9 @@ public abstract class AbcvlibActivity extends AppCompatActivity implements Seria
     public void onPause()
     {
         super.onPause();
-        if (abcvlibLooper != null){
-//            abcvlibLooper.setDutyCycle(0, 0);
-            abcvlibLooper.shutDown();
+        if (serialCommManager != null){
+            serialCommManager.setMotorLevels(0, 0, true, true);
+            serialCommManager.stop();
         }
         Log.i(TAG, "End of AbcvlibActivity.onPause");
     }
@@ -139,6 +134,6 @@ public abstract class AbcvlibActivity extends AppCompatActivity implements Seria
     }
 
     private void initializeOutputs(){
-        outputs = new Outputs(switches, abcvlibLooper);
+        outputs = new Outputs(switches, serialCommManager);
     }
 }

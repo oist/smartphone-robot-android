@@ -49,7 +49,7 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
     private final Context context;
     private final UsbManager usbManager;
     private UsbSerialPort port;
-    protected SerialResponseListener serialResponseListener;
+    protected SerialReadyListener serialReadyListener;
     private int cnt = 0;
     private float[] pwm = new float[]{1.0f, 0.5f, 0.0f, -0.5f, -1.0f};
     private byte[] responseData;
@@ -83,9 +83,9 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
 
     public UsbSerial(Context context,
                      UsbManager usbManager,
-                     SerialResponseListener serialResponseListener) throws IOException {
+                     SerialReadyListener serialReadyListener) throws IOException {
         this.context = context;
-        this.serialResponseListener = serialResponseListener;
+        this.serialReadyListener = serialReadyListener;
         // Find all available drivers from attached devices.
         this.usbManager = usbManager;
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
@@ -141,7 +141,7 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
             assert port != null;
             SerialInputOutputManager usbIoManager = new SerialInputOutputManager(port, this);
             usbIoManager.start();
-            serialResponseListener.onSerialReady(this);
+            serialReadyListener.onSerialReady(this);
         } catch (IOException e) {
             e.printStackTrace();
         }

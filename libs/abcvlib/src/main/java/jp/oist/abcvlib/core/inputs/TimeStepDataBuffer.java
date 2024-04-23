@@ -86,12 +86,12 @@ public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubsc
     public synchronized  int getReadIndex(){return readIndex;}
 
     @Override
-    public void onBatteryVoltageUpdate(double voltage, long timestamp) {
+    public void onBatteryVoltageUpdate(long timestamp, double voltage) {
         getWriteData().getBatteryData().put(voltage, timestamp);
     }
 
     @Override
-    public void onChargerVoltageUpdate(double chargerVoltage, double coilVoltage, long timestamp) {
+    public void onChargerVoltageUpdate(long timestamp, double chargerVoltage, double coilVoltage) {
         getWriteData().getChargerData().put(chargerVoltage, coilVoltage, timestamp);
     }
 

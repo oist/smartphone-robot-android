@@ -11,44 +11,40 @@ import jp.oist.abcvlib.core.inputs.PublisherManager;
 import jp.oist.abcvlib.core.inputs.Publisher;
 
 public class BatteryData extends Publisher<BatteryDataSubscriber> {
-    private final AbcvlibLooper abcvlibLooper;
 
-    public BatteryData(Context context, PublisherManager publisherManager, AbcvlibLooper abcvlibLooper){
+    public BatteryData(Context context, PublisherManager publisherManager){
         super(context, publisherManager);
-        this.abcvlibLooper = abcvlibLooper;
     }
 
     public static class Builder{
         private final Context context;
         private final PublisherManager publisherManager;
-        private final AbcvlibLooper abcvlibLooper;
 
-        public Builder(Context context, PublisherManager publisherManager, AbcvlibLooper abcvlibLooper){
+        public Builder(Context context, PublisherManager publisherManager){
             this.context = context;
             this.publisherManager = publisherManager;
-            this.abcvlibLooper = abcvlibLooper;
         }
 
         public BatteryData build(){
-            return new BatteryData(context, publisherManager, abcvlibLooper);
+            return new BatteryData(context, publisherManager);
         }
     }
 
-    public void onBatteryVoltageUpdate(double voltage, long timestamp) {
+    public void onBatteryVoltageUpdate(long timestamp, double voltage) {
         for (BatteryDataSubscriber subscriber: subscribers){
             handler.post(() -> {
                 if (!paused){
-                    subscriber.onBatteryVoltageUpdate(voltage, timestamp);
+                    subscriber.onBatteryVoltageUpdate(timestamp, voltage);
                 }
             });
         }
     }
 
-    public void onChargerVoltageUpdate(double chargerVoltage, double coilVoltage, long timestamp) {
+    public void onChargerVoltageUpdate(long timestamp, double chargerVoltage, double coilVoltage) {
         for (BatteryDataSubscriber subscriber: subscribers){
             handler.post(() -> {
                 if (!paused){
-                    subscriber.onChargerVoltageUpdate(chargerVoltage, coilVoltage, timestamp);
+                    subscriber.onChargerVoltageUpdate(timestamp, chargerVoltage, coilVoltage);
                 }
             });
         }
@@ -59,13 +55,11 @@ public class BatteryData extends Publisher<BatteryDataSubscriber> {
         mHandlerThread = new HandlerThread("batteryThread");
         mHandlerThread.start();
         handler = new Handler(mHandlerThread.getLooper());
-        abcvlibLooper.setBatteryData(this);
         publisherManager.onPublisherInitialized();
     }
 
     @Override
     public void stop() {
-        abcvlibLooper.setBatteryData(null);
         mHandlerThread.quitSafely();
         handler = null;
     }

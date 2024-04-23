@@ -11,9 +11,9 @@ public interface BatteryDataSubscriber extends Subscriber {
      * @param voltage
      * @param timestamp in nanoseconds see {@link java.lang.System#nanoTime()}
      */
-    void onBatteryVoltageUpdate(double voltage, long timestamp);
+    void onBatteryVoltageUpdate(long timestamp, double voltage);
     /**
-     * See {@link #onBatteryVoltageUpdate(double, long)} ()}
+     * See {@link #onBatteryVoltageUpdate(long, double)} ()}
      */
-    void onChargerVoltageUpdate(double chargerVoltage, double coilVoltage, long timestamp);
+    void onChargerVoltageUpdate(long timestamp, double chargerVoltage, double coilVoltage);
 }

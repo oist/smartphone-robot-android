@@ -356,15 +356,15 @@ public class AbcvlibLooper extends BaseIOIOLooper {
             boolean encoderALeftWheelState = encoderALeftWheel.read();
             boolean encoderBLeftWheelState = encoderBLeftWheel.read();
 
-            // Update any subscribers/listeners
-            if (wheelData != null){
-                wheelData.onWheelDataUpdate(timeStamp, encoderARightWheelState, encoderBRightWheelState,
-                        encoderALeftWheelState, encoderBLeftWheelState);
-            }
-            if (batteryData != null){
-                batteryData.onChargerVoltageUpdate(chargerVoltage, coilVoltage, timeStamp);
-                batteryData.onBatteryVoltageUpdate(batteryVoltage, timeStamp);
-            }
+//            // Update any subscribers/listeners
+//            if (wheelData != null){
+//                wheelData.onWheelDataUpdate(timeStamp, encoderARightWheelState, encoderBRightWheelState,
+//                        encoderALeftWheelState, encoderBLeftWheelState);
+//            }
+//            if (batteryData != null){
+//                batteryData.onChargerVoltageUpdate(chargerVoltage, coilVoltage, timeStamp);
+//                batteryData.onBatteryVoltageUpdate(batteryVoltage, timeStamp);
+//            }
 
             // Write all calculated values to the IOIO Board pins
             input1RightWheelController.write(input1RightWheelState);

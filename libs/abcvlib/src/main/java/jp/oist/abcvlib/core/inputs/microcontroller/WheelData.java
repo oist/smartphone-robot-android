@@ -18,12 +18,10 @@ public class WheelData extends Publisher<WheelDataSubscriber> {
     //----------------------------------- Wheel speed metrics --------------------------------------
     private final SingleWheelData rightWheel;
     private final SingleWheelData leftWheel;
-    private final AbcvlibLooper abcvlibLooper;
 
-    public WheelData(Context context, PublisherManager publisherManager, AbcvlibLooper abcvlibLooper,
+    public WheelData(Context context, PublisherManager publisherManager,
                      int bufferLength, double expWeight){
         super(context, publisherManager);
-        this.abcvlibLooper = abcvlibLooper;
 
         rightWheel = new SingleWheelData(bufferLength, expWeight);
         leftWheel = new SingleWheelData(bufferLength, expWeight);
@@ -32,18 +30,16 @@ public class WheelData extends Publisher<WheelDataSubscriber> {
     public static class Builder{
         private final Context context;
         private final PublisherManager publisherManager;
-        private final AbcvlibLooper abcvlibLooper;
         private int bufferLength = 50;
         private double expWeight = 0.01;
 
-        public Builder(Context context, PublisherManager publisherManager, AbcvlibLooper abcvlibLooper){
+        public Builder(Context context, PublisherManager publisherManager){
             this.context = context;
             this.publisherManager = publisherManager;
-            this.abcvlibLooper = abcvlibLooper;
         }
 
         public WheelData build(){
-            return new WheelData(context, publisherManager, abcvlibLooper, bufferLength, expWeight);
+            return new WheelData(context, publisherManager, bufferLength, expWeight);
         }
         public WheelData.Builder setBufferLength(int bufferLength){
             this.bufferLength = bufferLength;
@@ -70,12 +66,12 @@ public class WheelData extends Publisher<WheelDataSubscriber> {
      *     (and therefore usually zero in value)<br><br>
      * 2.) {@link SingleWheelData#speedBuffered} is the speed as measured from the beginning to the end
      * of a fixed length buffer. The default length is 50, but this can be set via the
-     * {@link WheelData#WheelData(Context, PublisherManager, AbcvlibLooper, int, double)} constructor or via the
+     * {@link WheelData#WheelData(Context, PublisherManager, int, double)} constructor or via the
      * {@link WheelData.Builder#setBufferLength(int)} builder method when creating an instance of
      * WheelData.<br><br>
      * 3.) {@link SingleWheelData#speedExponentialAvg} is a running exponential average of
      * {@link SingleWheelData#speedBuffered}. The default weight of the average is 0.01, but this
-     * can be set via the {@link WheelData#WheelData(Context, PublisherManager, AbcvlibLooper, int, double)} constructor or via the
+     * can be set via the {@link WheelData#WheelData(Context, PublisherManager, int, double)} constructor or via the
      * {@link WheelData.Builder#setExpWeight(double)} builder method when creating an instance of
      * WheelData.<br><br>
      *
@@ -85,12 +81,10 @@ public class WheelData extends Publisher<WheelDataSubscriber> {
      * See the jp.oist.abcvlib.basicsubscriber.MainActivity for an example of this subscription
      * framework
      */
-    public void onWheelDataUpdate(long timestamp, boolean encoderARightWheelState,
-                                  boolean encoderBRightWheelState, boolean encoderALeftWheelState,
-                                  boolean encoderBLeftWheelState) {
+    public void onWheelDataUpdate(long timestamp, int countL, int countR) {
         handler.post(() -> {
-            rightWheel.update(timestamp, encoderARightWheelState, encoderBRightWheelState);
-            leftWheel.update(timestamp, encoderALeftWheelState, encoderBLeftWheelState);
+            rightWheel.update(timestamp, countR);
+            leftWheel.update(timestamp, countL);
             if (!paused){
                 for (WheelDataSubscriber subscriber:subscribers){
                     subscriber.onWheelDataUpdate(timestamp, leftWheel.getLatestEncoderCount(),
@@ -111,13 +105,11 @@ public class WheelData extends Publisher<WheelDataSubscriber> {
         mHandlerThread = new HandlerThread("wheelDataThread");
         mHandlerThread.start();
         handler = new Handler(mHandlerThread.getLooper());
-        abcvlibLooper.setWheelData(this);
         publisherManager.onPublisherInitialized();
     }
 
     @Override
     public void stop() {
-        abcvlibLooper.setWheelData(null);
         mHandlerThread.quitSafely();
         handler = null;
     }
@@ -140,9 +132,6 @@ public class WheelData extends Publisher<WheelDataSubscriber> {
      * rate compared to the rate of change on the quadrature encoders.
      */
     private static class SingleWheelData {
-        // High/Low state of pins monitoring quadrature encoders
-        private boolean encoderAStatePrevious;
-        private boolean encoderBStatePrevious;
         private final int bufferLength;
         private int idxHead;
         private int idxHeadPrev;
@@ -199,70 +188,10 @@ public class WheelData extends Publisher<WheelDataSubscriber> {
 
          See: <a href="http://www.creative-robotics.com/quadrature-intro">http://www.creative-robotics.com/quadrature-intro</a>
          */
-        private synchronized void update(long timestamp, Boolean encoderAState, Boolean encoderBState){
-            updateCount(encoderAState, encoderBState);
+        private synchronized void update(long timestamp, int count){
+            encoderCount[idxHead] = count;
             updateDistance();
             updateWheelSpeed(timestamp);
-        }
-
-        private synchronized void updateCount(Boolean encoderAState, Boolean encoderBState){
-
-            // Channel A goes from Low to High
-            if (!encoderAStatePrevious && encoderAState){
-                // Channel B is Low = Clockwise
-                if (!encoderBState){
-                    encoderCount[idxHead] = encoderCount[idxHeadPrev] + 1;
-                }
-                // Channel B is High = CounterClockwise
-                else {
-                    encoderCount[idxHead] = encoderCount[idxHeadPrev] - 1;
-                }
-            }
-
-            // Channel A goes from High to Low
-            else if (encoderAStatePrevious && !encoderAState){
-                // Channel B is Low = CounterClockwise
-                if (!encoderBState){
-                    encoderCount[idxHead] = encoderCount[idxHeadPrev] - 1;
-                }
-                // Channel B is High = Clockwise
-                else {
-                    encoderCount[idxHead] = encoderCount[idxHeadPrev] + 1;
-                }
-            }
-
-            // Channel B goes from Low to High
-            else if (!encoderBStatePrevious && encoderBState){
-                // Channel A is Low = CounterClockwise
-                if (!encoderAState){
-                    encoderCount[idxHead] = encoderCount[idxHeadPrev] - 1;
-                }
-                // Channel A is High = Clockwise
-                else {
-                    encoderCount[idxHead] = encoderCount[idxHeadPrev] + 1;
-                }
-            }
-
-            // Channel B goes from High to Low
-            else if (encoderBStatePrevious && !encoderBState){
-                // Channel A is Low = Clockwise
-                if (!encoderAState){
-                    encoderCount[idxHead] = encoderCount[idxHeadPrev] + 1;
-                }
-                // Channel A is High = CounterClockwise
-                else {
-                    encoderCount[idxHead] = encoderCount[idxHeadPrev] - 1;
-                }
-            }
-
-            // Else both the current and previous state of A is HIGH or LOW, meaning no transition has
-            // occurred thus no need to add or subtract from wheelCounts
-            else {
-                encoderCount[idxHead] = encoderCount[idxHeadPrev];
-            }
-
-            encoderAStatePrevious = encoderAState;
-            encoderBStatePrevious = encoderBState;
         }
 
         private synchronized void updateDistance(){
