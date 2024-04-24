@@ -19,27 +19,35 @@ public final class MotionAction extends Table {
   public String actionName() { int o = __offset(6); return o != 0 ? __string(o + bb_pos) : null; }
   public ByteBuffer actionNameAsByteBuffer() { return __vector_as_bytebuffer(6, 1); }
   public ByteBuffer actionNameInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 6, 1); }
-  public float leftWheel() { int o = __offset(8); return o != 0 ? bb.getFloat(o + bb_pos) : 0.0f; }
-  public float rightWheel() { int o = __offset(10); return o != 0 ? bb.getFloat(o + bb_pos) : 0.0f; }
+  public float leftWheelSpeed() { int o = __offset(8); return o != 0 ? bb.getFloat(o + bb_pos) : 0.0f; }
+  public float rightWheelSpeed() { int o = __offset(10); return o != 0 ? bb.getFloat(o + bb_pos) : 0.0f; }
+  public boolean leftWheelBrake() { int o = __offset(12); return o != 0 ? 0!=bb.get(o + bb_pos) : false; }
+  public boolean rightWheelBrake() { int o = __offset(14); return o != 0 ? 0!=bb.get(o + bb_pos) : false; }
 
   public static int createMotionAction(FlatBufferBuilder builder,
       byte action_byte,
       int action_nameOffset,
-      float left_wheel,
-      float right_wheel) {
-    builder.startTable(4);
-    MotionAction.addRightWheel(builder, right_wheel);
-    MotionAction.addLeftWheel(builder, left_wheel);
+      float left_wheel_speed,
+      float right_wheel_speed,
+      boolean left_wheel_brake,
+      boolean right_wheel_brake) {
+    builder.startTable(6);
+    MotionAction.addRightWheelSpeed(builder, right_wheel_speed);
+    MotionAction.addLeftWheelSpeed(builder, left_wheel_speed);
     MotionAction.addActionName(builder, action_nameOffset);
+    MotionAction.addRightWheelBrake(builder, right_wheel_brake);
+    MotionAction.addLeftWheelBrake(builder, left_wheel_brake);
     MotionAction.addActionByte(builder, action_byte);
     return MotionAction.endMotionAction(builder);
   }
 
-  public static void startMotionAction(FlatBufferBuilder builder) { builder.startTable(4); }
+  public static void startMotionAction(FlatBufferBuilder builder) { builder.startTable(6); }
   public static void addActionByte(FlatBufferBuilder builder, byte actionByte) { builder.addByte(0, actionByte, 0); }
   public static void addActionName(FlatBufferBuilder builder, int actionNameOffset) { builder.addOffset(1, actionNameOffset, 0); }
-  public static void addLeftWheel(FlatBufferBuilder builder, float leftWheel) { builder.addFloat(2, leftWheel, 0.0f); }
-  public static void addRightWheel(FlatBufferBuilder builder, float rightWheel) { builder.addFloat(3, rightWheel, 0.0f); }
+  public static void addLeftWheelSpeed(FlatBufferBuilder builder, float leftWheelSpeed) { builder.addFloat(2, leftWheelSpeed, 0.0f); }
+  public static void addRightWheelSpeed(FlatBufferBuilder builder, float rightWheelSpeed) { builder.addFloat(3, rightWheelSpeed, 0.0f); }
+  public static void addLeftWheelBrake(FlatBufferBuilder builder, boolean leftWheelBrake) { builder.addBoolean(4, leftWheelBrake, false); }
+  public static void addRightWheelBrake(FlatBufferBuilder builder, boolean rightWheelBrake) { builder.addBoolean(5, rightWheelBrake, false); }
   public static int endMotionAction(FlatBufferBuilder builder) {
     int o = builder.endTable();
     return o;

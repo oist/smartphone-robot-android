@@ -20,6 +20,8 @@ public class MotionAction {
 
     public float getLeftWheelPWM(){return leftWheelPWM;}
     public float getRightWheelPWM(){return rightWheelPWM;}
+    public boolean getLeftWheelBrake(){return leftWheelBrake;}
+    public boolean getRightWheelBrake(){return rightWheelBrake;}
     public String getActionName(){return actionName;}
     public byte getActionByte(){return actionByte;}
 

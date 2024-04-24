@@ -260,7 +260,8 @@ public class FlatbufferAssembler {
                 builder, ca.getActionByte(), builder.createString(ca.getActionName()));
         int ma_offset = jp.oist.abcvlib.core.learning.fbclasses.MotionAction.createMotionAction(
                 builder, ma.getActionByte(), builder.createString(ma.getActionName()),
-                ma.getLeftWheelPWM(), ma.getRightWheelPWM());
+                ma.getLeftWheelPWM(), ma.getRightWheelPWM(),
+                ma.getLeftWheelBrake(), ma.getRightWheelBrake());
         return RobotAction.createRobotAction(builder, ma_offset, ca_offset);
     }
 
