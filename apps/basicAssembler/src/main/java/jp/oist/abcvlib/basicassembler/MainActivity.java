@@ -21,6 +21,8 @@ import jp.oist.abcvlib.core.learning.MotionActionSpace;
 import jp.oist.abcvlib.core.learning.StateSpace;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
+import jp.oist.abcvlib.util.SerialReadyListener;
+import jp.oist.abcvlib.util.UsbSerial;
 
 /**
  * Most basic Android application showing connection to IOIOBoard and Android Sensors
@@ -39,7 +41,7 @@ import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
  * unresponsive.
  * @author Christopher Buckley https://github.com/topherbuckley
  */
-public class MainActivity extends AbcvlibActivity implements IOReadyListener {
+public class MainActivity extends AbcvlibActivity implements SerialReadyListener {
 
     private GuiUpdater guiUpdater;
     private final int maxEpisodeCount = 3;
@@ -51,8 +53,6 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
         // Setup Android GUI object references such that we can write data to them later.
         setContentView(R.layout.activity_main);
 
-        setIoReadyListener(this);
-
         // Creates an another thread that schedules updates to the GUI every 100 ms. Updaing the GUI every 100 microseconds would bog down the CPU
         ScheduledExecutorServiceWithException executor = new ScheduledExecutorServiceWithException(1, new ProcessPriorityThreadFactory(Thread.MIN_PRIORITY, "GuiUpdates"));
         guiUpdater = new GuiUpdater(this, maxTimeStepCount, maxEpisodeCount);
@@ -63,7 +63,7 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
     }
 
     @Override
-    public void onIOReady(AbcvlibLooper abcvlibLooper) {
+    public void onSerialReady(UsbSerial usbSerial) {
         /*------------------------------------------------------------------------------
         ------------------------------ Set MetaParameters ------------------------------
         --------------------------------------------------------------------------------
@@ -83,11 +83,11 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
         commActionSpace.addCommAction("action3", (byte) 2);
 
         MotionActionSpace motionActionSpace = new MotionActionSpace(5);
-        motionActionSpace.addMotionAction("stop", (byte) 0, 0, 0); // I'm just overwriting an existing to show how
-        motionActionSpace.addMotionAction("forward", (byte) 1, 100, 100);
-        motionActionSpace.addMotionAction("backward", (byte) 2, -100, 100);
-        motionActionSpace.addMotionAction("left", (byte) 3, -100, 100);
-        motionActionSpace.addMotionAction("right", (byte) 4, 100, -100);
+        motionActionSpace.addMotionAction("stop", (byte) 0, 0, 0, false, false); // I'm just overwriting an existing to show how
+        motionActionSpace.addMotionAction("forward", (byte) 1, 1, 1, false, false);
+        motionActionSpace.addMotionAction("backward", (byte) 2, -1, 1, false, false);
+        motionActionSpace.addMotionAction("left", (byte) 3, -1, 1, false, false);
+        motionActionSpace.addMotionAction("right", (byte) 4, 1, -1, false, false);
 
         ActionSpace actionSpace = new ActionSpace(commActionSpace, motionActionSpace);
 
@@ -98,13 +98,13 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
 
         PublisherManager publisherManager = new PublisherManager();
 
-        WheelData wheelData = new WheelData.Builder(this, publisherManager, abcvlibLooper)
+        WheelData wheelData = new WheelData.Builder(this, publisherManager)
                 .setBufferLength(50)
                 .setExpWeight(0.01)
                 .build();
         wheelData.addSubscriber(timeStepDataBuffer);
 
-        BatteryData batteryData = new BatteryData.Builder(this, publisherManager, abcvlibLooper).build();
+        BatteryData batteryData = new BatteryData.Builder(this, publisherManager).build();
         batteryData.addSubscriber(timeStepDataBuffer);
 
         OrientationData orientationData = new OrientationData.Builder(this, publisherManager).build();

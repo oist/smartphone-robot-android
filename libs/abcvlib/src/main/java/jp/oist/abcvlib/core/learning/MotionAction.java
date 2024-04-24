@@ -2,19 +2,24 @@ package jp.oist.abcvlib.core.learning;
 
 public class MotionAction {
     private String actionName;
-    private int leftWheelPWM;
-    private int rightWheelPWM;
+    private float leftWheelPWM;
+    private float rightWheelPWM;
     private byte actionByte;
+    private boolean leftWheelBrake;
+    private boolean rightWheelBrake;
 
-    public MotionAction(String actionName, byte actionByte, int leftWheelPWM, int rightWheelPWM){
+    public MotionAction(String actionName, byte actionByte, float leftWheelPWM, float rightWheelPWM,
+                        boolean leftWheelBrake, boolean rightWheelBrake){
         this.actionName = actionName;
         this.actionByte = actionByte;
         this.leftWheelPWM = leftWheelPWM;
         this.rightWheelPWM = rightWheelPWM;
+        this.leftWheelBrake = leftWheelBrake;
+        this.rightWheelBrake = rightWheelBrake;
     }
 
-    public int getLeftWheelPWM(){return leftWheelPWM;}
-    public int getRightWheelPWM(){return rightWheelPWM;}
+    public float getLeftWheelPWM(){return leftWheelPWM;}
+    public float getRightWheelPWM(){return rightWheelPWM;}
     public String getActionName(){return actionName;}
     public byte getActionByte(){return actionByte;}
 

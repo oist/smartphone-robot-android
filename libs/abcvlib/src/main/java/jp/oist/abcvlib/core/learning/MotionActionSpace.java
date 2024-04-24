@@ -6,7 +6,7 @@ public class MotionActionSpace {
 
     /**
      * Initialize an object with actionCount number of discrete actions. Add actions via the
-     * {@link #addMotionAction(String, byte, int, int)} method. Alternatively, you can use the default actions
+     * {@link #addMotionAction(String, byte, float, float, boolean, boolean)} method. Alternatively, you can use the default actions
      * by calling this method without any arguments. See {@link #MotionActionSpace()}.
      * @param actionCount Number of possible discrete actions
      */
@@ -23,25 +23,27 @@ public class MotionActionSpace {
     }
 
     private void addDefaultActions(){
-        motionActions[0] = new MotionAction("stop", (byte) 0, 0, 0);
-        motionActions[1] = new MotionAction("forward", (byte) 1, 100, 100);
-        motionActions[2] = new MotionAction("backward", (byte) 2, -100, 100);
-        motionActions[3] = new MotionAction("left", (byte) 3, -100, 100);
-        motionActions[4] = new MotionAction("right", (byte) 4, 100, -100);
+        motionActions[0] = new MotionAction("stop", (byte) 0, 0, 0, true, true);
+        motionActions[1] = new MotionAction("forward", (byte) 1, 1, 1, false, false);
+        motionActions[2] = new MotionAction("backward", (byte) 2, -1, 1, false, false);
+        motionActions[3] = new MotionAction("left", (byte) 3, -1, 1, false, false);
+        motionActions[4] = new MotionAction("right", (byte) 4, 1, -1, false, false);
     }
 
     public MotionAction[] getMotionActions() {
         return motionActions;
     }
 
-    public void addMotionAction(String actionName, byte actionByte, int leftWheelPWM, int rightWheelPWM){
+    public void addMotionAction(String actionName, byte actionByte, float leftWheelSpeed,
+                                float rightWheelSpeed, boolean leftWheelBrake, boolean rightWheelBrake){
         if (actionByte > motionActions.length){
             throw new ArrayIndexOutOfBoundsException("Tried to addMotionAction to an index that " +
                     "doesn't exist in the MotionActionSpace. Make sure you initialize the " +
                     "MotionActionSpace with long enough length to accommodate all the actions you " +
                     "plan to create.");
         }
-        motionActions[actionByte] = new MotionAction(actionName, actionByte, leftWheelPWM, rightWheelPWM);
+        motionActions[actionByte] = new MotionAction(actionName, actionByte, leftWheelSpeed,
+                rightWheelSpeed, leftWheelBrake, rightWheelBrake);
     }
 }
 

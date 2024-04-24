@@ -19,14 +19,14 @@ public final class MotionAction extends Table {
   public String actionName() { int o = __offset(6); return o != 0 ? __string(o + bb_pos) : null; }
   public ByteBuffer actionNameAsByteBuffer() { return __vector_as_bytebuffer(6, 1); }
   public ByteBuffer actionNameInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 6, 1); }
-  public int leftWheel() { int o = __offset(8); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
-  public int rightWheel() { int o = __offset(10); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
+  public float leftWheel() { int o = __offset(8); return o != 0 ? bb.getFloat(o + bb_pos) : 0.0f; }
+  public float rightWheel() { int o = __offset(10); return o != 0 ? bb.getFloat(o + bb_pos) : 0.0f; }
 
   public static int createMotionAction(FlatBufferBuilder builder,
       byte action_byte,
       int action_nameOffset,
-      int left_wheel,
-      int right_wheel) {
+      float left_wheel,
+      float right_wheel) {
     builder.startTable(4);
     MotionAction.addRightWheel(builder, right_wheel);
     MotionAction.addLeftWheel(builder, left_wheel);
@@ -38,8 +38,8 @@ public final class MotionAction extends Table {
   public static void startMotionAction(FlatBufferBuilder builder) { builder.startTable(4); }
   public static void addActionByte(FlatBufferBuilder builder, byte actionByte) { builder.addByte(0, actionByte, 0); }
   public static void addActionName(FlatBufferBuilder builder, int actionNameOffset) { builder.addOffset(1, actionNameOffset, 0); }
-  public static void addLeftWheel(FlatBufferBuilder builder, int leftWheel) { builder.addInt(2, leftWheel, 0); }
-  public static void addRightWheel(FlatBufferBuilder builder, int rightWheel) { builder.addInt(3, rightWheel, 0); }
+  public static void addLeftWheel(FlatBufferBuilder builder, float leftWheel) { builder.addFloat(2, leftWheel, 0.0f); }
+  public static void addRightWheel(FlatBufferBuilder builder, float rightWheel) { builder.addFloat(3, rightWheel, 0.0f); }
   public static int endMotionAction(FlatBufferBuilder builder) {
     int o = builder.endTable();
     return o;
