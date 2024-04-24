@@ -43,7 +43,6 @@ public class MainActivity extends AbcvlibActivity {
             serialCommManager.setMotorLevels(speed, speed, false, false);
             if (speed >= 1.00f || speed <= -1.00f) {
                 increment = -increment;
-//                serialCommManager.getLog();
             }
             speed += increment;
             cnt++;

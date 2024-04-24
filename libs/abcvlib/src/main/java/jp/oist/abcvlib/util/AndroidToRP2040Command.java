@@ -4,9 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 enum AndroidToRP2040Command {
-    GET_LOG((byte) 0x00), //GET_STATE not necessary as you should just repeat the last command from previous time step
+    GET_LOG((byte) 0x00),
     SET_MOTOR_LEVELS((byte) 0x01),
     RESET_STATE((byte) 0x02),
+    GET_STATE((byte) 0x03),
     NACK((byte) 0xFC),
     ACK((byte) 0xFD),
     START((byte) 0xFE),

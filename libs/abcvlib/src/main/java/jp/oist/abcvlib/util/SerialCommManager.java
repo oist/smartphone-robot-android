@@ -77,7 +77,7 @@ public class SerialCommManager {
         @Override
         public void run() {
             while (!shutdown) {
-                //TODO
+                getState();
             }
         }
     };
@@ -124,6 +124,7 @@ public class SerialCommManager {
                     result = 1;
                     break;
                 case SET_MOTOR_LEVELS:
+                case GET_STATE:
                 case RESET_STATE:
                     parseStatus(packet);
                     result = 1;
@@ -181,32 +182,21 @@ public class SerialCommManager {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        receivePacket();
         return 0;
     }
 
-    private int recievePacket() {
-        int recievedStatus = usbSerial.awaitPacketReceived(1000);
-        if (recievedStatus == 1){
+    private void receivePacket() {
+        int receivedStatus = usbSerial.awaitPacketReceived(1000);
+        if (receivedStatus == 1){
             //Note this is actually calling the functions like parseLog, parseStatus, etc.
-            int result = parseFifoPacket();
+            parseFifoPacket();
         }
-        return recievedStatus;
     }
 
-    //-------------------------------------------------------------------///
-    // ---- API function calls for requesting something from the mcu ----///
-    //-------------------------------------------------------------------///
-    private void sendAck() throws IOException {
-        byte[] ack = new byte[]{AndroidToRP2040Command.ACK.getHexValue()};
-        sendPacket(ack);
-    }
-
-    /*
-    parameters:
-    float: left [-1,1] representing full speed backward to full speed forward
-    float: right (same as left)
-     */
-    public void setMotorLevels(float left, float right, boolean leftBrake, boolean rightBrake) {
+    private byte[] generateSetMotorLevels(AndroidToRP2040Packet androidToRP2040Packet,
+                                          float left, float right, boolean leftBrake,
+                                          boolean rightBrake) {
         if (cnt == 0) {
             // start timer
             startTimeAndroid = System.nanoTime();
@@ -272,43 +262,54 @@ public class SerialCommManager {
             }
             androidToRP2040Packet.payload.put(control_values[i]);
         }
+        return androidToRP2040Packet.packetTobytes();
+//        cnt++;
+//        durationAndroid = durationAndroid + (System.nanoTime() - startTimeAndroid);
+//        if (cnt == 100) {
+//            cnt = 0;
+//            durationAndroid = durationAndroid / 100;
+//            // convert from nanoseconds to milliseconds
+//            Log.i("AndroidSide", "Average time per command: " + durationAndroid / 1000 + "us");
+//        }
+    }
 
-        // Just to check for error in return packet
-        if (rp2040State != null){
-            rp2040State.motorsState.controlValues.left = control_values[0];
-            rp2040State.motorsState.controlValues.right = control_values[1];
-        }
+    private byte[] generateGetLogCmd(){
+        androidToRP2040Packet.clear();
+        androidToRP2040Packet.setCommand(AndroidToRP2040Command.GET_LOG);
+        return androidToRP2040Packet.packetTobytes();
+    }
 
-        byte[] commandData = androidToRP2040Packet.packetTobytes();
-        if (sendPacket(commandData) != 0){
-            Log.e("Android2PiWriter", "Error sending packet");
-        }else{
-            Log.d("Android2PiWriter", "Packet sent");
-            if (recievePacket() != 0){
-                Log.e("Android2PiWriter", "Error receiving packet");
-            }else{
-                Log.d("Android2PiWriter", "Packet received");
-            }
-        }
-        cnt++;
-        durationAndroid = durationAndroid + (System.nanoTime() - startTimeAndroid);
-        if (cnt == 100) {
-            cnt = 0;
-            durationAndroid = durationAndroid / 100;
-            // convert from nanoseconds to milliseconds
-            Log.i("AndroidSide", "Average time per command: " + durationAndroid / 1000 + "us");
-        }
+    private byte[] generateGetStateCmd(){
+        androidToRP2040Packet.clear();
+        androidToRP2040Packet.setCommand(AndroidToRP2040Command.GET_STATE);
+        return androidToRP2040Packet.packetTobytes();
+    }
+
+    private void getState(){
+        sendPacket(generateGetStateCmd());
+    }
+
+    //-------------------------------------------------------------------///
+    // ---- API function calls for requesting something from the mcu ----///
+    //-------------------------------------------------------------------///
+//    private void sendAck() throws IOException {
+//        byte[] ack = new byte[]{AndroidToRP2040Command.ACK.getHexValue()};
+//        sendPacket(ack);
+
+//    }
+
+    /*
+    parameters:
+    float: left [-1,1] representing full speed backward to full speed forward
+    float: right (same as left)
+    */
+    public void setWheelSpeed(float left, float right, boolean leftBrake,
+                              boolean rightBrake){
+        sendPacket(generateSetMotorLevels(androidToRP2040Packet, left, right, leftBrake, rightBrake));
     }
 
     public void getLog(){
-        androidToRP2040Packet.clear();
-        androidToRP2040Packet.setCommand(AndroidToRP2040Command.GET_LOG);
-        byte[] commandData = androidToRP2040Packet.packetTobytes();
-        if (sendPacket(commandData) != 0){
-            Log.e("Android2PiWriter", "Error sending packet");
-        }else{
-            Log.d("Android2PiWriter", "Packet sent");
-        }
+        sendPacket(generateGetLogCmd());
     }
 
     //----------------------------------------------------------///
