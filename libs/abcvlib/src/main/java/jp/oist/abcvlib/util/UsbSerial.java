@@ -24,27 +24,14 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 public class UsbSerial implements SerialInputOutputManager.Listener{
 
-    // Shared Object
-    protected class PacketReceived{
-        // Might add fields/methods here later
-    }
-    protected final PacketReceived packetReceived = new PacketReceived();
-
-    // Shared Object
-    protected class PacketParsed{
-        private int status;
-        protected synchronized void setStatus(int status){
-            this.status = status;
-        }
-        protected synchronized int getStatus(){
-            return status;
-        }
-    }
-    protected final PacketParsed packetParsed = new PacketParsed();
+    private static final ReentrantLock lock = new ReentrantLock();
+    protected static final Condition packetReceived = lock.newCondition();
 
     private final Context context;
     private final UsbManager usbManager;
@@ -163,6 +150,9 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
     @Override
     public void onNewData(byte[] data) {
 
+        //TODO I feel this should be executed in a separate thread otherwise the
+        // SerialInputOutputManager thread may be delayed and miss data
+
         // print the byte[] as an array of hex values
         StringBuilder sb = new StringBuilder();
         for (byte b : data) {
@@ -172,53 +162,46 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
 
         try {
             if (verifyPacket(data)){
-                Log.d(TAG, "Packet verified. Notifying packetParsed");
-                Log.d(TAG, "packetReceived.notify()");
-                synchronized (packetReceived){
-                    packetReceived.notify();
-                }
+                Log.d(TAG, "Packet verified");
+                Log.d(TAG, "packetReceived.signal()");
+                lock.lock();
+                packetReceived.signal();
             }
             else{
                 Log.d(TAG, "Incomplete Packet. Waiting for more data");
             };
         } catch (IOException e) {
             throw new RuntimeException(e);
+        } finally {
+            lock.unlock();
         }
     }
 
     protected void send(byte[] packet, int timeout) throws IOException {
         port.write(packet, timeout);
         Log.i(Thread.currentThread().getName(), "awaitPacketParsed()");
-        awaitPacketParsed();
     }
 
     /**
      * Blocks until a response is received
      */
-    protected void awaitPacketReceived() {
-        try {
-            // Wait until packet is available
-            synchronized (packetReceived){
-                Log.i(Thread.currentThread().getName(), "packetReceived.wait()");
-                packetReceived.wait();
-                Log.i(Thread.currentThread().getName(), "Packet received");
+    protected int awaitPacketReceived(int timeout) {
+        int returnVal = -1;
+        // Wait until packet is available
+        lock.lock();
+        try{
+            if (!packetReceived.await(timeout, java.util.concurrent.TimeUnit.MILLISECONDS)){
+                Log.e(Thread.currentThread().getName(), "packetReceived.await() timed out. Packet not received from rp2040");
+            } else {
+                Log.d(Thread.currentThread().getName(), "packetReceived.await() completed. Packet received from rp2040");
+                returnVal = 1;
             }
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
         }
-    }
-
-    protected void awaitPacketParsed() {
-        try {
-            // Wait until packet is available
-            synchronized (packetParsed){
-                Log.i(Thread.currentThread().getName(), "packetParsed.wait()");
-                packetParsed.wait();
-                Log.i(Thread.currentThread().getName(), "PacketParsed received");
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        return returnVal;
     }
 
     private StartStopIndex startStopIndexSearch(ByteBuffer data) throws IOException {

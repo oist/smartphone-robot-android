@@ -30,7 +30,6 @@ public class SerialCommManager {
     private AndroidToRP2040Packet androidToRP2040Packet = new AndroidToRP2040Packet();
     private RP2040State rp2040State;
     private boolean shutdown = false;
-    private Runnable pi2AndroidReader;
     private Runnable android2PiWriter;
     private SerialReadyListener serialReadyListener;
 
@@ -40,19 +39,12 @@ public class SerialCommManager {
 
     // Constructor to initialize SerialCommManager
     public SerialCommManager(UsbSerial usbSerial,
-                             Runnable pi2AndroidReader,
                              Runnable android2PiWriter,
                              SerialReadyListener serialReadyListener,
                              BatteryData batteryData,
                              WheelData wheelData) {
         this.usbSerial = usbSerial;
         this.serialReadyListener = serialReadyListener;
-        if (pi2AndroidReader == null){
-            this.pi2AndroidReader = defaultPi2AndroidReader;
-            Log.w("serial", "pi2AndroidReader was null. Using default rather than custom");
-        }else {
-            this.pi2AndroidReader = pi2AndroidReader;
-        }
         if (android2PiWriter == null){
             this.android2PiWriter = defaultAndroid2PiWriter;
             Log.w("serial", "android2PiWriter was null. Using default rather than custom");
@@ -71,32 +63,15 @@ public class SerialCommManager {
     public SerialCommManager(UsbSerial usbSerial,
                              Runnable android2PiWriter,
                              SerialReadyListener serialReadyListener){
-        this(usbSerial, null, android2PiWriter, serialReadyListener, null, null);
+        this(usbSerial, android2PiWriter, serialReadyListener, null, null);
     }
 
     public SerialCommManager(UsbSerial usbSerial,
                              SerialReadyListener serialReadyListener,
                              BatteryData batteryData,
                              WheelData wheelData){
-        this(usbSerial, null, null, serialReadyListener, batteryData, wheelData);
+        this(usbSerial, null, serialReadyListener, batteryData, wheelData);
     }
-
-    private final Runnable defaultPi2AndroidReader = new Runnable() {
-        @Override
-        public void run() {
-            while (!shutdown) {
-                int result = parseFifoPacket();
-                // Packet received from rp2040 start Android Processing
-                startTimeAndroid = System.nanoTime();
-                usbSerial.packetParsed.setStatus(result);
-                Log.i(Thread.currentThread().getName(), "usbSerial.packetParsed.notify()");
-                synchronized (usbSerial.packetParsed){
-                    usbSerial.packetParsed.notify();
-                }
-                usbSerial.awaitPacketReceived();
-            }
-        }
-    };
 
     private final Runnable defaultAndroid2PiWriter = new Runnable() {
         @Override
@@ -109,14 +84,9 @@ public class SerialCommManager {
 
     // Start method to start the thread
     public void start() {
-        ProcessPriorityThreadFactory serialCommManager_Pi2Android_factory =
-                new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY,
-                        "SerialCommManager_Pi2Android");
         ProcessPriorityThreadFactory serialCommManager_Android2Pi_factory =
                 new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY,
                         "SerialCommManager_Android2Pi");
-        Executors.newSingleThreadScheduledExecutor(serialCommManager_Pi2Android_factory).
-                execute(pi2AndroidReader);
         Executors.newSingleThreadScheduledExecutor(serialCommManager_Android2Pi_factory).
                 scheduleWithFixedDelay(android2PiWriter, 0, 10, java.util.concurrent.TimeUnit.MILLISECONDS);
     }
@@ -214,6 +184,15 @@ public class SerialCommManager {
         return 0;
     }
 
+    private int recievePacket() {
+        int recievedStatus = usbSerial.awaitPacketReceived(1000);
+        if (recievedStatus == 1){
+            //Note this is actually calling the functions like parseLog, parseStatus, etc.
+            int result = parseFifoPacket();
+        }
+        return recievedStatus;
+    }
+
     //-------------------------------------------------------------------///
     // ---- API function calls for requesting something from the mcu ----///
     //-------------------------------------------------------------------///
@@ -304,7 +283,12 @@ public class SerialCommManager {
         if (sendPacket(commandData) != 0){
             Log.e("Android2PiWriter", "Error sending packet");
         }else{
-            //Log.d("Android2PiWriter", "Packet sent");
+            Log.d("Android2PiWriter", "Packet sent");
+            if (recievePacket() != 0){
+                Log.e("Android2PiWriter", "Error receiving packet");
+            }else{
+                Log.d("Android2PiWriter", "Packet received");
+            }
         }
         cnt++;
         durationAndroid = durationAndroid + (System.nanoTime() - startTimeAndroid);
