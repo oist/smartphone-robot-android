@@ -66,8 +66,10 @@ public abstract class AbcvlibActivity extends AppCompatActivity implements Seria
     }
 
     public void onSerialReady(UsbSerial usbSerial) {
-        serialCommManager = new SerialCommManager(usbSerial);
-        serialCommManager.start();
+        if (serialCommManager == null){
+            serialCommManager = new SerialCommManager(usbSerial);
+            serialCommManager.start();
+        }
 
         Executors.newSingleThreadScheduledExecutor(new ProcessPriorityThreadFactory(
                 Thread.NORM_PRIORITY,

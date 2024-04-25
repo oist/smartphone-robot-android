@@ -103,7 +103,7 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
         new ObjectDetectorData.Builder(this, publisherManager, this).setPreviewView(findViewById(R.id.camera_x_preview)).build().addSubscriber(this);
         new QRCodeData.Builder(this, publisherManager, this).build().addSubscriber(this);
 
-        serialCommManager = new SerialCommManager(usbSerial,this, batteryData, wheelData);
+        serialCommManager = new SerialCommManager(usbSerial, batteryData, wheelData);
         serialCommManager.start();
         super.onSerialReady(usbSerial);
 
