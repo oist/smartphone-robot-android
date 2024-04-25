@@ -21,6 +21,7 @@ import jp.oist.abcvlib.core.learning.MotionActionSpace;
 import jp.oist.abcvlib.core.learning.StateSpace;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
+import jp.oist.abcvlib.util.SerialCommManager;
 import jp.oist.abcvlib.util.SerialReadyListener;
 import jp.oist.abcvlib.util.UsbSerial;
 
@@ -118,6 +119,10 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
         imageDataRaw.addSubscriber(timeStepDataBuffer);
 
         StateSpace stateSpace = new StateSpace(publisherManager);
+
+        serialCommManager = new SerialCommManager(usbSerial, batteryData, wheelData);
+        serialCommManager.start();
+        super.onSerialReady(usbSerial);
 
         /*------------------------------------------------------------------------------
         ------------------------------ Initialize and Start Trial ----------------------
