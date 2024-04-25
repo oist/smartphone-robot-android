@@ -90,6 +90,7 @@ public class RP2040State {
         int max77976_chg_details;
         boolean ncp3901_wireless_charger_attached;
         short usb_charger_voltage;
+        short wireless_charger_vrect;
 
         protected int getMax77976ChgDetails() {
             return max77976_chg_details;
@@ -99,6 +100,9 @@ public class RP2040State {
         }
         protected float getUsbChargerVoltage() {
             return ((float) usb_charger_voltage / 1000f);
+        }
+        protected float getWirelessChargerVrect() {
+            return ((float) wireless_charger_vrect / 1000f);
         }
     }
 
@@ -121,7 +125,7 @@ public class RP2040State {
         long ts = System.nanoTime();
         batteryData.onBatteryVoltageUpdate(ts, batteryDetails.getVoltage());
         //Todo need to implement coilVoltage get from rp2040
-        batteryData.onChargerVoltageUpdate(ts, chargeSideUSB.getUsbChargerVoltage(), 0);
+        batteryData.onChargerVoltageUpdate(ts, chargeSideUSB.getUsbChargerVoltage(), chargeSideUSB.getWirelessChargerVrect());
         wheelData.onWheelDataUpdate(ts, motorsState.getEncoderCounts().getLeft(), motorsState.getEncoderCounts().getRight());
     }
 }

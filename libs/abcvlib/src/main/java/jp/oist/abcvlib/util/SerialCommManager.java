@@ -343,6 +343,7 @@ public class SerialCommManager {
             rp2040State.chargeSideUSB.ncp3901_wireless_charger_attached = byteBuffer.get() == 1;
             Log.v("serial", "ncp3901_wireless_charger_attached: " + rp2040State.chargeSideUSB.ncp3901_wireless_charger_attached);
             rp2040State.chargeSideUSB.usb_charger_voltage = byteBuffer.getShort();
+            rp2040State.chargeSideUSB.wireless_charger_vrect = byteBuffer.getShort();
             //Log.v("serial", "usb_charger_voltage: " + rp2040State.chargeSideUSB.usb_charger_voltage);
             rp2040State.updatePublishers();
         }
