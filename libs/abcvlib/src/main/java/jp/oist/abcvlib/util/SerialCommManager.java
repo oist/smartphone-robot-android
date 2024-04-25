@@ -1,14 +1,13 @@
 package jp.oist.abcvlib.util;
 
-import android.content.Context;
 import android.util.Log;
+
 import com.hoho.android.usbserial.driver.SerialTimeoutException;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executors;
-import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
@@ -23,34 +22,51 @@ public class SerialCommManager {
     onReceive()
      */
 
-    private UsbSerial usbSerial;
+    private final UsbSerial usbSerial;
     // fifoQueue is used to store the commands that are sent from the mcu to be executed
     // on the Android phone
 
     // Preallocated bytebuffer to write motor levels to
-    private AndroidToRP2040Packet androidToRP2040Packet = new AndroidToRP2040Packet();
-    private RP2040State rp2040State;
+    private final AndroidToRP2040Packet androidToRP2040Packet = new AndroidToRP2040Packet();
+    private final RP2040State rp2040State;
     private boolean shutdown = false;
-    private Runnable android2PiWriter;
-    private ReentrantLock commandRequestedLock = new ReentrantLock();
-    private Condition commandRequested = commandRequestedLock.newCondition();
+    private final ReentrantLock commandRequestedLock = new ReentrantLock();
     private byte[] command = null;
 
     long startTimeAndroid;
     int cnt = 0;
     long durationAndroid;
 
+    private final Runnable android2PiWriter = new Runnable() {
+        @Override
+        public void run() {
+            startTimeAndroid = System.nanoTime();
+            while (!shutdown) {
+                commandRequestedLock.lock();
+                // command is null if no command has been requested by setMotorLevels or getLog
+                if (command == null) {
+                    command = generateGetStateCmd();
+                }
+                sendPacket(command);
+                command = null;
+                commandRequestedLock.unlock();
+
+                cnt++;
+                if (cnt == 100) {
+                    durationAndroid = (System.nanoTime() - startTimeAndroid) / 100;
+                    cnt = 0;
+                    // convert from nanoseconds to microseconds
+                    Log.i("AndroidSide", "Average time per command: " + durationAndroid / 1000 + "us");
+                }
+            }
+        }
+    };
+
     // Constructor to initialize SerialCommManager
     public SerialCommManager(UsbSerial usbSerial,
                              BatteryData batteryData,
                              WheelData wheelData) {
         this.usbSerial = usbSerial;
-        if (android2PiWriter == null){
-            this.android2PiWriter = defaultAndroid2PiWriter;
-            Log.w("serial", "android2PiWriter was null. Using default rather than custom");
-        }else{
-            this.android2PiWriter = android2PiWriter;
-        }
         if (batteryData == null || wheelData == null){
             Log.w("serial", "batteryData or wheelData was null. " +
                     "Ignoring all rp2040 state values. You must initialize both to use rp2040 state");
@@ -63,22 +79,6 @@ public class SerialCommManager {
     public SerialCommManager(UsbSerial usbSerial){
         this(usbSerial, null, null);
     }
-
-    private final Runnable defaultAndroid2PiWriter = new Runnable() {
-        @Override
-        public void run() {
-            while (!shutdown) {
-                commandRequestedLock.lock();
-                // command is null if no command has been requested by setMotorLevels or getLog
-                if (command == null) {
-                    command = generateGetStateCmd();
-                }
-                sendPacket(command);
-                command = null;
-                commandRequestedLock.unlock();
-            }
-        }
-    };
 
     // Start method to start the thread
     public void start(long initialDelay, long delay) {
@@ -98,7 +98,7 @@ public class SerialCommManager {
     }
 
     //TODO paseFifoPacket() should call the various SerialResponseListener methods.
-    protected int parseFifoPacket() {
+    protected void parseFifoPacket() {
         int result = 0;
         FifoQueuePair fifoQueuePair;
         byte[] packet = null;
@@ -118,7 +118,7 @@ public class SerialCommManager {
             Log.i(Thread.currentThread().getName(), "Received " + command + " from pi");
             if (command == null){
                 Log.e("Pi2AndroidReader", "Command not found");
-                return -1;
+                return;
             }
             switch (command) {
                 case GET_LOG:
@@ -159,7 +159,6 @@ public class SerialCommManager {
             Log.i(Thread.currentThread().getName(), "No packet in queue");
             result = 0;
         }
-        return result;
     }
 
 
@@ -199,10 +198,6 @@ public class SerialCommManager {
     private byte[] generateSetMotorLevels(AndroidToRP2040Packet androidToRP2040Packet,
                                           float left, float right, boolean leftBrake,
                                           boolean rightBrake) {
-        if (cnt == 0) {
-            // start timer
-            startTimeAndroid = System.nanoTime();
-        }
         androidToRP2040Packet.clear();
         androidToRP2040Packet.setCommand(AndroidToRP2040Command.SET_MOTOR_LEVELS);
 
@@ -265,14 +260,6 @@ public class SerialCommManager {
             androidToRP2040Packet.payload.put(control_values[i]);
         }
         return androidToRP2040Packet.packetTobytes();
-//        cnt++;
-//        durationAndroid = durationAndroid + (System.nanoTime() - startTimeAndroid);
-//        if (cnt == 100) {
-//            cnt = 0;
-//            durationAndroid = durationAndroid / 100;
-//            // convert from nanoseconds to milliseconds
-//            Log.i("AndroidSide", "Average time per command: " + durationAndroid / 1000 + "us");
-//        }
     }
 
     private byte[] generateGetLogCmd(){
