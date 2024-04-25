@@ -92,7 +92,7 @@ public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubsc
 
     @Override
     public void onChargerVoltageUpdate(long timestamp, double chargerVoltage, double coilVoltage) {
-        getWriteData().getChargerData().put(chargerVoltage, coilVoltage, timestamp);
+        getWriteData().getChargerData().put(timestamp, chargerVoltage, coilVoltage);
     }
 
     @Override
@@ -260,7 +260,7 @@ public class TimeStepDataBuffer implements BatteryDataSubscriber, WheelDataSubsc
             ArrayList<Long> timestamps = new ArrayList<>();
             ArrayList<Double> chargerVoltage = new ArrayList<>();
             ArrayList<Double> coilVoltage = new ArrayList<>();
-            public void put(double _chargerVoltage, double _coilVoltage, long _timestamp){
+            public void put(long _timestamp, double _chargerVoltage, double _coilVoltage){
                 timestamps.add(_timestamp);
                 chargerVoltage.add(_chargerVoltage);
                 coilVoltage.add(_coilVoltage);
