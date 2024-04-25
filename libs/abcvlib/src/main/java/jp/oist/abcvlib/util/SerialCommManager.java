@@ -8,8 +8,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
-import jp.oist.abcvlib.core.inputs.PublisherManager;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 
@@ -31,7 +32,9 @@ public class SerialCommManager {
     private RP2040State rp2040State;
     private boolean shutdown = false;
     private Runnable android2PiWriter;
-    private SerialReadyListener serialReadyListener;
+    private ReentrantLock commandRequestedLock = new ReentrantLock();
+    private Condition commandRequested = commandRequestedLock.newCondition();
+    private byte[] command = null;
 
     long startTimeAndroid;
     int cnt = 0;
@@ -39,12 +42,9 @@ public class SerialCommManager {
 
     // Constructor to initialize SerialCommManager
     public SerialCommManager(UsbSerial usbSerial,
-                             Runnable android2PiWriter,
-                             SerialReadyListener serialReadyListener,
                              BatteryData batteryData,
                              WheelData wheelData) {
         this.usbSerial = usbSerial;
-        this.serialReadyListener = serialReadyListener;
         if (android2PiWriter == null){
             this.android2PiWriter = defaultAndroid2PiWriter;
             Log.w("serial", "android2PiWriter was null. Using default rather than custom");
@@ -60,35 +60,37 @@ public class SerialCommManager {
         }
     }
 
-    public SerialCommManager(UsbSerial usbSerial,
-                             Runnable android2PiWriter,
-                             SerialReadyListener serialReadyListener){
-        this(usbSerial, android2PiWriter, serialReadyListener, null, null);
-    }
-
-    public SerialCommManager(UsbSerial usbSerial,
-                             SerialReadyListener serialReadyListener,
-                             BatteryData batteryData,
-                             WheelData wheelData){
-        this(usbSerial, null, serialReadyListener, batteryData, wheelData);
+    public SerialCommManager(UsbSerial usbSerial){
+        this(usbSerial, null, null);
     }
 
     private final Runnable defaultAndroid2PiWriter = new Runnable() {
         @Override
         public void run() {
             while (!shutdown) {
-                getState();
+                commandRequestedLock.lock();
+                // command is null if no command has been requested by setMotorLevels or getLog
+                if (command == null) {
+                    command = generateGetStateCmd();
+                }
+                sendPacket(command);
+                command = null;
+                commandRequestedLock.unlock();
             }
         }
     };
 
     // Start method to start the thread
-    public void start() {
+    public void start(long initialDelay, long delay) {
         ProcessPriorityThreadFactory serialCommManager_Android2Pi_factory =
                 new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY,
                         "SerialCommManager_Android2Pi");
         Executors.newSingleThreadScheduledExecutor(serialCommManager_Android2Pi_factory).
-                scheduleWithFixedDelay(android2PiWriter, 0, 10, java.util.concurrent.TimeUnit.MILLISECONDS);
+                scheduleWithFixedDelay(android2PiWriter, initialDelay, delay, java.util.concurrent.TimeUnit.MILLISECONDS);
+    }
+
+    public void start() {
+        start(0, 10);
     }
 
     public void stop() {
@@ -285,10 +287,6 @@ public class SerialCommManager {
         return androidToRP2040Packet.packetTobytes();
     }
 
-    private void getState(){
-        sendPacket(generateGetStateCmd());
-    }
-
     //-------------------------------------------------------------------///
     // ---- API function calls for requesting something from the mcu ----///
     //-------------------------------------------------------------------///
@@ -303,13 +301,17 @@ public class SerialCommManager {
     float: left [-1,1] representing full speed backward to full speed forward
     float: right (same as left)
     */
-    public void setWheelSpeed(float left, float right, boolean leftBrake,
+    public void setMotorLevels(float left, float right, boolean leftBrake,
                               boolean rightBrake){
-        sendPacket(generateSetMotorLevels(androidToRP2040Packet, left, right, leftBrake, rightBrake));
+        commandRequestedLock.lock();
+        command = generateSetMotorLevels(androidToRP2040Packet, left, right, leftBrake, rightBrake);
+        commandRequestedLock.unlock();
     }
 
     public void getLog(){
-        sendPacket(generateGetLogCmd());
+        commandRequestedLock.lock();
+        command = generateGetLogCmd();
+        commandRequestedLock.unlock();
     }
 
     //----------------------------------------------------------///

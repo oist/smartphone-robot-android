@@ -13,8 +13,10 @@ import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.IOException;
+import java.util.concurrent.Executors;
 
 import jp.oist.abcvlib.core.outputs.Outputs;
+import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.SerialCommManager;
 import jp.oist.abcvlib.util.UsbSerial;
 import jp.oist.abcvlib.util.SerialReadyListener;
@@ -41,8 +43,12 @@ public abstract class AbcvlibActivity extends AppCompatActivity implements Seria
     private Runnable android2PiWriter = null;
     private Runnable pi2AndroidReader = null;
     AlertDialog alertDialog = null;
+    private long initialDelay = 0;
+    private long delay = 10;
+    private boolean isCreated = false;
 
     protected void onCreate(Bundle savedInstanceState) {
+        isCreated = true;
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         usbInitialize();
         super.onCreate(savedInstanceState);
@@ -60,6 +66,39 @@ public abstract class AbcvlibActivity extends AppCompatActivity implements Seria
     }
 
     public void onSerialReady(UsbSerial usbSerial) {
+        serialCommManager = new SerialCommManager(usbSerial);
+        serialCommManager.start();
+
+        Executors.newSingleThreadScheduledExecutor(new ProcessPriorityThreadFactory(
+                Thread.NORM_PRIORITY,
+                "AbcvlibActivityMainLoop")
+                ).scheduleWithFixedDelay(new AbcvlibActivityRunnable(), this.initialDelay, this.delay,
+                java.util.concurrent.TimeUnit.MILLISECONDS);
+    }
+
+    protected void setInitialDelay(long initialDelay){
+        if (isCreated){
+            throw new RuntimeException("setInitialDelay must be called before onCreate");
+        }
+        this.initialDelay = initialDelay;
+    }
+    protected void setDelay(long delay){
+        if (isCreated){
+            throw new RuntimeException("setDelay must be called before onCreate");
+        }
+        this.delay = delay;
+    }
+
+    protected void abcvlibMainLoop(){
+        // Throw runtime error if this is called and indicate to user that this needs to be overriden
+        throw new RuntimeException("runAbcvlibActivityMainLoop must be overridden");
+    }
+
+    private class AbcvlibActivityRunnable implements Runnable{
+        @Override
+        public void run() {
+            abcvlibMainLoop();
+        }
     }
 
     public void onEncoderCountsRec(int left, int right){
