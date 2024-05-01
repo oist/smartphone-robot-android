@@ -44,7 +44,9 @@ public abstract class AbcvlibActivity extends AppCompatActivity implements Seria
     private Runnable pi2AndroidReader = null;
     AlertDialog alertDialog = null;
     private long initialDelay = 0;
-    private long delay = 10;
+    // Note anything less than 10ms will result in no GET_STATE commands being called and all
+    // being overrides by whatever commands are sent in the main loop
+    private long delay = 5;
     private boolean isCreated = false;
 
     protected void onCreate(Bundle savedInstanceState) {

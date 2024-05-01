@@ -160,11 +160,12 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
         }
         Log.d(TAG, "onNewData Received: " + sb.toString());
 
+        // Run the packet verification in a separate thread
         try {
+            lock.lock();
             if (verifyPacket(data)){
                 Log.d(TAG, "Packet verified");
                 Log.d(TAG, "packetReceived.signal()");
-                lock.lock();
                 packetReceived.signal();
             }
             else{
@@ -179,7 +180,7 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
 
     protected void send(byte[] packet, int timeout) throws IOException {
         port.write(packet, timeout);
-        Log.i(Thread.currentThread().getName(), "awaitPacketParsed()");
+        Log.i(Thread.currentThread().getName(), "send()");
     }
 
     /**
@@ -300,6 +301,12 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
                         Log.i("verifyPacket", "GET_LOG command received");
                     } else if (packetType == AndroidToRP2040Command.SET_MOTOR_LEVELS) {
                         Log.i("verifyPacket", "SET_MOTOR_LEVELS command received");
+                    } else if (packetType == AndroidToRP2040Command.GET_STATE) {
+                        Log.i("verifyPacket", "GET_STATE command received");
+                    } else {
+                        Log.e("verifyPacket", "Unknown packetType: " + packetType);
+                        onBadPacket();
+                        return true;
                     }
                     onCompletePacketReceived();
                     return true;

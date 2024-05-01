@@ -7,7 +7,9 @@ import com.hoho.android.usbserial.driver.SerialTimeoutException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
@@ -30,8 +32,8 @@ public class SerialCommManager {
     private final AndroidToRP2040Packet androidToRP2040Packet = new AndroidToRP2040Packet();
     private final RP2040State rp2040State;
     private boolean shutdown = false;
-    private final ReentrantLock commandRequestedLock = new ReentrantLock();
     private byte[] command = null;
+    private final Object commandLock = new Object();
 
     long startTimeAndroid;
     int cnt = 0;
@@ -42,15 +44,20 @@ public class SerialCommManager {
         public void run() {
             startTimeAndroid = System.nanoTime();
             while (!shutdown) {
-                commandRequestedLock.lock();
-                // command is null if no command has been requested by setMotorLevels or getLog
-                if (command == null) {
-                    command = generateGetStateCmd();
+                synchronized (commandLock) {
+                    try {
+                        // this results in getState commands every 10ms unless another command
+                        // (e.g. setMotorLevels) is set, which which case wait will return immediately
+                        commandLock.wait(10);
+                        if (command == null) {
+                            command = generateGetStateCmd();
+                        }
+                        sendPacket(command);
+                        command = null;
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
-                sendPacket(command);
-                command = null;
-                commandRequestedLock.unlock();
-
                 cnt++;
                 if (cnt == 100) {
                     durationAndroid = (System.nanoTime() - startTimeAndroid) / 100;
@@ -288,17 +295,18 @@ public class SerialCommManager {
     float: left [-1,1] representing full speed backward to full speed forward
     float: right (same as left)
     */
-    public void setMotorLevels(float left, float right, boolean leftBrake,
-                              boolean rightBrake){
-        commandRequestedLock.lock();
-        command = generateSetMotorLevels(androidToRP2040Packet, left, right, leftBrake, rightBrake);
-        commandRequestedLock.unlock();
+    public void setMotorLevels(float left, float right, boolean leftBrake, boolean rightBrake) {
+        synchronized (commandLock){
+            command = generateSetMotorLevels(androidToRP2040Packet, left, right, leftBrake, rightBrake);
+            commandLock.notify();
+        }
     }
 
     public void getLog(){
-        commandRequestedLock.lock();
-        command = generateGetLogCmd();
-        commandRequestedLock.unlock();
+        synchronized (commandLock){
+            command = generateGetLogCmd();
+            commandLock.notify();
+        }
     }
 
     //----------------------------------------------------------///
