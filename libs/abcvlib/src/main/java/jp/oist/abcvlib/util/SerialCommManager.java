@@ -183,10 +183,10 @@ public class SerialCommManager {
             throw new IllegalArgumentException("Input byte array must have a length of " + AndroidToRP2040Packet.packetSize);
         }
         try {
-            this.usbSerial.send(bytes, 1000);
+            this.usbSerial.send(bytes, 10000);
         } catch (SerialTimeoutException e){
-            Log.e("serial", "SerialTimeoutException on send");
-            return -2;
+            throw new RuntimeException("SerialTimeoutException on send. The serial connection " +
+                    "with the rp2040 is not working as expected and timed out");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -5,6 +5,8 @@ import android.util.Log;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Phaser;
 
 /**
@@ -56,10 +58,14 @@ public class PublisherManager {
     public void startPublishers(){
         phaser.arrive();
         Log.i(TAG, "Waiting on all publishers to initialize before starting");
-        phaser.awaitAdvance(1);
-        for (Publisher<?> publisher: publishers){
-            publisher.resume(); // set pause to false now that all publishers are initialized. Setting pause to false will initialize recording from the existing streams.
-        }
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            phaser.awaitAdvance(1);
+            for (Publisher<?> publisher: publishers){
+                publisher.resume();
+            }
+            executor.shutdown(); // Shut down the executor after the task is completed
+        });
     }
 
     //====================================Non-phase Related=========================================

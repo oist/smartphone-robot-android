@@ -158,12 +158,17 @@ public abstract class ImageData<S extends Subscriber> extends Publisher<S> imple
             handler.post(() -> previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER));
         }
         bindAll(lifecycleOwner);
-        try {
-            countDownLatch.await();
-            publisherManager.onPublisherInitialized();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                countDownLatch.await();
+                publisherManager.onPublisherInitialized();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+        executor.shutdown();
+
     }
 
     @Override
