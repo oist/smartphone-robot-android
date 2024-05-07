@@ -195,7 +195,7 @@ public class SerialCommManager {
     }
 
     private void receivePacket() {
-        int receivedStatus = usbSerial.awaitPacketReceived(1000);
+        int receivedStatus = usbSerial.awaitPacketReceived(10000);
         if (receivedStatus == 1){
             //Note this is actually calling the functions like parseLog, parseStatus, etc.
             parseFifoPacket();

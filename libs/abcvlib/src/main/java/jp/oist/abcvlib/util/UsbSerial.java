@@ -192,7 +192,8 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
         lock.lock();
         try{
             if (!packetReceived.await(timeout, java.util.concurrent.TimeUnit.MILLISECONDS)){
-                Log.e(Thread.currentThread().getName(), "packetReceived.await() timed out. Packet not received from rp2040");
+                throw new RuntimeException("SerialTimeoutException on send. The serial connection " +
+                        "with the rp2040 is not working as expected and timed out");
             } else {
                 Log.d(Thread.currentThread().getName(), "packetReceived.await() completed. Packet received from rp2040");
                 returnVal = 1;
