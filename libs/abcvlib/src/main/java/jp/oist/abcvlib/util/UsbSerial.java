@@ -345,6 +345,9 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
         Log.e("serial", "Bad packet received. Clearing buffer and sending next command.");
         // Ignore this packet as it is corrupted by some other data being sent between.
         packetBuffer.clear();
+        while (packetBuffer.hasRemaining()) {
+            packetBuffer.put((byte) 0);
+        }
         // reset to default value;
         packetType = AndroidToRP2040Command.NACK;
     }
