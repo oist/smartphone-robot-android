@@ -34,7 +34,7 @@ import jp.oist.abcvlib.util.SerialReadyListener;
  */
 public abstract class AbcvlibActivity extends AppCompatActivity implements SerialReadyListener {
 
-    private Outputs outputs;
+    protected Outputs outputs;
     private Switches switches = new Switches();
     private static final String TAG = "abcvlib";
     private IOReadyListener ioReadyListener;
@@ -72,6 +72,7 @@ public abstract class AbcvlibActivity extends AppCompatActivity implements Seria
             serialCommManager = new SerialCommManager(usbSerial);
             serialCommManager.start();
         }
+        initializeOutputs();
 
         Executors.newSingleThreadScheduledExecutor(new ProcessPriorityThreadFactory(
                 Thread.NORM_PRIORITY,
@@ -162,10 +163,6 @@ public abstract class AbcvlibActivity extends AppCompatActivity implements Seria
             serialCommManager.stop();
         }
         Log.i(TAG, "End of AbcvlibActivity.onPause");
-    }
-
-    public Outputs getOutputs() {
-        return outputs;
     }
 
     public Switches getSwitches() {
