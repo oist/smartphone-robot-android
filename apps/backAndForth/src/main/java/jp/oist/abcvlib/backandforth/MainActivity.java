@@ -25,7 +25,7 @@ public class MainActivity extends AbcvlibActivity {
     @Override
     protected void abcvlibMainLoop(){
         Log.i("BackAndForth", "Current command speed: " + speed);
-        serialCommManager.setMotorLevels(speed, speed, false, false);
+        outputs.setWheelOutput(speed, speed, false, false);
         if (speed >= 1.00f || speed <= -1.00f) {
             increment = -increment;
         }
