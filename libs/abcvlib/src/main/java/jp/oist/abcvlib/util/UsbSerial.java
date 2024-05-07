@@ -1,5 +1,7 @@
 package jp.oist.abcvlib.util;
 
+import static java.lang.Thread.sleep;
+
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -127,10 +129,16 @@ public class UsbSerial implements SerialInputOutputManager.Listener{
             this.port = port;
             assert port != null;
             SerialInputOutputManager usbIoManager = new SerialInputOutputManager(port, this);
+            // Adding this as there doesn't appear to be any call back in the usbIoManager that
+            // will call onSerialReady after initialization. As it stands, there were things occurring
+            // in onSerialReady that were being executed before the usbIoManager was initialized.
+            sleep(100);
             usbIoManager.start();
             serialReadyListener.onSerialReady(this);
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
