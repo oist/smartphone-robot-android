@@ -25,7 +25,7 @@ public class MotionActionSpace {
     private void addDefaultActions(){
         motionActions[0] = new MotionAction("stop", (byte) 0, 0, 0, true, true);
         motionActions[1] = new MotionAction("forward", (byte) 1, 1, 1, false, false);
-        motionActions[2] = new MotionAction("backward", (byte) 2, -1, 1, false, false);
+        motionActions[2] = new MotionAction("backward", (byte) 2, -1, -1, false, false);
         motionActions[3] = new MotionAction("left", (byte) 3, -1, 1, false, false);
         motionActions[4] = new MotionAction("right", (byte) 4, 1, -1, false, false);
     }

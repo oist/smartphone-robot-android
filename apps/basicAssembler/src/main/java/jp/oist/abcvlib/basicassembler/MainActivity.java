@@ -86,7 +86,7 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
         MotionActionSpace motionActionSpace = new MotionActionSpace(5);
         motionActionSpace.addMotionAction("stop", (byte) 0, 0, 0, false, false); // I'm just overwriting an existing to show how
         motionActionSpace.addMotionAction("forward", (byte) 1, 1, 1, false, false);
-        motionActionSpace.addMotionAction("backward", (byte) 2, -1, 1, false, false);
+        motionActionSpace.addMotionAction("backward", (byte) 2, -1, -1, false, false);
         motionActionSpace.addMotionAction("left", (byte) 3, -1, 1, false, false);
         motionActionSpace.addMotionAction("right", (byte) 4, 1, -1, false, false);
 
