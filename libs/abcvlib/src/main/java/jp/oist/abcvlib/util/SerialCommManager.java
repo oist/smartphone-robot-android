@@ -212,8 +212,10 @@ public class SerialCommManager {
         final float LOWER_LIMIT = 0.49f;
 
         // Normalize [-1,1] to [-5.06,5.06] as this is the range accepted by the chip
-        left = left * 5.06f;
-        right = right * 5.06f;
+        // Note - signs are to invert the direction of the motors as the motors are mounted in a
+        // polar opposite direction.
+        left = -left * 5.06f;
+        right = -right * 5.06f;
 
         byte DRV8830_IN1_BIT = 0;
         byte DRV8830_IN2_BIT = 1;
