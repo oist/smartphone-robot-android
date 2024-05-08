@@ -92,8 +92,9 @@ public class SerialCommManager {
         ProcessPriorityThreadFactory serialCommManager_Android2Pi_factory =
                 new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY,
                         "SerialCommManager_Android2Pi");
-        Executors.newSingleThreadScheduledExecutor(serialCommManager_Android2Pi_factory).
-                scheduleWithFixedDelay(android2PiWriter, initialDelay, delay, java.util.concurrent.TimeUnit.MILLISECONDS);
+        ScheduledExecutorServiceWithException scheduledExecutorServiceWithException =
+                new ScheduledExecutorServiceWithException(1, serialCommManager_Android2Pi_factory);
+        scheduledExecutorServiceWithException.scheduleWithFixedDelay(android2PiWriter, initialDelay, delay, java.util.concurrent.TimeUnit.MILLISECONDS);
     }
 
     public void start() {
