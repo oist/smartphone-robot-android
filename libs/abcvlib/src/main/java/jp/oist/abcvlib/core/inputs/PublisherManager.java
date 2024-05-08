@@ -57,10 +57,11 @@ public class PublisherManager {
     //========================================Phase 2===============================================
     public void startPublishers(){
         phaser.arrive();
-        Log.i(TAG, "Waiting on all publishers to initialize before starting");
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
+            Log.i(TAG, "Waiting on phase 1 to finish before starting");
             phaser.awaitAdvance(1);
+            Log.i(TAG, "All publishers initialized. Starting publishers");
             for (Publisher<?> publisher: publishers){
                 publisher.resume();
             }

@@ -47,6 +47,9 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
     private GuiUpdater guiUpdater;
     private final int maxEpisodeCount = 3;
     private final int maxTimeStepCount = 40;
+    private StateSpace stateSpace;
+    private ActionSpace actionSpace;
+    private TimeStepDataBuffer timeStepDataBuffer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,20 +62,14 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
         guiUpdater = new GuiUpdater(this, maxTimeStepCount, maxEpisodeCount);
         executor.scheduleAtFixedRate(guiUpdater, 0, 100, TimeUnit.MILLISECONDS);
 
+        timeStepDataBuffer = new TimeStepDataBuffer(10);
+
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
     }
 
     @Override
     public void onSerialReady(UsbSerial usbSerial) {
-        /*------------------------------------------------------------------------------
-        ------------------------------ Set MetaParameters ------------------------------
-        --------------------------------------------------------------------------------
-         */
-        TimeStepDataBuffer timeStepDataBuffer = new TimeStepDataBuffer(10);
-        MetaParameters metaParameters = new MetaParameters(this, 100, maxTimeStepCount,
-                100, maxEpisodeCount, null, timeStepDataBuffer, getOutputs(), 1);
-
         /*------------------------------------------------------------------------------
         ------------------------------ Define Action Space -----------------------------
         --------------------------------------------------------------------------------
@@ -90,7 +87,7 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
         motionActionSpace.addMotionAction("left", (byte) 3, -1, 1, false, false);
         motionActionSpace.addMotionAction("right", (byte) 4, 1, -1, false, false);
 
-        ActionSpace actionSpace = new ActionSpace(commActionSpace, motionActionSpace);
+        actionSpace = new ActionSpace(commActionSpace, motionActionSpace);
 
         /*------------------------------------------------------------------------------
         ------------------------------ Define State Space ------------------------------
@@ -118,12 +115,20 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
                 .setPreviewView(findViewById(R.id.camera_x_preview)).build();
         imageDataRaw.addSubscriber(timeStepDataBuffer);
 
-        StateSpace stateSpace = new StateSpace(publisherManager);
-
-        serialCommManager = new SerialCommManager(usbSerial, batteryData, wheelData);
-        serialCommManager.start();
+        stateSpace = new StateSpace(publisherManager);
+        setSerialCommManager(new SerialCommManager(usbSerial, batteryData, wheelData));
         super.onSerialReady(usbSerial);
+    }
 
+    @Override
+    protected void onOutputsReady(){
+        /*------------------------------------------------------------------------------
+        ------------------------------ Set MetaParameters ------------------------------
+        --------------------------------------------------------------------------------
+         */
+        // Note this whole block is not in onCreate because `outputs` is not initialized until onSerialReady is called
+        MetaParameters metaParameters = new MetaParameters(this, 100, maxTimeStepCount,
+                100, maxEpisodeCount, null, timeStepDataBuffer, getOutputs(), 1);
         /*------------------------------------------------------------------------------
         ------------------------------ Initialize and Start Trial ----------------------
         --------------------------------------------------------------------------------

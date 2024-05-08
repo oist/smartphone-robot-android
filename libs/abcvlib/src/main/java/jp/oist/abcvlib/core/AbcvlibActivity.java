@@ -39,7 +39,7 @@ public abstract class AbcvlibActivity extends AppCompatActivity implements Seria
     private static final String TAG = "abcvlib";
     private IOReadyListener ioReadyListener;
     protected UsbSerial usbSerial;
-    protected SerialCommManager serialCommManager;
+    private SerialCommManager serialCommManager;
     private Runnable android2PiWriter = null;
     private Runnable pi2AndroidReader = null;
     AlertDialog alertDialog = null;
@@ -52,6 +52,7 @@ public abstract class AbcvlibActivity extends AppCompatActivity implements Seria
     protected void onCreate(Bundle savedInstanceState) {
         isCreated = true;
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
         usbInitialize();
         super.onCreate(savedInstanceState);
     }
@@ -69,16 +70,39 @@ public abstract class AbcvlibActivity extends AppCompatActivity implements Seria
 
     public void onSerialReady(UsbSerial usbSerial) {
         if (serialCommManager == null){
+            Log.w(TAG, "Default SerialCommManager being used. If you intended to create your " +
+                    "own, make sure you initialize it in onCreate prior to calling super.onCreate().");
             serialCommManager = new SerialCommManager(usbSerial);
-            serialCommManager.start();
         }
+        serialCommManager.start();
         initializeOutputs();
+        onOutputsReady();
 
         Executors.newSingleThreadScheduledExecutor(new ProcessPriorityThreadFactory(
                 Thread.NORM_PRIORITY,
                 "AbcvlibActivityMainLoop")
                 ).scheduleWithFixedDelay(new AbcvlibActivityRunnable(), this.initialDelay, this.delay,
                 java.util.concurrent.TimeUnit.MILLISECONDS);
+    }
+
+    protected void onOutputsReady(){
+        // Override this method in your MainActivity to do anything that requires the outputs
+        Log.w(TAG, "onOutputsReady not overridden. Override this method in your MainActivity to " +
+                "do anything that requires the outputs.");
+    }
+
+    public Outputs getOutputs() {
+        // Throw runtime error here if outputs is null
+        if (outputs == null){
+            throw new RuntimeException("Outputs is null. You are trying to access outputs before " +
+                    "it has been initialized. Make sure to call super.onCreate() in your onCreate " +
+                    "method.");
+        }
+        return outputs;
+    }
+
+    protected void setSerialCommManager(SerialCommManager serialCommManager){
+        this.serialCommManager = serialCommManager;
     }
 
     protected void setInitialDelay(long initialDelay){

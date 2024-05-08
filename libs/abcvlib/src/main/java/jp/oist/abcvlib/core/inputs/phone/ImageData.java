@@ -161,7 +161,9 @@ public abstract class ImageData<S extends Subscriber> extends Publisher<S> imple
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
+                Log.i(TAG, "Waiting for preview and analysis to start");
                 countDownLatch.await();
+                Log.i(TAG, "Preview and analysis started");
                 publisherManager.onPublisherInitialized();
             } catch (InterruptedException e) {
                 e.printStackTrace();

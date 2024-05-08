@@ -2,6 +2,7 @@ package jp.oist.abcvlib.basicassembler;
 
 import android.content.Context;
 import android.os.Handler;
+import android.util.Log;
 
 import java.io.IOException;
 import java.util.concurrent.BrokenBarrierException;
@@ -35,12 +36,20 @@ public class MyTrial extends Trial implements ActionSelector{
         CommAction commAction;
 
         // Use data as input to your policy and select action here
-        // Just using first actions of each set as an example but this should be replaced by your policy's decision process
-        motionAction = getMotionActionSet().getMotionActions()[0];
+        // Just using default actions of each set as an example but this
+        // should be replaced by your policy's decision process
+        motionAction = getMotionActionSet().getMotionActions()[3];
         commAction = getCommActionSet().getCommActions()[0];
 
         // Add your selected actions to the TimeStepDataBuffer for record
         data.getActions().add(motionAction, commAction);
+
+        Log.i("myTrail", "Current motionAction: " + motionAction.getActionName());
+        outputs.setWheelOutput(motionAction.getLeftWheelPWM(),
+                motionAction.getRightWheelPWM(),
+                motionAction.getLeftWheelBrake(),
+                motionAction.getRightWheelBrake());
+
         // Note this will never be called when the myStepHandler.getTimeStep() >= myStepHandler.getMaxTimeStep() as the forward method will no longer be called
         mainHandler.post(() -> guiUpdater.updateGUIValues(data, getTimeStep(), getEpisodeCount()));
     }

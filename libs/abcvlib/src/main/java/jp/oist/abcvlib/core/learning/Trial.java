@@ -26,6 +26,7 @@ import jp.oist.abcvlib.util.FileOps;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.RecordingWithoutTimeStepBufferException;
 import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
+import jp.oist.abcvlib.util.SerialCommManager;
 import jp.oist.abcvlib.util.SocketListener;
 
 public class Trial implements Runnable, ActionSelector, SocketListener {

@@ -63,6 +63,9 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
     private long lastFrameTime = System.nanoTime();
     private GuiUpdater guiUpdater;
     private final String TAG = getClass().getName();
+    float speed = 0.35f;
+    float increment = 0.01f;
+    private PublisherManager publisherManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,7 +90,7 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
          * The subscriber in this example is this (MainActivity) class. It can equally be any other class
          * that implements the appropriate listener interface.
          */
-        PublisherManager publisherManager = new PublisherManager();
+        publisherManager = new PublisherManager();
 
         // Note how BatteryData and WheelData objects must have a reference such that they can
         // passed to the SerialCommManager object.
@@ -103,12 +106,25 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
         new ObjectDetectorData.Builder(this, publisherManager, this).setPreviewView(findViewById(R.id.camera_x_preview)).build().addSubscriber(this);
         new QRCodeData.Builder(this, publisherManager, this).build().addSubscriber(this);
 
-        serialCommManager = new SerialCommManager(usbSerial, batteryData, wheelData);
-        serialCommManager.start();
+        setSerialCommManager(new SerialCommManager(usbSerial, batteryData, wheelData));
         super.onSerialReady(usbSerial);
+    }
 
+    @Override
+    public void onOutputsReady() {
         publisherManager.initializePublishers();
         publisherManager.startPublishers();
+    }
+
+    // Main loop for any application extending AbcvlibActivity. This is where you will put your main code
+    @Override
+    protected void abcvlibMainLoop(){
+//        Log.i("basicSubscriber", "Current command speed: " + speed);
+        outputs.setWheelOutput(speed, speed, false, false);
+        if (speed >= 1.00f || speed <= -1.00f) {
+            increment = -increment;
+        }
+        speed += increment;
     }
 
     @Override
