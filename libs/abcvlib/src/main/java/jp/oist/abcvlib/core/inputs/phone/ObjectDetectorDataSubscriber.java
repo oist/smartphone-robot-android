@@ -9,5 +9,5 @@ import jp.oist.abcvlib.core.inputs.Subscriber;
 
 public interface ObjectDetectorDataSubscriber extends Subscriber {
 
-    void onResults(Bitmap bitmap, TensorImage tensorImage, List<Detection> results, long inferenceTime, int height, int width);
+    void onObjectsDetected(Bitmap bitmap, TensorImage tensorImage, List<Detection> results, long inferenceTime, int height, int width);
 }

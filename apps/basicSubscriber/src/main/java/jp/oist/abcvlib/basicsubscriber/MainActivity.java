@@ -215,7 +215,7 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
     }
 
     @Override
-    public void onResults(Bitmap bitmap, TensorImage tensorImage, List<Detection> results, long inferenceTime, int height, int width) {
+    public void onObjectsDetected(Bitmap bitmap, TensorImage tensorImage, List<Detection> results, long inferenceTime, int height, int width) {
         try{
             // Note you can also get the bounding box here. See https://www.tensorflow.org/lite/api_docs/java/org/tensorflow/lite/task/vision/detector/Detection
             Category category = results.get(0).getCategories().get(0); //todo not sure if there will ever be more than one category (multiple detections). If so are they ordered by higheest score?

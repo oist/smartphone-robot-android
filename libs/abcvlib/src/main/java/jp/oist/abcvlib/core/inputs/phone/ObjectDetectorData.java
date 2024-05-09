@@ -145,7 +145,7 @@ public class ObjectDetectorData extends ImageData<ObjectDetectorDataSubscriber> 
         inferenceTime = SystemClock.uptimeMillis() - inferenceTime;
 
         for (ObjectDetectorDataSubscriber subscriber:subscribers){
-            subscriber.onResults(bitmap, tensorImage, results, inferenceTime, height, width);
+            subscriber.onObjectsDetected(bitmap, tensorImage, results, inferenceTime, height, width);
         }
     }
 
