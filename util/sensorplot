@@ -1,0 +1,85 @@
+#!//usr/bin/env bash
+
+# A script to plot given Android Logcat tag parameters on a live plot. 
+# syntax: sensorplot --logcatTag tag --plotTitle title --dataUnits units --xlabel label
+# --ylabel label --legendLabel label
+###Example One-Liner
+# ./sensorplot --logcatTag "qvalues:I" --plotTitle "QValues" --xlen "200" --legendLabel1 "Action1" --legendLabel2 "Action2" --legendLabel3 "Action3" & ./sensorplot --logcatTag "weights:I" --plotTitle "weights" --xlen "200" --legendLabel1 "Action1" --legendLabel2 "Action2" --legendLabel3 "Action3" & ./sensorplot --logcatTag "reward:I" --plotTitle "Reward" --xlen "200" --legendLabel1 "Reward"
+
+
+if [ $# -lt 1 ]; then
+	echo "Your command line contains less than the necessary 6 arguments"
+	echo "syntax: sensorplot --logcatTag tag --plotTitle title --xlen x-axis-length --xlabel label --ylabel label --legendLabel[1..3] label"
+	exit
+fi
+
+##### Default Values
+updateTime=0.02
+
+help_info()
+{
+	echo "syntax: sensorplot --logcatTag tag --plotTitle title --xlen x-axis-length --xlabel label --ylabel label --legendLabel[1..3] label"
+	echo "All inputs should be string literals i.e. surrounded by single quotes"
+}
+
+plotter="feedgnuplot --lines --stream $updateTime --exit"
+
+while [ "$1" != "" ]; do
+	case $1 in
+	-h )			help_info
+				exit
+				;;
+	--logcatTag )		shift
+				logcatTag=$1
+				;;
+	--plotTitle )		shift
+				plotTitle=$1
+				plotter="$plotter --title $plotTitle" 
+				;;
+	--xlen )		shift
+				xlen=$1
+				plotter="$plotter --xlen $xlen" 
+				;;
+	--ymin )		shift
+				ymin=$1
+				plotter="$plotter --ymin $ymin" 
+				;;
+	--ymax )		shift
+				ymax=$1
+				plotter="$plotter --ymax $ymax" 
+				;;
+	--xlabel )		shift
+				xlabel=$1
+				plotter="$plotter --xlabel $xlabel" 
+				;;
+	--ylabel )		shift
+				ylabel=$1
+				plotter="$plotter --ylabel $ylabel" 
+				;;
+	--legendLabel1 )	shift
+				legendLabel1=$1
+				plotter="$plotter --legend 0 '$legendLabel1'" 
+				;;
+	--legendLabel2 )	shift
+				legendLabel2=$1
+				plotter="$plotter --legend 1 $legendLabel2" 
+				;;
+	--legendLabel3 )	shift
+				legendLabel3=$1
+				plotter="$plotter --legend 2 $legendLabel3" 
+				;;
+	esac
+	shift
+done
+
+echo "plotter = $plotter"
+
+##### Functions
+
+{
+adb logcat -c
+while true; do
+	sleep 1; 
+	adb logcat -v raw $logcatTag *:S; 
+done
+} | $plotter
