@@ -1,0 +1,78 @@
+// Example IDL file for our monster's schema.
+namespace jp.oist.abcvlib.core.learning.fbclasses;
+table Episode {
+    timesteps:[TimeStep];
+    robotid:int;
+}
+table TimeStep {
+  wheel_data:WheelData;
+  orientation_data:OrientationData;
+  charger_data:ChargerData;
+  battery_data:BatteryData;
+  image_data:ImageData;
+  sound_data:SoundData;
+  actions:RobotAction;
+}
+table WheelData {
+    left:IndividualWheelData;
+    right:IndividualWheelData;
+}
+table OrientationData {
+    timestamps:[long];
+    tiltangle:[double];
+    tiltvelocity:[double];
+}
+table ChargerData {
+    timestamps:[long];
+    voltage:[double];
+}
+table BatteryData {
+    timestamps:[long];
+    voltage:[double];
+}
+table ImageData {
+    images:[Image];
+}
+table SoundData{
+    start_time:AudioTimestamp;
+    end_time:AudioTimestamp;
+    total_time:double;
+    sample_rate:int;
+    total_samples:long;
+    levels:[float];
+}
+table RobotAction{
+    motion_action:MotionAction;
+    comm_action:CommAction;
+}
+table IndividualWheelData{
+    timestamps:[long];
+    counts:[int];
+    distances:[double];
+    speeds_instantaneous:[double];
+    speeds_buffered:[double];
+    speeds_expavg:[double];
+}
+table MotionAction{
+    action_byte:byte;
+    action_name:string;
+    left_wheel_speed:float;
+    right_wheel_speed:float;
+    left_wheel_brake:bool;
+    right_wheel_brake:bool;
+}
+table CommAction{
+    action_byte:byte;
+    action_name:string;
+}
+table Image{
+    timestamp:long;
+    webp_image:[byte];
+    width:int;
+    height:int;
+}
+table AudioTimestamp {
+    frame_position:long;
+    nanotime:long;
+}
+root_type Episode;
