@@ -1,3 +1,5 @@
+import groovy.json.JsonSlurper
+
 buildscript {
     repositories {
         google()
@@ -11,7 +13,10 @@ buildscript {
 }
 
 allprojects {
-    apply from: "$rootDir.parent/python/config/config.gradle"
+    def jsonFile = file("$rootDir/config.json")
+    def pythonconfig = new JsonSlurper().parseText(jsonFile.text)
+    ext.host = pythonconfig.DEFAULT.host
+    ext.port = pythonconfig.DEFAULT.port
 }
 
 subprojects {
