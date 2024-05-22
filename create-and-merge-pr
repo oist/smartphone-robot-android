@@ -58,7 +58,7 @@ PR_URL=$(gh pr create --title "$PR_TITLE" --body "$PR_BODY" | grep -oP '(?<=pull
 if gh pr merge $PR_URL --merge; then
   echo "Pull request successfully merged."
 else
-  PR_LINK=$(gh pr view $PR_URL --json html_url -q '.html_url' | tr -d '"')
+  PR_LINK=$(gh pr view $PR_URL --json url -q '_url' | tr -d '"')
   echo "Pull request failed. There are likely merge conflicts. Please resolve them at:"
   echo "$PR_LINK"
   exit 1
