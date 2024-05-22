@@ -55,10 +55,12 @@ git push --set-upstream $REMOTE $BRANCH_NAME
 PR_URL=$(gh pr create --title "$PR_TITLE" --body "$PR_BODY" | grep -oP '(?<=pulls\/)\d+')
 
 # Merge the pull request
-if gh pr merge $PR_URL --squash; then
+if gh pr merge $PR_URL --merge; then
   echo "Pull request successfully merged."
 else
-  echo "Pull request failed. There are likely merge conflicts. Please resolve them and try again."
+  PR_LINK=$(gh pr view $PR_URL --json html_url -q '.html_url' | tr -d '"')
+  echo "Pull request failed. There are likely merge conflicts. Please resolve them at:"
+  echo "$PR_LINK"
   exit 1
 fi
 
