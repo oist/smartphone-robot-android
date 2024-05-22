@@ -55,7 +55,12 @@ git push --set-upstream $REMOTE $BRANCH_NAME
 PR_URL=$(gh pr create --title "$PR_TITLE" --body "$PR_BODY" | grep -oP '(?<=pulls\/)\d+')
 
 # Merge the pull request
-gh pr merge $PR_URL --squash
+if gh pr merge $PR_URL --squash; then
+  echo "Pull request successfully merged."
+else
+  echo "Pull request failed. There are likely merge conflicts. Please resolve them and try again."
+  exit 1
+fi
 
 # Pull changes into the current branch
 git pull $REMOTE $BRANCH_NAME
@@ -84,6 +89,9 @@ if confirm_deletion "remote" "$BRANCH_NAME"; then
 else
   echo "Remote branch '$BRANCH_NAME' not deleted."
 fi
+
+# Switch to the default branch (main or master)
+git checkout $DEFAULT_BRANCH
 
 # Confirm and delete the local branch
 if confirm_deletion "local" "$BRANCH_NAME"; then
