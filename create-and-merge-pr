@@ -1,0 +1,94 @@
+#!/bin/bash
+
+# Function to display usage instructions
+usage() {
+  echo "Usage: $0 PR_TITLE [-b BRANCH_NAME] [-d PR_BODY]"
+  echo "  PR_TITLE      : The title for the pull request (required)"
+  echo "  -b BRANCH_NAME: The name of the branch (optional, defaults to current branch)"
+  echo "  -d PR_BODY    : The body of the pull request (optional, defaults to the latest commit message)"
+  exit 1
+}
+
+# Check if PR_TITLE is provided
+if [ -z "$1" ]; then
+  echo "Error: PR title must be provided."
+  usage
+fi
+
+# Assign the first argument to PR_TITLE
+PR_TITLE="$1"
+shift
+
+# Parse remaining command-line arguments
+while getopts ":b:d:" opt; do
+  case $opt in
+    b) BRANCH_NAME="$OPTARG"
+    ;;
+    d) PR_BODY="$OPTARG"
+    ;;
+    \?) usage
+    ;;
+  esac
+done
+
+# Get the current branch name
+DEFAULT_BRANCH_NAME=$(git symbolic-ref --short HEAD)
+BRANCH_NAME=${BRANCH_NAME:-$DEFAULT_BRANCH_NAME}
+
+# Check if BRANCH_NAME is "main" or "master"
+if [ "$BRANCH_NAME" == "main" ] || [ "$BRANCH_NAME" == "master" ]; then
+  echo "Error: Branch name cannot be 'main' or 'master'. Please provide a different branch name."
+  exit 1
+fi
+
+# Use the most recent commit message at HEAD as the default PR_BODY
+DEFAULT_PR_BODY=$(git log -1 --pretty=%B)
+PR_BODY=${PR_BODY:-$DEFAULT_PR_BODY}
+
+# Get default remote
+REMOTE=$(git remote | head -n 1)
+
+# Push your changes
+git push --set-upstream $REMOTE $BRANCH_NAME
+
+# Create a pull request
+PR_URL=$(gh pr create --title "$PR_TITLE" --body "$PR_BODY" | grep -oP '(?<=pulls\/)\d+')
+
+# Merge the pull request
+gh pr merge $PR_URL --squash
+
+# Pull changes into the current branch
+git pull $REMOTE $BRANCH_NAME
+
+# Pull changes into the default branch (main or master)
+DEFAULT_BRANCH=$(git remote show $REMOTE | grep 'HEAD branch' | awk '{print $NF}')
+git checkout $DEFAULT_BRANCH
+git pull $REMOTE $DEFAULT_BRANCH
+
+# Switch back to the original branch
+git checkout $BRANCH_NAME
+
+# Function to confirm deletion
+confirm_deletion() {
+  read -p "Do you want to delete the $1 branch '$2'? [y/N] " CONFIRMATION
+  case $CONFIRMATION in
+    [Yy]* ) return 0 ;;
+    * ) return 1 ;;
+  esac
+}
+
+# Confirm and delete the remote branch
+if confirm_deletion "remote" "$BRANCH_NAME"; then
+  git push $REMOTE --delete $BRANCH_NAME
+  echo "Remote branch '$BRANCH_NAME' deleted."
+else
+  echo "Remote branch '$BRANCH_NAME' not deleted."
+fi
+
+# Confirm and delete the local branch
+if confirm_deletion "local" "$BRANCH_NAME"; then
+  git branch -d $BRANCH_NAME
+  echo "Local branch '$BRANCH_NAME' deleted."
+else
+  echo "Local branch '$BRANCH_NAME' not deleted."
+fi
