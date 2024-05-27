@@ -3,30 +3,6 @@ import groovy.json.JsonOutput
 
 project.ext.ASSET_DIR = projectDir.toString() + '/src/main/assets'
 
-task downloadModelFile(type: Download) {
-    src 'https://storage.googleapis.com/download.tensorflow.org/models/tflite/task_library/object_detection/android/lite-model_ssd_mobilenet_v1_1_metadata_2.tflite'
-    dest project.ext.ASSET_DIR + '/mobilenetv1.tflite'
-    overwrite false
-}
-
-task downloadModelFile0(type: Download) {
-    src 'https://storage.googleapis.com/download.tensorflow.org/models/tflite/task_library/object_detection/android/lite-model_efficientdet_lite0_detection_metadata_1.tflite'
-    dest project.ext.ASSET_DIR + '/efficientdet-lite0.tflite'
-    overwrite false
-}
-
-task downloadModelFile1(type: Download) {
-    src 'https://storage.googleapis.com/download.tensorflow.org/models/tflite/task_library/object_detection/android/lite-model_efficientdet_lite1_detection_metadata_1.tflite'
-    dest project.ext.ASSET_DIR + '/efficientdet-lite1.tflite'
-    overwrite false
-}
-
-task downloadModelFile2(type: Download) {
-    src 'https://storage.googleapis.com/download.tensorflow.org/models/tflite/task_library/object_detection/android/lite-model_efficientdet_lite2_detection_metadata_1.tflite'
-    dest project.ext.ASSET_DIR + '/efficientdet-lite2.tflite'
-    overwrite false
-}
-
 task downloadModelFileRobot(type: Exec) {
     if (!System.getenv('GITHUB_TOKEN')) {
         println "Error: The environment variable GITHUB_TOKEN is not set."
@@ -38,4 +14,4 @@ task downloadModelFileRobot(type: Exec) {
     }
 }
 
-preBuild.dependsOn downloadModelFile, downloadModelFile0, downloadModelFile1, downloadModelFile2, downloadModelFileRobot
+preBuild.dependsOn downloadModelFileRobot
