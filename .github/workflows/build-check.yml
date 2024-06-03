@@ -1,8 +1,6 @@
 name: Android CI
 
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
@@ -13,6 +11,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      fetch-tags: 'true'
     - name: set up JDK
       uses: actions/setup-java@v4.2.1
       with:
