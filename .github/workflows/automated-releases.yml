@@ -19,7 +19,9 @@ jobs:
 
       - name: Generate file paths
         id: generate_paths
-        run: echo "paths=./.github/scripts/generate_output_paths.sh" >> $GITHUB_ENV
+        run: |
+          echo ./.github/scripts/generate_output_paths.sh
+          echo "paths=./.github/scripts/generate_output_paths.sh" >> $GITHUB_ENV
 
       - name: Release
         uses: softprops/action-gh-release@v2
