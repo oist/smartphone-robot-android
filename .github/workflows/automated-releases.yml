@@ -20,13 +20,15 @@ jobs:
       - name: Generate file paths
         id: generate_paths
         run: |
-          echo ./.github/scripts/generate_output_paths.sh
-          echo "paths=./.github/scripts/generate_output_paths.sh" >> $GITHUB_ENV
-
+          apps=$(jq -r '.apps | join(",")' apps-config.json)
+          echo "debug_glob=./apps/{$apps}/build/outputs/apk/debug/{$apps}-debug.apk" >> $GITHUB_OUTPUT
+          echo "release_glob=./apps/{$apps}/build/outputs/apk/release/{$apps}-release-unsigned.apk" >> $GITHUB_OUTPUT
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ steps.generate_paths.outputs.paths }}
+          files: |
+            ${{ steps.generate_paths.outputs.debug_glob }}
+            ${{ steps.generate_paths.outputs.release_glob }}
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ github.ref_name }}
           generate_release_notes: true
