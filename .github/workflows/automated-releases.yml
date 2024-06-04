@@ -22,7 +22,7 @@ jobs:
         run: |
           apps=$(jq -r '.apps | join(",")' apps-config.json)
           # create some variable for storing a new line delimited list
-          touch paths
+          paths=""
           # Take apps and add lines to paths by filling in the values of ./apps/{$apps}/build/outputs/apk/debug/{$apps}-debug.apk
           # and ./apps/{$apps}/build/outputs/apk/release/{$apps}-release-unsigned.apk
           for app in $(echo $apps | tr "," "\n"); do
