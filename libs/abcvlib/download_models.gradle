@@ -1,11 +1,9 @@
-import groovy.json.JsonSlurper
-import groovy.json.JsonOutput
-
 project.ext.ASSET_DIR = projectDir.toString() + '/src/main/assets'
+project.ext.MODEL_FILE_URL = 'https://github.com/oist/smartphone-robot-object-detection/releases/download/0.1.1/model.tflite'
+
 
 task downloadModelFileRobot(type: Exec) {
-    commandLine 'echo', System.getenv('GITHUB_TOKEN'), '|','gh', 'auth', 'login', '--with-token'
-    commandLine 'gh', 'release', 'download', '0.1.1', '-p', 'model.tflite', '-R', 'oist/smartphone-robot-object-detection', '-D', project.ext.ASSET_DIR, '--skip-existing'
+    commandLine 'wget', '-N', '-P', project.ext.ASSET_DIR, project.ext.MODEL_FILE_URL
 }
 
 preBuild.dependsOn downloadModelFileRobot
