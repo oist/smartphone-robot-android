@@ -21,12 +21,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ./apps/basicSubscriber/build/outputs/apk/debug/basicSubscriber-debug.apk
-            ./apps/basicSubscriber/build/outputs/apk/release/basicSubscriber-release-unsigned.apk
-            ./apps/basicAssembler/build/outputs/apk/debug/basicAssembler-debug.apk
-            ./apps/basicAssembler/build/outputs/apk/release/basicAssembler-release-unsigned.apk
-            ./apps/backAndForth/build/outputs/apk/debug/backAndForth-debug.apk
-            ./apps/backAndForth/build/outputs/apk/release/backAndForth-release-unsigned.apk
+            ${GITHUB_WORKSPACE}/apps/basicSubscriber/build/outputs/apk/debug/basicSubscriber-debug.apk
+            ${GITHUB_WORKSPACE}/apps/basicSubscriber/build/outputs/apk/release/basicSubscriber-release-unsigned.apk
+            ${GITHUB_WORKSPACE}/apps/basicAssembler/build/outputs/apk/debug/basicAssembler-debug.apk
+            ${GITHUB_WORKSPACE}/apps/basicAssembler/build/outputs/apk/release/basicAssembler-release-unsigned.apk
+            ${GITHUB_WORKSPACE}/apps/backAndForth/build/outputs/apk/debug/backAndForth-debug.apk
+            ${GITHUB_WORKSPACE}/apps/backAndForth/build/outputs/apk/release/backAndForth-release-unsigned.apk
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ github.ref_name }}
           generate_release_notes: true
