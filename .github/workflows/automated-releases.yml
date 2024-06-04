@@ -18,7 +18,7 @@ jobs:
         run: sudo apt-get install -y jq
 
       - name: Generate file paths
-        run: ./.github/scripts/generate_paths.sh
+        run: ./.github/scripts/generate_output_paths.sh
 
       - name: Release
         uses: softprops/action-gh-release@v2
