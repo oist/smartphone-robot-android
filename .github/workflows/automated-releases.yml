@@ -18,12 +18,13 @@ jobs:
         run: sudo apt-get install -y jq
 
       - name: Generate file paths
-        run: ./.github/scripts/generate_output_paths.sh
+        id: generate_paths
+        run: echo "paths=./.github/scripts/generate_output_paths.sh" >> $GITHUB_ENV
 
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ env.files }}
+          files: ${{ steps.generate_paths.outputs.paths }}
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ github.ref_name }}
           generate_release_notes: true
