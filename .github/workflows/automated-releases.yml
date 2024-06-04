@@ -21,14 +21,20 @@ jobs:
         id: generate_paths
         run: |
           apps=$(jq -r '.apps | join(",")' apps-config.json)
-          echo "debug_glob=./apps/{$apps}/build/outputs/apk/debug/{$apps}-debug.apk" >> $GITHUB_OUTPUT
-          echo "release_glob=./apps/{$apps}/build/outputs/apk/release/{$apps}-release-unsigned.apk" >> $GITHUB_OUTPUT
+          # create some variable for storing a new line delimited list
+          touch paths
+          # Take apps and add lines to paths by filling in the values of ./apps/{$apps}/build/outputs/apk/debug/{$apps}-debug.apk
+          # and ./apps/{$apps}/build/outputs/apk/release/{$apps}-release-unsigned.apk
+          for app in $(echo $apps | tr "," "\n"); do
+            echo "./apps/${app}/build/outputs/apk/debug/${app}-debug.apk" >> paths
+            echo "./apps/${app}/build/outputs/apk/release/${app}-release-unsigned.apk" >> paths
+          done
+          echo "paths=$paths" >> $GITHUB_OUTPUT
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ${{ steps.generate_paths.outputs.debug_glob }}
-            ${{ steps.generate_paths.outputs.release_glob }}
+            ${{ steps.generate_paths.outputs.paths }}
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ github.ref_name }}
           generate_release_notes: true
