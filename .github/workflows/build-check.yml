@@ -1,4 +1,4 @@
-name: Android CI
+name: Build Check
 
 on:
   pull_request:
@@ -14,18 +14,7 @@ jobs:
       with:
         fetch-depth: 0
         fetch-tags: 'true'
-    - name: Install Git
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y git
-        git --version
-    - name: set up JDK
-      uses: actions/setup-java@v4.2.1
+    - name: Build
       with:
-        java-version: '17.0'
-        distribution: 'temurin'
-        cache: gradle
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3.3.2
-    - name: Build with Gradle
-      run: ./gradlew build
+        gradle-encryption-key: ${{ secrets.GradleEncryptionKey }}
+      uses: ./.github/actions/build-apk
