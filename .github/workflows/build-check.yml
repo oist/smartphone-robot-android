@@ -1,6 +1,7 @@
 name: Android CI
 
 on:
+  workflow_call:
   pull_request:
     branches: [ "main" ]
 
@@ -27,5 +28,8 @@ jobs:
         cache: gradle
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3.3.2
+      with:
+        gradle-version: 8.6
+        cache-encryption-key: ${{ secrets.GradleEncryptionKey }}
     - name: Build with Gradle
-      run: ./gradlew build
+      run: ./gradlew build --configuration-cache
