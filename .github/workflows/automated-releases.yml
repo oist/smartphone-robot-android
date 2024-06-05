@@ -1,13 +1,4 @@
 name: Automated Releases
-on:
-  push:
-    tags:
-      - v*.*.*
-
-permissions:
-  contents: write
-
-name: Automated Releases
 
 on:
   push:
