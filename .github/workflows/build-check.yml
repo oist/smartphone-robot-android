@@ -33,3 +33,14 @@ jobs:
         cache-encryption-key: ${{ secrets.GradleEncryptionKey }}
     - name: Build with Gradle
       run: ./gradlew build --configuration-cache
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-artifacts
+        path: |
+          apps/basicSubscriber/build/outputs/apk/debug/basicSubscriber-debug.apk
+          apps/basicSubscriber/build/outputs/apk/release/basicSubscriber-release-unsigned.apk
+          apps/basicAssembler/build/outputs/apk/debug/basicAssembler-debug.apk
+          apps/basicAssembler/build/outputs/apk/release/basicAssembler-release-unsigned.apk
+          apps/backAndForth/build/outputs/apk/debug/backAndForth-debug.apk
+          apps/backAndForth/build/outputs/apk/release/backAndForth-release-unsigned.apk
