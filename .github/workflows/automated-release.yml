@@ -29,6 +29,8 @@ jobs:
           ${{ github.workspace }}/apps/basicAssembler/build/outputs/apk/release/basicAssembler-release-unsigned.apk
           ${{ github.workspace }}/apps/backAndForth/build/outputs/apk/debug/backAndForth-debug.apk
           ${{ github.workspace }}/apps/backAndForth/build/outputs/apk/release/backAndForth-release-unsigned.apk
+          ${{ github.workspace }}/libs/abcvlib/build/outputs/aar/abcvlib-release.aar
+          ${{ github.workspace }}/libs/abcvlib/build/outputs/aar/abcvlib-debug.aar
         token: ${{ secrets.GITHUB_TOKEN }}
         tag_name: ${{ github.ref_name }}
         generate_release_notes: true
