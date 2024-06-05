@@ -33,7 +33,7 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew build --configuration-cache
     - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/v*.*.*')
         with:
           files: |
