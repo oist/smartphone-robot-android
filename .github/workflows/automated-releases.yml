@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build-and-release:
-    uses: ./.github/workflows/android-ci.yml
+    uses: oist/smartphone-robot-android/.github/workflows/android-ci.yml
     with:
       secrets: inherit
 
