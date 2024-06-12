@@ -1,0 +1,9 @@
+services:
+  smartphone-robot-android-build-env:
+    build:
+      context: .
+    image: topher217/smartphone-robot-android:0.0.1
+    container_name: smartphone-robot-android
+    volumes:
+      - ../:/project
+    working_dir: /project
