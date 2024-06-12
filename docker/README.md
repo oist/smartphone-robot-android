@@ -1,6 +1,6 @@
 # Building Android app from existing image
 ```
-docker run -it -v $HOME/.gradle:/root/.gradle -v ./:/project topher217/smartphone-robot-android:0.0.1 ./gradlew build
+docker compose -f docker/docker-compose.yml run smartphone-robot-android-build-env ./gradlew assemble
 ```
 
 # Building Docker image
