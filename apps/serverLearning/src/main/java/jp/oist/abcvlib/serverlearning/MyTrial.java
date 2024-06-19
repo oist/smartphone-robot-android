@@ -35,7 +35,11 @@ public class MyTrial extends Trial implements ActionSelector{
 
         // Add your selected actions to the TimeStepDataBuffer for record
         data.getActions().add(motionAction, commAction);
-        outputs.setWheelOutput(motionAction.getLeftWheelPWM(), motionAction.getRightWheelPWM());
+        Log.i("myTrail", "Current motionAction: " + motionAction.getActionName());
+        outputs.setWheelOutput(motionAction.getLeftWheelPWM(),
+                motionAction.getRightWheelPWM(),
+                motionAction.getLeftWheelBrake(),
+                motionAction.getRightWheelBrake());
     }
 
     // If you want to do things at the start/end of the episode/trail you can override these methods from Trail
@@ -65,7 +69,7 @@ public class MyTrial extends Trial implements ActionSelector{
     protected void endTrial() throws RecordingWithoutTimeStepBufferException, InterruptedException {
         // Do stuff here
         Log.v("MyTrail", "endTrail");
-        outputs.setWheelOutput(0,0);
+        outputs.setWheelOutput(0,0,true,true);
         super.endTrial();
     }
 }

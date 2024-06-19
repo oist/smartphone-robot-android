@@ -21,8 +21,16 @@ import jp.oist.abcvlib.core.learning.MetaParameters;
 import jp.oist.abcvlib.core.learning.MotionActionSpace;
 import jp.oist.abcvlib.core.learning.StateSpace;
 import jp.oist.abcvlib.util.FileOps;
+import jp.oist.abcvlib.util.SerialCommManager;
+import jp.oist.abcvlib.util.SerialReadyListener;
+import jp.oist.abcvlib.util.UsbSerial;
 
-public class MainActivity extends AbcvlibActivity implements IOReadyListener {
+public class MainActivity extends AbcvlibActivity implements SerialReadyListener {
+    private final int maxEpisodeCount = 3;
+    private final int maxTimeStepCount = 40;
+    private StateSpace stateSpace;
+    private ActionSpace actionSpace;
+    TimeStepDataBuffer timeStepDataBuffer;
 
     InetSocketAddress inetSocketAddress = new InetSocketAddress(BuildConfig.HOST, BuildConfig.PORT);
     @SuppressWarnings("unused")
@@ -33,24 +41,16 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
         // Setup a live preview of camera feed to the display. Remove if unwanted.
         setContentView(jp.oist.abcvlib.core.R.layout.camera_x_preview);
 
-        setIoReadyListener(this);
-
         // Copies all files from assets/models to local storage
         FileOps.copyAssets(getApplicationContext(), "models/");
+
+        timeStepDataBuffer = new TimeStepDataBuffer(200);
 
         super.onCreate(savedInstanceState);
     }
 
     @Override
-    public void onIOReady(AbcvlibLooper abcvlibLooper) {
-        /*------------------------------------------------------------------------------
-        ------------------------------ Set MetaParameters ------------------------------
-        --------------------------------------------------------------------------------
-         */
-        TimeStepDataBuffer timeStepDataBuffer = new TimeStepDataBuffer(200);
-        MetaParameters metaParameters = new MetaParameters(this, 50, 200,
-                100000, 1000, inetSocketAddress, timeStepDataBuffer, getOutputs(), 1);
-
+    public void onSerialReady(UsbSerial usbSerial) {
         /*------------------------------------------------------------------------------
         ------------------------------ Define Action Space -----------------------------
         --------------------------------------------------------------------------------
@@ -62,13 +62,13 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
         commActionSpace.addCommAction("action3", (byte) 2);
 
         MotionActionSpace motionActionSpace = new MotionActionSpace(5);
-        motionActionSpace.addMotionAction("stop", (byte) 0, 0, 0); // I'm just overwriting an existing to show how
-        motionActionSpace.addMotionAction("forward", (byte) 1, 1, 1);
-        motionActionSpace.addMotionAction("backward", (byte) 2, -1, 1);
-        motionActionSpace.addMotionAction("left", (byte) 3, -1, 1);
-        motionActionSpace.addMotionAction("right", (byte) 4, 1, -1);
+        motionActionSpace.addMotionAction("stop", (byte) 0, 0, 0, false, false); // I'm just overwriting an existing to show how
+        motionActionSpace.addMotionAction("forward", (byte) 1, 1, 1, false, false);
+        motionActionSpace.addMotionAction("backward", (byte) 2, -1, -1, false, false);
+        motionActionSpace.addMotionAction("left", (byte) 3, -1, 1, false, false);
+        motionActionSpace.addMotionAction("right", (byte) 4, 1, -1, false, false);
 
-        ActionSpace actionSpace = new ActionSpace(commActionSpace, motionActionSpace);
+        actionSpace = new ActionSpace(commActionSpace, motionActionSpace);
 
         /*------------------------------------------------------------------------------
         ------------------------------ Define State Space ------------------------------
@@ -76,13 +76,13 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
          */
         PublisherManager publisherManager = new PublisherManager();
         // Customize how each sensor data is gathered via constructor params or builders
-        WheelData wheelData = new WheelData.Builder(this, publisherManager, abcvlibLooper)
+        WheelData wheelData = new WheelData.Builder(this, publisherManager)
                 .setBufferLength(50)
                 .setExpWeight(0.01)
                 .build();
         wheelData.addSubscriber(timeStepDataBuffer);
 
-        BatteryData batteryData = new BatteryData.Builder(this, publisherManager, abcvlibLooper).build();
+        BatteryData batteryData = new BatteryData.Builder(this, publisherManager).build();
         batteryData.addSubscriber(timeStepDataBuffer);
 
         OrientationData orientationData = new OrientationData.Builder(this, publisherManager).build();
@@ -98,9 +98,27 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener {
         QRCodeData qrCodeData = new QRCodeData.Builder(this, publisherManager, this).build();
         qrCodeData.addSubscriber(timeStepDataBuffer);
 
-        StateSpace stateSpace = new StateSpace(publisherManager);
+        stateSpace = new StateSpace(publisherManager);
+        setSerialCommManager(new SerialCommManager(usbSerial, batteryData, wheelData));
+        super.onSerialReady(usbSerial);
         /*------------------------------------------------------------------------------
         ----------- Initialize and Start Trial After PublisherManager Ready ----------------------
+        --------------------------------------------------------------------------------
+         */
+
+    }
+
+    @Override
+    protected void onOutputsReady(){
+        /*------------------------------------------------------------------------------
+        ------------------------------ Set MetaParameters ------------------------------
+        --------------------------------------------------------------------------------
+         */
+        MetaParameters metaParameters = new MetaParameters(this, 50, maxTimeStepCount,
+                100000, maxEpisodeCount, inetSocketAddress, timeStepDataBuffer, getOutputs(), 1);
+
+        /*------------------------------------------------------------------------------
+        ------------------------------ Initialize and Start Trial ----------------------
         --------------------------------------------------------------------------------
          */
         MyTrial myTrial = new MyTrial(metaParameters, actionSpace, stateSpace);
