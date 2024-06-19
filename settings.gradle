@@ -1,20 +1,15 @@
+import groovy.json.JsonSlurper
+
+def jsonFile = file('apps-config.json')
+def jsonContent = new JsonSlurper().parseText(jsonFile.text)
+
 def androidLibs = [
         'abcvlib',
 ]
 
 gradle.ext.androidLibs = androidLibs
 
-def apps = [
-        'basicSubscriber',
-        'basicAssembler',
-        'backAndForth',
-//        'pidbalancer',
-//        'setPath',
-//        'compoundController',
-//        "qrComm",
-//        "serverLearning",
-//        "serviceTest",
-]
+def apps = jsonContent.apps
 
 gradle.ext.apps = apps
 
