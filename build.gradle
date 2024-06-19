@@ -17,6 +17,10 @@ allprojects {
     def pythonconfig = new JsonSlurper().parseText(jsonFile.text)
     ext.host = pythonconfig.DEFAULT.host
     ext.port = pythonconfig.DEFAULT.port
+    // Check for GITHUB_USER and GITHUB_TOKEN environment variables
+    if (!System.getenv("GITHUB_USER") || !System.getenv("GITHUB_TOKEN")) {
+        throw new GradleException("Environment variables GITHUB_USER and GITHUB_TOKEN must be set.")
+    }
 }
 
 subprojects {
@@ -33,6 +37,13 @@ subprojects {
         maven { url 'https://jitpack.io' }
         google()
         jcenter()
+        maven {
+            url = uri("https://maven.pkg.github.com/topherbuckley/smartphone-robot-flatbuffers")
+            credentials {
+                username = System.getenv("GITHUB_USER")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
     }
 
     apply plugin: 'maven-publish'
@@ -80,6 +91,7 @@ subprojects {
         implementation 'io.github.nishkarsh:android-permissions:2.0.54'
 
         implementation 'com.github.mik3y:usb-serial-for-android:3.6.0'
+        implementation 'jp.oist.abcvlib.core.learning:fbclasses:0.0.1'
     }
 
     android {
