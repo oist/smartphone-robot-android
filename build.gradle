@@ -15,8 +15,13 @@ buildscript {
 allprojects {
     def jsonFile = file("$rootDir/config.json")
     def pythonconfig = new JsonSlurper().parseText(jsonFile.text)
-    ext.host = pythonconfig.DEFAULT.host
-    ext.port = pythonconfig.DEFAULT.port
+    if (pythonconfig.CUSTOM) {
+		ext.host = pythonconfig.CUSTOM.host
+		ext.port = pythonconfig.CUSTOM.port
+	} else {
+		ext.host = pythonconfig.DEFAULT.host
+		ext.port = pythonconfig.DEFAULT.port
+	}
     // Check for GITHUB_USER and GITHUB_TOKEN environment variables
     if (!System.getenv("GITHUB_USER") || !System.getenv("GITHUB_TOKEN")) {
         throw new GradleException("Environment variables GITHUB_USER and GITHUB_TOKEN must be set.")
