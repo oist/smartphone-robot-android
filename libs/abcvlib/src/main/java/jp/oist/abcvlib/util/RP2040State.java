@@ -2,6 +2,7 @@ package jp.oist.abcvlib.util;
 
 import android.content.Context;
 
+import jp.oist.abcvlib.core.inputs.PublisherState;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
 
@@ -122,6 +123,9 @@ public class RP2040State {
     }
 
     protected void updatePublishers(){
+        if (batteryData.getState() != PublisherState.STARTED || wheelData.getState() != PublisherState.STARTED){
+            return;
+        }
         long ts = System.nanoTime();
         batteryData.onBatteryVoltageUpdate(ts, batteryDetails.getVoltage());
         //Todo need to implement coilVoltage get from rp2040

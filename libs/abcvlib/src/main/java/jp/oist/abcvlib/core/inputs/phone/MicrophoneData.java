@@ -61,6 +61,7 @@ public class MicrophoneData extends Publisher<MicrophoneDataSubscriber> implemen
         }
         Log.i("microphone_start", "StartFrame:" + startTime.framePosition + " NanoTime: " + startTime.nanoTime);
         publisherManager.onPublisherInitialized();
+        super.start();
     }
 
     public void stop(){
@@ -69,6 +70,7 @@ public class MicrophoneData extends Publisher<MicrophoneDataSubscriber> implemen
         audioExecutor.shutdownNow();
         recorder.release();
         recorder = null;
+        super.stop();
     }
 
     @Override
