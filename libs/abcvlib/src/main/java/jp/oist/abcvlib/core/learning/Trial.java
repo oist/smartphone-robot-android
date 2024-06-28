@@ -237,11 +237,11 @@ public class Trial implements Runnable, ActionSelector, SocketListener {
     }
 
     public boolean isLastEpisode() {
-        return (episodeCount >= maxEpisodeCount) | lastEpisode;
+        return (episodeCount >= maxEpisodeCount) || lastEpisode;
     }
 
     public boolean isLastTimestep() {
-        return (timeStep >= maxTimeStepCount) | lastTimestep;
+        return (timeStep >= maxTimeStepCount) || lastTimestep;
     }
 
     public int getMaxEpisodecount() {
