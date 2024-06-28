@@ -3,6 +3,11 @@ package jp.oist.abcvlib.serverlearning;
 import android.os.Bundle;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.AbcvlibLooper;
@@ -32,7 +37,8 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
     private ActionSpace actionSpace;
     TimeStepDataBuffer timeStepDataBuffer;
 
-    InetSocketAddress inetSocketAddress = new InetSocketAddress(BuildConfig.HOST, BuildConfig.PORT);
+    InetSocketAddress inetSocketAddress;
+    private ExecutorService executorService = Executors.newSingleThreadExecutor();
     @SuppressWarnings("unused")
     private final String TAG = getClass().toString();
 
@@ -45,6 +51,20 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
         FileOps.copyAssets(getApplicationContext(), "models/");
 
         timeStepDataBuffer = new TimeStepDataBuffer(200);
+
+        // Initialize InetSocketAddress in a background thread and wait for completion
+        Future<InetSocketAddress> future = executorService.submit(new Callable<InetSocketAddress>() {
+            @Override
+            public InetSocketAddress call() {
+                return new InetSocketAddress(BuildConfig.IP, BuildConfig.PORT);
+            }
+        });
+
+        try {
+            inetSocketAddress = future.get(); // This will wait until inetSocketAddress is initialized
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
 
         super.onCreate(savedInstanceState);
     }
