@@ -16,10 +16,10 @@ allprojects {
     def jsonFile = file("$rootDir/config.json")
     def pythonconfig = new JsonSlurper().parseText(jsonFile.text)
     if (pythonconfig.CUSTOM) {
-		ext.host = pythonconfig.CUSTOM.host
+		ext.ip = pythonconfig.CUSTOM.ip
 		ext.port = pythonconfig.CUSTOM.port
 	} else {
-		ext.host = pythonconfig.DEFAULT.host
+		ext.ip = pythonconfig.DEFAULT.ip
 		ext.port = pythonconfig.DEFAULT.port
 	}
     // Check for GITHUB_USER and GITHUB_TOKEN environment variables
@@ -111,7 +111,7 @@ subprojects {
             minSdkVersion 24
             targetSdkVersion 30
 
-            buildConfigField("String", "HOST", "\"${host.toString()}\"")
+            buildConfigField("String", "IP", "\"${ip.toString()}\"")
             buildConfigField("int", "PORT", "${port.toString()}")
 
             // Fetch the version according to git latest tag and "how far are we from last tag"
