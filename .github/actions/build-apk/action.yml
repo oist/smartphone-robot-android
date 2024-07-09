@@ -4,6 +4,12 @@ inputs:
   gradle-encryption-key:
     description: 'The encryption key to use for caching'
     required: true
+  github-user:
+    description: 'GitHub username for authentication'
+    required: true
+  github-token:
+    description: 'GitHub token for authentication'
+    required: true
 runs:
   using: "composite"
   steps:
@@ -29,3 +35,6 @@ runs:
   - name: Build with Gradle
     run: ./gradlew build --configuration-cache
     shell: bash
+    env:
+      GITHUB_USER: ${{ inputs.github-user }}
+      GITHUB_TOKEN: ${{ inputs.github-token }}

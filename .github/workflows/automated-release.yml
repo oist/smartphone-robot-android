@@ -18,6 +18,8 @@ jobs:
     - name: Build
       with:
         gradle-encryption-key: ${{ secrets.GradleEncryptionKey }}
+        github-user: ${{ github.actor }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
       uses: ./.github/actions/build-apk
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2

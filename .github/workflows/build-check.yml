@@ -6,7 +6,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -17,4 +16,6 @@ jobs:
     - name: Build
       with:
         gradle-encryption-key: ${{ secrets.GradleEncryptionKey }}
+        github-user: ${{ github.actor }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
       uses: ./.github/actions/build-apk
