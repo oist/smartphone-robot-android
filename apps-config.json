@@ -2,6 +2,7 @@
   "apps": [
       "basicSubscriber",
       "basicAssembler",
-      "backAndForth"
+      "backAndForth",
+      "basicServer"
   ]
 }

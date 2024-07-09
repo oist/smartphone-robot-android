@@ -139,14 +139,20 @@ public class Trial implements Runnable, ActionSelector, SocketListener {
         Log.d("Episode", "End of episode:" + getEpisodeCount());
         // Waits for all image compression to finish prior to finishing flatbuffer
         long start = System.nanoTime();
-        for (Collection<Future<?>> timestepFutures: timeStepDataBuffer.imgCompFuturesEpisode){
-            for (Future<?> future:timestepFutures){
-                future.get();
+        synchronized (timeStepDataBuffer.imgCompFuturesEpisode){
+            for (Collection<Future<?>> timestepFutures: timeStepDataBuffer.imgCompFuturesEpisode){
+                synchronized (timestepFutures){
+                    for (Future<?> future:timestepFutures){
+                        future.get();
+                    }
+                }
             }
         }
-        // Waits for all timestep flatbuffer writes to finish prior to finishing flatbuffer
-        for (Future<?> future:flatbufferAssembler.flatbufferWriteFutures){
-            future.get();
+        synchronized (flatbufferAssembler.flatbufferWriteFutures){
+            // Waits for all timestep flatbuffer writes to finish prior to finishing flatbuffer
+            for (Future<?> future:flatbufferAssembler.flatbufferWriteFutures){
+                future.get();
+            }
         }
         long stop = System.nanoTime();
         long timediff = stop - start;
@@ -231,11 +237,11 @@ public class Trial implements Runnable, ActionSelector, SocketListener {
     }
 
     public boolean isLastEpisode() {
-        return (episodeCount >= maxEpisodeCount) | lastEpisode;
+        return (episodeCount >= maxEpisodeCount) || lastEpisode;
     }
 
     public boolean isLastTimestep() {
-        return (timeStep >= maxTimeStepCount) | lastTimestep;
+        return (timeStep >= maxTimeStepCount) || lastTimestep;
     }
 
     public int getMaxEpisodecount() {

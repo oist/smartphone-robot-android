@@ -52,6 +52,7 @@ public abstract class Publisher<T extends Subscriber> implements PermissionManag
     protected PublisherManager publisherManager;
     protected final String TAG = getClass().getName();
     protected PermissionManager permissionManager;
+    protected PublisherState state;
 
     public Publisher(Context context, PublisherManager publisherManager){
         this.context = context;
@@ -61,16 +62,26 @@ public abstract class Publisher<T extends Subscriber> implements PermissionManag
         permissionManager.checkPermissions(getRequiredPermissions(), this);
     }
 
-    public abstract void start();
-    public abstract void stop();
+    public void start(){
+        this.state = PublisherState.STARTED;
+    }
+    public void stop(){
+        this.state = PublisherState.STOPPED;
+    }
     public abstract ArrayList<String> getRequiredPermissions();
 
     public void pause() {
+        this.state = PublisherState.PAUSED;
         this.paused = true;
     }
 
     public void resume() {
+        this.state = PublisherState.STARTED;
         this.paused = false;
+    }
+
+    public PublisherState getState() {
+        return state;
     }
 
     public Publisher<T> addSubscriber(T subscriber){

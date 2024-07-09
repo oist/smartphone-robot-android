@@ -14,9 +14,17 @@ buildscript {
 
 allprojects {
     def jsonFile = file("$rootDir/config.json")
+    if (!jsonFile.exists()) {
+        jsonFile = file("$rootDir/config.template.json")
+    }
     def pythonconfig = new JsonSlurper().parseText(jsonFile.text)
-    ext.host = pythonconfig.DEFAULT.host
-    ext.port = pythonconfig.DEFAULT.port
+    if (pythonconfig.CUSTOM) {
+		ext.ip = pythonconfig.CUSTOM.ip
+		ext.port = pythonconfig.CUSTOM.port
+	} else {
+		ext.ip = pythonconfig.DEFAULT.ip
+		ext.port = pythonconfig.DEFAULT.port
+	}
     // Check for GITHUB_USER and GITHUB_TOKEN environment variables
     if (!System.getenv("GITHUB_USER") || !System.getenv("GITHUB_TOKEN")) {
         throw new GradleException("Environment variables GITHUB_USER and GITHUB_TOKEN must be set.")
@@ -103,10 +111,10 @@ subprojects {
         defaultConfig {
             compileSdkVersion = 30
             buildToolsVersion = '30.0.2'
-            minSdkVersion 24
+            minSdkVersion 30
             targetSdkVersion 30
 
-            buildConfigField("String", "HOST", "\"${host.toString()}\"")
+            buildConfigField("String", "IP", "\"${ip.toString()}\"")
             buildConfigField("int", "PORT", "${port.toString()}")
 
             // Fetch the version according to git latest tag and "how far are we from last tag"

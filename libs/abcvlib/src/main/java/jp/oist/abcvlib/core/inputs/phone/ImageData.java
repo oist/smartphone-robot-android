@@ -170,7 +170,7 @@ public abstract class ImageData<S extends Subscriber> extends Publisher<S> imple
             }
         });
         executor.shutdown();
-
+        super.start();
     }
 
     @Override
@@ -183,6 +183,7 @@ public abstract class ImageData<S extends Subscriber> extends Publisher<S> imple
         mCameraProviderFuture.cancel(false);
         cameraProvider.unbindAll();
         cameraProvider = null;
+        super.stop();
     }
 
     private void bindAll(LifecycleOwner lifecycleOwner) {

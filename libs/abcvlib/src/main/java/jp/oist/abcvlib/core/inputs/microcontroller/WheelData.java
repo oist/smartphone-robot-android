@@ -106,12 +106,14 @@ public class WheelData extends Publisher<WheelDataSubscriber> {
         mHandlerThread.start();
         handler = new Handler(mHandlerThread.getLooper());
         publisherManager.onPublisherInitialized();
+        super.start();
     }
 
     @Override
     public void stop() {
         mHandlerThread.quitSafely();
         handler = null;
+        super.stop();
     }
 
     @Override

@@ -276,6 +276,7 @@ public class OrientationData extends Publisher<OrientationDataSubscriber> implem
         handler = new Handler(mHandlerThread.getLooper());
         register(handler);
         publisherManager.onPublisherInitialized();
+        super.start();
     }
 
     @Override
@@ -283,6 +284,7 @@ public class OrientationData extends Publisher<OrientationDataSubscriber> implem
         mHandlerThread.quitSafely();
         unregister();
         handler = null;
+        super.stop();
     }
 
     @Override
