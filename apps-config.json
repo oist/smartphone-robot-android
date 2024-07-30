@@ -3,6 +3,7 @@
       "basicSubscriber",
       "basicAssembler",
       "backAndForth",
-      "basicServer"
+      "basicServer",
+      "basicCharger"
   ]
 }
