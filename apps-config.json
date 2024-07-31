@@ -4,6 +4,7 @@
       "basicAssembler",
       "backAndForth",
       "basicServer",
-      "basicCharger"
+      "basicCharger",
+      "basicQRTransmitter"
   ]
 }
