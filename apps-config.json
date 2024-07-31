@@ -5,6 +5,7 @@
       "backAndForth",
       "basicServer",
       "basicCharger",
-      "basicQRTransmitter"
+      "basicQRTransmitter",
+      "basicQRReceiver"
   ]
 }
