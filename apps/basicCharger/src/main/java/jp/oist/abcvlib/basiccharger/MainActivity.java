@@ -1,9 +1,17 @@
 package jp.oist.abcvlib.basiccharger;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.random;
+
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
+import android.graphics.RectF;
 import android.media.AudioTimestamp;
 import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
+
+import androidx.camera.view.PreviewView;
 
 import org.tensorflow.lite.support.image.TensorImage;
 import org.tensorflow.lite.support.label.Category;
@@ -13,6 +21,10 @@ import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.basiccharger.R;
@@ -54,20 +66,47 @@ import jp.oist.abcvlib.util.UsbSerial;
  * @author Christopher Buckley https://github.com/topherbuckley
  */
 public class MainActivity extends AbcvlibActivity implements SerialReadyListener,
-        BatteryDataSubscriber, WheelDataSubscriber, QRCodeDataSubscriber,
+        BatteryDataSubscriber, WheelDataSubscriber,
         ObjectDetectorDataSubscriber {
 
     private long lastFrameTime = System.nanoTime();
     private GuiUpdater guiUpdater;
     private final String TAG = getClass().getName();
-    float speed = 0.35f;
-    float increment = 0.01f;
+    private float speedL = 0.0f;
+    private float speedR = 0.0f;
+    private float forwardBias = 0.5f; // for moving forward while centering
+    private float p_controller = 0.2f;
+    private float leftWheelCompensation = 1.1f;
     private PublisherManager publisherManager;
+    private OverlayView overlayView;
+    private PreviewView previewView;
+    private enum StateX{
+        UNCENTERED,
+        CENTERED,
+    }
+    private enum StateY{
+        CLOSE_TO_BOTTOM,
+        FAR_FROM_BOTTOM,
+    }
+    private enum Action{
+        SEARCHING,
+        APPROACH,
+        MOUNT,
+        DISMOUNT,
+        RESET
+    }
+    private StateX stateX = StateX.UNCENTERED;
+    private StateY stateY = StateY.FAR_FROM_BOTTOM;
+    private Action action = Action.APPROACH;
+    private boolean centeredPuck = false;
+    private boolean puckCloseToBottom = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Setup Android GUI object references such that we can write data to them later.
         setContentView(R.layout.activity_main);
+        previewView = findViewById(R.id.camera_x_preview);
+        overlayView = findViewById(R.id.overlayView);
 
         // Creates an another thread that schedules updates to the GUI every 100 ms. Updaing the GUI every 100 microseconds would bog down the CPU
         ScheduledExecutorServiceWithException executor = new ScheduledExecutorServiceWithException(1, new ProcessPriorityThreadFactory(Thread.MIN_PRIORITY, "GuiUpdates"));
@@ -76,6 +115,13 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
 
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
+
+        // Get dimensions of the PreviewView after it is laid out
+        previewView.post(() -> {
+            int previewWidth = previewView.getWidth();
+            int previewHeight = previewView.getHeight();
+            overlayView.setPreviewDimensions(previewWidth, previewHeight);
+        });
     }
     @Override
     public void onSerialReady(UsbSerial usbSerial){
@@ -96,8 +142,7 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
         WheelData wheelData = new WheelData.Builder(this, publisherManager).build();
         wheelData.addSubscriber(this);
 
-        new ObjectDetectorData.Builder(this, publisherManager, this).setPreviewView(findViewById(R.id.camera_x_preview)).build().addSubscriber(this);
-        new QRCodeData.Builder(this, publisherManager, this).build().addSubscriber(this);
+        new ObjectDetectorData.Builder(this, publisherManager, this).setPreviewView(previewView).build().addSubscriber(this);
 
         setSerialCommManager(new SerialCommManager(usbSerial, batteryData, wheelData));
         super.onSerialReady(usbSerial);
@@ -112,12 +157,8 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
     // Main loop for any application extending AbcvlibActivity. This is where you will put your main code
     @Override
     protected void abcvlibMainLoop(){
-//        Log.i("basicCharger", "Current command speed: " + speed);
-//        outputs.setWheelOutput(speed, speed, false, false);
-//        if (speed >= 1.00f || speed <= -1.00f) {
-//            increment = -increment;
-//        }
-//        speed += increment;
+        Log.d("MAIN_LOOP", "speedL: " + speedL + " speedR: " + speedR);
+        outputs.setWheelOutput(speedL, speedR, false, false);
     }
 
     @Override
@@ -155,22 +196,139 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
     }
 
     @Override
-    public void onQRCodeDetected(String qrDataDecoded) {
-        guiUpdater.qrDataString = qrDataDecoded;
-    }
-
-    @Override
     public void onObjectsDetected(Bitmap bitmap, TensorImage tensorImage, List<Detection> results, long inferenceTime, int height, int width) {
+        // for some unknown reason I cannot get the image roated properly before this point so hack
+        int height_ = width;
+        width = height;
+        height = height_;
         try{
             // Note you can also get the bounding box here. See https://www.tensorflow.org/lite/api_docs/java/org/tensorflow/lite/task/vision/detector/Detection
             Category category = results.get(0).getCategories().get(0); //todo not sure if there will ever be more than one category (multiple detections). If so are they ordered by higheest score?
             String label = category.getLabel();
+            RectF boundingBox = results.get(0).getBoundingBox();
+            overlayView.setImageDimensions(width, height);
+            overlayView.setRect(boundingBox);
+
+            boolean visible = false;
+            if (label.equals("puck")) {
+                Log.d("PUCK", "Puck detected");
+                visible = true;
+            }else{
+                Log.d("PUCK", "Puck not detected");
+            }
+            puckMountController(visible, boundingBox.centerX(), boundingBox.centerY(), width, height);
+
+
             @SuppressLint("DefaultLocale") String score = String.format("%.2f", category.getScore());
             @SuppressLint("DefaultLocale") String time = String.format("%d", inferenceTime);
             guiUpdater.objectDetectorString = label + " : " + score + " : " + time + "ms";
         }catch (IndexOutOfBoundsException e){
             guiUpdater.objectDetectorString = "No results from ObjectDetector";
         }
+    }
+
+    public void puckMountController(boolean visible, float centerX, float centerY, int width, int height){
+        /**
+         * Center puck
+         * Move forward only when puck centered within range
+         * After centerY is close enough to bottom of image, override, and move forward for X seconds
+         */
+
+        if (action == Action.MOUNT){
+            // Ignore all else and just continue routine
+        }
+        else if (action == Action.APPROACH && visible){
+            float errorX = 2f * ((centerX / width) - 0.5f); // Error normalized from -1 to 1 from horizontal center
+            float errorY = 1 - (centerY / height); // Error normalized to 1 from bottom. 1 - as origin apparently at top of image
+            Log.v("PUCK", "ErrorX: " + errorX + " ErrorY: " + errorY);
+
+            // Implement hysteresis on both error signals to prevent jitter
+            float centeredLowerThreshold = 0.5f;
+            float centeredUpperThreshold = 0.1f;
+            float closeLowerThreshold = 0.1f;
+            float closeUpperThreshold = 0.2f;
+
+            if (abs(errorX) < centeredLowerThreshold){
+                centeredPuck = true;
+            }else if (abs(errorX) > centeredUpperThreshold){
+                centeredPuck = false;
+            }
+            if (abs(errorY) < closeLowerThreshold){
+                puckCloseToBottom = true;
+            }else if (abs(errorY) > closeUpperThreshold){
+                puckCloseToBottom = false;
+            }
+
+            if (centeredPuck && puckCloseToBottom) {
+                mount();
+            }else{
+                approach(errorX, errorY);
+            }
+        }
+        else if (action == Action.APPROACH){
+            // Implied !visible
+            searching();
+        }
+    }
+
+    private void searching(){
+//        action = Action.SEARCHING;
+        Log.v("PUCK", "Action.SEARCHING");
+        speedL = 0.6f;
+        speedR = -0.6f;
+    }
+
+    private void approach(float errorX, float errorY){
+        action = Action.APPROACH;
+        Log.i("PUCK", "Action.APPROACH");
+
+        speedL = (-errorX * p_controller) + forwardBias;
+        speedR = (errorX * p_controller) + forwardBias;
+    }
+
+    private void mount(){
+        action = Action.MOUNT;
+        Log.i("PUCK", "Action.MOUNT");
+        speedL = 1f;
+        speedR = 1f;
+        // start async timer task to call dismount 5 seconds later
+        ScheduledExecutorService actionExecutor = Executors.newSingleThreadScheduledExecutor();
+        actionExecutor.schedule(new Runnable() {
+            @Override
+            public void run() {
+                stop();
+                ScheduledExecutorService actionExecutor = Executors.newSingleThreadScheduledExecutor();
+                actionExecutor.schedule(() -> dismount(), 5, TimeUnit.SECONDS);
+            }
+        }, 1000, TimeUnit.MILLISECONDS);
+    }
+
+    private void dismount(){
+        action = Action.DISMOUNT;
+        Log.i("PUCK", "Action.DISMOUNT");
+        speedL = -1.0f;
+        speedR = -1.0f;
+        // start async timer task to call reset 3 seconds later
+        ScheduledExecutorService actionExecutor = Executors.newSingleThreadScheduledExecutor();
+        actionExecutor.schedule(this::reset, 2, TimeUnit.SECONDS);
+    }
+
+    private void reset(){
+        action = Action.RESET;
+        Log.i("PUCK", "Action.RESET");
+        // Turn in random direction for 3 seconds then set state to APPROACH
+        Random random = new Random();
+        int direction = random.nextBoolean() ? 1 : -1;
+        speedL = direction * 1.0f;
+        speedR = -direction * 1.0f;
+        // start async timer task to set action to APPROACH 3 seconds later
+        ScheduledExecutorService actionExecutor = Executors.newSingleThreadScheduledExecutor();
+        actionExecutor.schedule(() -> action = Action.APPROACH, 2, TimeUnit.SECONDS);
+    }
+
+    private void stop(){
+        speedL = 0.0f;
+        speedR = 0.0f;
     }
 }
 

@@ -10,7 +10,7 @@ public abstract class AbcvlibController implements Runnable{
 
     private String name;
     private int threadCount = 1;
-    private int threadPriority = Thread.NORM_PRIORITY;
+    private int threadPriority = Thread.MAX_PRIORITY;
     private int initDelay;
     private int timeStep;
     private TimeUnit timeUnit;

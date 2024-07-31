@@ -90,7 +90,7 @@ public class SerialCommManager {
     // Start method to start the thread
     public void start(long initialDelay, long delay) {
         ProcessPriorityThreadFactory serialCommManager_Android2Pi_factory =
-                new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY,
+                new ProcessPriorityThreadFactory(Thread.MAX_PRIORITY,
                         "SerialCommManager_Android2Pi");
         ScheduledExecutorServiceWithException scheduledExecutorServiceWithException =
                 new ScheduledExecutorServiceWithException(1, serialCommManager_Android2Pi_factory);
