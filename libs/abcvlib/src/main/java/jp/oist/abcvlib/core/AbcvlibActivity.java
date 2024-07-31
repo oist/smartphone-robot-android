@@ -79,7 +79,7 @@ public abstract class AbcvlibActivity extends AppCompatActivity implements Seria
         onOutputsReady();
 
         Executors.newSingleThreadScheduledExecutor(new ProcessPriorityThreadFactory(
-                Thread.NORM_PRIORITY,
+                Thread.MAX_PRIORITY, // Needs to be > 5 in order for object detector not to overwhelm cpu
                 "AbcvlibActivityMainLoop")
                 ).scheduleWithFixedDelay(new AbcvlibActivityRunnable(), this.initialDelay, this.delay,
                 java.util.concurrent.TimeUnit.MILLISECONDS);

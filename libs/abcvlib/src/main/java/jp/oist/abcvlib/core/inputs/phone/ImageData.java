@@ -7,6 +7,7 @@ import android.media.Image;
 import android.os.Handler;
 import android.util.Log;
 import android.util.Size;
+import android.view.Surface;
 
 import androidx.annotation.NonNull;
 import androidx.camera.core.CameraSelector;
@@ -138,6 +139,7 @@ public abstract class ImageData<S extends Subscriber> extends Publisher<S> imple
                         .setTargetResolution(new Size(10, 10))
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .setImageQueueDepth(20)
+                        .setTargetRotation(Surface.ROTATION_0)
                         .build();
     }
 
@@ -147,7 +149,7 @@ public abstract class ImageData<S extends Subscriber> extends Publisher<S> imple
             setDefaultImageAnalysis();
         }
         if (imageExecutor == null){
-            imageExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(Thread.NORM_PRIORITY, "imageAnalysis"));
+            imageExecutor = Executors.newCachedThreadPool(new ProcessPriorityThreadFactory(1, "imageAnalysis"));
         }
         if (subscribers.size() > 0){
             yuvToRgbConverter = new YuvToRgbConverter(context);
