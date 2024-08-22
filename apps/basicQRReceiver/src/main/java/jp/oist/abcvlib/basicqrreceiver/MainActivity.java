@@ -82,12 +82,22 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
     private void turnRight(){
         speedL = -speed;
         speedR = speed;
-        letterTextView.setText("R");
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                letterTextView.setText("R");
+            }
+        });
     }
 
     private void turnLeft(){
         speedL = speed;
         speedR = -speed;
-        letterTextView.setText("L");
-        }
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                letterTextView.setText("L");
+            }
+        });
+    }
 }
