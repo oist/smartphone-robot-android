@@ -28,7 +28,6 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
     private float speed = 0;
     TextView letterTextView;
 
-
     public MainActivity() {
     }
 
