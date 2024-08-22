@@ -37,11 +37,11 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
 
-        letterTextView = findViewById(R.id.letterTextView);
-
         // Setup Android GUI. Point this method to your main activity xml file or corresponding int
         // ID within the R class
         setContentView(R.layout.activity_main);
+
+        letterTextView = findViewById(R.id.letterTextView);
     }
 
     @Override
