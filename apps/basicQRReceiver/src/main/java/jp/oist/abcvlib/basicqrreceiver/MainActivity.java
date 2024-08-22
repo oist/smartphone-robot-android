@@ -66,9 +66,9 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
 
     @Override
     public void onQRCodeDetected(String qrDataDecoded) {
-        if (!qrDataDecoded.equals("L")){
+        if (qrDataDecoded.equals("L")){
             turnLeft();
-        } else if (!qrDataDecoded.equals("R")){
+        } else if (qrDataDecoded.equals("R")){
             turnRight();
         }
     }
