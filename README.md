@@ -111,7 +111,12 @@ Three demo applications exemplify the basic use of the API:
 ## Installing/Rolling back APK versions
 APK builds and abcvlib .aar files are stored in Github Releases.
 1. Download any versioned release in the [releases page](https://github.com/oist/smartphone-robot-android/releases)
-2. Install the APK on your device by running `adb install -r <path_to_apk>`
+2. Install the APK on your device by running `adb install -r <path_to_apk>`. You may also find the following adb flags helpful:
+
+    - -r: replace existing application
+    - -t: allow test packages
+    - -d: allow version code downgrade (debuggable packages only)
+    - -g: grant all runtime permissions
 3. Run the APK on your device via `adb shell am start -n jp.oist.abcvlib.<AppName>/.MainActivity` where `<AppName>` is the name of the APK you just installed (e.g. `backandforth`)
 4. Alternatively to step 3, you can open the app from the app drawer on your device
 
