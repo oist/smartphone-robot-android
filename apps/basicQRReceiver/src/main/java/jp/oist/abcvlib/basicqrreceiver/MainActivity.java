@@ -28,7 +28,6 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
     private float speed = 0;
     TextView letterTextView;
 
-
     public MainActivity() {
     }
 
@@ -38,11 +37,11 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
 
-        letterTextView = findViewById(R.id.letterTextView);
-
         // Setup Android GUI. Point this method to your main activity xml file or corresponding int
         // ID within the R class
         setContentView(R.layout.activity_main);
+
+        letterTextView = findViewById(R.id.letterTextView);
     }
 
     @Override
@@ -67,9 +66,9 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
 
     @Override
     public void onQRCodeDetected(String qrDataDecoded) {
-        if (!qrDataDecoded.equals("L")){
+        if (qrDataDecoded.equals("L")){
             turnLeft();
-        } else if (!qrDataDecoded.equals("R")){
+        } else if (qrDataDecoded.equals("R")){
             turnRight();
         }
     }
@@ -83,12 +82,22 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
     private void turnRight(){
         speedL = -speed;
         speedR = speed;
-        letterTextView.setText("R");
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                letterTextView.setText("R");
+            }
+        });
     }
 
     private void turnLeft(){
         speedL = speed;
         speedR = -speed;
-        letterTextView.setText("L");
-        }
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                letterTextView.setText("L");
+            }
+        });
+    }
 }
