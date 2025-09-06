@@ -7,7 +7,6 @@ import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.PublisherManager;
-import jp.oist.abcvlib.core.inputs.phone.ImageDataRaw;
 import jp.oist.abcvlib.core.inputs.phone.QRCodeData;
 import jp.oist.abcvlib.core.inputs.phone.QRCodeDataSubscriber;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;

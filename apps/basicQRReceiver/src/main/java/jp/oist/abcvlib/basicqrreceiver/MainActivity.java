@@ -1,18 +1,13 @@
 package jp.oist.abcvlib.basicqrreceiver;
 
-import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.widget.TextView;
-
-import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.PublisherManager;
 import jp.oist.abcvlib.core.inputs.phone.QRCodeData;
 import jp.oist.abcvlib.core.inputs.phone.QRCodeDataSubscriber;
-import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.QRCode;
-import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 import jp.oist.abcvlib.util.SerialCommManager;
 import jp.oist.abcvlib.util.SerialReadyListener;
 import jp.oist.abcvlib.util.UsbSerial;
