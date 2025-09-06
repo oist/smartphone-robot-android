@@ -1,12 +1,12 @@
 package jp.oist.abcvlib.fragments;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.fragment.app.Fragment;
-
 import com.google.android.material.slider.Slider;
 
 import org.json.JSONException;
@@ -34,14 +34,12 @@ public class PidGuiFragament extends Fragment{
     Slider p_wheel_;
     Slider expWeight_;
     Slider maxAbsTilt_;
+
+    private final String TAG = this.getClass().toString();
     private BalancePIDController balancePIDController;
     private final Slider.OnChangeListener sliderChangeListener = (slider, value, fromUser) -> updatePID();
 
-    private String TAG = this.getClass().toString();
-
     Map<String, Slider> controls = new HashMap<String, Slider>();
-
-    private boolean isQRCodeDisplayed = false;
 
     public PidGuiFragament() {
         // Required empty public constructor
@@ -51,24 +49,12 @@ public class PidGuiFragament extends Fragment{
         this.balancePIDController = balancePIDController;
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param balancePIDController
-     * @return A new instance of fragment pid_gui.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static PidGuiFragament newInstance(BalancePIDController balancePIDController) {
-        return new PidGuiFragament(balancePIDController);
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
 
-    public void updatePID(){
+    public void updatePID() {
         try {
             balancePIDController.setPID(p_tilt_.getValue(),
                     0,
@@ -86,7 +72,6 @@ public class PidGuiFragament extends Fragment{
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.pid_gui, container, false);
-
         controls.put("sp", setPoint_ = rootView.findViewById(R.id.seekBarSetPoint));
         controls.put("pt", p_tilt_ = rootView.findViewById(R.id.seekBarTiltP));
         controls.put("dt", d_tilt_ = rootView.findViewById(R.id.seekBarTiltD));
@@ -97,12 +82,10 @@ public class PidGuiFragament extends Fragment{
         for (Map.Entry<String, Slider> entry : controls.entrySet()) {
             entry.getValue().addOnChangeListener(sliderChangeListener);
         }
-        // Inflate the layout for this fragment
-
         return rootView;
     }
 
-    public String getControls(){
+    public String getControls() {
 
         JSONObject controlValues = new JSONObject();
         Map<String, Double> controls = new HashMap<String, Double>();

@@ -93,7 +93,7 @@ subprojects {
 
         implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.5.21"
         implementation "com.google.flatbuffers:flatbuffers-java:1.12.0"
-        implementation 'com.google.android.material:material:1.4.0'
+        implementation 'com.google.android.material:material:1.6.0'
         implementation 'com.google.zxing:core:3.4.1'
         implementation 'com.google.zxing:android-integration:3.3.0'
         implementation 'io.github.nishkarsh:android-permissions:2.0.54'

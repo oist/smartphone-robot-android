@@ -13,7 +13,7 @@ public class BalancePIDController extends AbcvlibController implements WheelData
     private final String TAG = this.getClass().getName();
 
     // Initialize all sensor reading variables
-    private double p_tilt = -24;
+    private double p_tilt = -10;
     private double i_tilt = 0;
     private double d_tilt = 1.0;
     private double setPoint = 2.8;
@@ -109,7 +109,7 @@ public class BalancePIDController extends AbcvlibController implements WheelData
         e_t = setPoint - thetaDeg;
         // error betweeen actual and desired wheel speed (default 0)
         double e_w = 0.0 - speedL;
-        Log.v(TAG, "speedL:" + speedL);
+        Log.v(TAG, "speedL: " + speedL + ", deg: " + thetaDeg);
 
         double p_out = (p_tilt * e_t) + (p_wheel * e_w);
         double i_out = i_tilt * int_e_t;
