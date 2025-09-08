@@ -1,13 +1,18 @@
 package jp.oist.abcvlib.basicqrreceiver;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.widget.TextView;
+
+import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.PublisherManager;
 import jp.oist.abcvlib.core.inputs.phone.QRCodeData;
 import jp.oist.abcvlib.core.inputs.phone.QRCodeDataSubscriber;
+import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
 import jp.oist.abcvlib.util.QRCode;
+import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException;
 import jp.oist.abcvlib.util.SerialCommManager;
 import jp.oist.abcvlib.util.SerialReadyListener;
 import jp.oist.abcvlib.util.UsbSerial;
@@ -25,7 +30,10 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
     private PublisherManager publisherManager;
     private float speedL = 0;
     private float speedR = 0;
-    private float speed = 0;
+    private final float speed = 0.5f;
+    private int rotateCount = 0;
+    private final int initRotateCount = 10;
+    private int rotatingState = 0;
     TextView letterTextView;
 
     public MainActivity() {
@@ -76,12 +84,21 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
     // Main loop for any application extending AbcvlibActivity. This is where you will put your main code
     @Override
     protected void abcvlibMainLoop(){
-        outputs.setWheelOutput(speedL, speedR, false, false);
+        if (rotateCount > 0) {
+            outputs.setWheelOutput(speedL, speedR, false, false);
+            rotateCount -= 1;
+        } else {
+            outputs.setWheelOutput(0.0f, 0.0f, false, false);
+        }
     }
 
     private void turnRight(){
         speedL = -speed;
         speedR = speed;
+        if (rotatingState != 1) {
+            rotateCount = initRotateCount;
+            rotatingState = 1;
+        }
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -93,6 +110,10 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
     private void turnLeft(){
         speedL = speed;
         speedR = -speed;
+        if (rotatingState != 2) {
+            rotateCount = initRotateCount;
+            rotatingState = 2;
+        }
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
