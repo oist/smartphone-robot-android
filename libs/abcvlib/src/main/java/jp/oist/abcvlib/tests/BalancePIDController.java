@@ -82,7 +82,7 @@ public class BalancePIDController extends AbcvlibController implements WheelData
     // -------------- Actual Controllers ----------------------------
 
     private void bounce(boolean forward) {
-        float speed = 0.5f;
+        float speed = 0.6f;
         // loop steps between turning on and off wheels.
         int bouncePulseWidth = 100;
         if (bounceLoopCount < bouncePulseWidth * 0.1){
