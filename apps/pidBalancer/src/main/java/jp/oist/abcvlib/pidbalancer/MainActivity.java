@@ -10,13 +10,16 @@ import androidx.fragment.app.FragmentTransaction;
 import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
-import jp.oist.abcvlib.core.AbcvlibLooper;
-import jp.oist.abcvlib.core.IOReadyListener;
 import jp.oist.abcvlib.core.inputs.PublisherManager;
+import jp.oist.abcvlib.core.inputs.microcontroller.BatteryData;
+import jp.oist.abcvlib.core.inputs.microcontroller.BatteryDataSubscriber;
 import jp.oist.abcvlib.core.inputs.microcontroller.WheelData;
 import jp.oist.abcvlib.core.inputs.phone.OrientationData;
 import jp.oist.abcvlib.tests.BalancePIDController;
 import jp.oist.abcvlib.fragments.PidGuiFragament;
+import jp.oist.abcvlib.util.SerialCommManager;
+import jp.oist.abcvlib.util.SerialReadyListener;
+import jp.oist.abcvlib.util.UsbSerial;
 
 /**
  * Android application showing connection to IOIOBoard, Hubee Wheels, and Android Sensors
@@ -24,11 +27,17 @@ import jp.oist.abcvlib.fragments.PidGuiFragament;
  * Runs PID controller locally on Android, but takes PID parameters from python GUI
  * @author Christopher Buckley https://github.com/topherbuckley
  */
-public class MainActivity extends AbcvlibActivity implements IOReadyListener{
+public class MainActivity extends AbcvlibActivity implements SerialReadyListener,
+        BatteryDataSubscriber {
 
-    private final String TAG = getClass().getName();
     private BalancePIDController balancePIDController;
     private PidGuiFragament pidGuiFragament;
+    // Create your data publisher objects
+    PublisherManager publisherManager = new PublisherManager();
+    private OrientationData orientationData;
+    private WheelData wheelData;
+    private boolean started = false;
+    private final android.os.Handler handler = new android.os.Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,11 +46,25 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener{
         // ID within the R class
         setContentView(R.layout.activity_main);
 
-        setIoReadyListener(this);
-
         // Passes Android App information up to parent classes for various usages. Do not modify
         super.onCreate(savedInstanceState);
     }
+
+    protected void onStart(){
+        super.onStart();
+        handler.post(checkControllerRunnable);
+    }
+
+    private final Runnable checkControllerRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (balancePIDController != null) {
+                displayPID_GUI();
+            } else {
+                handler.postDelayed(this, 100); // Check again in 100ms
+            }
+        }
+    };
 
     public void displayPID_GUI(){
         pidGuiFragament = PidGuiFragament.newInstance(balancePIDController);
@@ -65,34 +88,48 @@ public class MainActivity extends AbcvlibActivity implements IOReadyListener{
     }
 
     @Override
-    public void onIOReady(AbcvlibLooper abcvlibLooper) {
-        // Create your data publisher objects
-        PublisherManager publisherManager = new PublisherManager();
-        OrientationData orientationData = new OrientationData
+    public void onSerialReady(UsbSerial usbSerial) {
+        orientationData = new OrientationData
                 .Builder(this, publisherManager).build();
-        WheelData wheelData = new WheelData
-                .Builder(this, publisherManager, abcvlibLooper).build();
+        BatteryData batteryData = new BatteryData.Builder(this, publisherManager).build();
+        batteryData.addSubscriber(this);
+        wheelData = new WheelData.Builder(this, publisherManager).build();
         // Initialize all publishers (i.e. start their threads and data streams)
         publisherManager.initializePublishers();
 
+        SerialCommManager serialCommManager = new SerialCommManager(usbSerial, batteryData, wheelData);
+        setSerialCommManager(serialCommManager);
+        super.onSerialReady(usbSerial);
+    }
+
+    @Override
+    public void onOutputsReady() {
+        publisherManager.initializePublishers();
+        publisherManager.startPublishers();
+
         // Create your controller/subscriber
-        balancePIDController = (BalancePIDController) new BalancePIDController().setInitDelay(0)
+        balancePIDController = (BalancePIDController) new BalancePIDController(outputs).setInitDelay(0)
                 .setName("BalancePIDController").setThreadCount(1)
                 .setThreadPriority(Thread.NORM_PRIORITY).setTimestep(5)
                 .setTimeUnit(TimeUnit.MILLISECONDS);
-
         // Attach the controller/subscriber to the publishers
         orientationData.addSubscriber(balancePIDController);
         wheelData.addSubscriber(balancePIDController);
+    }
 
-        // Start your publishers
-        publisherManager.startPublishers();
+    // Main loop for any application extending AbcvlibActivity. This is where you will put your main code
+    @Override
+    protected void abcvlibMainLoop(){
+        balancePIDController.run();
+    }
 
-        // Adds your custom controller to the compounding master controller.
-        getOutputs().getMasterController().addController(balancePIDController);
-        // Start the master controller after adding and starting any customer controllers.
-        getOutputs().startMasterController();
+    @Override
+    public void onBatteryVoltageUpdate(long timestamp, double voltage) {
 
-        runOnUiThread(this::displayPID_GUI);
+    }
+
+    @Override
+    public void onChargerVoltageUpdate(long timestamp, double chargerVoltage, double coilVoltage) {
+
     }
 }

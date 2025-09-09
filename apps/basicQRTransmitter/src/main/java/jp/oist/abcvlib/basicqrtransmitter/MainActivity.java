@@ -7,7 +7,6 @@ import java.util.concurrent.TimeUnit;
 
 import jp.oist.abcvlib.core.AbcvlibActivity;
 import jp.oist.abcvlib.core.inputs.PublisherManager;
-import jp.oist.abcvlib.core.inputs.phone.ImageDataRaw;
 import jp.oist.abcvlib.core.inputs.phone.QRCodeData;
 import jp.oist.abcvlib.core.inputs.phone.QRCodeDataSubscriber;
 import jp.oist.abcvlib.util.ProcessPriorityThreadFactory;
@@ -30,8 +29,7 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
     private PublisherManager publisherManager;
     private float speedL = 0;
     private float speedR = 0;
-    private float speed = 0.6f;
-    private String qrcodeData = "";
+    private final float speed = 0.5f;
     private enum ACTIONS {TURN_LEFT, TURN_RIGHT};
     private ACTIONS action = ACTIONS.TURN_RIGHT;
 
@@ -89,7 +87,7 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
 
     @Override
     public void onQRCodeDetected(String qrDataDecoded) {
-        if (!qrDataDecoded.equals("")){
+        if (!qrDataDecoded.equals("")) {
             Log.i("qrcode", "QR Code Found and decoded: " + qrDataDecoded);
         }
     }

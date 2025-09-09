@@ -7,6 +7,7 @@ import jp.oist.abcvlib.core.inputs.microcontroller.WheelDataSubscriber;
 import jp.oist.abcvlib.core.inputs.phone.OrientationData;
 import jp.oist.abcvlib.core.inputs.phone.OrientationDataSubscriber;
 import jp.oist.abcvlib.core.outputs.AbcvlibController;
+import jp.oist.abcvlib.core.outputs.Outputs;
 
 public class BalancePIDController extends AbcvlibController implements WheelDataSubscriber, OrientationDataSubscriber {
 
@@ -30,7 +31,8 @@ public class BalancePIDController extends AbcvlibController implements WheelData
 
     private int bounceLoopCount = 0;
 
-    public BalancePIDController(){
+    public BalancePIDController(Outputs outputs){
+        super(outputs);
     }
 
     public void run(){
