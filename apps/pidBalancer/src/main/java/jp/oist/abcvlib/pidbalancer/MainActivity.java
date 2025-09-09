@@ -1,6 +1,8 @@
 package jp.oist.abcvlib.pidbalancer;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.widget.Button;
 
@@ -36,8 +38,7 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
     PublisherManager publisherManager = new PublisherManager();
     private OrientationData orientationData;
     private WheelData wheelData;
-    private boolean started = false;
-    private final android.os.Handler handler = new android.os.Handler();
+    private final Handler handler = new Handler(Looper.getMainLooper());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,9 +95,6 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
         BatteryData batteryData = new BatteryData.Builder(this, publisherManager).build();
         batteryData.addSubscriber(this);
         wheelData = new WheelData.Builder(this, publisherManager).build();
-        // Initialize all publishers (i.e. start their threads and data streams)
-        publisherManager.initializePublishers();
-
         SerialCommManager serialCommManager = new SerialCommManager(usbSerial, batteryData, wheelData);
         setSerialCommManager(serialCommManager);
         super.onSerialReady(usbSerial);
@@ -119,8 +117,8 @@ public class MainActivity extends AbcvlibActivity implements SerialReadyListener
 
     // Main loop for any application extending AbcvlibActivity. This is where you will put your main code
     @Override
-    protected void abcvlibMainLoop(){
-        balancePIDController.run();
+    protected void abcvlibMainLoop() {
+         balancePIDController.run();
     }
 
     @Override

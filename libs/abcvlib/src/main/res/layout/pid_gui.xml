@@ -9,7 +9,7 @@
     <TextView
         android:id="@+id/textViewSetPoint"
         android:layout_width="wrap_content"
-        android:layout_height="40dp"
+        android:layout_height="30dp"
         android:gravity="center"
         android:text="@string/set_point_deg"
         android:textAlignment="center" />
@@ -17,7 +17,7 @@
     <com.google.android.material.slider.Slider
         android:id="@+id/seekBarSetPoint"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="40dp"
         android:stepSize="0.1"
         android:value="3.8"
         android:valueFrom="-10.0"
@@ -26,14 +26,14 @@
     <TextView
         android:id="@+id/textViewTiltP"
         android:layout_width="wrap_content"
-        android:layout_height="40dp"
+        android:layout_height="30dp"
         android:gravity="center"
         android:text="@string/tilt_p" />
 
     <com.google.android.material.slider.Slider
         android:id="@+id/seekBarTiltP"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="40dp"
         android:stepSize="0.001"
         android:value="-0.475"
         android:valueFrom="-1.0"
@@ -42,14 +42,14 @@
     <TextView
         android:id="@+id/textViewTiltD"
         android:layout_width="wrap_content"
-        android:layout_height="40dp"
+        android:layout_height="30dp"
         android:gravity="center"
         android:text="@string/tilt_d" />
 
     <com.google.android.material.slider.Slider
         android:id="@+id/seekBarTiltD"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="40dp"
         android:stepSize="0.0001"
         android:value="0.007"
         android:valueFrom="0.0"
@@ -58,14 +58,14 @@
     <TextView
         android:id="@+id/textViewWheelSpeedP"
         android:layout_width="wrap_content"
-        android:layout_height="40dp"
+        android:layout_height="30dp"
         android:gravity="center"
         android:text="@string/speed_p" />
 
     <com.google.android.material.slider.Slider
         android:id="@+id/seekBarWheelSpeedP"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="40dp"
         android:stepSize="0.00001"
         android:value="0.006"
         android:valueFrom="0.0"
@@ -74,14 +74,14 @@
     <TextView
         android:id="@+id/textViewExponentialWeight"
         android:layout_width="wrap_content"
-        android:layout_height="40dp"
+        android:layout_height="30dp"
         android:gravity="center"
         android:text="@string/expWeight" />
 
     <com.google.android.material.slider.Slider
         android:id="@+id/seekBarExponentialWeight"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="40dp"
         android:stepSize="0.001"
         android:value="0.25"
         android:valueFrom="0.0"
@@ -90,14 +90,14 @@
     <TextView
         android:id="@+id/textViewMaxAbsTilt"
         android:layout_width="wrap_content"
-        android:layout_height="40dp"
+        android:layout_height="30dp"
         android:gravity="center"
         android:text="@string/maximum_absolute_tilt_angle" />
 
     <com.google.android.material.slider.Slider
         android:id="@+id/seekBarMaxAbsTilt"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="40dp"
         android:stepSize="0.1"
         android:value="7.0"
         android:valueFrom="-90.0"
