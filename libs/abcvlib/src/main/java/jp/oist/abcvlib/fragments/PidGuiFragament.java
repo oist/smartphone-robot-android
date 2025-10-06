@@ -41,12 +41,11 @@ public class PidGuiFragament extends Fragment{
     private String TAG = this.getClass().toString();
 
     Map<String, Slider> controls = new HashMap<String, Slider>();
-
+    private boolean isQRCodeDisplayed = false;
 
     public PidGuiFragament() {
         // Required empty public constructor
     }
-    private boolean isQRCodeDisplayed = false;
 
     public PidGuiFragament(BalancePIDController balancePIDController) {
         this.balancePIDController = balancePIDController;
