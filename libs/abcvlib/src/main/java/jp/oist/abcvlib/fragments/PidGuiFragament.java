@@ -15,6 +15,7 @@ import org.json.JSONObject;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import jp.oist.abcvlib.core.R;
@@ -40,7 +41,6 @@ public class PidGuiFragament extends Fragment{
     private String TAG = this.getClass().toString();
 
     Map<String, Slider> controls = new HashMap<String, Slider>();
-
     private boolean isQRCodeDisplayed = false;
 
     public PidGuiFragament() {
@@ -93,7 +93,9 @@ public class PidGuiFragament extends Fragment{
         controls.put("pw", p_wheel_ = rootView.findViewById(R.id.seekBarWheelSpeedP));
         controls.put("ew", expWeight_ = rootView.findViewById(R.id.seekBarExponentialWeight));
         controls.put("mt", maxAbsTilt_ = rootView.findViewById(R.id.seekBarMaxAbsTilt));
-
+        p_wheel_.setLabelFormatter(value -> String.format(Locale.US, "%.5f", value));
+        p_tilt_.setLabelFormatter(value -> String.format(Locale.US, "%.3f", value));
+        d_tilt_.setLabelFormatter(value -> String.format(Locale.US, "%.4f", value));
         for (Map.Entry<String, Slider> entry : controls.entrySet()) {
             entry.getValue().addOnChangeListener(sliderChangeListener);
         }

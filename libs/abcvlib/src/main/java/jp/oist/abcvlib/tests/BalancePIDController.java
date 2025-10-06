@@ -35,7 +35,7 @@ public class BalancePIDController extends AbcvlibController implements WheelData
         super(outputs);
     }
 
-    public void run(){
+    public void run() {
         // If current tilt angle is over maxAbsTilt or under -maxAbsTilt --> Bounce Up
         if ((setPoint - maxAbsTilt) > thetaDeg){
             bounce(false); // Bounce backward first
@@ -79,7 +79,7 @@ public class BalancePIDController extends AbcvlibController implements WheelData
     // -------------- Actual Controllers ----------------------------
 
     private void bounce(boolean forward) {
-        float speed = 0.5f;
+        float speed = 0.6f;
         // loop steps between turning on and off wheels.
         int bouncePulseWidth = 100;
         if (bounceLoopCount < bouncePulseWidth * 0.1){
@@ -104,20 +104,21 @@ public class BalancePIDController extends AbcvlibController implements WheelData
         bounceLoopCount++;
     }
 
-    private void linearController(){
-
+    private void linearController() {
+        final double clipThreshold = 0.6;
         // TODO this needs to account for length of time on each interval, or overall time length. Here this just assumes a width of 1 for all intervals.
         int_e_t = int_e_t + e_t;
         e_t = setPoint - thetaDeg;
-        // error betweeen actual and desired wheel speed (default 0)
+        // error between actual and desired wheel speed (default 0)
         double e_w = 0.0 - speedL;
         Log.v(TAG, "speedL:" + speedL);
 
         double p_out = (p_tilt * e_t) + (p_wheel * e_w);
         double i_out = i_tilt * int_e_t;
         double d_out = d_tilt * angularVelocityDeg;
-
-        setOutput((float)(p_out + i_out + d_out), (float)(p_out + i_out + d_out));
+        Log.v(TAG,  "e_t: " + e_t + "e_w: " + e_w + "LinearControllerOutput:" + p_out + i_out + d_out);
+        double clippedC = Math.min(clipThreshold, Math.max(-clipThreshold, p_out + i_out + d_out));
+        setOutput((float)clippedC, (float)clippedC);
     }
 
     // -------------- Input Data Listeners ----------------------------
