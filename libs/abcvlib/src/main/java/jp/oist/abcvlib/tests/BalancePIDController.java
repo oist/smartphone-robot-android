@@ -36,14 +36,11 @@ public class BalancePIDController extends AbcvlibController implements WheelData
     }
 
     public void run() {
-        if (setPoint < thetaDeg - maxAbsTilt) {
-            // Example 0 < 20 - 15
-            // The robot is learning backward too much. Bounce forward first.
-            bounce(false);
-        } else if(setPoint > thetaDeg + maxAbsTilt) {
-            // Example 0 > -20 + 15
-            // The robot is learning backward too much. Bounce forward first.
-            bounce(true);
+        // If current tilt angle is over maxAbsTilt or under -maxAbsTilt --> Bounce Up
+        if ((setPoint - maxAbsTilt) > thetaDeg){
+            bounce(false); // Bounce backward first
+        }else if((setPoint + maxAbsTilt) < thetaDeg){
+            bounce(true); // Bounce forward first
         }else{
             bounceLoopCount = 0;
             linearController();
