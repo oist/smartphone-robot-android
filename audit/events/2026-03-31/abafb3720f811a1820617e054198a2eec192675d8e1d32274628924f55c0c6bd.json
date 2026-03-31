@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-03-31T10:05:06Z",
+  "event_ts": "2026-03-31T10:04:47Z",
+  "repo": "oist/smartphone-robot-android",
+  "event_name": "issues",
+  "action": "closed",
+  "actor": "topherbuckley",
+  "run_id": "23791801225",
+  "run_attempt": "1",
+  "sender": {
+    "login": "topherbuckley",
+    "html_url": "https://github.com/topherbuckley"
+  },
+  "issue": {
+    "number": 57,
+    "title": "[Issue]:  AUDIT_LOG_PUSH_TOKEN is not configured.",
+    "state": "closed",
+    "html_url": "https://github.com/oist/smartphone-robot-android/issues/57",
+    "milestone": null
+  },
+  "pull_request": null,
+  "comment": null,
+  "milestone": null,
+  "changes": null,
+  "severity": "INFO",
+  "target_url": "https://github.com/oist/smartphone-robot-android/issues/57",
+  "event_id": "abafb3720f811a1820617e054198a2eec192675d8e1d32274628924f55c0c6bd"
+}
