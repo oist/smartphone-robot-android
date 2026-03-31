@@ -45,7 +45,8 @@ class WheelData(
      * Listens for updates from the microcontroller-backed quadrature encoder stream.
      * Note these updates are not interrupts, so they do not necessarily represent changes in
      * value, simply a loop that regularly checks the status of the pin (high/low). This method is
-     * called from the publisher located in [AbcvlibLooper.loop].
+     * called from the microcontroller-backed wheel data publisher whenever new encoder counts are
+     * available.
      *
      * After receiving data this then calculates various metrics like encoderCounts, distance,
      * and speed of each wheel. As the quadrature encoder pin states is updated FAR more frequently
