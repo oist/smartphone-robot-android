@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-03-31T10:05:05Z",
+  "event_ts": "2026-03-31T10:04:48Z",
+  "repo": "oist/smartphone-robot-android",
+  "event_name": "issues",
+  "action": "closed",
+  "actor": "topherbuckley",
+  "run_id": "23791801965",
+  "run_attempt": "1",
+  "sender": {
+    "login": "topherbuckley",
+    "html_url": "https://github.com/topherbuckley"
+  },
+  "issue": {
+    "number": 39,
+    "title": "Gradle sync error \"Compilation is not supported for the following modules: android.\"",
+    "state": "closed",
+    "html_url": "https://github.com/oist/smartphone-robot-android/issues/39",
+    "milestone": null
+  },
+  "pull_request": null,
+  "comment": null,
+  "milestone": null,
+  "changes": null,
+  "severity": "INFO",
+  "target_url": "https://github.com/oist/smartphone-robot-android/issues/39",
+  "event_id": "f5c479e2596bd5d97ecc96441d0edbe66474d30b107e743eea49adf47a741fb3"
+}
