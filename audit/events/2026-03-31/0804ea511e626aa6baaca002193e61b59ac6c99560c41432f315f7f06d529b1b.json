@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-03-31T10:02:53Z",
+  "event_ts": "2026-03-31T10:02:36Z",
+  "repo": "oist/smartphone-robot-android",
+  "event_name": "issues",
+  "action": "closed",
+  "actor": "topherbuckley",
+  "run_id": "23791715486",
+  "run_attempt": "1",
+  "sender": {
+    "login": "topherbuckley",
+    "html_url": "https://github.com/topherbuckley"
+  },
+  "issue": {
+    "number": 42,
+    "title": "Deprecated package Attribute in AndroidManifest.xml",
+    "state": "closed",
+    "html_url": "https://github.com/oist/smartphone-robot-android/issues/42",
+    "milestone": null
+  },
+  "pull_request": null,
+  "comment": null,
+  "milestone": null,
+  "changes": null,
+  "severity": "INFO",
+  "target_url": "https://github.com/oist/smartphone-robot-android/issues/42",
+  "event_id": "0804ea511e626aa6baaca002193e61b59ac6c99560c41432f315f7f06d529b1b"
+}
