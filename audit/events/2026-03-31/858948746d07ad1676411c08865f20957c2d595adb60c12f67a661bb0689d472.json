@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-03-31T10:02:15Z",
+  "event_ts": "2026-03-31T10:01:57Z",
+  "repo": "oist/smartphone-robot-android",
+  "event_name": "issues",
+  "action": "closed",
+  "actor": "topherbuckley",
+  "run_id": "23791689154",
+  "run_attempt": "1",
+  "sender": {
+    "login": "topherbuckley",
+    "html_url": "https://github.com/topherbuckley"
+  },
+  "issue": {
+    "number": 31,
+    "title": "LiteRT migration",
+    "state": "closed",
+    "html_url": "https://github.com/oist/smartphone-robot-android/issues/31",
+    "milestone": null
+  },
+  "pull_request": null,
+  "comment": null,
+  "milestone": null,
+  "changes": null,
+  "severity": "INFO",
+  "target_url": "https://github.com/oist/smartphone-robot-android/issues/31",
+  "event_id": "858948746d07ad1676411c08865f20957c2d595adb60c12f67a661bb0689d472"
+}
