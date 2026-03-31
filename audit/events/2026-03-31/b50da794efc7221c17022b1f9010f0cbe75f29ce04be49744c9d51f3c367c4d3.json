@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-03-31T10:02:53Z",
+  "event_ts": "2026-03-31T10:02:37Z",
+  "repo": "oist/smartphone-robot-android",
+  "event_name": "issues",
+  "action": "closed",
+  "actor": "topherbuckley",
+  "run_id": "23791716058",
+  "run_attempt": "1",
+  "sender": {
+    "login": "topherbuckley",
+    "html_url": "https://github.com/topherbuckley"
+  },
+  "issue": {
+    "number": 33,
+    "title": "Why are right wheel values negated?",
+    "state": "closed",
+    "html_url": "https://github.com/oist/smartphone-robot-android/issues/33",
+    "milestone": null
+  },
+  "pull_request": null,
+  "comment": null,
+  "milestone": null,
+  "changes": null,
+  "severity": "INFO",
+  "target_url": "https://github.com/oist/smartphone-robot-android/issues/33",
+  "event_id": "b50da794efc7221c17022b1f9010f0cbe75f29ce04be49744c9d51f3c367c4d3"
+}
