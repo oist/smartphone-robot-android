@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-03-31T09:51:55Z",
+  "event_ts": "2026-03-31T09:51:38Z",
+  "repo": "oist/smartphone-robot-android",
+  "event_name": "issues",
+  "action": "closed",
+  "actor": "topherbuckley",
+  "run_id": "23791277218",
+  "run_attempt": "1",
+  "sender": {
+    "login": "topherbuckley",
+    "html_url": "https://github.com/topherbuckley"
+  },
+  "issue": {
+    "number": 51,
+    "title": "Robot freezes without speed updated",
+    "state": "closed",
+    "html_url": "https://github.com/oist/smartphone-robot-android/issues/51",
+    "milestone": null
+  },
+  "pull_request": null,
+  "comment": null,
+  "milestone": null,
+  "changes": null,
+  "severity": "INFO",
+  "target_url": "https://github.com/oist/smartphone-robot-android/issues/51",
+  "event_id": "cd59fbf6b3a822b7670c502fb46f15abcd62dd799d289701d71ec8eed0f81109"
+}
