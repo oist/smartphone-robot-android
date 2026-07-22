@@ -281,6 +281,8 @@ def run_command(command: list[str]) -> None:
 
 
 def run_install_command(adb: str, apk: Path) -> subprocess.CompletedProcess[str]:
+    apk_size_mb = apk.stat().st_size / (1024 * 1024)
+    print(f"Installing {apk.name} ({apk_size_mb:.1f} MiB)...", flush=True)
     return subprocess.run(
         [adb, "install", "-r", "-d", str(apk)],
         cwd=ROOT,

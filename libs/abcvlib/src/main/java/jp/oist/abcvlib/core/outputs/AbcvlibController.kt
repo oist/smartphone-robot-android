@@ -1,6 +1,8 @@
 package jp.oist.abcvlib.core.outputs
 
 import jp.oist.abcvlib.util.ErrorHandler
+import jp.oist.abcvlib.util.ProcessPriorityThreadFactory
+import jp.oist.abcvlib.util.ScheduledExecutorServiceWithException
 import java.util.concurrent.TimeUnit
 
 abstract class AbcvlibController : Runnable {
@@ -11,6 +13,7 @@ abstract class AbcvlibController : Runnable {
     private var timeStep = 0
     private lateinit var timeUnit: TimeUnit
     private val TAG: String = javaClass.name
+    private var executor: ScheduledExecutorServiceWithException? = null
 
     private var _isRunning = false
     private lateinit var outputs: Outputs
@@ -56,11 +59,26 @@ abstract class AbcvlibController : Runnable {
     }
 
     fun startController() {
+        if (!this::outputs.isInitialized && executor == null) {
+            executor = ScheduledExecutorServiceWithException(
+                threadCount,
+                ProcessPriorityThreadFactory(threadPriority, name)
+            ).also {
+                it.scheduleWithFixedDelay(this, initDelay.toLong(), timeStep.toLong(), timeUnit)
+            }
+        }
         _isRunning = true
     }
 
     fun stopController() {
-        setOutput(0f, 0f)
+        if (this::outputs.isInitialized) {
+            setOutput(0f, 0f)
+        } else {
+            _output.left = 0f
+            _output.right = 0f
+        }
+        executor?.shutdown()
+        executor = null
         _isRunning = false
     }
 
@@ -84,7 +102,7 @@ abstract class AbcvlibController : Runnable {
     fun setOutput(left: Float, right: Float) {
         _output.left = left
         _output.right = right
-        if (_isRunning) {
+        if (_isRunning && this::outputs.isInitialized) {
             outputs.setWheelOutput(left, right, false, false)
         }
     }
