@@ -1,6 +1,7 @@
 package jp.oist.abcvlib.basicqrtransmitter
 
 import android.os.Bundle
+import android.widget.TextView
 import jp.oist.abcvlib.core.AbcvlibActivity
 import jp.oist.abcvlib.core.inputs.PublisherManager
 import jp.oist.abcvlib.core.inputs.phone.QRCodeData
@@ -23,27 +24,57 @@ import java.util.concurrent.TimeUnit
 class MainActivity : AbcvlibActivity(), SerialReadyListener, QRCodeDataSubscriber {
     private lateinit var qrCode: QRCode
     private lateinit var publisherManager: PublisherManager
+    private lateinit var emojiTextView: TextView
+
     private var speedL = 0f
     private var speedR = 0f
-    private val speed = 0.6f
-    private enum class ACTIONS { TURN_LEFT, TURN_RIGHT }
-    private var action = ACTIONS.TURN_RIGHT
+    private val speed = 0.4f
+
+    private enum class ACTIONS { FORWARD_1, BACKWARD_1, TURN_RIGHT, FORWARD_2, BACKWARD_2, TURN_LEFT }
+    private var action = ACTIONS.FORWARD_1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContentView(R.layout.activity_main)
 
         qrCode = QRCode(supportFragmentManager, R.id.qrFragmentView)
+
+        emojiTextView = findViewById(R.id.emojiTextView)
+        emojiTextView.text = "😊"
     }
 
     private val swapAction: Runnable = Runnable {
-        if (action == ACTIONS.TURN_RIGHT) {
-            action = ACTIONS.TURN_LEFT
-            turnRight()
-        } else {
-            action = ACTIONS.TURN_RIGHT
-            turnLeft()
+        when (action) {
+            ACTIONS.FORWARD_1 -> {
+                action = ACTIONS.BACKWARD_1
+                goForward()
+                updateEmoji("😁")
+            }
+            ACTIONS.BACKWARD_1 -> {
+                action = ACTIONS.TURN_RIGHT
+                goBackward()
+                updateEmoji("😅")
+            }
+            ACTIONS.TURN_RIGHT -> {
+                action = ACTIONS.FORWARD_2
+                turnRight()
+                updateEmoji("😎")
+            }
+            ACTIONS.FORWARD_2 -> {
+                action = ACTIONS.BACKWARD_2
+                goForward()
+                updateEmoji("😁")
+            }
+            ACTIONS.BACKWARD_2 -> {
+                action = ACTIONS.TURN_LEFT
+                goBackward()
+                updateEmoji("😅")
+            }
+            ACTIONS.TURN_LEFT -> {
+                action = ACTIONS.FORWARD_1
+                turnLeft()
+                updateEmoji("🤪")
+            }
         }
     }
 
@@ -64,7 +95,7 @@ class MainActivity : AbcvlibActivity(), SerialReadyListener, QRCodeDataSubscribe
         publisherManager.initializePublishers()
         publisherManager.startPublishers()
         val executor = ScheduledExecutorServiceWithException(1, ProcessPriorityThreadFactory(Thread.MIN_PRIORITY, "ActionSelector"))
-        executor.scheduleAtFixedRate(swapAction, 0, 10, TimeUnit.SECONDS)
+        executor.scheduleAtFixedRate(swapAction, 0, 5, TimeUnit.SECONDS)
     }
 
     override fun onQRCodeDetected(qrDataDecoded: String) {
@@ -73,25 +104,35 @@ class MainActivity : AbcvlibActivity(), SerialReadyListener, QRCodeDataSubscribe
         }
     }
 
-    // Main loop for any application extending AbcvlibActivity. This is where you will put your main code
     override fun abcvlibMainLoop() {
         outputs.setWheelOutput(speedL, speedR, false, false)
+    }
+
+    private fun goForward() {
+        speedL = speed
+        speedR = speed
+    }
+
+    private fun goBackward() {
+        speedL = -speed
+        speedR = -speed
     }
 
     private fun turnRight() {
         speedL = -speed
         speedR = speed
-        qrCodeRegenerate("R")
     }
 
     private fun turnLeft() {
         speedL = speed
         speedR = -speed
-        qrCodeRegenerate("L")
     }
 
-    private fun qrCodeRegenerate(qrcodeData: String) {
+    private fun updateEmoji(emoji: String) {
         qrCode.close()
-        qrCode.generate(qrcodeData)
+        qrCode.generate(emoji)
+        runOnUiThread {
+            emojiTextView.text = emoji
+        }
     }
 }

@@ -18,16 +18,12 @@ import jp.oist.abcvlib.util.UsbSerial
  */
 class MainActivity : AbcvlibActivity(), SerialReadyListener, QRCodeDataSubscriber {
     private lateinit var publisherManager: PublisherManager
-    private lateinit var letterTextView: TextView
-
-    private var speedL = 0f
-    private var speedR = 0f
-    private val speed = 0f
+    private lateinit var emojiTextView: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        letterTextView = findViewById(R.id.letterTextView)
+        emojiTextView = findViewById(R.id.emojiTextView)
     }
 
     override fun onSerialReady(usbSerial: UsbSerial) {
@@ -49,26 +45,16 @@ class MainActivity : AbcvlibActivity(), SerialReadyListener, QRCodeDataSubscribe
     }
 
     override fun onQRCodeDetected(qrDataDecoded: String) {
-        when (qrDataDecoded) {
-            "L" -> turnLeft()
-            "R" -> turnRight()
+        updateEmoji(qrDataDecoded)
+    }
+
+    private fun updateEmoji(emoji: String) {
+        runOnUiThread {
+            emojiTextView.text = emoji
         }
     }
 
-    // Main loop for any application extending AbcvlibActivity. This is where you will put your main code
-    override fun abcvlibMainLoop() {
-        outputs.setWheelOutput(speedL, speedR, false, false)
-    }
+    // don't move
+    override fun abcvlibMainLoop() {}
 
-    private fun turnRight() {
-        speedL = -speed
-        speedR = speed
-        runOnUiThread { letterTextView.text = "R" }
-    }
-
-    private fun turnLeft() {
-        speedL = speed
-        speedR = -speed
-        runOnUiThread { letterTextView.text = "L" }
-    }
 }
