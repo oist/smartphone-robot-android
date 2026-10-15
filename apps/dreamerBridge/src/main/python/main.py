@@ -283,6 +283,10 @@ drive_ms = 0.0    # cost of handing one action to the serial writer
 pace = PACE        # negotiated per connection
 max_hz = MAX_HZ    # negotiated per connection
 cmd_scale = 1.0    # every wheel command is multiplied by this (trainer's hello)
+# Share of each motor output that is the command's own feed-forward drive
+# (command_motors) rather than the policy's action; the trainer's hello or
+# the player's sidecar sets it. 0: the policy alone, as before.
+command_bias = 0.0
 weights_installed = 0  # weight pushes swapped in this session
 reward_avg = 0.0   # display only, see note_reward
 ep_return = 0.0
@@ -427,6 +431,8 @@ def setup_player(PolicyRunner):
     onboard = True
     max_hz = float(player['hz'])
     cmd_scale = float(player.get('command_scale', 1.0))
+    global command_bias
+    command_bias = float(player.get('command_bias', 0.0))
     # Nobody needs random targets on a finished policy: it balances until the
     # joystick says otherwise.
     commands.set_mode('manual')
@@ -512,7 +518,9 @@ def player_reward(sensors, act, cmd):
         err = math.hypot(forward - cmd[0] / k, spin - cmd[1] / k)
         track = math.exp(-(err / sigma) ** 2)
         mode = p.get('command_reward', 'sum')
-        if mode == 'product':
+        if mode == 'balance':
+            score = balance
+        elif mode == 'product':
             score = balance * track
         elif mode == 'taper_sum':
             w = 0.1 + 0.8 * min(1.0, math.hypot(cmd[0], cmd[1]))
@@ -547,7 +555,7 @@ def loop_player():
     snap, _, _ = sample()
     cmd = commands.tick()
     _, act = runner.act(snap, cmd)
-    drive(act[0], act[1])
+    policy_drive(act[0], act[1])
     note_reward(player_reward(snap, act, cmd))
     step += 1
     if step >= int(player['length']):
@@ -633,7 +641,7 @@ def loop():
             snap, _, _ = sample()
             cmd = commands.tick()
             _, act = runner.act(snap, cmd)
-            drive(act[0], act[1])
+            policy_drive(act[0], act[1])
             score_locally(snap, act, cmd)
             if prepare_ahead:
                 runner.prepare()
@@ -703,7 +711,7 @@ def loop():
                 step = 0
                 end_episode()
             else:
-                drive(act['left'], act['right'])
+                policy_drive(act['left'], act['right'])
             last_act = time.monotonic()
         elif time.monotonic() - last_act > ACTION_TIMEOUT:
             # The trainer has gone quiet. Coast rather than keep driving.
@@ -733,15 +741,37 @@ def loop():
         update_gui()
 
 
+def command_motors(f, t):
+    """The motor outputs that drive the robot as command (f, t) asks.
+
+    Toward the wheel speeds the trainer would ask for the same command; a
+    motor output and its wheel speed have opposite signs (measured
+    2026-10-15: output -1 read about +4700), hence the minus. The pair is
+    scaled so the busier motor is at most 1, keeping the heading.
+    """
+    sign = math.copysign(1.0, command_units[0]) if command_units \
+        else FORWARD_SIGN
+    left, right = -(sign * f + t), -(sign * f - t)
+    n = max(1.0, abs(left), abs(right))
+    return left / n, right / n
+
+
+def policy_drive(left, right):
+    """Drive a policy's action, mixed with the command's own drive."""
+    if command_bias:
+        bl, br = command_motors(*commands.current)
+        left = (1.0 - command_bias) * float(left) + command_bias * bl
+        right = (1.0 - command_bias) * float(right) + command_bias * br
+    drive(left, right)
+
+
 def loop_direct():
     """One step of the joystick driving the motors itself, no policy.
 
     For checking what a command asks is possible at all: full forward is both
     motors at full output, full turn is +-1 on the two, and in between the
     pair is scaled so the busier motor is at most 1 (the heading is kept).
-    The motors are driven toward the wheel speeds the trainer would ask for
-    the same command. A motor output and its wheel speed have opposite signs
-    (measured 2026-10-15: output -1 read about +4700), hence the minus.
+    The outputs are command_motors(): what the trainer would ask for.
     The output is not multiplied by the trainer's command_scale. A trainer
     link is dropped on entry and not retried until the mode changes back.
     """
@@ -753,10 +783,7 @@ def loop_direct():
     wait_for_pace()
     snap, _, _ = sample()
     f, t = commands.tick()
-    sign = math.copysign(1.0, command_units[0]) if command_units \
-        else FORWARD_SIGN
-    left, right = -(sign * f + t), -(sign * f - t)
-    n = max(1.0, abs(left), abs(right))
+    left, right = command_motors(f, t)
     global direct_out, direct_at
     # Ramp from the start too: direct_out is zeroed in any other mode.
     now = time.monotonic()
@@ -764,7 +791,7 @@ def loop_direct():
     direct_at = now
     direct_out = tuple(
         old + max(-room, min(room, new - old))
-        for old, new in zip(direct_out, (left / n, right / n)))
+        for old, new in zip(direct_out, (left, right)))
     drive(direct_out[0], direct_out[1], scale=1.0)
     score_locally(snap, direct_out, (f, t))
     update_gui()
@@ -907,7 +934,7 @@ def loop_onboard():
         snap, snap_stamp, snap_age = sample()
         cmd = commands.tick()
         obs, act = runner.act(snap, cmd)
-    drive(act[0], act[1])
+    policy_drive(act[0], act[1])
     applied = time.monotonic()
     last_act = applied
     seq += 1
@@ -1023,7 +1050,7 @@ def loop_trainer_serial():
             step = 0
             end_episode()
         else:
-            drive(act['left'], act['right'])
+            policy_drive(act['left'], act['right'])
     elif time.monotonic() - last_act > ACTION_TIMEOUT:
         # The trainer has gone quiet. Coast rather than keep driving.
         stop_wheels()
@@ -1395,6 +1422,8 @@ def connect():
         pace = hello.get('pace', PACE)
         global cmd_scale
         cmd_scale = float(hello.get('cmd_scale', 1.0))
+        global command_bias
+        command_bias = float(hello.get('command_bias', 0.0))
         # A command-task trainer says how to pick commands nobody steers.
         if hello.get('command'):
             commands.configure(hello['command'])
