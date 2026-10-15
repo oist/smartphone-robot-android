@@ -539,8 +539,9 @@ def player_reward(sensors, act, cmd):
             margin = float(p.get('bumper_margin', 0.0175))
             near = (offset >= float(p.get('bumper_hi', 0.161)) - margin or
                     offset <= float(p.get('bumper_lo', -0.120)) + margin)
-            w_up = 0.3 * (1.0 - min(1.0, math.hypot(cmd[0], cmd[1])))
-            score = -1.0 if near else w_up * balance + (1.0 - w_up) * track
+            still = abs(cmd[0]) < 1e-3 and abs(cmd[1]) < 1e-3
+            score = -1.0 if near else (
+                0.5 * balance + 0.5 * track if still else track)
         elif mode == 'gated':
             score = balance * (0.5 + 0.5 * track)
         elif mode == 'product':
