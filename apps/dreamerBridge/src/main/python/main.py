@@ -183,6 +183,10 @@ DEAD_ZONE = 0.097
 # VSET: abcvlib's scaling gives 0x05 -- a reserved value -- for anything under
 # 0.111. Nothing about the dead zone itself.
 MIN_DRIVE = 0.13
+# Which motor direction the joystick's forward is in direct mode until a
+# trainer says otherwise (its command_speed carries the sign): the robot's
+# positive wheel direction is backward (e1302, robot.py forward_sign).
+FORWARD_SIGN = -1.0
 # Above this the IMU sample is not late, it is from a different moment: the
 # sensor handler is backed up. Normal is ~10 ms.
 STALE_SENSOR_MS = 250.0
@@ -425,31 +429,41 @@ def player_reward(sensors, act, cmd):
     bonus = math.exp(-(offset / p['theta_sigma']) ** 2)
     left = float(sensors['wheel_speed_l'])
     right = float(sensors['wheel_speed_r'])
-    balance, track = 0.5 * linear + 0.5 * bonus, 0.0
+    balance = 0.5 * linear + 0.5 * bonus
     if p.get('task') == 'command' and command_units:
-        # _command_reward: penalties measured from the commanded wheel speeds.
+        # _command_reward: tracking is a Gaussian on the 2D (forward, turn)
+        # error; only the tilt-rate penalty is kept. Turn is read from the
+        # wheels whatever the run's turn_source.
         speed, turn = command_units
         sigma = float(p.get('command_sigma', 0.3))
         forward = 0.5 * (left + right) / speed
         spin = 0.5 * (left - right) / turn
-        track = 0.5 * (math.exp(-((forward - cmd[0]) / sigma) ** 2)
-                       + math.exp(-((spin - cmd[1]) / sigma) ** 2))
-        left -= cmd[0] * speed + cmd[1] * turn
-        right -= cmd[0] * speed - cmd[1] * turn
-        # 'sum' (e1299 and older sidecars, which carry no command_reward)
-        # is half and half; 'product' pays balance times tracking.
-        if p.get('command_reward', 'sum') == 'product':
-            balance, track = balance * track, 0.0
+        # As robot.py: no wheel asked for more than full forward gives it.
+        k = max(1.0, abs(cmd[0]) + abs(cmd[1] * turn / speed))
+        err = math.hypot(forward - cmd[0] / k, spin - cmd[1] / k)
+        track = math.exp(-(err / sigma) ** 2)
+        mode = p.get('command_reward', 'sum')
+        if mode == 'product':
+            score = balance * track
+        elif mode == 'taper_sum':
+            w = 0.1 + 0.8 * min(1.0, math.hypot(cmd[0], cmd[1]))
+            score = (1.0 - w) * balance + w * track
         else:
-            balance, track = 0.5 * balance, 0.5 * track
-    left *= p['speed_scale']
-    right *= p['speed_scale']
-    clip = p['drift_clip']
-    reward = (balance + track
-              - p['rate_penalty'] * abs(float(sensors['angular_velocity']))
-              - p['drift_penalty'] * min(abs(0.5 * (left + right)), clip)
-              - p['wheel_penalty'] * 0.5 * (min(abs(left), clip)
-                                            + min(abs(right), clip)))
+            # 'sum', and 'curriculum' as if its ramp were done; sidecars
+            # without command_reward (e1299 and older) are 'sum'.
+            score = (float(p.get('command_balance_weight', 0.5)) * balance
+                     + float(p.get('command_track_weight', 0.5)) * track)
+        reward = score - p['rate_penalty'] * abs(
+            float(sensors['angular_velocity']))
+    else:
+        left *= p['speed_scale']
+        right *= p['speed_scale']
+        clip = p['drift_clip']
+        reward = (balance
+                  - p['rate_penalty'] * abs(float(sensors['angular_velocity']))
+                  - p['drift_penalty'] * min(abs(0.5 * (left + right)), clip)
+                  - p['wheel_penalty'] * 0.5 * (min(abs(left), clip)
+                                                + min(abs(right), clip)))
     if p.get('action_rate_penalty'):
         reward -= p['action_rate_penalty'] * 0.5 * (
             abs(act[0] - prev_act[0]) + abs(act[1] - prev_act[1]))
@@ -535,6 +549,8 @@ def latency_block(taken_at, sensor_stamp, sensor_age_ms):
 def loop():
     """One control step, or one reconnect attempt if we are not connected."""
     global step, next_tick, last_act
+    if commands.settings['mode'] == 'direct':
+        return loop_direct()
     if player is not None:
         return loop_player()
     if sock is None:
@@ -644,6 +660,31 @@ def loop():
         update_gui()
 
 
+def loop_direct():
+    """One step of the joystick driving the motors itself, no policy.
+
+    For checking what a command asks is possible at all: full forward is both
+    motors at full output, full turn is +-1 on the two, and in between the
+    pair is scaled so the busier motor is at most 1 (the heading is kept).
+    The output is not multiplied by the trainer's command_scale. A trainer
+    link is dropped on entry and not retried until the mode changes back.
+    """
+    if sock is not None:
+        print('dreamerBridge: direct drive, dropping the trainer')
+        stop_wheels()
+        disconnect()
+    context.guiUpdater.setTrainerStatus('direct drive (no policy)')
+    wait_for_pace()
+    sample()
+    f, t = commands.tick()
+    sign = math.copysign(1.0, command_units[0]) if command_units \
+        else FORWARD_SIGN
+    left, right = sign * f + t, sign * f - t
+    n = max(1.0, abs(left), abs(right))
+    drive(left / n, right / n, scale=1.0)
+    update_gui()
+
+
 def note_reward(reward):
     """Track the reward the trainer scored for each step, for the display.
 
@@ -676,7 +717,8 @@ def update_gui():
     """Mirror the current step onto the phone screen, at a human rate."""
     global last_report, last_gui, control_hz
     now = time.monotonic()
-    if sock is None and player is None:
+    if sock is None and player is None and \
+            commands.settings['mode'] != 'direct':
         # Idle refresh rate is not the control rate; do not let it pollute it.
         control_hz = 0.0
         last_report = 0.0
@@ -1167,7 +1209,7 @@ def zero_fix(value, previous):
     return sign * MIN_DRIVE, False
 
 
-def drive(left, right):
+def drive(left, right, scale=None):
     """Hand an action to the wheels, and time what that costs us.
 
     This only reaches the serial writer's mailbox; the wheels move whenever the
@@ -1177,7 +1219,8 @@ def drive(left, right):
     global drive_ms, last_drive, cycle_ms, last_command, t_drive, t_dequeued
     # The policy acts in [-1, 1]; the trainer may cap the motors below full
     # power (env.robot.command_scale) without shrinking the policy's range.
-    left, right = float(left) * cmd_scale, float(right) * cmd_scale
+    scale = cmd_scale if scale is None else scale
+    left, right = float(left) * scale, float(right) * scale
     requested = (left, right)
     t0 = time.monotonic()
     lb = rb = False

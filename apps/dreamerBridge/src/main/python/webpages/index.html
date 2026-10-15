@@ -101,6 +101,7 @@
   <div class="modes">
     <button data-mode="manual">Balance when idle<br><span style="color:var(--ink3)">drive / test</span></button>
     <button data-mode="auto">Random targets when idle<br><span style="color:var(--ink3)">training</span></button>
+    <button data-mode="direct">Stick = motors<br><span style="color:var(--ink3)">no policy</span></button>
   </div>
   <div id="padwrap">
     <div id="pad">
@@ -329,7 +330,7 @@ const rate = gauge("m-rate", "angular velocity", "deg/s", -200, 200, 1);
 const wl = wheel("m-wl", "left"), wr = wheel("m-wr", "right");
 
 // --- state ---------------------------------------------------------------
-const SRC = { joystick: "joystick", auto: "random", idle: "balance" };
+const SRC = { joystick: "joystick", auto: "random", idle: "balance", stopped: "stopped" };
 function render(s) {
   const cmd = s.cmd || [0, 0], meas = s.measured;
   drawGrid(s.grid || 0);

@@ -13,16 +13,20 @@ Where it comes from, in order:
 * otherwise, by mode:
   - 'auto': a random command, held for hold_min..hold_max seconds. Zero with
     p_zero, one axis only with p_axis (forward or turn, evenly), both axes
-    otherwise. Each nonzero axis is a multiple of `step` (0.5: -1, -0.5,
-    0.5, 1) or, with step 0, anywhere in [-1, 1]. This is what training runs
+    otherwise, inside the unit disk like the joystick. Each nonzero axis is a
+    multiple of `step` (0.5: -1, -0.5, 0.5, 1; a both-axes pair outside the
+    disk is scaled onto it) or, with step 0, anywhere in [-1, 1]. This is what training runs
     on; nobody can steer for an hour.
   - 'manual': zero, which is "balance in place".
+  - 'direct': no policy at all. The joystick sets the motor outputs itself
+    (main.loop_direct), to see what the wheels can do; zero when let go.
 
 Training starts in 'auto', the trainer's handshake sets the sampler
 (`command` in its hello, which also resets the mode to the run's), the web
 page can switch the mode at any time, and the player starts in 'manual'.
 """
 
+import math
 import random
 import threading
 import time
@@ -61,8 +65,9 @@ class CommandSource:
             self._auto_until = 0.0
 
     def set_mode(self, mode):
-        if mode not in ('auto', 'manual'):
-            raise ValueError('mode must be auto or manual, not %r' % mode)
+        if mode not in ('auto', 'manual', 'direct'):
+            raise ValueError(
+                'mode must be auto, manual or direct, not %r' % mode)
         with self._lock:
             self.settings['mode'] = mode
             self._auto_until = 0.0
@@ -100,7 +105,8 @@ class CommandSource:
                         float(s['hold_min']), float(s['hold_max']))
                 cmd, src = self._auto, 'auto'
             else:
-                cmd, src = (0.0, 0.0), 'idle'
+                stopped = self.settings['mode'] == 'direct'
+                cmd, src = (0.0, 0.0), 'stopped' if stopped else 'idle'
         self.current, self.source = cmd, src
         return [cmd[0], cmd[1]]
 
@@ -122,4 +128,13 @@ class CommandSource:
             if self._rng.random() < 0.5:
                 return (self._value(), 0.0)
             return (0.0, self._value())
-        return (self._value(), self._value())
+        # Both axes: a point in the unit disk, the joystick's own range. The
+        # trainer scores the command as one (forward, turn) vector, and a
+        # square corner like (1, 1) asks one wheel for speed + turn at once.
+        if float(s.get('step') or 0.0) <= 0:
+            r = math.sqrt(self._rng.random())
+            a = self._rng.uniform(0.0, 2.0 * math.pi)
+            return (r * math.cos(a), r * math.sin(a))
+        f, t = self._value(), self._value()
+        n = max(1.0, math.hypot(f, t))
+        return (f / n, t / n)

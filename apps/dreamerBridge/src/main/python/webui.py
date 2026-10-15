@@ -8,7 +8,7 @@ page: / is the joystick (with a few live numbers), /mirror the robot's screen.
     GET  /ws          a WebSocket: state pushed at WEB_HZ, commands sent back
     GET  /state       the screen's numbers as JSON (fallback: polling)
     POST /cmd         {"forward": f, "turn": t} in [-1, 1], or {"release": true}
-    POST /mode        {"mode": "auto" | "manual"}
+    POST /mode        {"mode": "auto" | "manual" | "direct"}
 
 The page talks over one WebSocket. Polling plain HTTP was measured at ~110 ms
 (p50) from a posted command to the page seeing it, up to ~250 ms: a fresh TCP
