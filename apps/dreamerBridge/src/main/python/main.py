@@ -266,7 +266,8 @@ DEFAULT_REWARD = dict(
     theta_hi=0.182, theta_sigma=0.05, speed_scale=1e-4, drift_penalty=0.1,
     drift_clip=1.0, wheel_penalty=0.0, rate_penalty=0.05,
     action_rate_penalty=0.0, command_speed=4900.0, command_turn=4900.0,
-    command_sigma=0.4, command_reward='taper_sum', forward_sign=-1.0)
+    command_sigma=0.4, command_reward='taper_sum', forward_sign=-1.0,
+    bumper_lo=-0.120, bumper_hi=0.161, bumper_margin=0.0175)
 reward_settings = dict(DEFAULT_REWARD)
 prev_act = (0.0, 0.0)
 pipeline = True
@@ -534,6 +535,11 @@ def player_reward(sensors, act, cmd):
         mode = p.get('command_reward', 'sum')
         if mode == 'balance':
             score = balance
+        elif mode == 'bumper':
+            margin = float(p.get('bumper_margin', 0.0175))
+            near = (offset >= float(p.get('bumper_hi', 0.161)) - margin or
+                    offset <= float(p.get('bumper_lo', -0.120)) + margin)
+            score = -1.0 if near else 0.3 * balance + 0.7 * track
         elif mode == 'gated':
             score = balance * (0.5 + 0.5 * track)
         elif mode == 'product':
