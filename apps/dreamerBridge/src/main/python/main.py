@@ -539,7 +539,7 @@ def player_reward(sensors, act, cmd):
             margin = float(p.get('bumper_margin', 0.0175))
             near = (offset >= float(p.get('bumper_hi', 0.161)) - margin or
                     offset <= float(p.get('bumper_lo', -0.120)) + margin)
-            score = -1.0 if near else track
+            score = -float(p.get('bumper_penalty', 1.0)) if near else track
         elif mode == 'bumper':
             margin = float(p.get('bumper_margin', 0.0175))
             near = (offset >= float(p.get('bumper_hi', 0.161)) - margin or
