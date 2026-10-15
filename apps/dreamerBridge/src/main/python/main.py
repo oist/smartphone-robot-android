@@ -520,6 +520,8 @@ def player_reward(sensors, act, cmd):
         mode = p.get('command_reward', 'sum')
         if mode == 'balance':
             score = balance
+        elif mode == 'gated':
+            score = balance * (0.5 + 0.5 * track)
         elif mode == 'product':
             score = balance * track
         elif mode == 'taper_sum':
@@ -1339,6 +1341,11 @@ def drive(left, right, scale=None):
     # power (env.robot.command_scale) without shrinking the policy's range.
     scale = cmd_scale if scale is None else scale
     left, right = float(left) * scale, float(right) * scale
+    # A non-finite output would pass every clamp below as a full one.
+    if not (math.isfinite(left) and math.isfinite(right)):
+        print('dreamerBridge: non-finite wheel command (%r, %r); stopping'
+              % (left, right))
+        left, right = 0.0, 0.0
     if not no_base:
         left = limit_current(left, sensors['wheel_speed_l'])
         right = limit_current(right, sensors['wheel_speed_r'])
