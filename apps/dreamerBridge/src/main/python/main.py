@@ -192,6 +192,19 @@ FORWARD_SIGN = -1.0
 # at once from full speed (2026-10-15) left the base answering in ~95 ms
 # with the battery and encoders reading nothing until it was power-cycled.
 DIRECT_RAMP = 4.0
+# Every motor output, from any source, is kept within CURRENT_GAP of the
+# output that would hold the wheel at its present speed. Motor current goes
+# with that gap (drive voltage minus back-EMF), so this caps it at what a
+# start from rest draws: from rest any output is allowed, but a full-speed
+# wheel cannot be thrown into full reverse (a gap of ~2), which twice
+# faulted the base on 2026-10-15 -- once in direct drive and once while
+# training e1460 -- leaving it answering slowly with the battery and encoders
+# reading 0 until power-cycled. Braking is still allowed at once down to
+# zero output from full speed; reversing then follows the wheel down.
+CURRENT_GAP = 1.0
+# Wheel speed (mm/s) at full output, wheels in the air (2026-10-15); a
+# positive output reads a negative speed.
+WHEEL_SPEED_MAX = 5700.0
 direct_out = (0.0, 0.0)
 direct_at = 0.0
 # Above this the IMU sample is not late, it is from a different moment: the
@@ -1281,6 +1294,12 @@ def zero_fix(value, previous):
     return sign * MIN_DRIVE, False
 
 
+def limit_current(output, speed):
+    """`output`, moved to within CURRENT_GAP of the wheel's own speed."""
+    held = -float(speed) / WHEEL_SPEED_MAX
+    return max(held - CURRENT_GAP, min(held + CURRENT_GAP, output))
+
+
 def drive(left, right, scale=None):
     """Hand an action to the wheels, and time what that costs us.
 
@@ -1293,6 +1312,9 @@ def drive(left, right, scale=None):
     # power (env.robot.command_scale) without shrinking the policy's range.
     scale = cmd_scale if scale is None else scale
     left, right = float(left) * scale, float(right) * scale
+    if not no_base:
+        left = limit_current(left, sensors['wheel_speed_l'])
+        right = limit_current(right, sensors['wheel_speed_r'])
     requested = (left, right)
     t0 = time.monotonic()
     lb = rb = False
