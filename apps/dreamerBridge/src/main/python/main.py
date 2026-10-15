@@ -183,10 +183,17 @@ DEAD_ZONE = 0.097
 # VSET: abcvlib's scaling gives 0x05 -- a reserved value -- for anything under
 # 0.111. Nothing about the dead zone itself.
 MIN_DRIVE = 0.13
-# Which motor direction the joystick's forward is in direct mode until a
+# Sign of the wheel *speed* that is forward (robot.py forward_sign) until a
 # trainer says otherwise (its command_speed carries the sign): the robot's
-# positive wheel direction is backward (e1302, robot.py forward_sign).
+# positive wheel speed is backward (e1302).
 FORWARD_SIGN = -1.0
+# Direct drive changes a motor output by at most this much per second, so a
+# flick of the stick from full forward to full back takes 0.5 s. Reversing
+# at once from full speed (2026-10-15) left the base answering in ~95 ms
+# with the battery and encoders reading nothing until it was power-cycled.
+DIRECT_RAMP = 4.0
+direct_out = (0.0, 0.0)
+direct_at = 0.0
 # Above this the IMU sample is not late, it is from a different moment: the
 # sensor handler is backed up. Normal is ~10 ms.
 STALE_SENSOR_MS = 250.0
@@ -238,6 +245,16 @@ no_base = False
 player_policy = None
 player_eval = True
 player = None      # the sidecar dict once loaded
+# How to score steps when no trainer does (idle, standalone, direct drive):
+# the last trainer's settings, kept in reward_settings.json across restarts,
+# else these -- robot.py's defaults with robot_command_taper_sum on top.
+DEFAULT_REWARD = dict(
+    task='command', length=500, theta_zero=0.0, theta_lo=-0.122,
+    theta_hi=0.182, theta_sigma=0.05, speed_scale=1e-4, drift_penalty=0.1,
+    drift_clip=1.0, wheel_penalty=0.0, rate_penalty=0.05,
+    action_rate_penalty=0.0, command_speed=4900.0, command_turn=4900.0,
+    command_sigma=0.4, command_reward='taper_sum', forward_sign=-1.0)
+reward_settings = dict(DEFAULT_REWARD)
 prev_act = (0.0, 0.0)
 pipeline = True
 imu_stamp = 0.0     # monotonic time of the last orientation callback
@@ -320,6 +337,7 @@ def setup():
     global web, web_url
     web = webui.WebUI(commands)
     web_url = web.start() or ''
+    load_reward_settings()
     from policy_runner import PolicyRunner
     if player_policy:
         setup_player(PolicyRunner)
@@ -405,6 +423,44 @@ def setup_player(PolicyRunner):
         player['name'], max_hz, runner.mode))
 
 
+def reward_settings_path():
+    return os.path.join(
+        str(context.getExternalFilesDir(None)), 'reward_settings.json')
+
+
+def load_reward_settings():
+    global reward_settings
+    try:
+        with open(reward_settings_path()) as f:
+            reward_settings = dict(DEFAULT_REWARD, **json.load(f))
+    except Exception:  # noqa: BLE001 -- no trainer has connected yet
+        reward_settings = dict(DEFAULT_REWARD)
+    note_command_units(reward_settings)
+
+
+def save_reward_settings(settings):
+    """Keep a trainer's reward settings, to score with after it is gone."""
+    global reward_settings
+    if not settings or 'theta_zero' not in settings:
+        return
+    reward_settings = dict(DEFAULT_REWARD, **settings)
+    try:
+        tmp = reward_settings_path() + '.tmp'
+        with open(tmp, 'w') as f:
+            json.dump(reward_settings, f)
+        os.replace(tmp, reward_settings_path())
+    except Exception as e:  # noqa: BLE001 -- display only
+        print('dreamerBridge: could not save reward settings: %s' % e)
+
+
+def score_locally(snap, act, cmd):
+    """Show the training reward for a step no trainer scored."""
+    note_reward(player_reward(snap, act, cmd))
+    p = player if player is not None else reward_settings
+    if ep_steps >= int(p.get('length', 500)):
+        end_episode()
+
+
 def note_command_units(settings):
     """Wheel speeds per command unit, signed: forward_sign -1 means forward
     is the robot's negative wheel direction (robot.py)."""
@@ -420,7 +476,7 @@ def player_reward(sensors, act, cmd):
     """The training reward (embodied/envs/robot.py, tasks balance and
     command), for display."""
     global prev_act
-    p = player
+    p = player if player is not None else reward_settings
     if 'theta_zero' not in p:
         return 0.0
     offset = float(sensors['theta']) - p['theta_zero']
@@ -549,8 +605,10 @@ def latency_block(taken_at, sensor_stamp, sensor_age_ms):
 def loop():
     """One control step, or one reconnect attempt if we are not connected."""
     global step, next_tick, last_act
+    global direct_out, direct_at
     if commands.settings['mode'] == 'direct':
         return loop_direct()
+    direct_out, direct_at = (0.0, 0.0), 0.0
     if player is not None:
         return loop_player()
     if sock is None:
@@ -560,8 +618,10 @@ def loop():
             # ticks; experience collected now is simply not recorded.
             wait_for_pace()
             snap, _, _ = sample()
-            _, act = runner.act(snap, commands.tick())
+            cmd = commands.tick()
+            _, act = runner.act(snap, cmd)
             drive(act[0], act[1])
+            score_locally(snap, act, cmd)
             if prepare_ahead:
                 runner.prepare()
             if time.monotonic() - last_attempt >= RETRY_DELAY:
@@ -573,8 +633,8 @@ def loop():
         # sensor readout on its own and not only while a trainer is attached.
         # Connection attempts stay on their own slower cadence.
         stop_wheels()
-        sample()
-        commands.tick()  # nothing follows it yet, but the page shows it
+        snap, _, _ = sample()
+        score_locally(snap, (0.0, 0.0), commands.tick())
         update_gui()
         if time.monotonic() - last_attempt >= RETRY_DELAY:
             connect()
@@ -666,6 +726,9 @@ def loop_direct():
     For checking what a command asks is possible at all: full forward is both
     motors at full output, full turn is +-1 on the two, and in between the
     pair is scaled so the busier motor is at most 1 (the heading is kept).
+    The motors are driven toward the wheel speeds the trainer would ask for
+    the same command. A motor output and its wheel speed have opposite signs
+    (measured 2026-10-15: output -1 read about +4700), hence the minus.
     The output is not multiplied by the trainer's command_scale. A trainer
     link is dropped on entry and not retried until the mode changes back.
     """
@@ -675,13 +738,22 @@ def loop_direct():
         disconnect()
     context.guiUpdater.setTrainerStatus('direct drive (no policy)')
     wait_for_pace()
-    sample()
+    snap, _, _ = sample()
     f, t = commands.tick()
     sign = math.copysign(1.0, command_units[0]) if command_units \
         else FORWARD_SIGN
-    left, right = sign * f + t, sign * f - t
+    left, right = -(sign * f + t), -(sign * f - t)
     n = max(1.0, abs(left), abs(right))
-    drive(left / n, right / n, scale=1.0)
+    global direct_out, direct_at
+    # Ramp from the start too: direct_out is zeroed in any other mode.
+    now = time.monotonic()
+    room = DIRECT_RAMP * min(now - direct_at, 0.1) if direct_at else 0.0
+    direct_at = now
+    direct_out = tuple(
+        old + max(-room, min(room, new - old))
+        for old, new in zip(direct_out, (left / n, right / n)))
+    drive(direct_out[0], direct_out[1], scale=1.0)
+    score_locally(snap, direct_out, (f, t))
     update_gui()
 
 
@@ -1305,6 +1377,8 @@ def connect():
         if hello.get('command'):
             commands.configure(hello['command'])
         note_command_units(hello.get('settings'))
+        save_reward_settings(hello.get('settings'))
+        end_episode()  # the idle steps scored here are not this run's
         max_hz = float(hello.get('max_hz', settings['max_hz']))
         if pace not in ('serial', 'clock'):
             raise ValueError('Unknown pacing %r' % pace)

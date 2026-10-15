@@ -9,6 +9,10 @@ import jp.oist.abcvlib.dreamerBridge.databinding.ActivityMainBinding
 import java.util.Locale
 import kotlin.concurrent.Volatile
 
+// Wheel speed (mm/s) at full motor output with the wheels in the air,
+// measured 2026-10-15 (dreamerv3 docs/ROBOT_BRIDGE_FINDINGS.md).
+const val WHEEL_SPEED_MAX = 5700.0
+
 /**
  * On-screen mirror of what the bridge is sending and receiving. Every field is
  * written from the Python control loop and read on the UI thread, so all of
@@ -153,10 +157,10 @@ class GuiUpdater(
         // The wheels take whatever height is left, so the screen is always full.
         col.addView(text(name, Palette.INK_2, 14f).apply { gravity = Gravity.CENTER })
         // Command as the column's fill; measured speed as a narrow strip down
-        // its middle, scaled to the largest speed seen (decaying), so the
-        // column stays symmetric under its centred label and numbers.
+        // its middle, as a fraction of the in-air top speed and signed like
+        // the motor output (a positive output reads a negative speed), so
+        // full output with the wheels free fills the column like the command.
         val c = BarView(activity, -1.0, 1.0, signed = true, vertical = true)
-        var speedSpan = 1.0
         col.addView(c, LinearLayout.LayoutParams(dp(64), 0, 1f)
             .apply { topMargin = dp(6); bottomMargin = dp(6) })
         val cv = text("", Palette.INK, 22f, bold = true).apply { gravity = Gravity.CENTER }
@@ -165,9 +169,8 @@ class GuiUpdater(
         col.addView(sv)
         updates += {
             val s = speed()
-            speedSpan = maxOf(speedSpan * 0.995, kotlin.math.abs(s) * 1.1, 1.0)
             c.value = cmd()
-            c.secondary = s / speedSpan
+            c.secondary = (-s / WHEEL_SPEED_MAX).coerceIn(-1.0, 1.0)
             cv.text = String.format(Locale.US, "%+.2f", c.value)
             sv.text = String.format(Locale.US, "speed %+.0f", s)
         }

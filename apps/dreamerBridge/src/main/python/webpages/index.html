@@ -167,6 +167,8 @@
 const $ = id => document.getElementById(id);
 const fmt = (v, d = 2) => (v == null || isNaN(v)) ? "-" : (v >= 0 ? "+" : "") + Number(v).toFixed(d);
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+// mm/s at full motor output, wheels in the air (measured 2026-10-15).
+const WHEEL_SPEED_MAX = 5700;
 
 // --- views ---------------------------------------------------------------
 function show(view) {
@@ -313,11 +315,12 @@ function wheel(id, name) {
   const el = $(id);
   el.innerHTML = `<div class="k">${name}</div><div class="col"><div class="fill"></div><div class="strip"></div><div class="zero"></div></div>
     <div class="v">-</div><div class="s">-</div>`;
-  let span = 1;
+  // Speed as a fraction of the in-air top speed, signed like the motor
+  // output (positive output reads a negative speed): full output with the
+  // wheels free fills the column like the command does.
   return (cmd, speed) => {
-    span = Math.max(span * 0.995, Math.abs(speed) * 1.1, 1);
     const fill = el.querySelector(".fill"), strip = el.querySelector(".strip");
-    const c = clamp(cmd, -1, 1), s = clamp(speed / span, -1, 1);
+    const c = clamp(cmd, -1, 1), s = clamp(-speed / WHEEL_SPEED_MAX, -1, 1);
     fill.style.top = (c >= 0 ? 50 - 50 * c : 50) + "%"; fill.style.height = Math.abs(50 * c) + "%";
     fill.style.background = c >= 0 ? "var(--blue)" : "var(--red)";
     strip.style.top = (s >= 0 ? 50 - 50 * s : 50) + "%"; strip.style.height = Math.abs(50 * s) + "%";
