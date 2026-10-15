@@ -287,6 +287,19 @@ cmd_scale = 1.0    # every wheel command is multiplied by this (trainer's hello)
 # (command_motors) rather than the policy's action; the trainer's hello or
 # the player's sidecar sets it. 0: the policy alone, as before.
 command_bias = 0.0
+# Friction compensation of policy outputs (friction_comp in the trainer's
+# hello or the player's sidecar). Measured 2026-10-15: a still wheel starts
+# only at ~0.3 output and then jumps to ~1400 mm/s; a turning one keeps
+# turning down to ~0.12. So an action a becomes sign(a) * (FRICTION_KINETIC
+# + (1 - FRICTION_KINETIC) * |a|), and a wheel that is still while the action
+# asks it to move gets FRICTION_BREAKAWAY for one step to unstick it -- not
+# two in a row, so a wheel held against something is not driven there.
+friction_comp = False
+FRICTION_KINETIC = 0.12
+FRICTION_BREAKAWAY = 0.32
+FRICTION_STILL = 100.0   # mm/s: below this a wheel counts as stuck
+FRICTION_ZERO = 0.02     # actions smaller than this stay zero
+kicked = [False, False]
 weights_installed = 0  # weight pushes swapped in this session
 reward_avg = 0.0   # display only, see note_reward
 ep_return = 0.0
@@ -431,8 +444,9 @@ def setup_player(PolicyRunner):
     onboard = True
     max_hz = float(player['hz'])
     cmd_scale = float(player.get('command_scale', 1.0))
-    global command_bias
+    global command_bias, friction_comp
     command_bias = float(player.get('command_bias', 0.0))
+    friction_comp = bool(player.get('friction_comp', False))
     # Nobody needs random targets on a finished policy: it balances until the
     # joystick says otherwise.
     commands.set_mode('manual')
@@ -758,12 +772,31 @@ def command_motors(f, t):
     return left / n, right / n
 
 
+def compensate(action, speed, wheel):
+    """One wheel's output for `action` under friction compensation."""
+    a = float(action)
+    if abs(a) < FRICTION_ZERO:
+        kicked[wheel] = False
+        return 0.0
+    out = math.copysign(FRICTION_KINETIC + (1 - FRICTION_KINETIC) * abs(a), a)
+    still = abs(float(speed)) < FRICTION_STILL
+    if still and not kicked[wheel] and abs(out) < FRICTION_BREAKAWAY:
+        kicked[wheel] = True
+        return math.copysign(FRICTION_BREAKAWAY, a)
+    kicked[wheel] = False
+    return out
+
+
 def policy_drive(left, right):
-    """Drive a policy's action, mixed with the command's own drive."""
+    """Drive a policy's action: mixed with the command's own drive, then
+    compensated for friction, as the run asks."""
     if command_bias:
         bl, br = command_motors(*commands.current)
         left = (1.0 - command_bias) * float(left) + command_bias * bl
         right = (1.0 - command_bias) * float(right) + command_bias * br
+    if friction_comp:
+        left = compensate(left, sensors['wheel_speed_l'], 0)
+        right = compensate(right, sensors['wheel_speed_r'], 1)
     drive(left, right)
 
 
@@ -1429,8 +1462,9 @@ def connect():
         pace = hello.get('pace', PACE)
         global cmd_scale
         cmd_scale = float(hello.get('cmd_scale', 1.0))
-        global command_bias
+        global command_bias, friction_comp
         command_bias = float(hello.get('command_bias', 0.0))
+        friction_comp = bool(hello.get('friction_comp', False))
         # A command-task trainer says how to pick commands nobody steers.
         if hello.get('command'):
             commands.configure(hello['command'])

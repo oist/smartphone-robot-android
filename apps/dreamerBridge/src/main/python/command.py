@@ -21,6 +21,11 @@ Where it comes from, in order:
   - 'direct': no policy at all. The joystick sets the motor outputs itself
     (main.loop_direct), to see what the wheels can do; zero when let go.
 
+With `ramp` > 0 the command handed out moves toward the chosen one at that
+many units per second, from any source: a balancing robot has to lean before
+it can speed up, and a step in the command leaves it no time to. The policy
+sees and is scored against the ramped command.
+
 Training starts in 'auto', the trainer's handshake sets the sampler
 (`command` in its hello, which also resets the mode to the run's), the web
 page can switch the mode at any time, and the player starts in 'manual'.
@@ -40,7 +45,7 @@ JOYSTICK_HOLD = 0.5
 # "Balance when idle" after every app restart until a trainer connected.
 # The player switches to 'manual' itself.
 DEFAULTS = dict(mode='auto', hold_min=2.0, hold_max=5.0, p_zero=0.3,
-                p_axis=0.4, step=0.0)
+                p_axis=0.4, step=0.0, ramp=0.0)
 
 
 class CommandSource:
@@ -55,6 +60,7 @@ class CommandSource:
         self._stick_at = -1e9
         self.current = (0.0, 0.0)
         self.source = 'idle'
+        self._ticked = 0.0
 
     def configure(self, settings):
         """Sampler settings from the trainer's hello; missing keys keep theirs."""
@@ -107,6 +113,14 @@ class CommandSource:
             else:
                 stopped = self.settings['mode'] == 'direct'
                 cmd, src = (0.0, 0.0), 'stopped' if stopped else 'idle'
+            ramp = float(self.settings.get('ramp') or 0.0)
+            if ramp > 0:
+                # The first tick holds still: no interval to ramp over yet.
+                room = ramp * min(now - self._ticked, 0.1) \
+                    if self._ticked else 0.0
+                cmd = tuple(old + max(-room, min(room, new - old))
+                            for old, new in zip(self.current, cmd))
+            self._ticked = now
         self.current, self.source = cmd, src
         return [cmd[0], cmd[1]]
 
