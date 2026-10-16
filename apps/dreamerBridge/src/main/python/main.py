@@ -810,6 +810,15 @@ def policy_drive(left, right):
     if friction_comp:
         left = compensate(left, sensors['wheel_speed_l'], 0)
         right = compensate(right, sensors['wheel_speed_r'], 1)
+    w = commands.blend
+    if w > 0:
+        # 'blend' mode: the stick's own motor outputs, as in direct drive (not
+        # multiplied by command_scale), take share w of the policy's.
+        sl, sr = command_motors(*commands.current)
+        left = (1.0 - w) * float(left) * cmd_scale + w * sl
+        right = (1.0 - w) * float(right) * cmd_scale + w * sr
+        drive(left, right, scale=1.0)
+        return
     drive(left, right)
 
 
@@ -945,7 +954,8 @@ def web_state():
         status=web_status[0], serial=web_status[1],
         cmd=list(commands.current), cmd_src=commands.source,
         mode=commands.settings['mode'], measured=measured,
-        grid=float(commands.settings.get('step') or 0.0))
+        grid=0.0 if commands.settings['mode'] == 'blend'
+        else float(commands.settings.get('step') or 0.0))
 
 
 def loop_onboard():

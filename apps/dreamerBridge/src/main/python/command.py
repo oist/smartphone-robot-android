@@ -60,6 +60,8 @@ class CommandSource:
         self._stick_at = -1e9
         self.current = (0.0, 0.0)
         self.source = 'idle'
+        # The stick's share of the motors in 'blend' mode, 0..1.
+        self.blend = 0.0
         self._ticked = 0.0
 
     def configure(self, settings):
@@ -71,9 +73,9 @@ class CommandSource:
             self._auto_until = 0.0
 
     def set_mode(self, mode):
-        if mode not in ('auto', 'manual', 'direct'):
+        if mode not in ('auto', 'manual', 'direct', 'blend'):
             raise ValueError(
-                'mode must be auto, manual or direct, not %r' % mode)
+                'mode must be auto, manual, direct or blend, not %r' % mode)
         with self._lock:
             self.settings['mode'] = mode
             self._auto_until = 0.0
@@ -86,7 +88,7 @@ class CommandSource:
         # levels -1, -0.5, 0, 0.5, 1 never saw anything in between. The page
         # snaps too; this covers any other client.
         step = float(self.settings.get('step') or 0.0)
-        if step > 0:
+        if step > 0 and self.settings['mode'] != 'blend':
             forward = round(forward / step) * step
             turn = round(turn / step) * step
         with self._lock:
@@ -122,6 +124,12 @@ class CommandSource:
                             for old, new in zip(self.current, cmd))
             self._ticked = now
         self.current, self.source = cmd, src
+        if self.settings['mode'] == 'blend':
+            # The policy only balances; the stick reaches the motors through
+            # main.policy_drive, weighted by how far it is pushed.
+            self.blend = min(1.0, math.hypot(cmd[0], cmd[1]))
+            return [0.0, 0.0]
+        self.blend = 0.0
         return [cmd[0], cmd[1]]
 
     def _value(self):

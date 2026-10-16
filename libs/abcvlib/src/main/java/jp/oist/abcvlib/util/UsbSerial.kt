@@ -96,6 +96,11 @@ class UsbSerial @Throws(IOException::class) constructor(
         ContextCompat.registerReceiver(context, usbReceiver, filter, RECEIVER_NOT_EXPORTED)
     }
 
+    private fun isBase(d: UsbDevice): Boolean =
+        (d.manufacturerName == "Seeed" && d.productName == "Seeeduino XIAO") ||
+            (d.manufacturerName == "Raspberry Pi" &&
+                (d.productName == "Pico" || d.productName == "Pico Test Device"))
+
     @Throws(IOException::class)
     private fun connect(device: UsbDevice) {
         if (usbManager.hasPermission(device)) {
@@ -124,6 +129,10 @@ class UsbSerial @Throws(IOException::class) constructor(
         Logger.i(Thread.currentThread().name, "Opening port")
         val driver = getDriver()
         val port = driver.ports[0] // Most devices have just one port (port 0)
+        if (this::port.isInitialized) {
+            // The previous port belongs to a device that is gone; release it.
+            try { this.port.close() } catch (e: Exception) { }
+        }
         try {
             port.open(connection)
             port.setParameters(115200, 8, 1, UsbSerialPort.PARITY_NONE)
@@ -508,6 +517,22 @@ class UsbSerial @Throws(IOException::class) constructor(
                 UsbManager.EXTRA_DEVICE,
                 UsbDevice::class.java
             )
+            if (intent.action == UsbManager.ACTION_USB_DEVICE_ATTACHED) {
+                // The base came back (an RP2040 reset re-enumerates USB). Before
+                // 2026-10-16 only a permission grant reconnected, and nothing
+                // asked for one after a re-attach, so the app sat without wheels.
+                if (device != null && isBase(device)) {
+                    Logger.i("serial", "Base re-attached; reconnecting")
+                    synchronized(this) {
+                        try {
+                            connect(device)
+                        } catch (e: Exception) {
+                            Logger.e("serial", "Reconnect failed: $e")
+                        }
+                    }
+                }
+                return
+            }
             if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
                 val action = intent.action
                 if (ACTION_USB_PERMISSION == action) {

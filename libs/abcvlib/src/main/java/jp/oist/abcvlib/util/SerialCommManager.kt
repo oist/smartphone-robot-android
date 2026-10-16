@@ -129,6 +129,7 @@ class SerialCommManager @JvmOverloads constructor(
             logSerialTx(inFlightTrace)
             val isMotor = AndroidToRP2040Command.getEnumByValue(nextCommand[1]) ==
                     AndroidToRP2040Command.SET_MOTOR_LEVELS
+            try {
             if (ControlLatencyTrace.asyncMotor && isMotor) {
                 // Fire and forget, then drain whatever the RP2040 has answered
                 // in the meantime. The state packets still land, they are just
@@ -146,6 +147,16 @@ class SerialCommManager @JvmOverloads constructor(
             } else {
                 sendPacket(nextCommand, queueWaitNs)
             }
+            } catch (e: RuntimeException) {
+                // The base dropped off USB (an RP2040 reset under motor load,
+                // 2026-10-16). Throwing here crashed the whole app; instead end
+                // this writer and wait for the port to come back. Nothing can
+                // reach the motors meanwhile, so the firmware must stop them
+                // on its own way back up.
+                if (!isUsbFailure(e)) throw e
+                onLinkLost(context, e)
+                break
+            }
             cnt++
             if (cnt == 100) {
                 durationAndroid = (System.nanoTime() - startTimeAndroid) / 100
@@ -160,6 +171,38 @@ class SerialCommManager @JvmOverloads constructor(
         }
     }
 
+
+    private fun isUsbFailure(e: Throwable): Boolean {
+        var cause: Throwable? = e
+        while (cause != null) {
+            if (cause is IOException) return true
+            cause = cause.cause
+        }
+        return e.message?.contains("SerialTimeoutException") == true
+    }
+
+    private fun onLinkLost(context: RunContext, e: Throwable) {
+        Logger.e("serial", "USB link to the base lost; serial writer stopped: $e")
+        linkLost = true
+        ControlLatencyTrace.linkLostCount++
+        synchronized(lifecycleLock) {
+            if (runContext === context) runContext = null
+        }
+        context.stopRequested.set(true)
+        synchronized(commandLock) {
+            // A stale action must not be the first thing a re-attached base
+            // gets; start() queues a stop instead.
+            command = null
+            queuedMotorLevelsTrace = null
+        }
+        // shutdown(), not shutdownNow(): no interrupt of this very thread,
+        // just no further scheduled runs.
+        context.writerExecutor?.shutdown()
+    }
+
+    /** True from a lost USB link until the writer is started again. */
+    @Volatile var linkLost: Boolean = false
+        private set
 
     // Start method to start the thread
     @JvmOverloads
@@ -185,6 +228,13 @@ class SerialCommManager @JvmOverloads constructor(
                 )
             }
             runContext = context
+        }
+        if (linkLost) {
+            // Re-attached after a lost link: stop first, whatever the base was
+            // doing, and let the controller take over from rest.
+            linkLost = false
+            Logger.i("serial", "USB link to the base back; sending a stop first")
+            setMotorLevels(0f, 0f, true, true)
         }
     }
 

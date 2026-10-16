@@ -91,6 +91,9 @@ object ControlLatencyTrace {
     @Volatile
     var timeoutCount: Long = 0L
 
+    /** Times the USB link to the base was lost (the writer stopped). */
+    @Volatile var linkLostCount: Long = 0L
+
     // -- inbound: is the RP2040 slow, or is our parser late? ------------------
 
     /** send() -> the first byte of the reply arriving from the wire. */
@@ -183,6 +186,7 @@ object ControlLatencyTrace {
         ",\"ser_gap_ms\":" + dataGapUs / 1e3 +
         ",\"ser_sent\":" + sentCount +
         ",\"ser_dropped\":" + droppedCount +
+        ",\"ser_lost\":" + linkLostCount +
         ",\"ser_timeouts\":" + timeoutCount +
         ",\"ser_async\":" + (if (asyncMotor) 1 else 0) +
         ",\"t_queued\":" + lastQueuedNs / 1e9 +
