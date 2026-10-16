@@ -6,6 +6,12 @@ This repository contains the Android side of the OIST Smartphone Robot project:
 the shared `abcvlib` Android library, demo app modules, build configuration, and
 documentation for creating robot-control apps.
 
+> **This fork, branch `dreamer-bridge`**, adds the `dreamerBridge` app, which
+> trains DreamerV3 on the robot: the policy runs on the phone and a learner on
+> a GPU streams it new weights. Setup and usage:
+> [ROBOT.md in the dreamerv3 repo](https://github.com/Alex-Vasilache/dreamerv3/blob/smartphone-robot-bridge/ROBOT.md);
+> app internals: [docs/dreamer-bridge.md](docs/dreamer-bridge.md).
+
 Android apps handle phone-side sensing, user interaction, app-level control
 logic, and communication with the robot hardware. For the full hardware,
 firmware, model, and Android project context, see the

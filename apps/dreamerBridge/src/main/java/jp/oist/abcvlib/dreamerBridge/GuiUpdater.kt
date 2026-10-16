@@ -10,7 +10,7 @@ import java.util.Locale
 import kotlin.concurrent.Volatile
 
 // Wheel speed (mm/s) at full motor output with the wheels in the air,
-// measured 2026-10-15 (dreamerv3 docs/ROBOT_BRIDGE_FINDINGS.md).
+// measured 2026-10-15 (dreamerv3 docs/robot/ROBOT_BRIDGE_FINDINGS.md).
 const val WHEEL_SPEED_MAX = 5700.0
 
 /**

@@ -21,7 +21,7 @@ import java.io.File
  * The top row returns to training. Below it, every saved policy: a <name>.npz
  * with a <name>.json sidecar under policies/ in the app's external files dir.
  * Each training run keeps its latest weights there under the run's name
- * (main.py:weight_saver); tools/save_policy.sh adds others. Tap one to run it
+ * (main.py:weight_saver); tools/robot/save_policy.sh adds others. Tap one to run it
  * with no trainer (PlayerActivity); long-press to rename or delete it.
  */
 class PickerActivity : Activity() {

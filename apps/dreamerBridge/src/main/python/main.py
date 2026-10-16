@@ -1,10 +1,14 @@
 """Phone side of the DreamerV3 bridge.
 
-The policy runs on the training computer, not here. Each control step this
+Two ways to run, settled at handshake. Onboard (what the dreamerv3 robot
+tools use, see loop_onboard): the policy runs here on weights the trainer
+pushes in the background, and every observation is streamed back to train
+on. Remote: the policy runs on the training computer; each control step this
 client applies an action to the wheels, waits out the control period, then
-reports the proprio sensors it collected. The phone owns the control clock.
+reports the proprio sensors it collected. Either way the phone owns the
+control clock.
 
-The trainer's handshake reply picks how tightly the two ends are coupled:
+In remote mode the handshake reply picks how tightly the two ends are coupled:
 
 * Pipelined (the default). We tick on our own clock at CONTROL_HZ, apply the
   most recent action that has arrived, and report every tick without ever
@@ -18,7 +22,7 @@ The trainer's handshake reply picks how tightly the two ends are coupled:
   1/(control period + round trip). Measured at ~9.7Hz against a 50Hz tick.
 
 The trainer is `embodied/envs/robot.py` in the dreamerv3 repo, and
-`tools/fake_robot_phone.py` there is the same protocol without a robot, useful
+`tools/robot/dev/fake_robot_phone.py` there is the same protocol without a robot, useful
 for testing the computer side on its own.
 
 Wire format, both directions: a 4-byte big-endian header length, a UTF-8 JSON
@@ -32,7 +36,7 @@ on every connection attempt:
 
     adb push trainer.json /sdcard/Android/data/jp.oist.abcvlib.dreamerBridge/files/
 
-with `{"ip": "10.210.28.40", "port": 3000, "max_hz": 25}`; every key is
+with `{"ip": "<learner address>", "port": 3000, "max_hz": 25}`; every key is
 optional.
 """
 
@@ -230,7 +234,7 @@ sensors = dict(
 # it is that the action can be applied in the SAME tick as the observation
 # that produced it. Measured 2026-09-07, waiting for the trainer's reply cost a
 # full 20ms of a ~30ms sensor-to-torque budget, against a robot whose tilt
-# diverges with a ~50ms time constant. See docs/ONDEVICE_POLICY.md.
+# diverges with a ~50ms time constant. See docs/robot/ONDEVICE_POLICY.md in dreamerv3.
 onboard = False
 # Sticky across disconnects. `onboard` is negotiated per connection, but a
 # robot that is balancing must not have its wheels cut the moment the trainer
@@ -253,7 +257,7 @@ receiver = None
 no_base = False
 # Player mode (the Dreamer Player launcher): run one saved policy with no
 # trainer at all. `player_policy` is the .npz path, injected by abcvlib.py;
-# its <name>.json sidecar (tools/save_policy.sh) gives the rate, episode length
+# its <name>.json sidecar (tools/robot/save_policy.sh) gives the rate, episode length
 # and reward settings, so the screen scores steps the way training did.
 player_policy = None
 player_eval = True
@@ -1174,7 +1178,7 @@ def weights_dir():
 def policies_dir():
     """Saved policies, one <name>.npz + <name>.json each: what the policy
     list shows. Each training run keeps its latest weights here under the
-    run's name; tools/save_policy.sh adds others."""
+    run's name; tools/robot/save_policy.sh adds others."""
     return os.path.join(str(context.getExternalFilesDir(None)), 'policies')
 
 
