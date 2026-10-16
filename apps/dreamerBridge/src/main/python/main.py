@@ -325,6 +325,12 @@ warm_ms = WARM_MS
 warm_n = 1
 prepare_ahead = PREPARE_AHEAD
 serial_ok = True          # the RP2040 answered within SERIAL_WAIT_MAX_MS
+# After the base stops answering (USB dropped, RP2040 reset, I2C stuck), the
+# wheels are held at zero until it has answered cleanly for BASE_HOLD_S, and
+# every observation says base_ok False until then so the trainer can end the
+# episode instead of learning from frozen sensors (2026-10-16).
+BASE_HOLD_S = 2.0
+base_ok_from = 0.0        # monotonic time from which the base counts as healthy
 serial_misses = 0         # waits that hit SERIAL_WAIT_MAX_MS, for the display
 last_serial_warning = 0.0
 last_stale_warning = 0.0
@@ -649,6 +655,7 @@ def latency_block(taken_at, sensor_stamp, sensor_age_ms):
     block['t_drive'] = t_drive
     block['t_obs'] = taken_at
     block['ser_ok'] = serial_ok
+    block['base_ok'] = base_ok()
     return block
 
 
@@ -1232,6 +1239,17 @@ def wait_for_pace():
         wait_for_tick()
 
 
+def base_lost():
+    """The base is not answering: hold the wheels from now until it has
+    answered cleanly for BASE_HOLD_S."""
+    global base_ok_from
+    base_ok_from = time.monotonic() + BASE_HOLD_S
+
+
+def base_ok():
+    return no_base or time.monotonic() >= base_ok_from
+
+
 def wait_for_serial(lead_ms=0.0):
     """Block until the RP2040 has answered the previous command, then until it
     is about to poll USB again, then, under a max_hz cap, until `lead_ms`
@@ -1259,6 +1277,7 @@ def wait_for_serial(lead_ms=0.0):
             continue
         if time.monotonic() >= deadline:
             serial_ok = False
+            base_lost()
             serial_misses += 1
             context.guiUpdater.setSerialNote('%d missed replies, last %s' % (
                 serial_misses, time.strftime('%H:%M:%S')))
@@ -1397,6 +1416,10 @@ def drive(left, right, scale=None):
     # power (env.robot.command_scale) without shrinking the policy's range.
     scale = cmd_scale if scale is None else scale
     left, right = float(left) * scale, float(right) * scale
+    if not base_ok():
+        # Just back from an outage: whatever the policy wants, the first thing
+        # the base gets is a stop, until it has answered for BASE_HOLD_S.
+        left, right = 0.0, 0.0
     # A non-finite output would pass every clamp below as a full one.
     if not (math.isfinite(left) and math.isfinite(right)):
         print('dreamerBridge: non-finite wheel command (%r, %r); stopping'

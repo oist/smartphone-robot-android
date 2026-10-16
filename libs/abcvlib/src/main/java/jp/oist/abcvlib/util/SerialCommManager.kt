@@ -634,6 +634,17 @@ class SerialCommManager @JvmOverloads constructor(
             )
             rp2040State.chargeSideUSB.usb_charger_voltage = byteBuffer.getShort()
             rp2040State.chargeSideUSB.wireless_charger_vrect = byteBuffer.getShort()
+            // Firmware from 2026-10-16 appends its health block (health.h).
+            if (byteBuffer.remaining() >= 8) {
+                ControlLatencyTrace.recordHealth(
+                    resetCause = byteBuffer.get().toInt() and 0xFF,
+                    prevStage = byteBuffer.get().toInt() and 0xFF,
+                    boots = byteBuffer.get().toInt() and 0xFF,
+                    motorWriteFailures = byteBuffer.getShort().toInt() and 0xFFFF,
+                    busRecoveries = byteBuffer.get().toInt() and 0xFF,
+                    motorLinkOk = byteBuffer.get().toInt() and 0xFF,
+                    selfResets = byteBuffer.get().toInt() and 0xFF)
+            }
             // Logger.v("serial", "usb_charger_voltage: " + rp2040State.chargeSideUSB.usb_charger_voltage);
             rp2040State.updatePublishers()
         }

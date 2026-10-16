@@ -41,6 +41,7 @@ def run():
     if not first:
         print('dreamerBridge: serial link came back; keeping the existing '
               'control loop and publishers rather than starting a second set')
+        main.base_lost()
         # The base class still needs to restart the serial writer and rebuild
         # the outputs for the re-opened port. This is the only part of the
         # original setup() that must run again.

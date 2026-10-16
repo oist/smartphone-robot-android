@@ -147,6 +147,28 @@ object ControlLatencyTrace {
     /** Battery pack safety status byte from the last state reply. */
     @Volatile var battSafety: Int = 0
 
+    // The base's health block (firmware health.h); -1 until a base reports one.
+    private var baseResetCause = -1
+    private var basePrevStage = -1
+    private var baseBoots = -1
+    private var baseMotorWriteFailures = -1
+    private var baseBusRecoveries = -1
+    private var baseMotorLinkOk = -1
+    private var baseSelfResets = -1
+
+    @JvmStatic
+    @Synchronized
+    fun recordHealth(resetCause: Int, prevStage: Int, boots: Int, motorWriteFailures: Int,
+                     busRecoveries: Int, motorLinkOk: Int, selfResets: Int) {
+        baseResetCause = resetCause
+        basePrevStage = prevStage
+        baseBoots = boots
+        baseMotorWriteFailures = motorWriteFailures
+        baseBusRecoveries = busRecoveries
+        baseMotorLinkOk = motorLinkOk
+        baseSelfResets = selfResets
+    }
+
     @JvmStatic
     @Synchronized
     fun recordState(faultLeft: Byte, faultRight: Byte, safety: Byte) {
@@ -187,6 +209,13 @@ object ControlLatencyTrace {
         ",\"ser_sent\":" + sentCount +
         ",\"ser_dropped\":" + droppedCount +
         ",\"ser_lost\":" + linkLostCount +
+        ",\"base_reset_cause\":" + baseResetCause +
+        ",\"base_prev_stage\":" + basePrevStage +
+        ",\"base_boots\":" + baseBoots +
+        ",\"base_motor_fail\":" + baseMotorWriteFailures +
+        ",\"base_bus_recoveries\":" + baseBusRecoveries +
+        ",\"base_motor_link_ok\":" + baseMotorLinkOk +
+        ",\"base_self_resets\":" + baseSelfResets +
         ",\"ser_timeouts\":" + timeoutCount +
         ",\"ser_async\":" + (if (asyncMotor) 1 else 0) +
         ",\"t_queued\":" + lastQueuedNs / 1e9 +
