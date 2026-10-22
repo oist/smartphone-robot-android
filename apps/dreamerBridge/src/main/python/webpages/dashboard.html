@@ -119,6 +119,7 @@ main {
 .hero .big {
   font-size: 46px; line-height: 1; font-weight: 500; font-variant-numeric: tabular-nums;
   text-shadow: var(--glow);
+  display: inline-block; width: 5ch; text-align: right; white-space: nowrap;
 }
 .hero .unit { color: var(--muted); font-size: 11px; letter-spacing: 0.14em; }
 .legend { display: flex; gap: 16px; color: var(--text-2); font-size: 11px; }
@@ -442,6 +443,8 @@ function niceTicks(lo, hi, n) {
   return out;
 }
 const fmtTime = (s) => { s = Math.max(0, s); const m = Math.floor(s / 60); return m >= 60 ? `${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}` : `${m}:${String(Math.floor(s % 60)).padStart(2, '0')}`; };
+// Always signed, so a value crossing zero keeps its width.
+const signed = (v, d = 2) => (v === null || v === undefined || !Number.isFinite(v)) ? '—' : (v < 0 ? '-' : '+') + Math.abs(v).toFixed(d);
 const fmt = (v, d = 2) => (v === null || v === undefined || !Number.isFinite(v)) ? '—' : (Math.abs(v) >= 1000 ? v.toFixed(0) : v.toFixed(d));
 
 // series: [{pts: [[x,y]], color, width, dots}] drawn in order; hover uses `hoverIdx` series.
@@ -540,13 +543,13 @@ function drawReward() {
   ], {x0: 0, x1: Math.max(tNow, 1), zero: true, xfmt: v => `${v}m`, yticks: 5,
       empty: 'waiting for the first rewards',
       tip: (x, y) => `${fmtTime(x * 60)} · ${fmt(y, 3)} / step`});
-  document.getElementById('r-avg').textContent = avg.length ? fmt(avg[avg.length - 1][1], 2) : '—';
+  document.getElementById('r-avg').textContent = avg.length ? signed(avg[avg.length - 1][1], 2) : '—';
 }
 function drawInst() {
   const now = performance.now();
   drawChart(instEl, [{pts: inst.map(([t, r]) => [(t - now) / 1000, r]), color: css('--series-2'), width: 1.5}],
     {x0: -10, x1: 0, xlabels: false, pad: {l: 2, r: 2, t: 4, b: 4}, yticks: 0, empty: ''});
-  document.getElementById('r-now').textContent = inst.length ? fmt(inst[inst.length - 1][1], 2) : '—';
+  document.getElementById('r-now').textContent = inst.length ? signed(inst[inst.length - 1][1], 2) : '—';
 }
 hoverable(rewardEl, drawReward);
 
@@ -607,15 +610,15 @@ function arcPath(r, a0, a1) {   // angles from vertical, clockwise positive, deg
 function drawBlueprint() {
   const s = lastState; if (!s) return;
   const now = performance.now(), dt = Math.min(0.2, (now - lastBpT) / 1000); lastBpT = now;
-  // Positive tilt is a backward lean: the top goes left, toward the back.
+  // Positive tilt is a forward lean: the top goes right, toward the front.
   const th = Number(s.theta_deg) || 0, rate = Number(s.rate_deg) || 0;
-  $('body').setAttribute('transform', `rotate(${(-th).toFixed(2)})`);
-  $('tilt-arc').setAttribute('d', Math.abs(th) > 0.05 ? arcPath(215, 0, -th) : '');
-  $('tilt-val').textContent = `θ ${th >= 0 ? '+' : ''}${th.toFixed(1)}°`;
-  $('tilt-val').setAttribute('x', (-Math.sin(th * DEG) * 120).toFixed(1));
-  const ra = Math.max(-60, Math.min(60, -rate * 0.25));
+  $('body').setAttribute('transform', `rotate(${th.toFixed(2)})`);
+  $('tilt-arc').setAttribute('d', Math.abs(th) > 0.05 ? arcPath(215, 0, th) : '');
+  $('tilt-val').textContent = `θ ${signed(th, 1)}°`;
+  $('tilt-val').setAttribute('x', (Math.sin(th * DEG) * 120).toFixed(1));
+  const ra = Math.max(-60, Math.min(60, rate * 0.25));
   $('rate-arrow').setAttribute('d', Math.abs(ra) > 1 ? `M0 -232 A 40 40 0 0 ${ra > 0 ? 1 : 0} ${(40 * Math.sin(ra * DEG)).toFixed(1)} ${(-192 - 40 * Math.cos(ra * DEG)).toFixed(1)}` : '');
-  $('rate-val').textContent = `θ̇ ${rate >= 0 ? '+' : ''}${rate.toFixed(0)}°/s`;
+  $('rate-val').textContent = `θ̇ ${signed(rate, 0)}°/s`;
   // Forward is negative wheel speed. Wheel turns at the true rim speed
   // (the phone's units are ~20x it), clockwise in this view going forward.
   const vl = -(Number(s.speed_l) || 0), vr = -(Number(s.speed_r) || 0), v = 0.5 * (vl + vr);
@@ -626,20 +629,20 @@ function drawBlueprint() {
   const vx = Math.max(-200, Math.min(200, pct(v) * 2));
   $('v-arrow').setAttribute('x2', vx.toFixed(1));
   $('v-arrow').style.display = Math.abs(vx) > 3 ? '' : 'none';
-  $('v-val').textContent = `v ${pct(v) >= 0 ? '+' : ''}${pct(v).toFixed(0)}%`;
+  $('v-val').textContent = `v ${signed(pct(v), 0)}%`;
   // front: motor outputs
   for (const [side, a] of [['l', Number(s.act_l) || 0], ['r', Number(s.act_r) || 0]]) {
     const h = Math.max(-1, Math.min(1, a)) * 50;
     $('out-' + side).setAttribute('y', (h > 0 ? -h : 0).toFixed(1));
     $('out-' + side).setAttribute('height', Math.abs(h).toFixed(1));
-    $(`out-${side}-val`).textContent = `${a >= 0 ? '+' : ''}${a.toFixed(2)}`;
+    $(`out-${side}-val`).textContent = signed(a, 2);
   }
   // top: wheel speed arrows, turn arc
   for (const [side, w, x] of [['l', vl, -74], ['r', vr, 74]]) {
     const len = Math.max(-110, Math.min(110, pct(w) * 1.6));
     $(`v${side}-arrow`).setAttribute('y2', (-len).toFixed(1));
     $(`v${side}-arrow`).style.display = Math.abs(len) > 3 ? '' : 'none';
-    $(`v${side}-val`).textContent = `${pct(w) >= 0 ? '+' : ''}${pct(w).toFixed(0)}%`;
+    $(`v${side}-val`).textContent = `${signed(pct(w), 0)}%`;
   }
   const turn = pct(0.5 * (vl - vr));
   const ya = Math.max(-80, Math.min(80, turn * 2));

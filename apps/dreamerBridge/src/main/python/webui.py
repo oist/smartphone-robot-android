@@ -225,7 +225,14 @@ class WebUI:
                 self.wfile.flush()
                 sock = self.connection
                 sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-                sock.settimeout(SEND_TIMEOUT)
+                # The timeout is for sends only. A socket timeout would also
+                # cover reads, and a buffered reader that has timed out once
+                # cannot be read again ('cannot read from timed out object'):
+                # every page that sent nothing for SEND_TIMEOUT was dropped,
+                # i.e. the mirror and dashboard reconnected every ~2 s.
+                sock.settimeout(None)
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDTIMEO,
+                                struct.pack('ll', int(SEND_TIMEOUT), 0))
                 client = _Client(sock)
                 with ui._cond:
                     ui._clients.add(client)
@@ -233,10 +240,7 @@ class WebUI:
                 try:
                     client.send(ws_frame(json.dumps(ui.state).encode()))
                     while True:
-                        try:
-                            frame = ws_read(self.rfile)
-                        except socket.timeout:
-                            continue  # idle page; the timeout is for sends
+                        frame = ws_read(self.rfile)
                         if frame is None:
                             break
                         opcode, data = frame
