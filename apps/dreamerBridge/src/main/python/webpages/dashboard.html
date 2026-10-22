@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Robot Training Live</title>
+<style>
+/* Two themes, one set of roles. Series colours validated with the dataviz
+   palette checker against each surface (blueprint navy / paper). */
+:root {
+  color-scheme: light;
+  --bg: #eef3f9;
+  --panel: #f8fbfe;
+  --grid: rgba(29, 99, 201, 0.07);
+  --grid-major: rgba(29, 99, 201, 0.14);
+  --rule: rgba(29, 99, 201, 0.28);
+  --ink: #1d63c9;            /* blueprint line work */
+  --ink-soft: rgba(29, 99, 201, 0.45);
+  --text: #0c2340;
+  --text-2: #3d5a7c;
+  --muted: #7890ab;
+  --series-1: #1d63c9;       /* reward average, metric lines */
+  --series-2: #e0602c;       /* instant reward */
+  --raw: rgba(29, 99, 201, 0.25);
+  --good: #0ca30c; --warn: #fab219; --crit: #d03b3b;
+  --glow: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --bg: #04101d;
+    --panel: #071526;
+    --grid: rgba(79, 170, 255, 0.06);
+    --grid-major: rgba(79, 170, 255, 0.13);
+    --rule: rgba(110, 190, 255, 0.30);
+    --ink: #8ccfff;
+    --ink-soft: rgba(140, 207, 255, 0.45);
+    --text: #dcefff;
+    --text-2: #93b7d6;
+    --muted: #57789a;
+    --series-1: #3594e0;
+    --series-2: #d9622e;
+    --raw: rgba(53, 148, 224, 0.35);
+    --glow: 0 0 6px rgba(120, 200, 255, 0.35);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #04101d;
+  --panel: #071526;
+  --grid: rgba(79, 170, 255, 0.06);
+  --grid-major: rgba(79, 170, 255, 0.13);
+  --rule: rgba(110, 190, 255, 0.30);
+  --ink: #8ccfff;
+  --ink-soft: rgba(140, 207, 255, 0.45);
+  --text: #dcefff;
+  --text-2: #93b7d6;
+  --muted: #57789a;
+  --series-1: #3594e0;
+  --series-2: #d9622e;
+  --raw: rgba(53, 148, 224, 0.35);
+  --glow: 0 0 6px rgba(120, 200, 255, 0.35);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 16px 16px;
+  color: var(--text);
+  font: 13px/1.35 ui-monospace, "SF Mono", Menlo, Consolas, "Roboto Mono", monospace;
+  letter-spacing: 0.02em;
+}
+header {
+  display: flex; align-items: center; gap: 22px; flex-wrap: wrap;
+  padding: 12px 18px; border-bottom: 1px solid var(--rule);
+}
+header h1 {
+  margin: 0; font-size: 14px; font-weight: 600; letter-spacing: 0.22em;
+  text-shadow: var(--glow);
+}
+.kv { display: flex; flex-direction: column; }
+.kv .k { color: var(--muted); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; }
+.kv .v { color: var(--text); font-size: 14px; font-variant-numeric: tabular-nums; }
+.spacer { flex: 1; }
+button {
+  font: inherit; color: var(--text-2); background: transparent; cursor: pointer;
+  border: 1px solid var(--rule); padding: 4px 10px; letter-spacing: 0.12em;
+}
+button:hover { color: var(--text); border-color: var(--ink); }
+main {
+  display: grid; gap: 14px; padding: 14px 18px 18px;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  grid-template-areas: "reward bp" "metrics bp" "weights bp";
+  align-items: start;
+}
+@media (max-width: 980px) {
+  main { grid-template-columns: 1fr; grid-template-areas: "reward" "bp" "weights" "metrics"; }
+}
+.panel {
+  position: relative; background: var(--panel); border: 1px solid var(--rule);
+  padding: 12px 14px 14px; min-width: 0;
+}
+/* HUD corner brackets */
+.panel::before, .panel::after {
+  content: ""; position: absolute; width: 10px; height: 10px; pointer-events: none;
+  border-color: var(--ink); border-style: solid;
+}
+.panel::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+.panel::after { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+.title {
+  display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px;
+  color: var(--text-2); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+}
+.title .tag { color: var(--muted); letter-spacing: 0.1em; text-transform: none; }
+.hero { display: flex; align-items: flex-end; gap: 28px; flex-wrap: wrap; margin-bottom: 6px; }
+.hero .big {
+  font-size: 46px; line-height: 1; font-weight: 500; font-variant-numeric: tabular-nums;
+  text-shadow: var(--glow);
+}
+.hero .unit { color: var(--muted); font-size: 11px; letter-spacing: 0.14em; }
+.legend { display: flex; gap: 16px; color: var(--text-2); font-size: 11px; }
+.legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; }
+.chart { position: relative; width: 100%; }
+.chart canvas { display: block; width: 100%; height: 100%; }
+.tip {
+  position: absolute; pointer-events: none; display: none; white-space: nowrap;
+  background: var(--panel); border: 1px solid var(--ink); color: var(--text);
+  padding: 4px 8px; font-size: 11px; transform: translate(-50%, -100%);
+}
+#reward-chart { height: 300px; }
+#inst-chart { height: 46px; width: 220px; }
+.metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; }
+.metric .head { display: flex; justify-content: space-between; color: var(--text-2);
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; }
+.metric .head b { color: var(--text); font-weight: 500; letter-spacing: 0.02em; }
+.metric .chart { height: 86px; margin-top: 4px; }
+#bp svg { width: 100%; height: auto; display: block; }
+.bp-ink { stroke: var(--ink); fill: none; stroke-width: 1.4; }
+.bp-thin { stroke: var(--ink-soft); fill: none; stroke-width: 0.8; }
+.bp-dim { stroke: var(--ink-soft); fill: none; stroke-width: 0.7; stroke-dasharray: 3 3; }
+.bp-txt { fill: var(--text); font-size: 11px; }
+.bp-lbl { fill: var(--muted); font-size: 9px; letter-spacing: 0.18em; }
+.bp-val { fill: var(--ink); font-size: 12px; font-weight: 600; }
+.bp-acc { stroke: var(--series-2); fill: none; stroke-width: 2; }
+.bp-accfill { fill: var(--series-2); }
+.wrow { display: flex; gap: 26px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; letter-spacing: 0.1em; }
+.chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+#weights-chart { height: 96px; }
+.foot { color: var(--muted); font-size: 10px; letter-spacing: 0.12em; margin-top: 6px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>DREAMERV3 · LIVE</h1>
+  <div class="kv"><span class="k">run</span><span class="v" id="h-run">—</span></div>
+  <div class="kv"><span class="k">training time</span><span class="v" id="h-time">—</span></div>
+  <div class="kv"><span class="k">control</span><span class="v" id="h-hz">—</span></div>
+  <div class="kv"><span class="k">robot steps</span><span class="v" id="h-step">—</span></div>
+  <div class="kv"><span class="k">gradient updates</span><span class="v" id="h-upd">—</span></div>
+  <div class="spacer"></div>
+  <span class="chip" id="h-link"><span class="dot"></span><span>—</span></span>
+  <button id="theme" type="button">THEME</button>
+</header>
+
+<main>
+  <section class="panel" style="grid-area: reward">
+    <div class="title">Reward <span class="tag">per robot step, since the run started</span></div>
+    <div class="hero">
+      <div>
+        <div class="big" id="r-avg">—</div>
+        <div class="unit">30 S AVERAGE</div>
+      </div>
+      <div>
+        <div style="display:flex; align-items:flex-end; gap:10px">
+          <div class="big" style="font-size:24px" id="r-now">—</div>
+          <div class="chart" id="inst-chart"><canvas></canvas></div>
+        </div>
+        <div class="unit">INSTANT · LAST 10 S</div>
+      </div>
+      <div class="spacer"></div>
+      <div class="legend">
+        <span><i style="background: var(--raw)"></i>each second</span>
+        <span><i style="background: var(--series-1)"></i>30 s average</span>
+      </div>
+    </div>
+    <div class="chart" id="reward-chart"><canvas></canvas><div class="tip"></div></div>
+  </section>
+
+  <section class="panel" id="bp" style="grid-area: bp">
+    <div class="title">Robot <span class="tag">live, from the phone's sensors</span></div>
+    <svg viewBox="0 0 560 720" aria-label="Live blueprint of the robot: side, front and top views">
+      <defs>
+        <pattern id="g-minor" width="10" height="10" patternUnits="userSpaceOnUse">
+          <path d="M10 0H0V10" class="bp-thin" style="stroke: var(--grid-major); stroke-width: .5"/>
+        </pattern>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0 0L10 5L0 10z" style="fill: var(--series-2)"/>
+        </marker>
+        <marker id="arrow-ink" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0 0L10 5L0 10z" style="fill: var(--ink)"/>
+        </marker>
+      </defs>
+
+      <!-- SIDE VIEW: forward is to the right. 1 mm = 1.25 px. -->
+      <g transform="translate(20 14)">
+        <rect width="520" height="370" fill="url(#g-minor)"/>
+        <text x="8" y="16" class="bp-lbl">SIDE</text>
+        <text x="512" y="16" class="bp-lbl" text-anchor="end">FRONT →</text>
+        <g transform="translate(260 282)">
+          <line x1="-250" y1="56" x2="250" y2="56" class="bp-ink"/>
+          <g id="ground-ticks"></g>
+          <!-- vertical reference and tilt arc -->
+          <line x1="0" y1="0" x2="0" y2="-245" class="bp-dim"/>
+          <path id="tilt-arc" class="bp-acc"/>
+          <text id="tilt-val" class="bp-val" x="0" y="-252" text-anchor="middle">θ —</text>
+          <g id="body">
+            <!-- chassis, housing, phone, bumpers: from the MuJoCo model (mm x 1.25) -->
+            <rect x="-94" y="24" width="188" height="15" class="bp-ink"/>
+            <rect x="-50" y="-12" width="100" height="36" class="bp-ink"/>
+            <rect x="6" y="-200" width="13" height="188" class="bp-ink"/>
+            <line x1="12.5" y1="-192" x2="12.5" y2="-20" class="bp-thin"/>
+            <circle cx="-120" cy="30" r="6" class="bp-ink"/>
+            <circle cx="120" cy="30" r="6" class="bp-ink"/>
+            <line x1="-94" y1="31" x2="-114" y2="31" class="bp-thin"/>
+            <line x1="94" y1="31" x2="114" y2="31" class="bp-thin"/>
+            <!-- body axis -->
+            <line x1="0" y1="0" x2="0" y2="-225" class="bp-thin" stroke-dasharray="8 4 2 4"/>
+            <!-- angular rate arrow at the top of the phone -->
+            <path id="rate-arrow" class="bp-acc" marker-end="url(#arrow)"/>
+          </g>
+          <text id="rate-val" class="bp-txt" x="-245" y="-226">θ̇ —</text>
+          <g id="wheel-side">
+            <circle r="56" class="bp-ink"/>
+            <circle r="46" class="bp-thin"/>
+            <circle r="9" class="bp-ink"/>
+            <g id="spokes"></g>
+          </g>
+          <line id="v-arrow" x1="0" y1="70" x2="0" y2="70" class="bp-acc" marker-end="url(#arrow)"/>
+          <text id="v-val" class="bp-txt" x="-245" y="80">v —</text>
+          <!-- static dimensions -->
+          <line x1="-200" y1="0" x2="-200" y2="56" class="bp-thin" marker-start="url(#arrow-ink)" marker-end="url(#arrow-ink)"/>
+          <text x="-206" y="32" class="bp-lbl" text-anchor="end">45</text>
+          <line x1="-200" y1="0" x2="-150" y2="0" class="bp-dim"/>
+          <text id="bumper-lbl" x="150" y="-60" class="bp-lbl" text-anchor="middle"></text>
+        </g>
+      </g>
+
+      <!-- FRONT VIEW: motor outputs inside the wheels -->
+      <g transform="translate(20 400)">
+        <rect width="250" height="306" fill="url(#g-minor)"/>
+        <text x="8" y="16" class="bp-lbl">FRONT</text>
+        <g transform="translate(125 238) scale(0.82)">
+          <line x1="-115" y1="56" x2="115" y2="56" class="bp-ink"/>
+          <rect x="-84" y="-56" width="21" height="112" class="bp-ink"/>
+          <rect x="63" y="-56" width="21" height="112" class="bp-ink"/>
+          <rect id="out-l" x="-80" width="13" class="bp-accfill"/>
+          <rect id="out-r" x="67" width="13" class="bp-accfill"/>
+          <line x1="-84" y1="0" x2="-63" y2="0" class="bp-thin"/>
+          <line x1="63" y1="0" x2="84" y2="0" class="bp-thin"/>
+          <rect x="-52" y="-12" width="104" height="36" class="bp-ink"/>
+          <rect x="-46" y="-200" width="92" height="188" class="bp-ink"/>
+          <rect x="-40" y="-192" width="80" height="172" class="bp-thin"/>
+          <line x1="-74" y1="-30" x2="74" y2="-30" class="bp-dim"/>
+          <text x="0" y="-36" class="bp-lbl" text-anchor="middle">119</text>
+          <text id="out-l-val" x="-112" y="-66" class="bp-val" text-anchor="middle">—</text>
+          <text id="out-r-val" x="112" y="-66" class="bp-val" text-anchor="middle">—</text>
+          <text x="-112" y="-80" class="bp-lbl" text-anchor="middle">MOTOR L</text>
+          <text x="112" y="-80" class="bp-lbl" text-anchor="middle">MOTOR R</text>
+        </g>
+      </g>
+
+      <!-- TOP VIEW: wheel speeds as arrows, forward is up -->
+      <g transform="translate(290 400)">
+        <rect width="250" height="306" fill="url(#g-minor)"/>
+        <text x="8" y="16" class="bp-lbl">TOP</text>
+        <text x="242" y="16" class="bp-lbl" text-anchor="end">↑ FRONT</text>
+        <g transform="translate(125 158) scale(0.82)">
+          <rect x="-84" y="-56" width="21" height="112" class="bp-ink"/>
+          <rect x="63" y="-56" width="21" height="112" class="bp-ink"/>
+          <rect x="-52" y="-94" width="104" height="188" class="bp-ink"/>
+          <rect x="-46" y="-19" width="92" height="13" class="bp-ink"/>
+          <circle cx="0" cy="-120" r="6" class="bp-ink"/>
+          <circle cx="0" cy="120" r="6" class="bp-ink"/>
+          <line id="vl-arrow" x1="-74" y1="0" x2="-74" y2="0" class="bp-acc" marker-end="url(#arrow)"/>
+          <line id="vr-arrow" x1="74" y1="0" x2="74" y2="0" class="bp-acc" marker-end="url(#arrow)"/>
+          <path id="yaw-arc" class="bp-ink" marker-end="url(#arrow-ink)"/>
+          <text id="vl-val" x="-112" y="84" class="bp-val" text-anchor="middle">—</text>
+          <text id="vr-val" x="112" y="84" class="bp-val" text-anchor="middle">—</text>
+          <text x="-112" y="98" class="bp-lbl" text-anchor="middle">WHEEL L</text>
+          <text x="112" y="98" class="bp-lbl" text-anchor="middle">WHEEL R</text>
+          <text id="yaw-val" x="0" y="-104" class="bp-txt" text-anchor="middle"></text>
+        </g>
+      </g>
+    </svg>
+    <div class="foot">SPEEDS IN % OF TOP WHEEL SPEED · TILT FROM THE PHONE'S ZERO · MOTOR OUTPUT −1…+1</div>
+  </section>
+
+  <section class="panel" style="grid-area: weights">
+    <div class="title">Policy weights <span class="tag">pushed from the learner to the phone</span></div>
+    <div class="wrow">
+      <div class="kv"><span class="k">last update</span><span class="v" id="w-ago">—</span></div>
+      <div class="kv"><span class="k">updates received</span><span class="v" id="w-count">—</span></div>
+      <div class="kv"><span class="k">age when installed</span><span class="v" id="w-age">—</span></div>
+      <span class="chip" id="w-chip"><span class="dot"></span><span>—</span></span>
+    </div>
+    <div class="chart" id="weights-chart"><canvas></canvas><div class="tip"></div></div>
+    <div class="foot">AGE OF EACH NEW POLICY WHEN THE PHONE SWAPPED IT IN, SECONDS</div>
+  </section>
+
+  <section class="panel" style="grid-area: metrics">
+    <div class="title">Learner <span class="tag">from the trainer, every ~10 s</span></div>
+    <div class="metrics" id="metrics"></div>
+  </section>
+</main>
+
+<script>
+'use strict';
+// ---------- theme ----------
+const root = document.documentElement;
+const themeBtn = document.getElementById('theme');
+function applyTheme(t) {
+  if (t) root.setAttribute('data-theme', t); else root.removeAttribute('data-theme');
+  try { t ? localStorage.setItem('dash-theme', t) : localStorage.removeItem('dash-theme'); } catch (e) {}
+  redrawAll();
+}
+themeBtn.onclick = () => {
+  const dark = getComputedStyle(root).colorScheme.includes('dark');
+  applyTheme(dark ? 'light' : 'dark');
+};
+try { const t = localStorage.getItem('dash-theme'); if (t) root.setAttribute('data-theme', t); } catch (e) {}
+{ const t = new URLSearchParams(location.search).get('theme'); if (t === 'dark' || t === 'light') root.setAttribute('data-theme', t); }
+const css = (name) => getComputedStyle(root).getPropertyValue(name).trim();
+
+// ---------- data ----------
+const TOP_SPEED = 5700;      // the phone's wheel-speed units at full output, in the air
+const AVG_WINDOW = 30;       // seconds, the headline average
+const METRICS = [
+  ['wm_loss', 'World model loss'],
+  ['entropy', 'Policy entropy'],
+  ['value_loss', 'Critic loss'],
+  ['ret', 'Imagined return'],
+];
+let run = null, t0 = 0, clockSkew = 0;
+let bins = [];               // [t (s since t0), mean reward]
+let curBin = null;           // [index, sum, n]
+let weights = [];            // [t, age at install]
+let stats = [];              // [t, {name: value}]
+let inst = [];               // [performance.now() ms, reward]
+let lastState = null, lastWeightsN = null, lastWeightsAt = null, lastStep = null;
+
+async function loadHistory() {
+  try {
+    const h = await (await fetch('/history', {cache: 'no-store'})).json();
+    run = h.run; t0 = h.t0 || 0;
+    clockSkew = (h.now || Date.now() / 1000) - Date.now() / 1000;
+    bins = h.reward || []; weights = h.weights || []; stats = h.stats || [];
+    curBin = null;
+    if (weights.length && lastWeightsAt === null)
+      lastWeightsAt = performance.now() - 1000 * ((h.now - h.t0) - weights[weights.length - 1][0]);
+    redrawAll();
+  } catch (e) { /* the live stream still works */ }
+}
+const phoneNow = () => Date.now() / 1000 + clockSkew;
+
+function onState(s) {
+  lastState = s;
+  if (s.run !== undefined && s.run !== run) { run = s.run; loadHistory(); }
+  if (s.now) clockSkew = s.now - Date.now() / 1000;
+  if (s.t0) t0 = s.t0;
+  // one reward per state frame is a sample of the stream, not every step:
+  // the per-second bins come from the phone's /history, which sees them all.
+  const stepped = s.step !== lastStep; lastStep = s.step;
+  if (typeof s.reward === 'number' && stepped) {
+    inst.push([performance.now(), s.reward]);
+    const cutoff = performance.now() - 10000;
+    while (inst.length && inst[0][0] < cutoff) inst.shift();
+    const t = phoneNow() - t0, i = Math.floor(t);
+    if (!curBin || curBin[0] !== i) {
+      if (curBin && curBin[2]) {
+        const b = [curBin[0] + 0.5, curBin[1] / curBin[2]];
+        if (!bins.length || bins[bins.length - 1][0] < b[0]) bins.push(b);
+      }
+      curBin = [i, 0, 0];
+    }
+    curBin[1] += s.reward; curBin[2] += 1;
+  }
+  if (s.weights_installed !== undefined && s.weights_installed !== lastWeightsN) {
+    if (lastWeightsN !== null) {
+      lastWeightsAt = performance.now();
+      let age = null;
+      const st = Number(s.policy);
+      if (Number.isFinite(st) && st > 1e15) age = s.now - st / 1e9;
+      weights.push([phoneNow() - t0, age]);
+    }
+    lastWeightsN = s.weights_installed;
+  }
+  if (s.stats && Object.keys(s.stats).length) {
+    const last = stats.length ? stats[stats.length - 1][1] : null;
+    if (!last || JSON.stringify(last) !== JSON.stringify(s.stats)) stats.push([phoneNow() - t0, s.stats]);
+  }
+  needBlueprint = true;
+}
+
+// ---------- link ----------
+const linkChip = document.getElementById('h-link');
+function setLink(ok, text) {
+  linkChip.querySelector('.dot').style.background = ok ? css('--good') : css('--crit');
+  linkChip.querySelector('span:last-child').textContent = text;
+}
+function connect() {
+  let ws;
+  try { ws = new WebSocket(`ws://${location.host}/ws`); } catch (e) { return poll(); }
+  ws.onmessage = (ev) => { try { onState(JSON.parse(ev.data)); } catch (e) {} };
+  ws.onopen = () => setLink(true, 'LIVE');
+  ws.onclose = () => { setLink(false, 'RECONNECTING'); setTimeout(connect, 1000); };
+}
+async function poll() {
+  for (;;) {
+    try { onState(await (await fetch('/state', {cache: 'no-store'})).json()); setLink(true, 'POLLING'); }
+    catch (e) { setLink(false, 'OFFLINE'); }
+    await new Promise(r => setTimeout(r, 100));
+  }
+}
+
+// ---------- charts (canvas, one series each, crosshair tooltip) ----------
+function sizeCanvas(el) {
+  const c = el.querySelector('canvas'), r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  if (c.width !== Math.round(r.width * dpr) || c.height !== Math.round(r.height * dpr)) {
+    c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr);
+  }
+  const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return [g, r.width, r.height];
+}
+function niceTicks(lo, hi, n) {
+  const span = hi - lo || 1, step0 = span / n, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => span / s <= n) || 10 * mag;
+  const out = []; for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+const fmtTime = (s) => { s = Math.max(0, s); const m = Math.floor(s / 60); return m >= 60 ? `${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}` : `${m}:${String(Math.floor(s % 60)).padStart(2, '0')}`; };
+const fmt = (v, d = 2) => (v === null || v === undefined || !Number.isFinite(v)) ? '—' : (Math.abs(v) >= 1000 ? v.toFixed(0) : v.toFixed(d));
+
+// series: [{pts: [[x,y]], color, width, dots}] drawn in order; hover uses `hoverIdx` series.
+function drawChart(el, series, opt = {}) {
+  const [g, W, H] = sizeCanvas(el);
+  g.clearRect(0, 0, W, H);
+  const pad = Object.assign({l: 44, r: 10, t: 8, b: opt.xlabels === false ? 6 : 20}, opt.pad || {});
+  const all = series.flatMap(s => s.pts);
+  if (!all.length) {
+    g.fillStyle = css('--muted'); g.font = '11px ui-monospace, Menlo, monospace';
+    g.fillText(opt.empty || 'waiting for data', pad.l, H / 2); el._geom = null; return;
+  }
+  let x0 = opt.x0 ?? Math.min(...all.map(p => p[0])), x1 = opt.x1 ?? Math.max(...all.map(p => p[0]));
+  if (x1 - x0 < 1e-9) x1 = x0 + 1;
+  const ys = all.map(p => p[1]).filter(Number.isFinite);
+  let y0 = Math.min(...ys), y1 = Math.max(...ys);
+  if (opt.ymin !== undefined) y0 = Math.min(y0, opt.ymin);
+  if (opt.ymax !== undefined) y1 = Math.max(y1, opt.ymax);
+  if (y1 - y0 < 1e-9) { y0 -= 0.5; y1 += 0.5; }
+  const yp = (y1 - y0) * 0.06; y0 -= yp; y1 += yp;
+  const X = x => pad.l + (x - x0) / (x1 - x0) * (W - pad.l - pad.r);
+  const Y = y => pad.t + (1 - (y - y0) / (y1 - y0)) * (H - pad.t - pad.b);
+  g.font = '10px ui-monospace, Menlo, monospace';
+  // recessive grid and axes
+  g.strokeStyle = css('--grid-major'); g.lineWidth = 1; g.fillStyle = css('--muted');
+  g.textAlign = 'right'; g.textBaseline = 'middle';
+  for (const v of niceTicks(y0, y1, opt.yticks || 4)) {
+    const y = Math.round(Y(v)) + 0.5; g.beginPath(); g.moveTo(pad.l, y); g.lineTo(W - pad.r, y); g.stroke();
+    g.fillText(fmt(v, Math.abs(y1 - y0) < 5 ? 2 : 0), pad.l - 6, y);
+  }
+  if (y0 < 0 && y1 > 0 && opt.zero) {
+    g.strokeStyle = css('--rule'); const y = Math.round(Y(0)) + 0.5;
+    g.beginPath(); g.moveTo(pad.l, y); g.lineTo(W - pad.r, y); g.stroke();
+  }
+  if (opt.xlabels !== false) {
+    g.textAlign = 'center'; g.textBaseline = 'top';
+    for (const v of niceTicks(x0, x1, opt.xticks || 6)) g.fillText(opt.xfmt ? opt.xfmt(v) : fmt(v, 0), X(v), H - pad.b + 5);
+  }
+  for (const s of series) {
+    g.strokeStyle = s.color; g.fillStyle = s.color; g.lineWidth = s.width || 2; g.lineJoin = 'round';
+    if (s.dots) {
+      for (const [x, y] of s.pts) if (Number.isFinite(y)) { g.beginPath(); g.arc(X(x), Y(y), s.dots, 0, 7); g.fill(); }
+      continue;
+    }
+    g.beginPath(); let pen = false, px = null;
+    for (const [x, y] of s.pts) {
+      if (!Number.isFinite(y) || (s.gap && px !== null && x - px > s.gap)) { pen = false; px = x; continue; }
+      pen ? g.lineTo(X(x), Y(y)) : g.moveTo(X(x), Y(y)); pen = true; px = x;
+    }
+    g.stroke();
+  }
+  el._geom = {X, Y, x0, x1, pad, W, H, series, opt};
+  drawHover(el);
+}
+function drawHover(el) {
+  const geo = el._geom, h = el._hover, tip = el.querySelector('.tip');
+  if (!tip) return;
+  if (!geo || h === undefined || h === null) { tip.style.display = 'none'; return; }
+  const s = geo.series[geo.opt.hoverIdx ?? geo.series.length - 1];
+  const xv = geo.x0 + (h - geo.pad.l) / (geo.W - geo.pad.l - geo.pad.r) * (geo.x1 - geo.x0);
+  let best = null;
+  for (const p of s.pts) if (Number.isFinite(p[1]) && (!best || Math.abs(p[0] - xv) < Math.abs(best[0] - xv))) best = p;
+  if (!best) { tip.style.display = 'none'; return; }
+  const g = el.querySelector('canvas').getContext('2d');
+  g.strokeStyle = css('--ink-soft'); g.lineWidth = 1;
+  const x = Math.round(geo.X(best[0])) + 0.5;
+  g.beginPath(); g.moveTo(x, geo.pad.t); g.lineTo(x, geo.H - geo.pad.b); g.stroke();
+  g.fillStyle = s.color; g.strokeStyle = css('--panel'); g.lineWidth = 2;
+  g.beginPath(); g.arc(geo.X(best[0]), geo.Y(best[1]), 4.5, 0, 7); g.fill(); g.stroke();
+  tip.style.display = 'block'; tip.style.left = geo.X(best[0]) + 'px'; tip.style.top = (geo.Y(best[1]) - 10) + 'px';
+  tip.textContent = (geo.opt.tip || ((x, y) => `${fmt(x)} · ${fmt(y)}`))(best[0], best[1]);
+}
+function hoverable(el, redraw) {
+  el.addEventListener('pointermove', e => { el._hover = e.clientX - el.getBoundingClientRect().left; redraw(); });
+  el.addEventListener('pointerleave', () => { el._hover = null; redraw(); });
+}
+
+// ---------- reward ----------
+const rewardEl = document.getElementById('reward-chart'), instEl = document.getElementById('inst-chart');
+function movingAverage(pts, window) {
+  const out = []; let sum = 0, j = 0;
+  for (let i = 0; i < pts.length; i++) {
+    sum += pts[i][1];
+    while (pts[j][0] < pts[i][0] - window) { sum -= pts[j][1]; j++; }
+    out.push([pts[i][0], sum / (i - j + 1)]);
+  }
+  return out;
+}
+function drawReward() {
+  const raw = bins.map(([t, r]) => [t / 60, r]);
+  const avg = movingAverage(bins, AVG_WINDOW).map(([t, r]) => [t / 60, r]);
+  const tNow = (phoneNow() - t0) / 60;
+  drawChart(rewardEl, [
+    {pts: raw, color: css('--raw'), width: 1, gap: 0.2},
+    {pts: avg, color: css('--series-1'), width: 2.5, gap: 0.2},
+  ], {x0: 0, x1: Math.max(tNow, 1), zero: true, xfmt: v => `${v}m`, yticks: 5,
+      empty: 'waiting for the first rewards',
+      tip: (x, y) => `${fmtTime(x * 60)} · ${fmt(y, 3)} / step`});
+  document.getElementById('r-avg').textContent = avg.length ? fmt(avg[avg.length - 1][1], 2) : '—';
+}
+function drawInst() {
+  const now = performance.now();
+  drawChart(instEl, [{pts: inst.map(([t, r]) => [(t - now) / 1000, r]), color: css('--series-2'), width: 1.5}],
+    {x0: -10, x1: 0, xlabels: false, pad: {l: 2, r: 2, t: 4, b: 4}, yticks: 0, empty: ''});
+  document.getElementById('r-now').textContent = inst.length ? fmt(inst[inst.length - 1][1], 2) : '—';
+}
+hoverable(rewardEl, drawReward);
+
+// ---------- learner metrics: small multiples, own y-scale each ----------
+const metricsEl = document.getElementById('metrics');
+for (const [key, label] of METRICS) {
+  const div = document.createElement('div'); div.className = 'metric';
+  div.innerHTML = `<div class="head"><span>${label}</span><b id="m-${key}">—</b></div><div class="chart" id="c-${key}"><canvas></canvas><div class="tip"></div></div>`;
+  metricsEl.appendChild(div);
+}
+function drawMetrics() {
+  for (const [key, label] of METRICS) {
+    const el = document.getElementById('c-' + key);
+    const pts = stats.filter(([, v]) => v && Number.isFinite(v[key])).map(([t, v]) => [t / 60, v[key]]);
+    if (!el._wired) { hoverable(el, drawMetrics); el._wired = true; }
+    drawChart(el, [{pts, color: css('--series-1'), width: 2}],
+      {xfmt: v => `${v}m`, xticks: 4, yticks: 3, pad: {l: 40}, empty: 'no learner metrics yet',
+       tip: (x, y) => `${fmtTime(x * 60)} · ${fmt(y, 3)}`});
+    document.getElementById('m-' + key).textContent = pts.length ? fmt(pts[pts.length - 1][1], 3) : '—';
+  }
+}
+
+// ---------- weights ----------
+const weightsEl = document.getElementById('weights-chart');
+hoverable(weightsEl, drawWeights);
+function drawWeights() {
+  const pts = weights.filter(w => w[1] !== null && Number.isFinite(w[1]) && w[1] > -60).map(([t, a]) => [t / 60, a]);
+  drawChart(weightsEl, [{pts, color: css('--series-1'), dots: 2}],
+    {ymin: 0, xfmt: v => `${v}m`, xticks: 5, yticks: 3, empty: 'no weight updates yet',
+     tip: (x, y) => `${fmtTime(x * 60)} · ${fmt(y, 1)} s old`});
+  const n = lastState ? lastState.weights_installed : null;
+  document.getElementById('w-count').textContent = n ?? '—';
+  const lastAge = pts.length ? pts[pts.length - 1][1] : null;
+  document.getElementById('w-age').textContent = lastAge === null ? '—' : `${fmt(lastAge, 1)} s`;
+}
+function tickWeights() {
+  const ago = lastWeightsAt === null ? null : (performance.now() - lastWeightsAt) / 1000;
+  document.getElementById('w-ago').textContent = ago === null ? '—' : `${ago.toFixed(1)} s ago`;
+  const chip = document.getElementById('w-chip');
+  const [c, label] = ago === null ? ['--muted', 'NO UPDATES'] : ago < 10 ? ['--good', '✓ FRESH'] : ago < 60 ? ['--warn', '! SLOW'] : ['--crit', '✕ STALLED'];
+  chip.querySelector('.dot').style.background = css(c);
+  chip.querySelector('span:last-child').textContent = label;
+}
+
+// ---------- blueprint ----------
+const $ = id => document.getElementById(id);
+const DEG = Math.PI / 180;
+let needBlueprint = false, wheelAngle = 0, lastBpT = performance.now();
+(function staticBits() {
+  const ticks = []; for (let x = -250; x <= 250; x += 25) ticks.push(`<line x1="${x}" y1="56" x2="${x - 8}" y2="64" class="bp-thin"/>`);
+  $('ground-ticks').innerHTML = ticks.join('');
+})();
+function arcPath(r, a0, a1) {   // angles from vertical, clockwise positive, degrees
+  const p = a => [r * Math.sin(a * DEG), -r * Math.cos(a * DEG)];
+  const [x0, y0] = p(a0), [x1, y1] = p(a1);
+  return `M${x0.toFixed(1)} ${y0.toFixed(1)}A${r} ${r} 0 0 ${a1 > a0 ? 1 : 0} ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+}
+function drawBlueprint() {
+  const s = lastState; if (!s) return;
+  const now = performance.now(), dt = Math.min(0.2, (now - lastBpT) / 1000); lastBpT = now;
+  // Positive tilt is a backward lean: the top goes left, toward the back.
+  const th = Number(s.theta_deg) || 0, rate = Number(s.rate_deg) || 0;
+  $('body').setAttribute('transform', `rotate(${(-th).toFixed(2)})`);
+  $('tilt-arc').setAttribute('d', Math.abs(th) > 0.05 ? arcPath(215, 0, -th) : '');
+  $('tilt-val').textContent = `θ ${th >= 0 ? '+' : ''}${th.toFixed(1)}°`;
+  $('tilt-val').setAttribute('x', (-Math.sin(th * DEG) * 120).toFixed(1));
+  const ra = Math.max(-60, Math.min(60, -rate * 0.25));
+  $('rate-arrow').setAttribute('d', Math.abs(ra) > 1 ? `M0 -232 A 40 40 0 0 ${ra > 0 ? 1 : 0} ${(40 * Math.sin(ra * DEG)).toFixed(1)} ${(-192 - 40 * Math.cos(ra * DEG)).toFixed(1)}` : '');
+  $('rate-val').textContent = `θ̇ ${rate >= 0 ? '+' : ''}${rate.toFixed(0)}°/s`;
+  // Forward is negative wheel speed. Wheel turns at the true rim speed
+  // (the phone's units are ~20x it), clockwise in this view going forward.
+  const vl = -(Number(s.speed_l) || 0), vr = -(Number(s.speed_r) || 0), v = 0.5 * (vl + vr);
+  wheelAngle = (wheelAngle + (v / 20 / 45) * dt / DEG) % 360;
+  const sp = []; for (let k = 0; k < 6; k++) { const a = (wheelAngle + k * 60) * DEG; sp.push(`<line x1="${(9 * Math.cos(a)).toFixed(1)}" y1="${(9 * Math.sin(a)).toFixed(1)}" x2="${(46 * Math.cos(a)).toFixed(1)}" y2="${(46 * Math.sin(a)).toFixed(1)}" class="bp-ink"/>`); }
+  $('spokes').innerHTML = sp.join('');
+  const pct = x => 100 * x / TOP_SPEED;
+  const vx = Math.max(-200, Math.min(200, pct(v) * 2));
+  $('v-arrow').setAttribute('x2', vx.toFixed(1));
+  $('v-arrow').style.display = Math.abs(vx) > 3 ? '' : 'none';
+  $('v-val').textContent = `v ${pct(v) >= 0 ? '+' : ''}${pct(v).toFixed(0)}%`;
+  // front: motor outputs
+  for (const [side, a] of [['l', Number(s.act_l) || 0], ['r', Number(s.act_r) || 0]]) {
+    const h = Math.max(-1, Math.min(1, a)) * 50;
+    $('out-' + side).setAttribute('y', (h > 0 ? -h : 0).toFixed(1));
+    $('out-' + side).setAttribute('height', Math.abs(h).toFixed(1));
+    $(`out-${side}-val`).textContent = `${a >= 0 ? '+' : ''}${a.toFixed(2)}`;
+  }
+  // top: wheel speed arrows, turn arc
+  for (const [side, w, x] of [['l', vl, -74], ['r', vr, 74]]) {
+    const len = Math.max(-110, Math.min(110, pct(w) * 1.6));
+    $(`v${side}-arrow`).setAttribute('y2', (-len).toFixed(1));
+    $(`v${side}-arrow`).style.display = Math.abs(len) > 3 ? '' : 'none';
+    $(`v${side}-val`).textContent = `${pct(w) >= 0 ? '+' : ''}${pct(w).toFixed(0)}%`;
+  }
+  const turn = pct(0.5 * (vl - vr));
+  const ya = Math.max(-80, Math.min(80, turn * 2));
+  $('yaw-arc').setAttribute('d', Math.abs(ya) > 3 ? arcPath(130, -ya / 2, ya / 2) : '');
+  $('yaw-val').textContent = Math.abs(turn) > 2 ? `turn ${turn > 0 ? 'right' : 'left'} ${Math.abs(turn).toFixed(0)}%` : '';
+}
+
+// ---------- header ----------
+function drawHeader() {
+  const s = lastState || {};
+  $('h-run').textContent = run || '—';
+  $('h-time').textContent = t0 && run ? fmtTime(phoneNow() - t0) : '—';
+  $('h-hz').textContent = s.hz ? `${s.hz.toFixed(0)} Hz` : '—';
+  $('h-step').textContent = s.step !== undefined ? s.step.toLocaleString() : '—';
+  const st = s.stats || {};
+  $('h-upd').textContent = st.updates !== undefined ? Math.round(st.updates).toLocaleString() : '—';
+}
+
+// ---------- loops ----------
+function redrawAll() { drawReward(); drawInst(); drawMetrics(); drawWeights(); needBlueprint = true; }
+function frame() {
+  if (needBlueprint) { drawBlueprint(); needBlueprint = false; }
+  requestAnimationFrame(frame);
+}
+setInterval(drawInst, 100);
+setInterval(() => { drawReward(); drawHeader(); tickWeights(); }, 500);
+setInterval(() => { drawMetrics(); drawWeights(); }, 2000);
+setInterval(loadHistory, 60000);   // resync with the phone's complete per-second bins
+window.addEventListener('resize', redrawAll);
+loadHistory(); connect(); requestAnimationFrame(frame); redrawAll();
+</script>
+</body>
+</html>

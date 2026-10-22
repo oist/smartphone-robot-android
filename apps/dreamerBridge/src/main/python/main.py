@@ -62,6 +62,7 @@ from jp.oist.abcvlib.dreamerBridge import SensorSnapshot
 
 import bridge_link
 from command import CommandSource
+import dashboard
 import webui
 
 PROTOCOL = 3
@@ -306,6 +307,9 @@ FRICTION_STILL = 100.0   # mm/s: below this a wheel counts as stuck
 FRICTION_ZERO = 0.02     # actions smaller than this stay zero
 kicked = [False, False]
 weights_installed = 0  # weight pushes swapped in this session
+# This run's reward curve, weight updates and learner metrics, for the web
+# dashboard (dashboard.py); the live numbers come from web_state.
+history = dashboard.RunHistory()
 reward_avg = 0.0   # display only, see note_reward
 ep_return = 0.0
 ep_steps = 0
@@ -376,7 +380,7 @@ def setup():
         except Exception as e:  # noqa: BLE001
             print('dreamerBridge: could not pin the control thread: %s' % e)
     global web, web_url
-    web = webui.WebUI(commands)
+    web = webui.WebUI(commands, history=history.snapshot)
     web_url = web.start() or ''
     load_reward_settings()
     from policy_runner import PolicyRunner
@@ -723,6 +727,9 @@ def loop():
                 if frame is None:
                     break
                 header, payload = frame
+                if header.get('type') == 'stats':
+                    history.stats(header.get('stats'))
+                    continue
                 if header.get('type') == 'weights_ready':
                     # Bootstrap: we came up without a policy, so the trainer is
                     # still driving. Once its weights land we can take over,
@@ -876,6 +883,7 @@ def note_reward(reward):
     reward_avg += REWARD_AVG_ALPHA * (reward - reward_avg)
     ep_return += reward
     ep_steps += 1
+    history.reward(reward)
     gui = context.guiUpdater
     gui.setReward(reward)
     gui.setRewardAvg(reward_avg)
@@ -965,6 +973,9 @@ def web_state():
         status=web_status[0], serial=web_status[1],
         cmd=list(commands.current), cmd_src=commands.source,
         mode=commands.settings['mode'], measured=measured,
+        run=history.run, t0=history.t0, now=time.time(),
+        policy=str(runner.stamp) if runner is not None else None,
+        weights_installed=weights_installed, stats=history.latest,
         grid=0.0 if commands.settings['mode'] == 'blend'
         else float(commands.settings.get('step') or 0.0))
 
@@ -1093,7 +1104,9 @@ def loop_trainer_serial():
         while frame is not None:
             header, payload = frame
             kind = header.get('type')
-            if kind == 'weights_ready':
+            if kind == 'stats':
+                history.stats(header.get('stats'))
+            elif kind == 'weights_ready':
                 runner.install(payload, header.get('stamp'))
                 print('dreamerBridge: got a policy, reconnecting to '
                       'take over control')
@@ -1156,7 +1169,12 @@ def drain_control():
             stamp = header.get('stamp')
             runner.install(payload, stamp)
             weights_installed += 1
+            history.weights(stamp)
             context.guiUpdater.setTrainerStatus('policy %s' % stamp)
+        elif kind == 'stats':
+            # The learner's latest metrics, forwarded by the trainer for the
+            # web dashboard only.
+            history.stats(header.get('stats'))
         elif kind in ('act', 'ctrl'):
             apply_overrides(header)
             note_reward(float(header.get('reward', 0.0)))
@@ -1520,6 +1538,7 @@ def connect():
             commands.configure(hello['command'])
         note_command_units(hello.get('settings'))
         save_reward_settings(hello.get('settings'))
+        history.start(hello.get('run'))
         end_episode()  # the idle steps scored here are not this run's
         max_hz = float(hello.get('max_hz', settings['max_hz']))
         if pace not in ('serial', 'clock'):

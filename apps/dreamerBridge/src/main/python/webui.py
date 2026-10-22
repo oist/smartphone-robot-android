@@ -3,8 +3,14 @@
 Open http://<robot phone's WiFi address>:8080 from another phone or a computer
 on the same network; the robot's screen shows the address. Two views of one
 page: / is the joystick (with a few live numbers), /mirror the robot's screen.
+/dash is a separate page for showing training to an audience: the reward
+curve since the run started, the age of the weights, the learner's losses and
+a live blueprint of the robot.
 
     GET  /, /mirror   the page
+    GET  /dash        the dashboard (webpages/dashboard.html)
+    GET  /history     this run's reward curve, weight updates and learner
+                      metrics so far (dashboard.py), for a page opened late
     GET  /ws          a WebSocket: state pushed at WEB_HZ, commands sent back
     GET  /state       the screen's numbers as JSON (fallback: polling)
     POST /cmd         {"forward": f, "turn": t} in [-1, 1], or {"release": true}
@@ -98,11 +104,13 @@ class _Client:
 
 class WebUI:
 
-    def __init__(self, commands, port=PORT):
+    def __init__(self, commands, port=PORT, history=None):
         self.commands = commands
         self.port = port
+        self.history = history or dict  # () -> the run's history as a dict
         self.state = {}   # the latest published, never mutated
         self.page = pkgutil.get_data('webpages', 'index.html')
+        self.dash = pkgutil.get_data('webpages', 'dashboard.html')
         self._server = None
         self._clients = set()
         self._cond = threading.Condition()
@@ -176,6 +184,10 @@ class WebUI:
                     self._websocket()
                 elif path in ('/', '/mirror', '/drive'):
                     self._send(200, ui.page, 'text/html; charset=utf-8')
+                elif path == '/dash':
+                    self._send(200, ui.dash, 'text/html; charset=utf-8')
+                elif path == '/history':
+                    self._json(ui.history())
                 elif path == '/state':
                     self._json(ui.state)
                 elif path == '/favicon.ico':
