@@ -29,12 +29,22 @@ class SerialCommManager @JvmOverloads constructor(
 
     private var command: ByteArray? = null
     private var queuedMotorLevelsAtMs: Long = 0L
+    private var queuedAtNs: Long = 0L
     private var queuedMotorLevelsTrace: MotorCommandTrace? = null
     private var nextSerialTraceSeq: Long = 1L
     private var inFlightTrace: SerialCommandTrace? = null
     private val commandLock = Object()
     private val lifecycleLock = Any()
     private var runContext: RunContext? = null
+
+    /**
+     * How long to wait for the RP2040 to answer a command before giving up on
+     * it and sending the next one. The 10 s default suits the stock firmware,
+     * which can stall ~1 s after a coast. The fast firmware (RTT-LoopReduction)
+     * answers in ~8 ms, and there a single lost reply otherwise freezes the
+     * wheels for the full 10 s, so callers on it should set this much lower.
+     */
+    @Volatile var replyTimeoutMs: Int = 10000
 
     private var startTimeAndroid: Long = 0
     private var cnt: Int = 0
@@ -77,6 +87,7 @@ class SerialCommManager @JvmOverloads constructor(
 
     private fun buildAndroid2PiWriter(context: RunContext): Runnable = Runnable {
         startTimeAndroid = System.nanoTime()
+        var queueWaitNs = 0L
         while (!context.stopRequested.get()) {
             val nextCommand: ByteArray? = try {
                 synchronized(commandLock) {
@@ -97,6 +108,10 @@ class SerialCommManager @JvmOverloads constructor(
                     )
                     command = null
                     queuedMotorLevelsTrace = null
+                    val dequeuedNs = System.nanoTime()
+                    ControlLatencyTrace.stampDequeued(dequeuedNs)
+                    queueWaitNs = if (queuedAtNs > 0L) dequeuedNs - queuedAtNs else 0L
+                    queuedAtNs = 0L
                     localCommand
                 }
             } catch (e: InterruptedException) {
@@ -112,7 +127,36 @@ class SerialCommManager @JvmOverloads constructor(
                 queuedMotorLevelsAtMs = 0L
             }
             logSerialTx(inFlightTrace)
-            sendPacket(nextCommand)
+            val isMotor = AndroidToRP2040Command.getEnumByValue(nextCommand[1]) ==
+                    AndroidToRP2040Command.SET_MOTOR_LEVELS
+            try {
+            if (ControlLatencyTrace.asyncMotor && isMotor) {
+                // Fire and forget, then drain whatever the RP2040 has answered
+                // in the meantime. The state packets still land, they are just
+                // no longer something a wheel command has to wait behind.
+                val t0 = System.nanoTime()
+                try {
+                    usbSerial.sendOnly(nextCommand)
+                } catch (e: IOException) {
+                    throw RuntimeException(e)
+                }
+                val t1 = System.nanoTime()
+                parseFifoPacket()
+                ControlLatencyTrace.record(
+                    queueWaitNs / 1000, 0L, (t1 - t0) / 1000, 0L)
+            } else {
+                sendPacket(nextCommand, queueWaitNs)
+            }
+            } catch (e: RuntimeException) {
+                // The base dropped off USB (an RP2040 reset under motor load,
+                // 2026-10-16). Throwing here crashed the whole app; instead end
+                // this writer and wait for the port to come back. Nothing can
+                // reach the motors meanwhile, so the firmware must stop them
+                // on its own way back up.
+                if (!isUsbFailure(e)) throw e
+                onLinkLost(context, e)
+                break
+            }
             cnt++
             if (cnt == 100) {
                 durationAndroid = (System.nanoTime() - startTimeAndroid) / 100
@@ -127,6 +171,38 @@ class SerialCommManager @JvmOverloads constructor(
         }
     }
 
+
+    private fun isUsbFailure(e: Throwable): Boolean {
+        var cause: Throwable? = e
+        while (cause != null) {
+            if (cause is IOException) return true
+            cause = cause.cause
+        }
+        return e.message?.contains("SerialTimeoutException") == true
+    }
+
+    private fun onLinkLost(context: RunContext, e: Throwable) {
+        Logger.e("serial", "USB link to the base lost; serial writer stopped: $e")
+        linkLost = true
+        ControlLatencyTrace.linkLostCount++
+        synchronized(lifecycleLock) {
+            if (runContext === context) runContext = null
+        }
+        context.stopRequested.set(true)
+        synchronized(commandLock) {
+            // A stale action must not be the first thing a re-attached base
+            // gets; start() queues a stop instead.
+            command = null
+            queuedMotorLevelsTrace = null
+        }
+        // shutdown(), not shutdownNow(): no interrupt of this very thread,
+        // just no further scheduled runs.
+        context.writerExecutor?.shutdown()
+    }
+
+    /** True from a lost USB link until the writer is started again. */
+    @Volatile var linkLost: Boolean = false
+        private set
 
     // Start method to start the thread
     @JvmOverloads
@@ -152,6 +228,13 @@ class SerialCommManager @JvmOverloads constructor(
                 )
             }
             runContext = context
+        }
+        if (linkLost) {
+            // Re-attached after a lost link: stop first, whatever the base was
+            // doing, and let the controller take over from rest.
+            linkLost = false
+            Logger.i("serial", "USB link to the base back; sending a stop first")
+            setMotorLevels(0f, 0f, true, true)
         }
     }
 
@@ -260,11 +343,17 @@ class SerialCommManager @JvmOverloads constructor(
      * @return 0 if successful, -1 if mResponse is not large enough to hold all response and the stop mark,
      * -2 if SerialTimeoutException on send
      */
-    private fun sendPacket(bytes: ByteArray): Int {
+    private fun sendPacket(bytes: ByteArray, queueWaitNs: Long = 0L): Int {
         require(bytes.size == AndroidToRP2040Packet.packetSize) {
             "Input byte array must have a length of " + AndroidToRP2040Packet.packetSize
         }
+        // Three stages, timed separately: clearing the parser, the USB bulk
+        // write, and waiting for the RP2040 to answer. Their sum is what a
+        // controller actually pays to move a wheel, and until it was split
+        // there was no way to tell whose fault the ~84ms was.
+        val t0 = System.nanoTime()
         usbSerial.prepareForCommand(AndroidToRP2040Command.getEnumByValue(bytes[1]))
+        val t1 = System.nanoTime()
         try {
             this.usbSerial.send(bytes, 10000)
         } catch (e: SerialTimeoutException) {
@@ -275,16 +364,21 @@ class SerialCommManager @JvmOverloads constructor(
         } catch (e: IOException) {
             throw RuntimeException(e)
         }
+        val t2 = System.nanoTime()
         receivePacket()
+        val t3 = System.nanoTime()
+        ControlLatencyTrace.record(
+            queueWaitNs / 1000, (t1 - t0) / 1000, (t2 - t1) / 1000, (t3 - t2) / 1000)
         return 0
     }
 
     private fun receivePacket() {
-        val receivedStatus = usbSerial.awaitPacketReceived(10000)
+        val receivedStatus = usbSerial.awaitPacketReceived(replyTimeoutMs)
         if (receivedStatus == 1) {
             //Note this is actually calling the functions like parseLog, parseStatus, etc.
             parseFifoPacket()
         } else {
+            ControlLatencyTrace.timeoutCount++
             inFlightTrace?.let {
                 Logger.e(
                     "BasicAssemblerTrace",
@@ -439,6 +533,12 @@ class SerialCommManager @JvmOverloads constructor(
             if (activeContext.stopRequested.get()) {
                 return
             }
+            // One slot, not a queue: if the previous command has not been
+            // sent yet it is silently replaced. That is the right policy for
+            // a controller (the newest action is the only useful one) but it
+            // means the wheels never see most of what the policy chose, so
+            // count it rather than letting it stay invisible.
+            if (command != null) ControlLatencyTrace.droppedCount++
             command =
                 generateSetMotorLevels(androidToRP2040Packet, left, right, leftBrake, rightBrake)
             queuedMotorLevelsTrace = MotorCommandTrace(
@@ -450,6 +550,9 @@ class SerialCommManager @JvmOverloads constructor(
                 rightControl = command!![3]
             )
             queuedMotorLevelsAtMs = SystemClock.uptimeMillis()
+            queuedAtNs = System.nanoTime()
+            ControlLatencyTrace.stampQueued(queuedAtNs)
+            ControlLatencyTrace.markQueued()
             commandLock.notify()
         }
     }
@@ -467,6 +570,7 @@ class SerialCommManager @JvmOverloads constructor(
                 return
             }
             command = generateGetLogCmd()
+            ControlLatencyTrace.markQueued()
             queuedMotorLevelsTrace = null
             queuedMotorLevelsAtMs = 0L
             commandLock.notify()
@@ -512,6 +616,10 @@ class SerialCommManager @JvmOverloads constructor(
             )
             rp2040State.batteryDetails.voltageMv = byteBuffer.getShort()
             rp2040State.batteryDetails.safetyStatus = byteBuffer.get()
+            ControlLatencyTrace.recordState(
+                rp2040State.motorsState.faults.left,
+                rp2040State.motorsState.faults.right,
+                rp2040State.batteryDetails.safetyStatus)
             rp2040State.batteryDetails.temperature = byteBuffer.getShort()
             rp2040State.batteryDetails.stateOfHealth = byteBuffer.get()
             rp2040State.batteryDetails.flags = byteBuffer.getShort()
@@ -526,6 +634,17 @@ class SerialCommManager @JvmOverloads constructor(
             )
             rp2040State.chargeSideUSB.usb_charger_voltage = byteBuffer.getShort()
             rp2040State.chargeSideUSB.wireless_charger_vrect = byteBuffer.getShort()
+            // Firmware from 2026-10-16 appends its health block (health.h).
+            if (byteBuffer.remaining() >= 8) {
+                ControlLatencyTrace.recordHealth(
+                    resetCause = byteBuffer.get().toInt() and 0xFF,
+                    prevStage = byteBuffer.get().toInt() and 0xFF,
+                    boots = byteBuffer.get().toInt() and 0xFF,
+                    motorWriteFailures = byteBuffer.getShort().toInt() and 0xFFFF,
+                    busRecoveries = byteBuffer.get().toInt() and 0xFF,
+                    motorLinkOk = byteBuffer.get().toInt() and 0xFF,
+                    selfResets = byteBuffer.get().toInt() and 0xFF)
+            }
             // Logger.v("serial", "usb_charger_voltage: " + rp2040State.chargeSideUSB.usb_charger_voltage);
             rp2040State.updatePublishers()
         }

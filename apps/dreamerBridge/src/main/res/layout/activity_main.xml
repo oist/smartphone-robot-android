@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fits one screen: the reward bar on top, then rows built by GuiUpdater, then
+     a fixed three-line status at the bottom so new messages never move anything. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FF1A1A19"
+    android:orientation="vertical"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="12dp"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="12dp"
+        android:paddingBottom="6dp"
+        android:fontFamily="monospace"
+        android:letterSpacing="0.1"
+        android:text="REWARD"
+        android:textColor="#FF8A8985"
+        android:textSize="11sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:id="@+id/rewardBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+
+    <TextView
+        android:id="@+id/rewardEpisode"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="6dp"
+        android:fontFamily="monospace"
+        android:maxLines="1"
+        android:text="this episode   -"
+        android:textColor="#FFB0B0B0"
+        android:textSize="13sp" />
+
+    <LinearLayout
+        android:id="@+id/rows"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical" />
+
+    <!-- Centred and narrow: at the bottom only the middle of the screen is
+         visible past the cradle. The bottom strip below it stays empty. -->
+    <TextView
+        android:id="@+id/status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="72dp"
+        android:layout_marginEnd="72dp"
+        android:layout_marginBottom="72dp"
+        android:gravity="center"
+        android:fontFamily="monospace"
+        android:lines="3"
+        android:ellipsize="end"
+        android:textColor="#FF707070"
+        android:textSize="11sp" />
+</LinearLayout>

@@ -13,6 +13,8 @@ import android.os.HandlerThread
 import jp.oist.abcvlib.core.inputs.Publisher
 import jp.oist.abcvlib.core.inputs.PublisherManager
 import jp.oist.abcvlib.util.Logger
+import jp.oist.abcvlib.util.SensorLatencyTrace
+import android.os.SystemClock
 
 /**
  * MotionSensors reads and processes the data from the Android phone gyroscope and
@@ -132,6 +134,20 @@ class OrientationData(context: Context, publisherManager: PublisherManager) :
     override fun onSensorChanged(event: SensorEvent) {
         val sensor = event.sensor
 
+        if (sensor.type == TYPE_GYROSCOPE) {
+            // Diagnostic only: nothing downstream consumes this. It exists so
+            // the fused rotation vector can be compared against a signal that
+            // has no fusion filter in front of it.
+            SensorLatencyTrace.gyroX = event.values[0]
+            SensorLatencyTrace.gyroY = event.values[1]
+            SensorLatencyTrace.gyroZ = event.values[2]
+            SensorLatencyTrace.gyroAgeMs =
+                (SystemClock.elapsedRealtimeNanos() - event.timestamp) / 1e6
+            SensorLatencyTrace.gyroCallbackNs = System.nanoTime()
+            SensorLatencyTrace.gyroCount++
+            return
+        }
+
         // if(sensor.getType()==Sensor.TYPE_GYROSCOPE){
         // indexCurrentGyro = sensorChangeCountGyro % windowLength;
         // indexPreviousGyro = (sensorChangeCountGyro - 1) % windowLength;
@@ -167,6 +183,14 @@ class OrientationData(context: Context, publisherManager: PublisherManager) :
             angularVelocityRad[indexCurrentRotation] =
                 (thetaRad[indexCurrentRotation] - thetaRad[indexPreviousRotation]) / dt
 
+            // Both clock bases, so the age can be checked rather than believed.
+            SensorLatencyTrace.rotAgeMs =
+                (SystemClock.elapsedRealtimeNanos() - event.timestamp) / 1e6
+            SensorLatencyTrace.rotAgeUptimeMs =
+                (System.nanoTime() - event.timestamp) / 1e6
+            SensorLatencyTrace.rotCallbackNs = System.nanoTime()
+            SensorLatencyTrace.rotCount++
+
             // Update all previous variables with current ones
             sensorChangeCountRotation++
         }
@@ -188,56 +212,31 @@ class OrientationData(context: Context, publisherManager: PublisherManager) :
      * Registering sensorEventListeners for accelerometer and gyroscope only.
      */
     fun register(handler: Handler) {
-        // Check if rotation_sensor exists before trying to turn on the listener
+        // Only the rotation vector is registered, and at a bounded rate.
+        //
+        // This used to register the rotation vector, gyroscope, accelerometer
+        // and uncalibrated accelerometer, all at SENSOR_DELAY_FASTEST, onto a
+        // single sensorThread -- while onSensorChanged only ever handles
+        // TYPE_ROTATION_VECTOR, so three of the four produced events purely to
+        // be discarded. The thread could not drain that, and the queue reached
+        // a standing backlog: measured on a Pixel 3a, sensor events arrived at
+        // the app 8.5 SECONDS after their hardware timestamp, which makes any
+        // closed-loop control impossible while looking like a healthy signal.
         if (rotationSensor != null) {
             sensorManager.registerListener(
                 this,
                 rotationSensor,
-                SensorManager.SENSOR_DELAY_FASTEST,
+                SAMPLING_PERIOD_US,
                 handler
             )
         } else {
-            Logger.e("SensorTesting", "No Default rotation_sensor Available.")
+            Logger.e("SensorTesting", "No rotation vector sensor available")
         }
-        // Check if gyro exists before trying to turn on the listener
-        if (gyroscope != null) {
-            sensorManager.registerListener(
-                this,
-                gyroscope,
-                SensorManager.SENSOR_DELAY_FASTEST,
-                handler
-            )
-        } else {
-            Logger.e("SensorTesting", "No Default gyroscope Available.")
-        }
-        // Check if rotation_sensor exists before trying to turn on the listener
-        if (accelerometer != null) {
-            sensorManager.registerListener(
-                this,
-                accelerometer,
-                SensorManager.SENSOR_DELAY_FASTEST,
-                handler
-            )
-        } else {
-            Logger.e("SensorTesting", "No Default accelerometer Available.")
-        }
-        // Check if rotation_sensor exists before trying to turn on the listener
-        if (accelerometerUncalibrated != null) {
-            sensorManager.registerListener(
-                this,
-                accelerometerUncalibrated,
-                SensorManager.SENSOR_DELAY_FASTEST,
-                handler
-            )
-        } else {
-            Logger.e("SensorTesting", "No Default accelerometer_uncalibrated Available.")
+        if (SensorLatencyTrace.gyroEnabled && gyroscope != null) {
+            sensorManager.registerListener(this, gyroscope, SAMPLING_PERIOD_US, handler)
         }
     }
 
-    /**
-     * Check if accelerometer and gyroscope objects still exist before trying to unregister them.
-     * This prevents null pointer exceptions.
-     */
     fun unregister() {
         // Check if rotation_sensor exists before trying to turn off the listener
         if (rotationSensor != null) {
@@ -267,7 +266,16 @@ class OrientationData(context: Context, publisherManager: PublisherManager) :
     }
 
     override fun start() {
-        mHandlerThread = HandlerThread("sensorThread")
+        // Urgent priority, not the default. Measured 2026-09-07, an
+        // orientation event reaches this callback ~7.4ms after its hardware
+        // timestamp, of which only ~2.5ms is sampling aliasing (the sensor
+        // reports maxRate=200Hz, no batching, so 5000us is already its
+        // ceiling -- SENSOR_DELAY_FASTEST would change nothing). The rest is
+        // delivery, and a default-priority HandlerThread competing with the
+        // control loop is part of it. This is latency on the critical path of
+        // a balancing robot, where the whole budget is ~30ms.
+        mHandlerThread = HandlerThread(
+            "sensorThread", android.os.Process.THREAD_PRIORITY_URGENT_DISPLAY)
         mHandlerThread.start()
         handler = Handler(mHandlerThread.looper)
         register(handler)
@@ -289,6 +297,13 @@ class OrientationData(context: Context, publisherManager: PublisherManager) :
         /**
          * @return utility function converting radians to degrees
          */
+        /**
+         * Sampling period in microseconds. 5000us is 200Hz, far above any
+         * control loop here and low enough that the sensor thread keeps up.
+         * SENSOR_DELAY_FASTEST let the queue build an 8.5s backlog.
+         */
+        const val SAMPLING_PERIOD_US = 5000
+
         fun getThetaDeg(radians: Double): Double {
             return (radians * (180 / Math.PI))
         }
