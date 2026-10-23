@@ -148,6 +148,10 @@ main {
 .bp-val { fill: var(--ink); font-size: 12px; font-weight: 600; }
 .bp-acc { stroke: var(--series-2); fill: none; stroke-width: 2; }
 .bp-accfill { fill: var(--series-2); }
+.bp-floor { stroke: var(--ink-soft); fill: none; stroke-width: 0.8; }
+#restart { border-color: var(--crit); color: var(--crit); }
+#restart.armed { background: var(--crit); color: var(--panel); }
+#restart:disabled { opacity: 0.6; cursor: default; }
 .wrow { display: flex; gap: 26px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 8px; }
 .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; letter-spacing: 0.1em; }
 .chip .dot { width: 8px; height: 8px; border-radius: 50%; }
@@ -165,6 +169,7 @@ main {
   <div class="kv"><span class="k">gradient updates</span><span class="v" id="h-upd">—</span></div>
   <div class="spacer"></div>
   <span class="chip" id="h-link"><span class="dot"></span><span>—</span></span>
+  <button id="restart" type="button" hidden title="Start training again from random weights">RESTART TRAINING</button>
   <button id="theme" type="button">THEME</button>
 </header>
 
@@ -206,6 +211,8 @@ main {
           <path d="M0 0L10 5L0 10z" style="fill: var(--ink)"/>
         </marker>
         <clipPath id="ground-clip"><rect x="-250" y="56" width="500" height="14"/></clipPath>
+        <clipPath id="front-floor-clip"><rect x="-115" y="45" width="230" height="35"/></clipPath>
+        <clipPath id="top-clip"><rect x="-125" y="-150" width="250" height="306"/></clipPath>
       </defs>
 
       <!-- SIDE VIEW: forward is to the right. Drawings from the robot's
@@ -235,25 +242,26 @@ main {
         </g>
       </g>
 
-      <!-- FRONT VIEW: motor outputs beside the wheels. 1 mm = 1 px. -->
+      <!-- FRONT VIEW, from in front of the robot (its left is on the right):
+           motor outputs beside the wheels, and the floor ahead of it in
+           perspective. 1 mm = 1 px at the robot. -->
       <g transform="translate(20 400)">
         <rect width="250" height="306" fill="url(#g-minor)"/>
         <text x="8" y="16" class="bp-lbl">FRONT</text>
         <g transform="translate(125 226)">
+          <g clip-path="url(#front-floor-clip)"><path id="front-floor" class="bp-floor"/></g>
           <line x1="-115" y1="45" x2="115" y2="45" class="bp-ink"/>
           <path id="bp-front" class="bp-mesh"/>
           <rect x="-102" y="-40" width="8" height="80" class="bp-thin"/>
           <rect x="94" y="-40" width="8" height="80" class="bp-thin"/>
-          <rect id="out-l" x="-101" width="6" class="bp-accfill"/>
-          <rect id="out-r" x="95" width="6" class="bp-accfill"/>
+          <rect id="out-r" x="-101" width="6" class="bp-accfill"/>
+          <rect id="out-l" x="95" width="6" class="bp-accfill"/>
           <line x1="-104" y1="0" x2="-92" y2="0" class="bp-thin"/>
           <line x1="92" y1="0" x2="104" y2="0" class="bp-thin"/>
-          <line x1="-58.5" y1="62" x2="58.5" y2="62" class="bp-dim"/>
-          <text x="0" y="74" class="bp-lbl" text-anchor="middle">119</text>
-          <text id="out-l-val" x="-98" y="-58" class="bp-val" text-anchor="middle">—</text>
-          <text id="out-r-val" x="98" y="-58" class="bp-val" text-anchor="middle">—</text>
-          <text x="-98" y="-72" class="bp-lbl" text-anchor="middle">MOTOR L</text>
-          <text x="98" y="-72" class="bp-lbl" text-anchor="middle">MOTOR R</text>
+          <text id="out-r-val" x="-98" y="-58" class="bp-val" text-anchor="middle">—</text>
+          <text id="out-l-val" x="98" y="-58" class="bp-val" text-anchor="middle">—</text>
+          <text x="-98" y="-72" class="bp-lbl" text-anchor="middle">MOTOR R</text>
+          <text x="98" y="-72" class="bp-lbl" text-anchor="middle">MOTOR L</text>
         </g>
       </g>
 
@@ -263,7 +271,10 @@ main {
         <text x="8" y="16" class="bp-lbl">TOP</text>
         <text x="242" y="16" class="bp-lbl" text-anchor="end">↑ FRONT</text>
         <g transform="translate(125 150)">
+          <g clip-path="url(#top-clip)"><path id="top-floor" class="bp-floor"/></g>
           <path id="bp-top" class="bp-mesh"/>
+          <line x1="-59.3" y1="132" x2="59.3" y2="132" class="bp-dim"/>
+          <text x="0" y="146" class="bp-lbl" text-anchor="middle">119</text>
           <line id="vl-arrow" x1="-58.5" y1="0" x2="-58.5" y2="0" class="bp-acc" marker-end="url(#arrow)"/>
           <line id="vr-arrow" x1="58.5" y1="0" x2="58.5" y2="0" class="bp-acc" marker-end="url(#arrow)"/>
           <path id="yaw-arc" class="bp-ink" marker-end="url(#arrow-ink)"/>
@@ -345,9 +356,23 @@ async function loadHistory() {
 }
 const phoneNow = () => Date.now() / 1000 + clockSkew;
 
+// A new run (a trainer connected with another name, e.g. after RESTART):
+// everything this page gathered belongs to the old one.
+function resetRun() {
+  bins = []; weights = []; stats = []; inst = []; curBin = null;
+  lastWeightsN = null; lastWeightsAt = null; lastStep = null;
+  restartDone();
+  redrawAll();
+}
+
 function onState(s) {
   lastState = s;
-  if (s.run !== undefined && s.run !== run) { run = s.run; loadHistory(); }
+  lastArrival = performance.now();
+  if (s.run !== undefined && s.run !== run) {
+    if (run !== null) resetRun();
+    run = s.run; loadHistory();
+  }
+  showRestart(s);
   if (s.now) clockSkew = s.now - Date.now() / 1000;
   if (s.t0) t0 = s.t0;
   // one reward per state frame is a sample of the stream, not every step:
@@ -381,7 +406,6 @@ function onState(s) {
     const last = stats.length ? stats[stats.length - 1][1] : null;
     if (!last || JSON.stringify(last) !== JSON.stringify(s.stats)) stats.push([phoneNow() - t0, s.stats]);
   }
-  needBlueprint = true;
 }
 
 // ---------- link ----------
@@ -390,13 +414,48 @@ function setLink(ok, text) {
   linkChip.querySelector('.dot').style.background = ok ? css('--good') : css('--crit');
   linkChip.querySelector('span:last-child').textContent = text;
 }
+let socket = null;
 function connect() {
   let ws;
   try { ws = new WebSocket(`ws://${location.host}/ws`); } catch (e) { return poll(); }
   ws.onmessage = (ev) => { try { onState(JSON.parse(ev.data)); } catch (e) {} };
-  ws.onopen = () => setLink(true, 'LIVE');
-  ws.onclose = () => { setLink(false, 'RECONNECTING'); setTimeout(connect, 1000); };
+  ws.onopen = () => { socket = ws; setLink(true, 'LIVE'); };
+  ws.onclose = () => { socket = null; setLink(false, 'RECONNECTING'); setTimeout(connect, 1000); };
 }
+
+// ---------- restart ----------
+// Offered only by a trainer started with tools/robot/demo.sh. Two presses, so
+// a stray click cannot throw a run away; the page resets itself when the
+// phone reports the new run.
+const restartBtn = document.getElementById('restart');
+let restartArmed = null, restarting = null;
+function showRestart(s) {
+  restartBtn.hidden = !(s.can_restart || restarting);
+  if (restarting && performance.now() - restarting > 30000) {
+    restartDone(); restartBtn.textContent = 'RESTART FAILED';
+  }
+}
+function restartDone() {
+  restarting = null; restartArmed = null;
+  restartBtn.disabled = false; restartBtn.classList.remove('armed');
+  restartBtn.textContent = 'RESTART TRAINING';
+}
+restartBtn.onclick = async () => {
+  if (restarting) return;
+  if (!restartArmed) {
+    restartArmed = setTimeout(restartDone, 4000);
+    restartBtn.classList.add('armed'); restartBtn.textContent = 'PRESS AGAIN TO RESTART';
+    return;
+  }
+  clearTimeout(restartArmed); restartArmed = null;
+  restarting = performance.now();
+  restartBtn.classList.remove('armed'); restartBtn.disabled = true;
+  restartBtn.textContent = 'RESTARTING…';
+  try {
+    if (socket && socket.readyState === 1) socket.send(JSON.stringify({t: 'restart'}));
+    else if (!(await fetch('/restart', {method: 'POST', body: '{}'})).ok) throw new Error();
+  } catch (e) { restartDone(); restartBtn.textContent = 'RESTART FAILED'; }
+};
 async function poll() {
   for (;;) {
     try { onState(await (await fetch('/state', {cache: 'no-store'})).json()); setLink(true, 'POLLING'); }
@@ -598,25 +657,82 @@ function setTiltViews(th) {
 }
 setTiltViews(0);
 
-// The phone sends its newest reading every 40 ms, unevenly over WiFi; the
-// drawing eases toward it every animation frame instead of jumping.
-const SMOOTH_S = 0.06;
+// The phone sends its newest reading every control step (~15 ms), unevenly
+// over WiFi, and by the time it is drawn it is already some tens of ms old.
+// So the tilt is drawn where it will be, not where it was: the reading plus
+// its own rate times its age and LEAD (the delay before it reached the page;
+// ?lead=<ms> to tune), never past a bumper the reading is not already past.
+// Then a short ease, which only takes out the jitter of uneven arrivals: a
+// longer one (60 ms until 2026-10-23) is itself a delay of about its length.
+const LEAD_S = (() => {
+  const ms = Number(new URLSearchParams(location.search).get('lead') ?? 30);
+  return (Number.isFinite(ms) ? ms : 30) / 1000;
+})();
+const PREDICT_MAX_S = 0.08;
+const BUMPERS_DEG = [-6.9, 9.35];   // where the body rests, back and front
+const EASE_S = {th: 0.012, rate: 0.03, vl: 0.04, vr: 0.04, al: 0.02, ar: 0.02};
 const shown = {th: 0, rate: 0, vl: 0, vr: 0, al: 0, ar: 0};
-let needBlueprint = false, wheelAngle = 0, groundShift = 0, lastBpT = performance.now();
+let lastArrival = performance.now();
+let wheelAngle = 0, groundShift = 0, lastBpT = performance.now();
+// Where the robot is on an endless floor, from its wheels alone: x, y in mm
+// (y up the page), heading psi in rad, clockwise. Only the floor grid's phase
+// matters, so x and y are kept modulo its spacing.
+const FLOOR_MM = 40, TRACK_MM = 118.7;
+const pose = {x: 0, y: 0, psi: 0};
+const topFloorPath = (() => {
+  const out = [], R = 320;
+  for (let k = -R; k <= R; k += FLOOR_MM) out.push(`M${k} ${-R}V${R}M${-R} ${k}H${R}`);
+  return out.join('');
+})();
 function arcPath(r, a0, a1) {   // angles from vertical, clockwise positive, degrees
   const p = a => [r * Math.sin(a * DEG), -r * Math.cos(a * DEG)];
   const [x0, y0] = p(a0), [x1, y1] = p(a1);
   return `M${x0.toFixed(1)} ${y0.toFixed(1)}A${r} ${r} 0 0 ${a1 > a0 ? 1 : 0} ${x1.toFixed(1)} ${y1.toFixed(1)}`;
 }
+// The floor ahead of the robot in the front view, in perspective: a camera
+// FRONT_EYE mm in front of the robot, FRONT_HIGH px above the floor, so that
+// at the robot 1 mm is still 1 px and the floor fills the strip under the
+// ground line out to FRONT_NEAR mm from the robot.
+const FRONT_EYE = 400, FRONT_HIGH = 60, FRONT_NEAR = 148;
+function frontFloor() {
+  const sp = Math.sin(pose.psi), cp = Math.cos(pose.psi), R = 320, out = [];
+  // World offset from the robot -> (ahead, to its right), in mm.
+  const local = (dx, dy) => [dx * sp + dy * cp, dx * cp - dy * sp];
+  const project = ([f, r]) => {
+    const z = FRONT_EYE - f;
+    return [(-r * FRONT_EYE / z).toFixed(1), (45 + FRONT_HIGH * (FRONT_EYE / z - 1)).toFixed(1)];
+  };
+  const x0 = -pose.x % FLOOR_MM, y0 = -pose.y % FLOOR_MM;
+  for (let k = -R; k <= R; k += FLOOR_MM) {
+    for (const [a, b] of [[[x0 + k, -R], [x0 + k, R]], [[-R, y0 + k], [R, y0 + k]]]) {
+      // Clip the line to 0 <= ahead <= FRONT_NEAR, then project its ends.
+      let p = local(...a), q = local(...b), t0 = 0, t1 = 1;
+      const df = q[0] - p[0];
+      for (const [lim, sign] of [[0, 1], [FRONT_NEAR, -1]]) {
+        if (Math.abs(df) < 1e-9) { if (sign * (p[0] - lim) < 0) t1 = -1; continue; }
+        const t = (lim - p[0]) / df;
+        if (sign * df > 0) t0 = Math.max(t0, t); else t1 = Math.min(t1, t);
+      }
+      if (t1 <= t0) continue;
+      const at = t => [p[0] + t * df, p[1] + t * (q[1] - p[1])];
+      const [u0, w0] = project(at(t0)), [u1, w1] = project(at(t1));
+      out.push(`M${u0} ${w0}L${u1} ${w1}`);
+    }
+  }
+  return out.join('');
+}
 function drawBlueprint() {
   const s = lastState; if (!s) return;
   const now = performance.now(), dt = Math.min(0.1, (now - lastBpT) / 1000); lastBpT = now;
-  const k = 1 - Math.exp(-dt / SMOOTH_S);
   // Forward is negative wheel speed.
-  const target = {th: Number(s.theta_deg) || 0, rate: Number(s.rate_deg) || 0,
+  const th0 = Number(s.theta_deg) || 0, rate0 = Number(s.rate_deg) || 0;
+  const ahead = Math.min(PREDICT_MAX_S, (now - lastArrival) / 1000 + LEAD_S);
+  const target = {th: Math.max(Math.min(th0, BUMPERS_DEG[0]),
+                               Math.min(Math.max(th0, BUMPERS_DEG[1]), th0 + rate0 * ahead)),
+                  rate: rate0,
                   vl: -(Number(s.speed_l) || 0), vr: -(Number(s.speed_r) || 0),
                   al: Number(s.act_l) || 0, ar: Number(s.act_r) || 0};
-  for (const key in shown) shown[key] += k * (target[key] - shown[key]);
+  for (const key in shown) shown[key] += (1 - Math.exp(-dt / EASE_S[key])) * (target[key] - shown[key]);
   const {th, rate, vl, vr, al, ar} = shown, v = 0.5 * (vl + vr);
   // Positive tilt is a forward lean: the top goes right, toward the front.
   $('body').setAttribute('transform', `rotate(${th.toFixed(2)})`);
@@ -634,6 +750,14 @@ function drawBlueprint() {
   $('wheel-side').setAttribute('transform', `rotate(${wheelAngle.toFixed(1)})`);
   groundShift = ((groundShift - rim * 1.25 * dt) % 25 + 25) % 25;
   $('ground-ticks').setAttribute('transform', `translate(${groundShift.toFixed(1)} 0)`);
+  // Top and front: the floor slides back and turns under the robot, from the
+  // same wheel speeds (a faster left wheel turns it right, clockwise).
+  pose.psi = (pose.psi + (vl - vr) / 20 / TRACK_MM * dt) % (2 * Math.PI);
+  pose.x = (pose.x + rim * dt * Math.sin(pose.psi)) % FLOOR_MM;
+  pose.y = (pose.y + rim * dt * Math.cos(pose.psi)) % FLOOR_MM;
+  $('top-floor').setAttribute('transform',
+    `rotate(${(-pose.psi / DEG).toFixed(2)}) translate(${(-pose.x).toFixed(1)} ${pose.y.toFixed(1)})`);
+  $('front-floor').setAttribute('d', frontFloor());
   const pct = x => 100 * x / TOP_SPEED;
   const vx = Math.max(-200, Math.min(200, pct(v) * 2));
   $('v-arrow').setAttribute('x2', vx.toFixed(1));
@@ -659,6 +783,7 @@ function drawBlueprint() {
 (function staticBits() {
   const ticks = []; for (let x = -275; x <= 275; x += 25) ticks.push(`<line x1="${x}" y1="56" x2="${x - 8}" y2="64" class="bp-thin"/>`);
   $('ground-ticks').innerHTML = ticks.join('');
+  $('top-floor').setAttribute('d', topFloorPath);
 })();
 
 // ---------- header ----------
@@ -673,7 +798,7 @@ function drawHeader() {
 }
 
 // ---------- loops ----------
-function redrawAll() { drawReward(); drawInst(); drawMetrics(); drawWeights(); needBlueprint = true; }
+function redrawAll() { drawReward(); drawInst(); drawMetrics(); drawWeights(); }
 function frame() {
   drawBlueprint();
   requestAnimationFrame(frame);

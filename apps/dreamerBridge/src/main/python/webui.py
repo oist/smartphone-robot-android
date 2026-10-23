@@ -15,6 +15,7 @@ a live blueprint of the robot.
     GET  /state       the screen's numbers as JSON (fallback: polling)
     POST /cmd         {"forward": f, "turn": t} in [-1, 1], or {"release": true}
     POST /mode        {"mode": "auto" | "manual" | "direct" | "blend"}
+    POST /restart     train from scratch (a tools/robot/demo.sh trainer only)
 
 The page talks over one WebSocket. Polling plain HTTP was measured at ~110 ms
 (p50) from a posted command to the page seeing it, up to ~250 ms: a fresh TCP
@@ -104,10 +105,11 @@ class _Client:
 
 class WebUI:
 
-    def __init__(self, commands, port=PORT, history=None):
+    def __init__(self, commands, port=PORT, history=None, on_restart=None):
         self.commands = commands
         self.port = port
         self.history = history or dict  # () -> the run's history as a dict
+        self.on_restart = on_restart    # () -> None; raises if not offered
         self.state = {}   # the latest published, never mutated
         self.page = pkgutil.get_data('webpages', 'index.html')
         self.dash = pkgutil.get_data('webpages', 'dashboard.html')
@@ -156,6 +158,10 @@ class WebUI:
             self.commands.release()
         elif kind == 'mode':
             self.commands.set_mode(message['mode'])
+        elif kind == 'restart':
+            if self.on_restart is None:
+                raise ValueError('restart is not available')
+            self.on_restart()
         else:
             raise ValueError('unknown message %r' % kind)
 
@@ -205,6 +211,8 @@ class WebUI:
                                        else 'cmd'))
                     elif path == '/mode':
                         ui.handle(dict(body, t='mode'))
+                    elif path == '/restart':
+                        ui.handle(dict(t='restart'))
                     else:
                         return self._send(404, b'not found', 'text/plain')
                     self._json(dict(ok=True))
@@ -217,6 +225,10 @@ class WebUI:
                     return self._send(400, b'websocket only', 'text/plain')
                 accept = base64.b64encode(hashlib.sha1(
                     (key + WS_GUID).encode()).digest()).decode()
+                # The handler's default is HTTP/1.0, and Firefox leaves a
+                # socket whose 101 says so connecting forever (RFC 6455 asks
+                # for 1.1): the page then never went live there.
+                self.protocol_version = 'HTTP/1.1'
                 self.send_response(101)
                 self.send_header('Upgrade', 'websocket')
                 self.send_header('Connection', 'Upgrade')

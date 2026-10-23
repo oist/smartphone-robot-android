@@ -46,6 +46,7 @@ import os
 import socket
 import struct
 import sys
+import threading
 import time
 
 from android.os import SystemClock
@@ -73,14 +74,18 @@ CONTROL_HZ = 50.0
 GUI_PERIOD = 0.1
 # The web page (webui.py) gets its own, faster refresh: it is pushed over a
 # socket on another thread, so it costs the loop only building a small dict.
-WEB_PERIOD = 0.04
+# Every control step at 65 Hz: at 25 Hz the dashboard's robot drawing was a
+# visible beat behind the robot, ~20 ms of it waiting for the next frame.
+WEB_PERIOD = 0.015
 RECV_TIMEOUT = 30.0
 # Connecting must fail fast. The control loop is single threaded, so a blocking
 # connect freezes sensing and the display with it -- which looks exactly like a
 # stale sensor. A refused connection returns immediately; this only bounds the
 # case where the trainer's host swallows the SYN.
 CONNECT_TIMEOUT = 0.5
-RETRY_DELAY = 2.0
+# A refused connection costs nothing, and after a dashboard restart this is
+# most of the time the robot waits for the next session.
+RETRY_DELAY = 0.5
 # Pipelined mode never blocks on the trainer, so nothing stops the wheels by
 # itself if the trainer stalls or the link goes quiet: without this the robot
 # keeps driving the last action it got. Lock-step got this for free.
@@ -307,6 +312,16 @@ FRICTION_STILL = 100.0   # mm/s: below this a wheel counts as stuck
 FRICTION_ZERO = 0.02     # actions smaller than this stay zero
 kicked = [False, False]
 weights_installed = 0  # weight pushes swapped in this session
+# Training from scratch, asked for on the dashboard (webui.py) and offered by
+# a trainer under tools/robot/demo_supervisor.py ('restart' in its hello).
+# The web thread sets the event; the control loop sends the request.
+trainer_restart = False
+restart_asked = threading.Event()
+# Wheels held still until the trainer's next weights land: from a restart
+# request, and whenever a trainer says the weights we hold are not its run's
+# ('hold' in its hello). Otherwise a fresh run would start out showing the
+# skill of the run before it.
+hold_weights = False
 # This run's reward curve, weight updates and learner metrics, for the web
 # dashboard (dashboard.py); the live numbers come from web_state.
 history = dashboard.RunHistory()
@@ -380,7 +395,8 @@ def setup():
         except Exception as e:  # noqa: BLE001
             print('dreamerBridge: could not pin the control thread: %s' % e)
     global web, web_url
-    web = webui.WebUI(commands, history=history.snapshot)
+    web = webui.WebUI(commands, history=history.snapshot,
+                      on_restart=request_restart)
     web_url = web.start() or ''
     load_reward_settings()
     from policy_runner import PolicyRunner
@@ -685,7 +701,11 @@ def loop():
             snap, _, _ = sample()
             cmd = commands.tick()
             _, act = runner.act(snap, cmd)
-            policy_drive(act[0], act[1])
+            if hold_weights:
+                act = [0.0, 0.0]
+                stop_wheels()
+            else:
+                policy_drive(act[0], act[1])
             score_locally(snap, act, cmd)
             if prepare_ahead:
                 runner.prepare()
@@ -976,6 +996,8 @@ def web_state():
         run=history.run, t0=history.t0, now=time.time(),
         policy=str(runner.stamp) if runner is not None else None,
         weights_installed=weights_installed, stats=history.latest,
+        can_restart=bool(trainer_restart and sock is not None and onboard),
+        holding=hold_weights,
         grid=0.0 if commands.settings['mode'] == 'blend'
         else float(commands.settings.get('step') or 0.0))
 
@@ -1014,7 +1036,12 @@ def loop_onboard():
         snap, snap_stamp, snap_age = sample()
         cmd = commands.tick()
         obs, act = runner.act(snap, cmd)
-    policy_drive(act[0], act[1])
+    if hold_weights:
+        # Recorded as what it is: a step with the wheels held.
+        act = [0.0, 0.0]
+        stop_wheels()
+    else:
+        policy_drive(act[0], act[1])
     applied = time.monotonic()
     last_act = applied
     seq += 1
@@ -1045,6 +1072,8 @@ def loop_onboard():
                sensors=snap,
                **latency_block(tick, snap_stamp, snap_age)))
     step += 1
+    if restart_asked.is_set():
+        send_restart()
     drain_control()
     # The GRU half of the next step needs only the carry we already have. Do
     # it now, in the ~80 ms the RP2040 is busy, so that when the reply lands
@@ -1157,7 +1186,7 @@ def drain_control():
     reaches us already parsed (bridge_link.Receiver did that on its own
     thread), so installing it is an assignment.
     """
-    global step, weights_installed
+    global step, weights_installed, hold_weights
     budget = time.monotonic() + 0.004
     while time.monotonic() < budget:
         frame = read_nowait()
@@ -1170,6 +1199,7 @@ def drain_control():
             runner.install(payload, stamp)
             weights_installed += 1
             history.weights(stamp)
+            hold_weights = False
             context.guiUpdater.setTrainerStatus('policy %s' % stamp)
         elif kind == 'stats':
             # The learner's latest metrics, forwarded by the trainer for the
@@ -1187,6 +1217,30 @@ def drain_control():
                 stop_wheels()
                 runner.reset()
                 step = 0
+
+
+def request_restart():
+    """From the web page's thread: ask for training from scratch. Only a
+    trainer that offered it is asked; the control loop sends it."""
+    if not (trainer_restart and sock is not None and onboard):
+        raise ValueError('this trainer cannot restart training')
+    restart_asked.set()
+
+
+def send_restart():
+    """Ask the trainer for a fresh run and stop acting on this one's weights.
+
+    The link stays up: the supervisor ends this session, which drops it, and
+    only then do we reconnect -- to the next session, not back to this one.
+    """
+    global hold_weights, reward_avg
+    restart_asked.clear()
+    write(dict(type='restart'))
+    hold_weights = True
+    end_episode()
+    reward_avg = 0.0
+    print('dreamerBridge: asked the trainer for a fresh run')
+    context.guiUpdater.setTrainerStatus('restarting training')
 
 
 def weights_dir():
@@ -1538,8 +1592,14 @@ def connect():
             commands.configure(hello['command'])
         note_command_units(hello.get('settings'))
         save_reward_settings(hello.get('settings'))
+        global trainer_restart, hold_weights, weights_installed
+        if (hello.get('run') or 'robot') != history.run:
+            weights_installed = 0   # the dashboard counts them per run
         history.start(hello.get('run'))
         end_episode()  # the idle steps scored here are not this run's
+        trainer_restart = bool(hello.get('restart', False))
+        hold_weights = bool(hello.get('hold', False))
+        restart_asked.clear()
         max_hz = float(hello.get('max_hz', settings['max_hz']))
         if pace not in ('serial', 'clock'):
             raise ValueError('Unknown pacing %r' % pace)
