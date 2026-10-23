@@ -724,14 +724,16 @@ function frontFloor() {
 function drawBlueprint() {
   const s = lastState; if (!s) return;
   const now = performance.now(), dt = Math.min(0.1, (now - lastBpT) / 1000); lastBpT = now;
-  // Forward is negative wheel speed.
+  // Forward is negative wheel speed, and with forward that way round the
+  // phone's _l wheel is the robot's right one: speed_l > speed_r is a right
+  // turn (the gyro agrees, robot.py yaw_sign), so l and r swap here.
   const th0 = Number(s.theta_deg) || 0, rate0 = Number(s.rate_deg) || 0;
   const ahead = Math.min(PREDICT_MAX_S, (now - lastArrival) / 1000 + LEAD_S);
   const target = {th: Math.max(Math.min(th0, BUMPERS_DEG[0]),
                                Math.min(Math.max(th0, BUMPERS_DEG[1]), th0 + rate0 * ahead)),
                   rate: rate0,
-                  vl: -(Number(s.speed_l) || 0), vr: -(Number(s.speed_r) || 0),
-                  al: Number(s.act_l) || 0, ar: Number(s.act_r) || 0};
+                  vl: -(Number(s.speed_r) || 0), vr: -(Number(s.speed_l) || 0),
+                  al: Number(s.act_r) || 0, ar: Number(s.act_l) || 0};
   for (const key in shown) shown[key] += (1 - Math.exp(-dt / EASE_S[key])) * (target[key] - shown[key]);
   const {th, rate, vl, vr, al, ar} = shown, v = 0.5 * (vl + vr);
   // Positive tilt is a forward lean: the top goes right, toward the front.
